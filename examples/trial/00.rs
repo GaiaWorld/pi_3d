@@ -129,7 +129,7 @@ fn setup(
     // actions.transform.localsrt.push(OpsTransformNodeLocal::ops(node, ETransformSRT::Euler(0., 0., 0.3)));
 
     let vertices = QuadBuilder::attrs_meta();
-    let indices = Some(QuadBuilder::indices_meta());
+    let indices = None;
     let state = MeshInstanceState::default();
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
     actions.transform.tree.push(OpsTransformNodeParent::ops(source, node));
@@ -139,7 +139,7 @@ fn setup(
     actions.mesh.render_state.push(OpsRenderState::depth_state(source, DemoScene::PASS_TRANSPARENT, EDepthState::Compare(CompareFunction::Always)));
 
     let vertices = QuadBuilder::attrs_meta();
-    let indices = Some(QuadBuilder::indices_meta());
+    let indices = None;
     let state = MeshInstanceState::default();
     let source2 = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
     actions.transform.tree.push(OpsTransformNodeParent::ops(source2, node));

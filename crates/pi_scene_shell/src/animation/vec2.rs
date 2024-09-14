@@ -3,7 +3,7 @@ use crate::ecs::*;
 use pi_bevy_asset::{TAssetCapacity, AssetCapacity};
 use pi_scene_math::{Vector2, Number};
 
-use super::{TAnimatableComp, TAnimatableCompRecord};
+use super::TAnimatableComp;
 
 #[derive(Clone, Copy, Component)]
 pub struct AnimatorableVec2(pub Vector2);
@@ -41,11 +41,3 @@ impl TAssetCapacity for AnimatorableVec2 {
     }
 }
 impl TAnimatableComp for AnimatorableVec2 {}
-
-#[derive(Clone, Copy, Component, Default)]
-pub struct RecordAnimatorableVec2(pub AnimatorableVec2);
-impl TAnimatableCompRecord<AnimatorableVec2> for RecordAnimatorableVec2 {
-    fn comp(&self) -> AnimatorableVec2 {
-        self.0.clone()
-    }
-}

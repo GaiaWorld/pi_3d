@@ -31,10 +31,12 @@ impl Default for EScalingMode {
     }
 }
 
-
+/// 标识实体类型 Mesh , 与 IntancedMesh 有区别, 两者都是 AbstructMesh
 #[derive(Component, Default)]
 pub struct Mesh;
 
+/// 在 AbstructMesh 实体上 可能设置的 PoseMatrix
+/// 用于 调整目标渲染姿态 , 与节点树世界矩阵 有区别
 #[derive(Component)]
 pub struct RenderPoseMatrix(pub Matrix);
 impl Default for RenderPoseMatrix {
@@ -44,12 +46,14 @@ impl Default for RenderPoseMatrix {
 }
 
 #[derive(Component, Default)]
-/// 相对于 SourceMesh 的 AlphaIndex
+/// InstancedMesh 相对于 SourceMesh 的 AlphaIndex
 pub struct InstanceTransparentIndex(pub i32);
 
+/// 用于标识 AbstructMesh 是否通过视口剔除
 #[derive(Component, Default)]
 pub struct AbstructMeshCullingFlag(pub bool);
 
+/// 用于表达 Mesh 的实例化数据描述
 #[derive(Component)]
 pub struct MeshInstanceState {
     pub instances: Vec<CustomVertexAttribute>,
@@ -62,11 +66,7 @@ impl Default for MeshInstanceState {
     }
 }
 
-#[derive(Clone, Component, Default)]
-pub struct DirtyMeshRef;
-
-pub type MeshRefs = EntityRefInfo<DirtyMeshRef>;
-
+/// 用于控制 Mesh 的渲染状态对齐模式控制(ERenderAlignment)
 #[derive(Clone, Component, Deref, DerefMut)]
 pub struct RenderAlignment(pub ERenderAlignment);
 impl Default for RenderAlignment {
@@ -75,9 +75,11 @@ impl Default for RenderAlignment {
     }
 }
 
+/// 用于控制 Mesh 的渲染状态缩放模式控制(EScalingMode)
 #[derive(Clone, Component, Default, Deref, DerefMut)]
 pub struct ScalingMode(pub EScalingMode);
 
+/// 用于记录 AbstructMesh 的全局速度向量
 #[derive(Clone, Component, Deref, DerefMut)]
 pub struct ModelVelocity(pub Vector3);
 impl Default for ModelVelocity {
@@ -86,6 +88,7 @@ impl Default for ModelVelocity {
     }
 }
 
+/// 用于标识 Mesh 是否为静态目标
 #[derive(Component, Clone)]
 pub struct ModelStatic(pub bool);
 impl ModelStatic {
@@ -94,6 +97,8 @@ impl ModelStatic {
     }
 }
 
+/// 用于记录 Mesh 的模型相关Uniform数据
+/// 包含 Mesh 的渲染矩阵, 骨骼绑定, 关联灯光等等信息
 #[derive(Component, Default, Clone)]
 pub struct BindModel(pub Option<Arc<ShaderBindModelAboutMatrix>>);
 impl BindModel {
@@ -109,17 +114,12 @@ impl BindModel {
     }
 }
 
+/// 通用的一个BindModel,可用于多个粒子系统共用,增加合批机会
+/// 实例化渲染中 BindModel 上的矩形数据并不会使用
 #[derive(Resource)]
 pub struct CommonBindModel(pub BindModel);
 
-#[derive(Component, Default, Clone)]
-pub struct RecordIndiceRenderRange(pub IndiceRenderRange);
-impl TAnimatableCompRecord<IndiceRenderRange> for RecordIndiceRenderRange {
-    fn comp(&self) -> IndiceRenderRange {
-        self.0.clone()
-    }
-}
-
+/// 用于记录 Mesh 的可渲染顶点范围(当使用 Indices 时)
 #[derive(Component, Clone)]
 pub struct IndiceRenderRange(pub Range<u32>);
 impl IndiceRenderRange {
@@ -206,6 +206,7 @@ impl TAnimatableComp for IndiceRenderRange {
 
 }
 
+/// 用于记录 Mesh 的可渲染顶点范围
 #[derive(Component, Clone)]
 pub struct VertexRenderRange(u32, u32);
 impl VertexRenderRange {
@@ -239,9 +240,11 @@ impl Default for VertexRenderRange {
     }
 }
 
+/// 用于标识 AbstructMesh 的渲染矩阵需要重新计算
 #[derive(Component, Default)]
 pub struct FlagRenderWorldMatrix;
 
+/// 用于记录 AbstructMesh 的渲染矩阵
 #[derive(Clone, Component, Default)]
 pub struct RenderWorldMatrix(pub Matrix);
 impl RenderWorldMatrix {
@@ -279,6 +282,7 @@ impl TInstanceData for RenderWorldMatrix {
     // }
 }
 
+/// 用于记录 AbstructMesh 的渲染矩阵逆矩阵
 #[derive(Clone, Component, Default)]
 pub struct RenderWorldMatrixInv(pub Matrix);
 impl RenderWorldMatrixInv {
@@ -287,9 +291,10 @@ impl RenderWorldMatrixInv {
     }
 }
 
+/// 用于记录 Mesh 的实例的排序后实例数据
 #[derive(Clone, Component, Default)]
 pub struct InstancedMeshTransparentSortCollection {
-    pub ranges: Vec<(i32, Range<u32>)>,
+    pub ranges: Vec<(i32, Range<u32>, (Number, Number, Number))>,
     pub data: Vec<u8>,
     pub dataidx: usize,
     pub count: usize,
@@ -304,28 +309,17 @@ impl InstancedMeshTransparentSortCollection {
         self.sizeperinstance = 0;
         self.dataidx = 0;
     }
-    pub fn push_val(&mut self, val: u8) {
-        // if self.dataidx < self.data.len() {
-        //     self.data[self.dataidx] = val;
-        // } else {
-        //     self.data.push(val);
-        // }
-        // self.dataidx += 1;
-        self.data.push(val);
-    }
 }
 
+/// 用于记录 Mesh 受哪些 Light 的强制影响
 #[derive(Component, Default)]
-pub struct ModelForcePointLightings(pub Vec<Entity>);
+pub struct ModelForceLightings {
+    pub point: Vec<Entity>,
+    pub spot: Vec<Entity>,
+    pub hemi: Vec<Entity>,
+}
 
-
-#[derive(Component, Default)]
-pub struct ModelForceSpotLightings(pub Vec<Entity>);
-
-
-#[derive(Component, Default)]
-pub struct ModelForceHemiLightings(pub Vec<Entity>);
-
+/// 用于记录 Mesh 关联灯光的 Uniform 数据
 #[derive(Component, Default)]
 pub struct ModelLightingIndexs {
     pub bind: Option<Arc<BindModelLightIndexs>>,

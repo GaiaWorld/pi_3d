@@ -3,7 +3,7 @@ use pi_scene_shell::prelude::*;
 use pi_scene_math::{Vector3, coordiante_system::CoordinateSytem3, vector::TToolVector3};
 
 use crate::{
-    layer_mask::prelude::*, prelude::{SceneID, SceneMainCameraID}, transforms::command_sys::{ActionTransformNode, TransformNodeBundle}, viewer::{command_sys::ActionViewer, prelude::*}
+    layer_mask::prelude::*, prelude::SceneID, transforms::command_sys::{ActionTransformNode, TransformNodeBundle}, viewer::{command_sys::ActionViewer, prelude::*}
 };
 
 use super::{
@@ -37,13 +37,14 @@ pub fn sys_create_camera(
 pub fn sys_act_camera_mode(
     mut cmds: ResMut<ActionListCameraModify>,
     mut active_cameras: Query<(&SceneID, &mut Camera, &mut ViewerActive)>,
-    mut scenes: Query<&mut SceneMainCameraID>,
     mut cameras: Query<(&mut CameraParam, &mut ViewerDistanceCompute)>,
-    mut fov_cameras: Query<(&mut CameraFov, &mut RecordCameraFov)>,
-    mut orth_cameras: Query<(&mut CameraOrthSize, &mut RecordCameraOrthSize)>,
+    mut fov_cameras: Query<&mut CameraFov>,
+    mut orth_cameras: Query<&mut CameraOrthSize>,
     mut aspect_cameras: Query<&mut ViewerAspect>,
     mut target_cameras: Query<&mut CameraTarget>,
     mut target_cmds: ResMut<ActionListCameraTarget>,
+    mut recordfovs: ResMut<AnimeTargetRecordValues<CameraFov>>,
+    mut recordorths: ResMut<AnimeTargetRecordValues<CameraOrthSize>>,
 ) {
     cmds.drain().for_each(|OpsCameraModify(entity, mode)| {
         match mode {
@@ -52,8 +53,8 @@ pub fn sys_act_camera_mode(
                     camera.mode = val;
                 }
                 match val {
-                    EFreeCameraMode::Perspective => *distance = ViewerDistanceCompute::Base,
-                    EFreeCameraMode::Orthograhic => *distance = ViewerDistanceCompute::Direction,
+                    EFreeCameraMode::Perspective => *distance = ViewerDistanceCompute::new(EViewerDistanceCompute::Base),
+                    EFreeCameraMode::Orthograhic => *distance = ViewerDistanceCompute::new(EViewerDistanceCompute::Direction),
                 }
             },
             ECameraModify::Active(val) => if let Ok((idscene, mut camera, mut viewer)) = active_cameras.get_mut(entity) {
@@ -63,23 +64,18 @@ pub fn sys_act_camera_mode(
                     *viewer = ViewerActive(val);
                     // log::warn!("CameraActive Ok");
                 }
-                if val {
-                    if let Ok(mut maincamera) = scenes.get_mut(idscene.0) {
-                        *maincamera = SceneMainCameraID(Some(entity));
-                    }
-                }
             },
             ECameraModify::FixMode(val) => if let Ok((mut camera, _)) = cameras.get_mut(entity) {
                 if camera.fixed_mode != val {
                     camera.fixed_mode = val;
                 }
             },
-            ECameraModify::Fov(val) => if let Ok((mut camera, mut record)) = fov_cameras.get_mut(entity) {
-                record.0 = CameraFov(val);
+            ECameraModify::Fov(val) => if let Ok(mut camera) = fov_cameras.get_mut(entity) {
+                recordfovs.insert(entity, CameraFov(val));
                 *camera = CameraFov(val);
             },
-            ECameraModify::OrthSize(val) => if let Ok((mut camera, mut record)) = orth_cameras.get_mut(entity) {
-                record.0 = CameraOrthSize(val);
+            ECameraModify::OrthSize(val) => if let Ok(mut camera) = orth_cameras.get_mut(entity) {
+                recordorths.insert(entity, CameraOrthSize(val));
                 *camera = CameraOrthSize(val);
             },
             ECameraModify::Aspect(val) => if let Ok(mut camera) = aspect_cameras.get_mut(entity) {
@@ -102,8 +98,6 @@ pub type CameraBaseBundle = (
     ViewerDistanceCompute,
     CameraFov,
     CameraOrthSize,
-    RecordCameraFov,
-    RecordCameraOrthSize,
     LayerMask,
     CameraUp,
     CameraTarget,
@@ -134,8 +128,6 @@ impl ActionCamera {
             ViewerDistanceCompute::default(),
             CameraFov::default(),
             CameraOrthSize::default(),
-            RecordCameraFov::default(),
-            RecordCameraOrthSize::default(),
             LayerMask::default(),
             CameraUp(CoordinateSytem3::up()),
             CameraTarget(Vector3::new(0., 0., 1.)),

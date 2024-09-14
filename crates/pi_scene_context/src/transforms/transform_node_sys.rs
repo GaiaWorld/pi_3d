@@ -135,7 +135,6 @@ pub fn sys_transform_dirty(
     });
 }
 
-#[inline(never)]
 fn iter_dirty(
     child: Entity,
     layers: &mut Query<(Entity, &mut TransformNodeDirty)>,
@@ -221,8 +220,6 @@ fn iter_dirty(
         if performance.debug { performance.worldmatrix += (pi_time::Instant::now() - performance.t_worldmatrix).as_micros() as u32; }
     }
 
-
-#[inline(never)]
 fn _calc_world_one(
     entity: Entity,
     nodes: &mut Query<(Ref<LocalMatrix>, &Enable, &mut GlobalEnable, &Up)>,
@@ -238,9 +235,8 @@ fn _calc_world_one(
     
             // log::warn!(">>>>> calc_world_one {:?}", lmatrix.1);
             if dirty {
-                let ( transform, flag) = GlobalMatrix::calc(&tmp.matrix, &lmatrix);
+                let flag = gtransform.calc(&tmp.matrix, &lmatrix);
                 resultenable = resultenable && flag;
-                *gtransform = transform;
                 absolute.reset_while_world_matrix_update();
             };
 
@@ -255,7 +251,6 @@ fn _calc_world_one(
     }
 }
 
-#[inline(never)]
 fn calc_world_bytree<'a>(
     nodes: &mut Query<(Ref<LocalMatrix>, &Enable, &mut GlobalEnable, &Up)>,
     transforms: &mut Query<(&mut GlobalMatrix, &mut AbsoluteTransform)>,
@@ -295,7 +290,6 @@ fn calc_world_bytree<'a>(
     return deep;
 }
 
-#[inline(never)]
 fn calc_world_one_bytree(
     entity: Entity,
     nodes: &mut Query<(Ref<LocalMatrix>, &Enable, &mut GlobalEnable, &Up)>,
@@ -312,9 +306,8 @@ fn calc_world_one_bytree(
     
             // log::warn!(">>>>> calc_world_one {:?}", lmatrix.1);
             if dirty {
-                let ( transform, flag) = GlobalMatrix::calc(&tmp.matrix, &lmatrix);
+                let flag = gtransform.calc(&tmp.matrix, &lmatrix);
                 resultenable = resultenable && flag;
-                *gtransform = transform;
                 absolute.reset_while_world_matrix_update();
             };
 
@@ -329,7 +322,6 @@ fn calc_world_one_bytree(
     }
 }
 
-#[inline(never)]
 fn calc_world_root_bytree(
     penable: bool,
     p_m: &Matrix,
@@ -345,9 +337,8 @@ fn calc_world_root_bytree(
 
             if dirty {
                 // log::debug!(">>>>> GlobalTransform 0");
-                let (transform, flag) = GlobalMatrix::calc(p_m, &lmatrix);
+                let flag = gtransform.calc(p_m, &lmatrix);
                 resultenable = resultenable && flag;
-                *gtransform = transform;
                 absolute.reset_while_world_matrix_update();
             }
 

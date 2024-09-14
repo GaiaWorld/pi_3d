@@ -3,7 +3,7 @@ use crate::ecs::*;
 use pi_bevy_asset::{TAssetCapacity, AssetCapacity};
 use pi_scene_math::Number;
 
-use super::{TAnimatableComp, TAnimatableCompRecord};
+use super::TAnimatableComp;
 
 #[derive(Clone, Copy, Component)]
 pub struct AnimatorableUint(pub u32);
@@ -41,12 +41,3 @@ impl TAssetCapacity for AnimatorableUint {
     }
 }
 impl TAnimatableComp for AnimatorableUint {}
-
-
-#[derive(Clone, Copy, Component, Default)]
-pub struct RecordAnimatorableUint(pub AnimatorableUint);
-impl TAnimatableCompRecord<AnimatorableUint> for RecordAnimatorableUint {
-    fn comp(&self) -> AnimatorableUint {
-        self.0.clone()
-    }
-}

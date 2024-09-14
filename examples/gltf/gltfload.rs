@@ -1,6 +1,9 @@
 #![feature(box_into_inner)]
+#![feature(test)]
+extern crate test;
 
 use pi_atom::Atom;
+use pi_gltf::Gltf;
 use pi_scene_shell::prelude::*;
 
 #[path = "../base.rs"]
@@ -86,4 +89,53 @@ pub fn main() {
     // app.run()
     crate::base::run_loop(app, window, event_loop)
 
+}
+
+#[cfg(test)]
+mod test_mod {
+    use pi_gltf::Gltf;
+    use pi_gltf2_load::relative_path;
+    use test::Bencher;
+
+    #[bench]
+    fn performance(b: &mut Bencher) {
+        let data = include_bytes!("./AnMiaoYi_YeYueZouQinQu_Cast_ff.gltf");
+        b.iter(move || {
+            
+            match Gltf::from_slice(data) {
+                Ok(gltf) => {
+                    let mut haserror = false;
+                    for buffer in gltf.buffers() {
+                        match buffer.source() {
+                            pi_gltf::buffer::Source::Bin => {
+                                haserror = true;
+                            },
+                            pi_gltf::buffer::Source::Uri(bufferpath) => {
+                                if bufferpath.starts_with("data:") {
+                                    haserror = true;
+                                } else {
+                                    let bufferpath = relative_path(bufferpath, "./AnMiaoYi_YeYueZouQinQu_Cast_ff.gltf");
+                                    // match pi_hal::file::load_from_url(&Atom::from(bufferpath) ).await {
+                                    //     Ok(bufferfile) => {
+                                    //         buffers.push(bufferfile);
+                                    //     },
+                                    //     Err(_e) =>  {
+                                    //         haserror = true;
+                                    //         // log::warn!("load gltf bin fail: {:?}", desc.as_str());
+                                    //         fail.push((key.clone(), ErrorRecord::ERROR_GLTF_BIN_LOAD_FAIL));
+                                    //         // Err(std::io::Error::new(std::io::ErrorKind::NotFound, ""));
+                                    //     },
+                                    // };
+                                }
+                            },
+                        }
+                        if haserror { break; }
+                    };
+                },
+                Err(_e) => {
+                    
+                }
+            };
+        });
+    }
 }

@@ -7,7 +7,7 @@ use crate::prelude::*;
 
 pub type ObjectID = Entity;
 
-/// 准备销毁
+/// 标识实体准备销毁 - 下一步是处理关联内容可以销毁
 #[derive(Component)]
 pub struct DisposeReady(pub bool);
 impl Default for DisposeReady {
@@ -16,7 +16,7 @@ impl Default for DisposeReady {
     }
 }
 
-/// 可以销毁
+/// 标识实体可以销毁 - 下一步即销毁
 #[derive(Component)]
 pub struct DisposeCan(pub bool);
 impl Default for DisposeCan {

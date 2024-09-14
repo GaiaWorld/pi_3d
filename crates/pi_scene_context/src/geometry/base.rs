@@ -25,9 +25,6 @@ impl HashAsResource for GeometryDesc {
     }
 }
 
-#[derive(Component, Default, Clone, Copy, PartialEq, Eq)]
-pub struct GeometryResourceHash(pub u64);
-
 #[derive(Component, Default, PartialEq, Eq)]
 pub struct GeometryLayoutHash(pub u64);
 

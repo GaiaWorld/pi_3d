@@ -211,9 +211,11 @@ impl RendererParam {
     }
 }
 
+/// 标识 RendererParam 变化影响 Pipeline 需要重新构建
 #[derive(Component, Default)]
 pub struct FlagRendererParamForPipeline;
 
+/// 存储 Renderer 的渲染目标数据
 #[derive(Clone, Component)]
 pub enum RendererRenderTarget {
     None(Option<Arc<SafeTargetView>>),
@@ -269,6 +271,7 @@ impl RendererRenderTarget {
     }
 }
 
+/// 存储 Renderer 的渲染数据
 #[derive(Component, Default)]
 pub struct Renderer {
     pub ready: bool,
@@ -294,6 +297,7 @@ impl Renderer {
     }
 }
 
+/// 存储一个视口的所有 Renderer 的PassTag数据
 #[derive(Clone, Component)]
 pub struct ViewerRenderersInfo(Vec<Entity>, Vec<PassTag>);
 impl Default for ViewerRenderersInfo {
@@ -345,8 +349,7 @@ impl ViewerRenderersInfo {
     }
 }
 
+/// 标识一个视口的 Renderer 有变化
 #[derive(Component, Default)]
 pub struct DirtyViewerRenderersInfo;
 
-#[derive(Default, Resource)]
-pub struct RendererDrawCallRecord(pub XHashMap<Entity, u32>);

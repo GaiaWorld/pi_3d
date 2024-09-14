@@ -112,7 +112,7 @@ impl DataPool {
         // }
         unsafe_vec_append_slice(&mut self.vec, data);
 
-        self.used += data.len();
+        self.used = end;
 
         Range { start, end }
     }

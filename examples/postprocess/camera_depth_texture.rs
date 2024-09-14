@@ -232,10 +232,11 @@ impl Plugin for PluginTest {
             
             let opaquetarget = targets.create( KeySampler::linear_repeat(), ColorFormat::Rgba8Unorm, DepthStencilFormat::Depth32Float, 128, 128 ); 
             let (opaque_texture_renderer, opaque_texture_renderer_camera) = copy::PluginImageCopy::init(&mut commands, &mut actions, scene,
-                demopass.opaque_renderer, demopass.transparent_renderer, demopass.opaque_target.clone(), Some(KeyCustomRenderTarget::Custom(opaquetarget.unwrap()))
+                demopass.skywater_renderer, demopass.transparent_renderer, demopass.opaque_target.clone(), Some(KeyCustomRenderTarget::Custom(opaquetarget.unwrap()))
             );
-            actions.renderer.connect.push(OpsRendererConnect::ops(demopass.opaque_renderer, demopass.transparent_renderer, true));
-
+    
+            actions.renderer.connect.push(OpsRendererConnect::ops(demopass.skywater_renderer, demopass.transparent_renderer, true));
+    
             let vertices = CubeBuilder::attrs_meta();
             let indices = Some(CubeBuilder::indices_meta());
             let state = MeshInstanceState::default();

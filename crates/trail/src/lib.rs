@@ -85,10 +85,10 @@ impl Plugin for PluginTrail {
         
 #[cfg(not(target_feature = "use_bevy"))]
     app
-        .configure_set( Update, StageTrail::TrailCreate.after(StageSkeleton::_SkinCreate))
-        .configure_set( Update, StageTrail::_TrailCreate.after(StageTrail::TrailCreate).before(StageTransform::TransformCommand).before(StageEnable::Command))
-        .configure_set( Update, StageTrail::TrailCommand.in_set(FrameDataPrepare).after(StageTrail::_TrailCreate))
-        .configure_set( Update, StageTrail::TrailUpdate.in_set(FrameDataPrepare).after(StageTrail::TrailCommand).after(StageGeometry::GeometryLoaded))
+        .configure_set( Update, StageTrail::TrailCreate .in_set(ERunStageChap::D3).after(StageSkeleton::_SkinCreate))
+        .configure_set( Update, StageTrail::_TrailCreate.in_set(ERunStageChap::D3).after(StageTrail::TrailCreate).before(StageTransform::TransformCommand).before(StageEnable::Command))
+        .configure_set( Update, StageTrail::TrailCommand.in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageTrail::_TrailCreate))
+        .configure_set( Update, StageTrail::TrailUpdate .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageTrail::TrailCommand).after(StageGeometry::GeometryLoaded))
         ;
 
 #[cfg(not(target_feature = "use_bevy"))]

@@ -80,7 +80,7 @@ pub fn setup(
                 let item = {
                     
                     let vertices = QuadBuilder::attrs_meta();
-                    let indices = Some(QuadBuilder::indices_meta());
+                    let indices = None;
                     let state = base::particelsystem_mesh_state_single();
                     let source = base::DemoScene::mesh(&mut commands, scene, node, &mut actions,  vertices, indices, state);
 

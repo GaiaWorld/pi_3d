@@ -50,6 +50,7 @@ pub struct BindGroups3D {
     pub model: Option<Arc<BindGroupModel>>, 
     pub textures: Option<Arc<BindGroupTextureSamplers>>,
     pub lightingshadow: Option<Arc<BindGroupSetExtend>>,
+    pub hashresource: u64,
 }
 impl BindGroups3D {
     pub fn create(
@@ -58,32 +59,22 @@ impl BindGroups3D {
         textures: Option<Arc<BindGroupTextureSamplers>>,
         lightingshadow: Option<Arc<BindGroupSetExtend>>,
     ) -> Self {
-        Self { scene, model, textures, lightingshadow }
-    }
-    pub fn key_set_blocks(&self) -> KeyShaderSetBlocks<4, EKeyShader3DSetBlock> {
-        let mut key_set_blocks = [None, None, None, None];
-        let mut setidx = 0;
-
-        if let Some(set) = &self.scene {
-            key_set_blocks[setidx] = Some(EKeyShader3DSetBlock::Scene(set.key().key_set.clone()));
-            setidx += 1;
-        }
         
-        if let Some(set) = &self.model {
-            key_set_blocks[setidx] = Some(EKeyShader3DSetBlock::Model(set.key().key.clone()));
-            setidx += 1;
+        let mut hasher = DefaultHasher::default();
+        if let Some(bindgroup) = &scene {
+            bindgroup.hash_resource(&mut hasher);
+        }
+        if let Some(bindgroup) = &model {
+            bindgroup.hash_resource(&mut hasher);
+        }
+        if let Some(bindgroup) = &textures {
+            bindgroup.hash_resource(&mut hasher);
+        }
+        if let Some(bindgroup) = &lightingshadow {
+            bindgroup.hash_resource(&mut hasher);
         }
 
-        if let Some(set_2) = &self.textures {
-            key_set_blocks[setidx] = Some(EKeyShader3DSetBlock::TextureSampler(set_2.key().asset_u64()));
-            setidx += 1;
-        }
-        if let Some(_set_3) = &self.lightingshadow {
-            key_set_blocks[setidx] = Some(EKeyShader3DSetBlock::Other(0));
-            // setidx += 1;
-        }
-
-        KeyShaderSetBlocks(key_set_blocks)
+        Self { scene, model, textures, lightingshadow, hashresource: hasher.finish() }
     }
     pub fn bind_group_layouts(&self) -> [Option<Handle<BindGroupLayout>>; 4] {
         let mut bind_group_layouts = [None, None, None, None];

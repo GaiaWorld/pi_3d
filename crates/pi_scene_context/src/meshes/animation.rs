@@ -1,6 +1,6 @@
 
 use pi_scene_shell::prelude::*;
 
-use super::model::{IndiceRenderRange, RecordIndiceRenderRange};
+use super::model::IndiceRenderRange;
 
-pub type PluginAnimeRenderIndiceRange   = PluginTypeAnime<IndiceRenderRange, RecordIndiceRenderRange>;
+pub type PluginAnimeRenderIndiceRange   = PluginTypeAnime<IndiceRenderRange>;

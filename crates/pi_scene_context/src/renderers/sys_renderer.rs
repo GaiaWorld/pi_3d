@@ -8,6 +8,7 @@ use crate::{
 use super::{
     _set0_modify, _set1_modify, base::*, render_depth_and_stencil::*, render_object::RenderState, render_primitive::*, render_sort::*, render_target_state::*, renderer::*
 };
+use pi_slotmap::Key;
 
     pub fn sys_pass_bind_groups(
         addeds: ComponentAdded<PassBindGroupsDirty>,
@@ -298,8 +299,7 @@ use super::{
             }
         });
     }
-    
-    #[inline(never)]
+
     fn _pass_pipeline_request_by_renderer(
         passid: Entity,
         passes: &mut Query<&mut PassPipelineStateDirty>,
@@ -428,6 +428,7 @@ use super::{
     
                         if let Ok(RenderGeometryComp(Some(rendergeo))) = geometrys.get(id_geo.0.clone()) {
                             if rendergeo.isok() {
+                                // log::error!("PassDraw Ok");
                                 *old_draw = PassDraw(true);
                             } else {
                                 // log::error!("PassDraw Geo Not Ok");
@@ -454,29 +455,29 @@ use super::{
         scenes: Query< (&BatchParamOpaque, &BatchParamTransparent) >,
         models: Query<
             (
-                &GlobalEnable, &GlobalMatrix, &TransparentSortParam, &InstancedMeshTransparentSortCollection, &InstanceSourceRefs,
+                &GlobalEnable, &GlobalMatrix, &TransparentSortParam, &InstancedMeshTransparentSortCollection,
                 &PassIDs, &GeometryID, &IndiceRenderRange, &VertexRenderRange, &RenderGeometryEable,
             )
         >,
         passes: Query<
             (&PassRendererID, &PassBindGroups, &PassPipeline)
         >,
-        geometrys: Query<(&RenderGeometryComp, &GeometryResourceHash)>,
-        mut instancedcache: ResMut<InstanceBufferAllocator>,
+        geometrys: Query<&RenderGeometryComp>,
         mut performance: ResMut<Performance>,
         mut allocator: ResMut<VertexBufferAllocator3D>,
         device: Res<PiRenderDevice>,
         queue: Res<PiRenderQueue>,
         mut combinebuffer: ResMut<CombineBuffer>,
-        mut opaque_list: ResMut<TmpSortDrawOpaqueVec>,
-        mut transparent_list: ResMut<TmpSortDrawTransparentVec>,
     ) {
         if performance.debug { performance.t_drawobjs = pi_time::Instant::now(); }
 
-        let opaque_list: &mut Vec<TmpSortDrawOpaque> = &mut opaque_list.opaque_list;
-        let transparent_list: &mut Vec<TmpSortDrawTransparent> = &mut transparent_list.transparent_list;
-        let mut draws: Vec<DrawTmpRef> = vec![];
+        let mut opaque_list: Vec<DrawTmpRef> = Vec::with_capacity(4096);
+        let mut transparent_list: Vec<DrawTmpRef> = Vec::with_capacity(4096);
 
+        let mut lastinsdata: EVerteicesInstance = EVerteicesInstance::default();
+        let mut lastdraw: Option<DrawTmpRef> = None;
+
+        performance.drawcalls = 0;
         renderers.iter_mut().for_each(|(_id_renderer, idscene, id_viewer, mut renderer, passtag, param)| {
             renderer.clear();
             // log::warn!("Renderer: {:?}, Camera {:?}, {:?}", _id_renderer, id_viewer.0, (param.enable.0, passtag));
@@ -489,140 +490,128 @@ use super::{
             let mut countmesh = 0;
             opaque_list.clear();
             transparent_list.clear();
-            draws.clear();
             if let (Ok((list_model, viewposition, viewdirection, disposed, distancecomp)), Ok((batchopaque, batchtransparent))) = (viewers.get(id_viewer.0), scenes.get(idscene.0)) {
                 if disposed.0 {
                     // log::warn!("Renderer Viewer disposed: {:?}, Camera {:?}, {:?}", _id_renderer, id_viewer.0, (param.enable.0, passtag));
                     return;
                 }
                 countmesh = 0;
-
-                // log::error!("renderer_draws : ModelListAfterCulling: {:?}, ", (list_model.0.len()));
                 renderer.draws.viewport = param.viewport.val();
+                let viewposition = (viewposition.0.x, viewposition.0.y, viewposition.0.z );
+                let viewdirection = (viewdirection.0.x, viewdirection.0.y, viewdirection.0.z );
                 for id_obj in list_model.0.iter() {
                     if let Ok(
                         (
-                            globalenable, nodeposition, rendersort, instancessortinfo, instancesref,
+                            globalenable, nodeposition, rendersort, instancessortinfo,
                             passids, idgeometry, indicerange, vertexrenage, geoenable
                         )
                     ) = models.get(id_obj.clone()) {
+                        let passids = &passids.0;
                         // log::warn!("Renderer: A {:?}", (disposed.0, globalenable.0));
-                        if globalenable.0 == false {
-                            // log::warn!("Fail Enable {:?}", (disposed.0, globalenable.0));
-                            break;
-                        }
-                        if let Ok((RenderGeometryComp(Some(rendergeo)), geohash)) = geometrys.get(idgeometry.0) {
-                            if geoenable.0 {
-                                let passids = passids.0;
+                        if geoenable.0 && globalenable.0 == true && passtag.index() < passids.len() {
+                            let idpass = passids[passtag.index()];
+                            if let Ok(RenderGeometryComp(Some(rendergeo))) = geometrys.get(idgeometry.0) {
                                 let index = 0;
                                 let is_transparent = param.blend.0;
                                 // log::error!("is_transparent {:?}", (is_transparent));
-                                if passtag.index() < passids.len() {
-                                    let idpass = passids[passtag.index()];
-                                    if let Ok((passrendererid, bindgroups, pipeline)) = passes.get(idpass) {
-                                        let pipelinehash = pipeline.key();
-                                        if let (true, Some(bindgroups), Some(pipeline)) = (passrendererid.0 == _id_renderer, bindgroups.val(), pipeline.val()) {
-                                            let distance = 0.;
-                                            if is_transparent {
-                                                if batchtransparent.0.distance {
-                                                    distancecomp.distance(&viewposition.0, &viewdirection.0, &nodeposition.position());
-                                                }
-                                            } else {
-                                                if batchopaque.0.distance {
-                                                    distancecomp.distance(&viewposition.0, &viewdirection.0, &nodeposition.position());
-                                                }
+                                if let Ok((passrendererid, bindgroups, pipeline)) = passes.get(idpass) {
+                                    if let (true, Some(bindgroups), Some(pipeline)) = (passrendererid.0 == _id_renderer, bindgroups.val(), pipeline.val()) {
+                                        let mut distance = 0.;
+                                        if is_transparent {
+                                            if batchtransparent.0.distance {
+                                                distance = distancecomp.distance(&viewposition, &viewdirection, &nodeposition.xyz());
                                             }
-
-                                            let vertexhash = geohash.0;
-    
-                                            collect_draw(
-                                                is_transparent, index, vertexhash, pipelinehash, rendergeo, bindgroups, pipeline, indicerange, vertexrenage, distance,
-                                                rendersort, opaque_list, transparent_list, &instancessortinfo, &mut draws
-                                            );
                                         } else {
-                                            // log::error!("PassDraw Renderer Error {:?}", (passtag));
+                                            if batchopaque.0.distance {
+                                                distance = distancecomp.distance(&viewposition, &viewdirection, &nodeposition.xyz());
+                                            }
                                         }
+
+                                        collect_draw(
+                                            is_transparent, index, rendergeo, bindgroups, pipeline, indicerange, vertexrenage, distance,
+                                            rendersort, &mut opaque_list, &mut transparent_list, &instancessortinfo, distancecomp, &viewposition, &viewdirection
+                                        );
                                     } else {
-                                        // log::error!("PassDraw Error {:?}", (passtag, passid));
+                                        // log::error!("PassDraw Renderer Error {:?}", (passtag));
                                     }
                                 } else {
-                                    // log::error!("passtag.index() < passids.len() fail .");
+                                //     log::error!("PassDraw Error {:?}", (passtag));
                                 }
                                 countmesh += 1;
+                                // log::warn!("OK {:?}", id_obj);
                             } else {
-                                // log::error!("Fail rendergeo enable {:?}", (idgeometry.0, id_obj));
+                                // log::error!("Fail rendergeo {:?}", (idgeometry.0, id_obj));
                             }
                         } else {
-                            // log::error!("Fail rendergeo {:?}", (idgeometry.0, id_obj));
+                            // log::error!("Fail rendergeo {:?}", (geoenable.0, globalenable.0));
+                            
                         }
                     } else {
-                        // log::warn!("models.get Fail");
+                        // log::warn!("models.get Fail {:?}", id_obj);
                     }
                 }
 
-                opaque_list.sort();
-                transparent_list.sort();
+                opaque_list.sort_by(|a, b| DrawTmpRef::cmp_opaque(a, b));
+                transparent_list.sort_by(|a, b| DrawTmpRef::cmp_transparent(a, b));
 
+                // return;
                 // log::error!("Mesh: {:?}", countmesh);
                 // log::warn!("Opaque: {:?}", opaque_list.len());
                 // log::error!("Transparent: {:?}", transparent_list.len());
-
-                let mut lastinsdata: EVerteicesInstance = EVerteicesInstance::default();
-                let mut lastdraw: Option<DrawTmpRef> = None;
-                opaque_list.iter().for_each(|tmp| {
+                lastinsdata.reset();
+                lastdraw = None;
+                opaque_list.drain(..).for_each(|drawinfo| {
                     // log::warn!("{:?}", tmp);
-                    if let Some(drawinfo) = draws.get(tmp.idx as usize) {
-                        if let Some(tempdraw) = &mut lastdraw {
-                            if tempdraw.can_batch_instance_memory(drawinfo, true) && combinebuffer.usedsize() + drawinfo.instancedatasize() < combinebuffer.maxcombinesize && combinebuffer.combinecommon(drawinfo.instancedatasize()) {
-                                _combine_instance(&mut combinebuffer, &mut lastinsdata, drawinfo);
-                            } else {
-                                // lastdraw 转 DrawObj
-                                collect_draw_batch(&mut combinebuffer, tempdraw, &lastinsdata, &mut renderer, &mut instancedcache, &mut allocator, &device, &queue, &mut count_vertex);
-                                lastinsdata.reset();
-                                lastinsdata.data.start = combinebuffer.usedsize();
-                                _combine_instance(&mut combinebuffer, &mut lastinsdata, drawinfo);
-                                lastdraw = Some(drawinfo.clone());
-                            }
+                    if let Some(tempdraw) = lastdraw.take() {
+                        if tempdraw.can_batch_instance_memory(&drawinfo, true) && combinebuffer.usedsize() + drawinfo.instancedatasize() < combinebuffer.maxcombinesize && combinebuffer.combinecommon(drawinfo.instancedatasize()) {
+                            _combine_instance(&mut combinebuffer, &mut lastinsdata, &drawinfo);
+                            lastdraw = Some(tempdraw);
                         } else {
+                            // lastdraw 转 DrawObj
+                            collect_draw_batch(&mut combinebuffer, tempdraw, &lastinsdata, &mut renderer, &mut allocator, &device, &queue, &mut count_vertex);
                             lastinsdata.reset();
                             lastinsdata.data.start = combinebuffer.usedsize();
-                            _combine_instance(&mut combinebuffer, &mut lastinsdata, drawinfo);
-                            lastdraw = Some(drawinfo.clone());
+                            _combine_instance(&mut combinebuffer, &mut lastinsdata, &drawinfo);
+                            lastdraw = Some(drawinfo);
                         }
+                    } else {
+                        lastinsdata.reset();
+                        lastinsdata.data.start = combinebuffer.usedsize();
+                        _combine_instance(&mut combinebuffer, &mut lastinsdata, &drawinfo);
+                        lastdraw = Some(drawinfo);
                     }
                 });
 
                 // lastdraw 转 DrawObj
-                if let Some(tempdraw) = &mut lastdraw {
-                    collect_draw_batch(&mut combinebuffer, tempdraw, &lastinsdata, &mut renderer, &mut instancedcache, &mut allocator, &device, &queue, &mut count_vertex);
+                if let Some(tempdraw) = lastdraw.take() {
+                    collect_draw_batch(&mut combinebuffer, tempdraw, &lastinsdata, &mut renderer, &mut allocator, &device, &queue, &mut count_vertex);
                     lastinsdata.reset();
                     lastinsdata.data.start = combinebuffer.usedsize();
                     lastdraw = None;
                 }
-                transparent_list.iter().for_each(|tmp| {
-                    if let Some(drawinfo) = draws.get(tmp.idx as usize) {
-                        if let Some(tempdraw) = &mut lastdraw {
-                            if tempdraw.can_batch_instance_memory(drawinfo, true) && combinebuffer.usedsize() + drawinfo.instancedatasize() < combinebuffer.maxcombinesize && combinebuffer.combinecommon(drawinfo.instancedatasize()) {
-                                _combine_instance(&mut combinebuffer, &mut lastinsdata, drawinfo);
-                            } else {
-                                // lastdraw 转 DrawObj
-                                collect_draw_batch(&mut combinebuffer, tempdraw, &lastinsdata, &mut renderer, &mut instancedcache, &mut allocator, &device, &queue, &mut count_vertex);
-                                lastinsdata.reset();
-                                lastinsdata.data.start = combinebuffer.usedsize();
-                                _combine_instance(&mut combinebuffer, &mut lastinsdata, drawinfo);
-                                lastdraw = Some(drawinfo.clone());
-                            }
+                transparent_list.drain(..).for_each(|drawinfo| {
+                    if let Some(tempdraw) = lastdraw.take() {
+                        if tempdraw.can_batch_instance_memory(&drawinfo, true) && combinebuffer.usedsize() + drawinfo.instancedatasize() < combinebuffer.maxcombinesize && combinebuffer.combinecommon(drawinfo.instancedatasize()) {
+                            _combine_instance(&mut combinebuffer, &mut lastinsdata, &drawinfo);
+                            lastdraw = Some(tempdraw);
                         } else {
+                            // lastdraw 转 DrawObj
+                            collect_draw_batch(&mut combinebuffer, tempdraw, &lastinsdata, &mut renderer, &mut allocator, &device, &queue, &mut count_vertex);
                             lastinsdata.reset();
                             lastinsdata.data.start = combinebuffer.usedsize();
-                            _combine_instance( &mut combinebuffer, &mut lastinsdata, drawinfo);
-                            lastdraw = Some(drawinfo.clone());
+                            _combine_instance(&mut combinebuffer, &mut lastinsdata, &drawinfo);
+                            lastdraw = Some(drawinfo);
                         }
+                    } else {
+                        lastinsdata.reset();
+                        lastinsdata.data.start = combinebuffer.usedsize();
+                        _combine_instance( &mut combinebuffer, &mut lastinsdata, &drawinfo);
+                        lastdraw = Some(drawinfo);
                     }
                 });
                 // lastdraw 转 DrawObj
-                if let Some(tempdraw) = &mut lastdraw {
-                    collect_draw_batch(&mut combinebuffer, tempdraw, &lastinsdata, &mut renderer, &mut instancedcache, &mut allocator, &device, &queue, &mut count_vertex);
+                if let Some(tempdraw) = lastdraw.take() {
+                    collect_draw_batch(&mut combinebuffer, tempdraw, &lastinsdata, &mut renderer, &mut allocator, &device, &queue, &mut count_vertex);
                     lastinsdata.reset();
                     lastinsdata.data.start = combinebuffer.usedsize();
                     // lastdraw = None;
@@ -631,6 +620,7 @@ use super::{
                 // log::warn!("Renderer Viewer Not Found: {:?}, Camera {:?}, {:?}", _id_renderer, id_viewer.0, (param.enable.0, passtag));
             }
 
+            performance.drawcalls += renderer.draws.list.len() as u32;
             // log::warn!("Renderer {:?},", (renderer.draws.list.len(), count_vertex, passtag));
             renderer.vertexs = count_vertex;
         });
@@ -641,7 +631,6 @@ use super::{
     }
 
 
-#[inline(never)]
 fn shader(
     _id_pass: Entity,
     meta: &Handle<ShaderEffectMeta>,
@@ -731,7 +720,6 @@ fn shader(
     }
 }
 
-#[inline(never)]
 fn pipeline(
     shader: &Handle<Shader3D>,
     bindgroups: &BindGroups3D,
@@ -793,12 +781,9 @@ fn pipeline(
     }
 }
 
-#[inline(never)]
 fn collect_draw<'w>(
     is_transparent: bool,
     pass: u8,
-    vertexhash: u64,
-    pipelinehash: u64,
     rendergeo: &'w RenderGeometry,
     bindgroups: &'w BindGroups3D,
     pipeline: &'w Pipeline3DUsage,
@@ -806,37 +791,37 @@ fn collect_draw<'w>(
     vertexrange: &'w VertexRenderRange,
     distance: f32,
     sort_param: &'w TransparentSortParam,
-    opaque_list: & mut Vec<TmpSortDrawOpaque>,
-    transparent_list: & mut Vec<TmpSortDrawTransparent>,
+    opaque_list: & mut Vec<DrawTmpRef<'w>>,
+    transparent_list: & mut Vec<DrawTmpRef<'w>>,
     instancessortinfo: &'w InstancedMeshTransparentSortCollection,
-    draws: & mut Vec<DrawTmpRef<'w>>,
+    distancecomp: &ViewerDistanceCompute,
+    viewposition: &(Number, Number, Number),
+    viewdirection: &(Number, Number, Number),
 ) {
-    let bindgroupshash = BindGroups3DHashResource::from(bindgroups).0;
-
-    if let Some(instance_memory) = &rendergeo.instance_slot {
+    if rendergeo.instance_slot.is_some() {
         if instancessortinfo.ranges.len() > 0 {
-            instancessortinfo.ranges.iter().for_each(|(alphaindex, range)| {
+            instancessortinfo.ranges.iter().for_each(|(alphaindex, range, center)| {
+                let distance = distancecomp.distance(&viewposition, &viewdirection, center);
                 if range.start < range.end && range.end <= instancessortinfo.count as u32 {
-                    let index = draws.len();
-                    draws.push(DrawTmpRef {
+                    let mut draw = DrawTmpRef {
                         rendergeo,
                         pipeline,
                         bindgroups,
                         indicerange,
                         vertexrange,
-                        vertexhash,
-                        bindgroupshash,
                         inscombinerange: range.clone(),
                         instancessortinfo,
-                    });
-                    // log::warn!("Range {:?}", range);
+                        pass,
+                        distance,
+                        queue: sort_param.clone(),
+                    };
                     
                     if is_transparent == false {
-                        opaque_list.push(TmpSortDrawOpaque { idx: index as u16, pass, distance, pipeline: pipelinehash, resourcehash: (vertexhash, bindgroupshash) });
+                        opaque_list.push(draw);
                     } else {
-                        let mut queue = sort_param.clone();
-                        queue.index += *alphaindex;
-                        transparent_list.push(TmpSortDrawTransparent { idx: index as u16, pass, distance, pipeline: pipelinehash, queue, resourcehash: (vertexhash, bindgroupshash) });
+                        // let mut queue = sort_param.clone();
+                        draw.queue.index += *alphaindex;
+                        transparent_list.push(draw);
 
                     }
                 } else {
@@ -844,46 +829,45 @@ fn collect_draw<'w>(
                 }
             });
         } else {
-            let index = draws.len();
             let range = Range { start: 0, end: instancessortinfo.count as u32 };
-            draws.push(DrawTmpRef {
+            let draw = DrawTmpRef {
                 rendergeo,
                 pipeline,
                 bindgroups,
                 indicerange,
                 vertexrange,
-                vertexhash,
-                bindgroupshash,
                 inscombinerange: range.clone(),
                 instancessortinfo,
-            });
+                pass,
+                distance,
+                queue: sort_param.clone(),
+            };
             // log::warn!("Range {:?}", range);
             
             if is_transparent == false {
-                opaque_list.push(TmpSortDrawOpaque { idx: index as u16, pass, distance, pipeline: pipelinehash, resourcehash: (vertexhash, bindgroupshash) });
+                opaque_list.push(draw);
             } else {
-                let queue = sort_param.clone();
-                transparent_list.push(TmpSortDrawTransparent { idx: index as u16, pass, distance, pipeline: pipelinehash, queue, resourcehash: (vertexhash, bindgroupshash) });
+                transparent_list.push(draw);
 
             }
         }
     } else {
-        let index = draws.len();
-        draws.push(DrawTmpRef {
+        let draw = DrawTmpRef {
             rendergeo,
             pipeline,
             bindgroups,
             indicerange,
             vertexrange,
-            vertexhash,
-            bindgroupshash,
             inscombinerange: Range { start: 0, end: 0 },
             instancessortinfo,
-        });
+            pass,
+            distance,
+            queue: sort_param.clone(),
+        };
         if is_transparent == false {
-            opaque_list.push(TmpSortDrawOpaque { idx: index as u16, pass, distance, pipeline: pipelinehash, resourcehash: (vertexhash, bindgroupshash) });
+            opaque_list.push(draw);
         } else {
-            transparent_list.push(TmpSortDrawTransparent { idx: index as u16, pass, distance, pipeline: pipelinehash, queue: sort_param.clone(), resourcehash: (vertexhash, bindgroupshash) });
+            transparent_list.push(draw);
         }
     }
 }
@@ -908,13 +892,11 @@ fn _combine_instance(
     }
 }
 
-#[inline(never)]
 fn collect_draw_batch(
     combinedata: &mut CombineBuffer,
-    tempdraw: &DrawTmpRef,
+    tempdraw: DrawTmpRef,
     instancedata: &EVerteicesInstance,
     renderer: &mut Renderer,
-    instancedcache: &mut InstanceBufferAllocator,
     allocator: &mut VertexBufferAllocator3D,
     device: &PiRenderDevice,
     queue: &PiRenderQueue,

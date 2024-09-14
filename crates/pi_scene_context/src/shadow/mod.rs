@@ -49,12 +49,12 @@ impl Plugin for PluginShadowGenerator {
 #[cfg(not(feature = "use_bevy"))]
 {
     app
-    .configure_set(Update, StageShadowGenerator::Create         /* .run_if(runif_3d) */.after(StageLighting::_LightCreate).after(StageCamera::_Create))
-    .configure_set(Update, StageShadowGenerator::_Create        /* .run_if(runif_3d) */.after(StageShadowGenerator::Create).before(StageRenderer::Create))
-    .configure_set(Update, StageShadowGenerator::Command        /* .run_if(runif_3d) */.after(StageShadowGenerator::_Create).after(StageLayerMask::Command).before(StageMaterial::Command))
-    .configure_set(Update, StageShadowGenerator::CalcMatrix     /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageShadowGenerator::Command).after(StageTransform::TransformCalcMatrix))
-    .configure_set(Update, StageShadowGenerator::ViewerUpdate   /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageShadowGenerator::CalcMatrix).before(StageViewer::TransformCalcMatrix))
-    .configure_set(Update, StageShadowGenerator::BindUpdate     /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageShadowGenerator::ViewerUpdate).before(StageViewer::Culling))
+    .configure_set(Update, StageShadowGenerator::Create         .in_set(ERunStageChap::D3).after(StageLighting::_LightCreate).after(StageCamera::_Create))
+    .configure_set(Update, StageShadowGenerator::_Create        .in_set(ERunStageChap::D3).after(StageShadowGenerator::Create).before(StageRenderer::Create))
+    .configure_set(Update, StageShadowGenerator::Command        .in_set(ERunStageChap::D3).after(StageShadowGenerator::_Create).after(StageLayerMask::Command).before(StageMaterial::Command))
+    .configure_set(Update, StageShadowGenerator::CalcMatrix     .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageShadowGenerator::Command).after(StageTransform::TransformCalcMatrix))
+    .configure_set(Update, StageShadowGenerator::ViewerUpdate   .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageShadowGenerator::CalcMatrix).before(StageViewer::TransformCalcMatrix))
+    .configure_set(Update, StageShadowGenerator::BindUpdate     .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageShadowGenerator::ViewerUpdate).before(StageViewer::Culling))
     ;
 }
 

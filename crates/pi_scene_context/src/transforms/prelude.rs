@@ -3,6 +3,7 @@ use pi_scene_shell::prelude::*;
 
 
 use crate::flags::*;
+use crate::prelude::ActionListCollider;
 
 pub use super::transform_node::*;
 pub use super::command::*;
@@ -24,6 +25,7 @@ pub struct ActionSetTransform<'w> {
     pub localrotq: ResMut<'w, ActionListTransformNodeLocalRotationQuaternion>,
     pub tree: ResMut<'w, ActionListTransformNodeParent>,
     pub enable: ResMut<'w, ActionListNodeEnable>,
+    pub collider: ResMut<'w, ActionListCollider>,
 }
 
 #[derive(Resource, Default)]

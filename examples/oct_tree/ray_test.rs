@@ -151,33 +151,18 @@ pub fn sys_test(
     mut list: ResMut<ActionListTestData>,
     scenes: Query<(&SceneColliderPool, &SceneBoundingPool)>,
     viewers: Query<(&ViewerTransformMatrix, &ViewerViewMatrix, &GlobalMatrix)>,
+    window: Res<PiRenderWindow>,
 ) {
     let mut temp = replace(&mut list.0, vec![]);
     temp.drain(..).for_each(|(scene, viewer, x, y)| {
-        if let (Ok((colliderpool, boundingpool)), Ok((transformatrix, viewmatrix, worldmatrix))) = (scenes.get(scene), viewers.get(viewer)) {
-            let mut invtransform = transformatrix.0.clone();
-            CoordinateSytem3::try_inverse_mut(&mut invtransform);
+        if let Ok((transformatrix, viewmatrix, worldmatrix)) = viewers.get(viewer) {
 
-            let near_screen_source = Vector3::new(x * 2. - 1., -(y * 2. - 1.), -1.0);
-            let far_screen_source = Vector3::new(x * 2. - 1., -(y * 2. - 1.), 1.0);
-            let mut near = Vector3::zeros();
-            let mut far = Vector3::zeros();
-            let vv = invtransform.fixed_view::<4, 1>(0, 3);
-            CoordinateSytem3::transform_coordinates(&near_screen_source, &invtransform, &mut near);
-            let num = near.x * vv.x + near.y * vv.y + near.z * vv.z + vv.w;
-            near.scale_mut(1.0 / num);
-            CoordinateSytem3::transform_coordinates(&far_screen_source, &invtransform, &mut far);
-            let num = far.x * vv.x + far.y * vv.y + far.z * vv.z + vv.w;
-            far.scale_mut(1.0 / num);
+            let x = 0. + ((x / window.width  as f32) * 2. - 1.);
+            let y = 0. - ((y / window.height as f32) * 2. - 1.);
 
-            let origin = near;
-            let direction = far - origin;
-            let mut result = None;
+            let ray = transformatrix.ray(x, y);
 
-            colliderpool.ray_test(origin.clone(), direction.clone(), &mut result);
-            if result.is_none() {
-                boundingpool.ray_test(origin, direction, &mut result)
-            }
+            let result = ray_cast(&scenes, &ray, scene, false);
 
             log::error!("Ray : {:?}", result);
         } else {

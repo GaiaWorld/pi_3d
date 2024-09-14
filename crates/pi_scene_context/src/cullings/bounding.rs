@@ -4,12 +4,13 @@ use pi_scene_math::{
     Number, Point3, Vector3,
 };
 
-use super::base::{TBoundingInfoCalc, TFilter};
+use super::base::{PiRay, PickResult, TBoundingInfoCalc, TFilter};
 
 #[derive(Default, Clone)]
 pub struct VecBoundingInfoCalc {
     pool: XHashMap<Entity, ((Number, Number, Number), (Number, Number, Number))>,
     fast: XHashSet<Entity>,
+    temp: XHashSet<Entity>,
 }
 
 impl TBoundingInfoCalc for VecBoundingInfoCalc {
@@ -27,16 +28,20 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
         self.pool.remove(&key);
     }
 
-    fn culling<F: TFilter>(&self, transform: &Matrix, filter: F, result: &mut Vec<Entity>) {
+    fn culling<F: TFilter>(&mut self, transform: &Matrix, filter: F, result: &mut Vec<Entity>) {
         let mut frustum_planes = FrustumPlanes::default();
         frustum_planes.from_transform_matrix(transform);
 
         filter.iter().for_each(|entity| {
             if self.fast.contains(entity) {
                 result.push(*entity);
+                // self.temp.insert(*entity);
+            // } else if self.temp.contains(entity) {
+            //     // 
             } else if let Some(item) = self.pool.get(entity) {
                 if filter.query(*entity) && is_in_frustum(item.0, item.1, &frustum_planes) {
                     result.push(*entity);
+                    // self.temp.insert(*entity);
                 }
             }
         });
@@ -53,9 +58,9 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
         // });
     }
 
-    fn ray_test(&self, org: Vector3, dir: Vector3, result: &mut Option<Entity>) {
-        let origin = Point3::new(org.x, org.y, org.z);
-        let ray = parry3d::query::Ray::new(origin.clone(), dir);
+    fn ray_test(&self, ray: &PiRay, result: &mut Option<PickResult>) {
+        let origin = Point3::new(ray.origin.0, ray.origin.1, ray.origin.2);
+        let ray = parry3d::query::Ray::new(origin, Vector3::new(ray.direction.0, ray.direction.1, ray.direction.2));
         let mut dest = f32::MAX;
         // println!("========= ray: {:?}", ray);
         self.pool.iter().for_each(|(entity, item)| {
@@ -70,7 +75,13 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
                 // println!("========= dest： {}", dest);
                 if dest > d  {
                     dest = d;
-                    result.replace(*entity);
+                    result.replace(PickResult {
+                        target: *entity,
+                        min: item.0,
+                        max: item.1,
+                        pickdetail: None,
+                        bybounding: false
+                    });
                 }
             }
         });
@@ -81,6 +92,12 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
         self.fast.iter().for_each(|v| { result.push(*v); });
         self.pool.keys().for_each(|v| { result.push(*v); });
         result
+    }
+    fn size(&self) -> usize {
+        self.fast.len() + self.pool.len()
+    }
+    fn reset_temp(&mut self) {
+        self.temp.clear();
     }
 }
 
@@ -95,47 +112,42 @@ pub fn is_in_frustum(
         (min.2 + max.2) * 0.5,
     );
     let radius = Vector3::new(
-        (min.0 - max.0) * 0.5,
-        (min.1 - max.1) * 0.5,
-        (min.2 - max.2) * 0.5,
+        (min.0 - max.0).abs() * 0.5,
+        (min.1 - max.1).abs() * 0.5,
+        (min.2 - max.2).abs() * 0.5,
     );
     let radius = CoordinateSytem3::length(&radius);
     // log::warn!("Radius: {}, {:?}", radius, (min, max));
 
-    // let dotnear = frustum_planes.near.dot_coordinate(&center);
-    // let dotfar = frustum_planes.far.dot_coordinate(&center);
-    // let dotleft = frustum_planes.left.dot_coordinate(&center);
-    // let dotright = frustum_planes.right.dot_coordinate(&center);
-    // let dottop = frustum_planes.top.dot_coordinate(&center);
-    // let dotbottom = frustum_planes.bottom.dot_coordinate(&center);
+    // let dotnear = frustum_planes.near.dot_coordinate(center.x, center.y, center.z);
+    // let dotfar = frustum_planes.far.dot_coordinate(center.x, center.y, center.z);
+    // let dotleft = frustum_planes.left.dot_coordinate(center.x, center.y, center.z);
+    // let dotright = frustum_planes.right.dot_coordinate(center.x, center.y, center.z);
+    // let dottop = frustum_planes.top.dot_coordinate(center.x, center.y, center.z);
+    // let dotbottom = frustum_planes.bottom.dot_coordinate(center.x, center.y, center.z);
     // log::warn!("Dots: {:?}", (dotnear, dotfar, dotleft, dotright, dottop, dotbottom));
 
     // {
-    let dotnear = frustum_planes.near.dot_coordinate(&center);
-    if dotnear < 0. {
-        return false;
-    }
-    let dotfar = frustum_planes.far.dot_coordinate(&center);
-    if dotfar < 0. {
-        return false;
-    }
-    let dotleft = frustum_planes.left.dot_coordinate(&center);
-    if dotleft < 0. {
-        return false;
-    }
-    let dotright = frustum_planes.right.dot_coordinate(&center);
-    if dotright < 0. {
-        return false;
-    }
-    let dottop = frustum_planes.top.dot_coordinate(&center);
-    if dottop < 0. {
-        return false;
-    }
-    let dotbottom = frustum_planes.bottom.dot_coordinate(&center);
-    if dotbottom < 0. {
-        return false;
-    }
+    let mut flag: bool = true;
+    let dotnear = frustum_planes.near.dot_coordinate(center.x, center.y, center.z);
+    flag = flag && dotnear > 0.;
+    let dotfar = frustum_planes.far.dot_coordinate(center.x, center.y, center.z);
+    flag = flag && dotfar > 0.;
+    let dotleft = frustum_planes.left.dot_coordinate(center.x, center.y, center.z);
+    flag = flag && dotleft > 0.;
+    let dotright = frustum_planes.right.dot_coordinate(center.x, center.y, center.z);
+    flag = flag && dotright > 0.;
+    let dottop = frustum_planes.top.dot_coordinate(center.x, center.y, center.z);
+    flag = flag && dottop > 0.;
+    let dotbottom = frustum_planes.bottom.dot_coordinate(center.x, center.y, center.z);
+    flag = flag && dotbottom > 0.;
     // }
+    
+    // log::warn!("dots: {:?}", (dotnear, dotfar, dotleft, dotright, dottop, dotbottom));
+
+    if flag {
+        return true;
+    }
 
     if dotnear <= -radius {
         return false;

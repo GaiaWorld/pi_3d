@@ -62,9 +62,9 @@ impl Plugin for PluginTest {
 
         actions.scene.options.push(OpsSceneOption::shadowmap(scene, demopass.shadowtarget));
         {
-            let light = light::DemoLight::directlight(&mut commands, scene, lightroot, &mut actions,);
+            // let light = light::DemoLight::directlight(&mut commands, scene, lightroot, &mut actions,);
 
-            let position = (0., 5., 0.);
+            let position = (0., 15., 0.);
             let direction =  (0., -5., 0.);
             let color = (1., 0.2, 0.2);
             let light = light::DemoLight::spotlight(&mut commands, scene, scene, &mut actions, position, direction, color, 0xFFFFFFFF);
@@ -76,7 +76,7 @@ impl Plugin for PluginTest {
                 let next_renderer = demopass.opaque_renderer;
                 let rendertarget = demopass.shadowtarget;
                 let shadow = shadow::DemoShadow::init(&mut commands, scene, light, pass, pre_renderer, next_renderer, rendertarget, &mut actions);
-                actions.shadow.param.push(OpsShadowGeneratorParam::ShadowMinz(shadow, 0.0));
+                // actions.shadow.param.push(OpsShadowGeneratorParam::ShadowMinz(shadow, 0.0));
             }
         }
         // {
@@ -138,7 +138,7 @@ impl Plugin for PluginTest {
     actions.material.usemat.push(OpsMaterialUse::Use(source, lightingmat, DemoScene::PASS_OPAQUE));
     actions.mesh.state.push(OpsMeshStateModify::ops(source, EMeshStateModify::CastShadow(true)));
     lights.iter().for_each(|light| {
-        actions.mesh.forcelighting.push(OpsMeshForceLighting::ops(source, *light, EMeshForceLighting::ForcePointLighting(true)));
+        actions.mesh.forcelighting.push(OpsMeshForceLighting::ops(source, *light, EMeshForceLighting::ForceSpotLighting(true)));
     });
     
     

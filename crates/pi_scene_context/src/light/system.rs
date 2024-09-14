@@ -13,7 +13,7 @@ use super::{spot::SpotLightAngle, hemisphere::HemiGrounds, base::*};
 
 pub fn sys_light_update(
     items: Query<
-        (&DirectLight, &SceneID, &SceneItemIndex, &LightDirection, &LightParam, &LayerMask, &GlobalEnable, &GlobalMatrix),
+        (&DirectLight, &SceneID, &SceneItemIndex, &LightParam, &GlobalMatrix, &LayerMask, &GlobalEnable, &LightDirection),
         Or<(Changed<LightParam>, Changed<LightDirection>, Changed<LayerMask>, Changed<GlobalEnable>, Changed<GlobalMatrix>)>
     >,
     pointitems: Query<
@@ -21,7 +21,7 @@ pub fn sys_light_update(
         Or<(Changed<LightParam>, Changed<LayerMask>, Changed<GlobalMatrix>, Changed<GlobalEnable>)>
     >,
     spotitems: Query<
-        (&SpotLight, &SceneID, &SceneItemIndex, &LightDirection, &LightParam, &SpotLightAngle, &GlobalMatrix, &LayerMask, &GlobalEnable),
+        (&SpotLight, &SceneID, &SceneItemIndex, &LightParam, &GlobalMatrix, &LayerMask, &GlobalEnable, &LightDirection, &SpotLightAngle),
         Or<(Changed<LightDirection>, Changed<LightParam>, Changed<SpotLightAngle>, Changed<LayerMask>, Changed<GlobalMatrix>, Changed<GlobalEnable>)>
     >,
     hemiitems: Query<
@@ -30,7 +30,7 @@ pub fn sys_light_update(
     >,
     scenes: Query<&SceneLightingInfos>,
 ) {
-    items.iter().for_each(|(_, idscene, lidx, direction, param, layer, enabled, wm)| {
+    items.iter().for_each(|(_, idscene, lidx, param, wm, layer, enabled, direction)| {
         if let Ok(info) = scenes.get(idscene.0) {
             let mut gdirection = Vector3::zeros();
             CoordinateSytem3::transform_normal_floats(direction.0.x, direction.0.y, direction.0.z, &wm.matrix, &mut gdirection);
@@ -45,7 +45,7 @@ pub fn sys_light_update(
             info.0.as_ref().unwrap().point_light_data(lidx.val(), enabled.0, layer.0 as f32, pos.x, pos.y, pos.z, r, g, b, param.radius, 1.0 / (param.radius * param.radius))
         }
     });
-    spotitems.iter().for_each(|(_, idscene, lidx, d, param, angle, transform, layer, enabled)| {
+    spotitems.iter().for_each(|(_, idscene, lidx, param, transform, layer, enabled, d, angle)| {
         if let Ok(info) = scenes.get(idscene.0) {
             let pos = transform.position();
             let r = param.color.x * param.strength; let g = param.color.y * param.strength; let b = param.color.z * param.strength;
@@ -61,19 +61,19 @@ pub fn sys_light_update(
 }
 
 pub fn sys_dispose_about_light(
-    items: Query<(Entity, &DisposeReady, &SceneID, &SceneItemIndex), (Changed<DisposeReady>, With<LightStrength>)>,
+    items: Query<(Entity, &DisposeReady, &SceneID, &SceneItemIndex, &LightParam), Changed<DisposeReady>>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
-    mut scenes: Query<(&mut SceneDirectLightsQueue, &mut ScenePointLightsQueue, &mut SceneSpotLightsQueue, &mut SceneHemiLightsQueue)>,
+    mut scenes: Query<(&mut SceneDirectLightsQueue, &mut SceneOtherLightsQueue)>,
     _empty: Res<SingleEmptyEntity>,
 ) {
-    items.iter().for_each(|(entity, state, idscene, lightindex)| {
+    items.iter().for_each(|(entity, state, idscene, lightindex, _)| {
         if state.0 == false { return; }
 
-        if let Ok((mut queuedirect, mut queuepoint, mut queuespot, mut queuehemi)) = scenes.get_mut(idscene.0) {
+        if let Ok((mut queuedirect, mut queuepoint)) = scenes.get_mut(idscene.0) {
             queuedirect.0.recycle(lightindex, &entity);
-            queuepoint.0.recycle(lightindex, &entity);
-            queuespot.0.recycle(lightindex, &entity);
-            queuehemi.0.recycle(lightindex, &entity);
+            queuepoint.point.recycle(lightindex, &entity);
+            queuepoint.spot.recycle(lightindex, &entity);
+            queuepoint.hemi.recycle(lightindex, &entity);
         }
 
         disposecanlist.push(OpsDisposeCan::ops(entity));

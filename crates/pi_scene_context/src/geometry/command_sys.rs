@@ -14,7 +14,7 @@ pub type BundleGeometry = (
     (DisposeReady, DisposeCan),
     GeometryDesc,
     (VertexBufferLayoutsComp, MeshID, RenderGeometryComp, IndicesBufferDescComp, AssetKeyBufferIndices, AssetDescVBSlots, LoadedKeyVBSlots, AssetResVBSlots),
-    AssetResBufferIndicesComp, InstancedInfoComp, GeometryResourceHash, FlagGeometryDirty
+    AssetResBufferIndicesComp, InstancedInfoComp, FlagGeometryDirty
 );
 
 pub fn sys_create_geometry(
@@ -62,11 +62,6 @@ pub fn sys_create_geometry(
         let (comp1, comp2, comp3, comp4, comp5, mut comp6) = ActionGeometry::init(&vertex_desc, indices_desc.clone(), id_mesh);
 
         let geo_desc = GeometryDesc { list: vertex_desc };
-        let mut hasher = DefaultHasher::default();
-        geo_desc.hash_resource(&mut hasher);
-        if instancestate.use_single_instancebuffer {
-            entity.hash(&mut hasher);
-        }
 
         let mut desclist = AssetDescVBSlots::default();
         let mut keyslist = LoadedKeyVBSlots::default();
@@ -108,7 +103,6 @@ pub fn sys_create_geometry(
             (comp2, comp3, comp4, comp5, comp6, desclist, keyslist, datalist),
             indicesres,
             instacned,
-            GeometryResourceHash(hasher.finish()),
             FlagGeometryDirty,
         );
         geocommands.insert(bundle);

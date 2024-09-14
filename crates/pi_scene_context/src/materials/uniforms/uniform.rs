@@ -3,10 +3,6 @@ use std::sync::Arc;
 use derive_deref::{Deref, DerefMut};
 use pi_scene_shell::prelude::*;
 
-#[derive(Component, Default)]
-pub struct BindEffectReset;
-
-
 #[derive(Component, Default, Deref, DerefMut)]
 pub struct BindEffect(pub Option<BindEffectValues>);
 

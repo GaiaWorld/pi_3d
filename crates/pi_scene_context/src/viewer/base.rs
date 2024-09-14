@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use pi_scene_shell::prelude::*;
 
-use crate::transforms::prelude::*;
+use crate::{cullings::prelude::PiRay, transforms::prelude::*};
 
 
 #[derive(Clone, Component, Default)]
@@ -16,18 +16,6 @@ pub struct ModelList(pub XHashSet<Entity>);
 
 #[derive(Clone, Component, Default)]
 pub struct FlagModelList(pub bool);
-
-#[derive(Component, Default)]
-pub struct ModelListAdd(pub XHashSet<Entity>);
-
-#[derive(Component, Default)]
-pub struct FlagModelListAdd(pub bool);
-
-#[derive(Component, Default)]
-pub struct ModelListDel(pub XHashSet<Entity>);
-
-#[derive(Component, Default)]
-pub struct FlagModelListDel(pub bool);
 
 #[derive(Component, Default)]
 pub struct ModelListAfterCulling(pub Vec<Entity>);
@@ -46,37 +34,6 @@ pub struct ViewerAspect(pub f32);
 impl Default for ViewerAspect {
     fn default() -> Self {
         Self(1.0)
-    }
-}
-
-#[derive(Component)]
-pub struct ViewerCullFilter {
-    _test: Vec<Entity>
-}
-impl Default for ViewerCullFilter {
-    fn default() -> Self {
-        Self {
-            _test: vec![]
-        }
-    }
-}
-impl ViewerCullFilter {
-    pub fn add(&mut self, _entity: Entity) {
-
-    }
-    pub fn remove(&mut self, _entity: Entity) {
-
-    }
-}
-
-#[derive(Component)]
-pub struct ViewerRenderTargetFormatOption {
-    pub color: wgpu::TextureFormat,
-    pub depth_stencil: wgpu::TextureFormat,
-}
-impl Default for ViewerRenderTargetFormatOption {
-    fn default() -> Self {
-        Self { color: wgpu::TextureFormat::Rgba8Unorm, depth_stencil: wgpu::TextureFormat::Depth24PlusStencil8 }
     }
 }
 
@@ -124,30 +81,28 @@ impl ViewerTransformMatrix {
     pub fn update(&self, range: &BindBufferRange) {
         range.write_data(ShaderBindViewer::OFFSET_VIEW_PROJECT_MATRIX as usize, bytemuck::cast_slice(self.0.as_slice()));
     }
-    pub fn ray(&self, x: f32, y: f32) -> (Vector3, Vector3) {
+    pub fn ray(&self, projectx: f32, projecty: f32) -> PiRay {
         let mut invtransform = self.0.clone();
         CoordinateSytem3::try_inverse_mut(&mut invtransform);
-        // let invtransform = if let Some(invtransform) = self.0.try_inverse() {
-        //     invtransform
-        // } else {
-        //     Matrix::identity()
-        // };
 
-        let near_screen_source = Vector3::new(x * 2. - 1., -(y * 2. - 1.), -1.0);
-        let far_screen_source = Vector3::new(x * 2. - 1., -(y * 2. - 1.), 1.0);
-        let mut near = Vector3::zeros();
+        let x = projectx;
+        let y = projecty;
+        let mut origin = Vector3::zeros();
         let mut far = Vector3::zeros();
-        let vv = invtransform.fixed_view::<4, 1>(0, 3);
-        CoordinateSytem3::transform_coordinates(&near_screen_source, &invtransform, &mut near);
-        let num = near.x * vv.x + near.y * vv.y + near.z * vv.z + vv.w;
-        near.scale_mut(1.0 / num);
-        CoordinateSytem3::transform_coordinates(&far_screen_source, &invtransform, &mut far);
-        let num = far.x * vv.x + far.y * vv.y + far.z * vv.z + vv.w;
-        far.scale_mut(1.0 / num);
 
-        let origin = near;
-        let direction = far - origin;
-        (origin, direction)
+        CoordinateSytem3::transform_coordinates_floats(x, y, 0., &invtransform, &mut origin);
+        CoordinateSytem3::transform_coordinates_floats(x, y, 1., &invtransform, &mut far);
+
+        far.x -= origin.x;
+        far.y -= origin.y;
+        far.z -= origin.z;
+        far.normalize_mut();
+        let direction = far;
+
+        PiRay {
+            origin: (origin.x, origin.y, origin.z),
+            direction: (direction.x, direction.y, direction.z),
+        }
     }
 }
 #[derive(Clone, Component)]
@@ -176,28 +131,41 @@ impl ViewerDirection {
     }
 }
 
-#[derive(Clone, Component)]
-pub enum ViewerDistanceCompute {
+#[derive(Clone)]
+pub enum EViewerDistanceCompute {
     Base,
     Direction,
 }
+#[derive(Clone, Component)]
+pub struct ViewerDistanceCompute {
+    pub call: fn(&(Number, Number, Number), &(Number, Number, Number), &(Number, Number, Number)) -> Number,
+}
 impl Default for ViewerDistanceCompute {
     fn default() -> Self {
-        Self::Base
+        Self { call: Self::base }
     }
 }
 impl ViewerDistanceCompute {
-    pub fn distance(&self, view: &Vector3, view_direction: &Vector3, target: &Vector3) -> Number {
-        match self {
-            ViewerDistanceCompute::Base => {
-                let temp = target - view;
-                temp.dot(&temp)
-            },
-            ViewerDistanceCompute::Direction => {
-                let temp = target - view;
-                view_direction.dot(&temp)
-            },
+    pub fn new(mode: EViewerDistanceCompute) -> Self {
+        match mode {
+            EViewerDistanceCompute::Base => Self { call: Self::base },
+            EViewerDistanceCompute::Direction => Self { call: Self::direction },
         }
+    }
+    pub fn distance(&self, view: &(Number, Number, Number), view_direction: &(Number, Number, Number), target: &(Number, Number, Number)) -> Number {
+        (self.call)(view, view_direction, target)
+    }
+    pub fn base(view: &(Number, Number, Number), view_direction: &(Number, Number, Number), target: &(Number, Number, Number)) -> Number {
+        let x = target.0 - view.0;
+        let y = target.1 - view.1;
+        let z = target.2 - view.2;
+        x * x + y * y + z * z
+    }
+    pub fn direction(view: &(Number, Number, Number), view_direction: &(Number, Number, Number), target: &(Number, Number, Number)) -> Number {
+        let x = target.0 - view.0;
+        let y = target.1 - view.1;
+        let z = target.2 - view.2;
+        view_direction.0 * x + view_direction.1 * y + view_direction.2 * z
     }
 }
 

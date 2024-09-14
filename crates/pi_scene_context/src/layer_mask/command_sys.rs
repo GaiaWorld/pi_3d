@@ -1,21 +1,21 @@
 
 use pi_scene_shell::prelude::*;
 
-use crate::prelude::FlagAbstructMeshForView;
+use crate::prelude::FlagMeshNeedRecheckForView;
 
 use super::{base::*, command::*};
 
 pub fn sys_act_layer_mask(
     mut cmds: ResMut<ActionListLayerMask>,
     mut nodes: Query<&mut LayerMask>,
-    mut meshes: Query<&mut FlagAbstructMeshForView>,
+    mut meshes: Query<&mut FlagMeshNeedRecheckForView>,
 ) {
     cmds.drain().for_each(|OpsLayerMask(entity, layermask)| {
         if let Ok(mut node) = nodes.get_mut(entity) {
             if *node != layermask {
                 *node = layermask;
                 if let Ok(mut flag) = meshes.get_mut(entity) {
-                    *flag = FlagAbstructMeshForView;
+                    *flag = FlagMeshNeedRecheckForView;
                 }
             }
         // } else {

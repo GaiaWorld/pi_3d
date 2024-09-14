@@ -75,16 +75,13 @@ pub fn sys_create_trail_mesh(
                 keyslist[0] = Some(slot.key().clone());
                 desclist[0] = Some(slot);
                 datalist[0] = Some(buffer);
-    
-                let mut hasher = DefaultHasher::default();
-                geo_desc.hash_resource(&mut hasher);
+
                 let bundle = (
                     comp1,
                     geo_desc,
                     (comp2, comp3, comp4, comp5, comp6, desclist, keyslist, datalist),
                     AssetResBufferIndicesComp(None),
                     InstancedInfoComp(None),
-                    GeometryResourceHash(hasher.finish()),
                     FlagGeometryDirty,
                 );
                 // geocommands.insert( bundle );

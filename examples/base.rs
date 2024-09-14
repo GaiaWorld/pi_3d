@@ -6,8 +6,10 @@ use bevy_input::*;
 #[allow(unused_imports)]
 
 use pi_3d::*;
+use pi_bevy_ecs_extend::action;
 // use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
 use pi_bevy_render_plugin::PiRenderPlugin;
+use pi_render::components::view;
 use pi_scene_shell::{prelude::*, frame_time::PluginFrameTime, run_stage::RunState3D};
 use pi_node_materials::prelude::*;
 use pi_particle_system::{PluginParticleSystem, prelude::{ActionSetParticleSystem, ParticleAttribute, EParticleAttributeType}};
@@ -139,7 +141,7 @@ impl DemoScene {
 
         let scene = commands.spawn_empty_id();
         // animegroupres.scene_ctxs.init_scene(scene);
-        actions.scene.create.push(OpsSceneCreation::ops(scene, SceneBoundingPool::MODE_LIST, [0, 0, 0, 0, 0, 0, 0, 0, 0]));
+        actions.scene.create.push(OpsSceneCreation::ops(scene, SceneBoundingPool::MODE_LIST, [-9999, -9999, -9999, 9999, 9999, 9999, 0, 128, 16]));
 
         let camera = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(camera, scene));
         actions.camera.create.push(OpsCameraCreation::ops(scene, camera));
@@ -456,7 +458,78 @@ pub fn active_lighting_shadow(mut state3d: ResMut<RunState3D>) {
     state3d.with_shadow(true);
 }
 
+#[derive(Resource, Default)]
+pub struct DemoWindowEvent {
+    pub cursormoved: Option<(f32, f32)>,
+    pub viewer: Option<Entity>,
+    pub raybox: Option<Entity>,
+}
+
+pub fn sys_move_ray_collider(
+    mut events: ResMut<DemoWindowEvent>,
+    scenes: Query<(&SceneColliderPool, &SceneBoundingPool)>,
+    viewers: Query<(&SceneID, &ViewerTransformMatrix)>,
+    window: Res<PiRenderWindow>,
+    items: Query<&Collider>,
+    matrixs: Query<&GlobalMatrix>,
+    mut actions: pi_3d::ActionSets,
+    mut commands: Commands,
+    defaultmat: Res<SingleIDBaseDefaultMaterial>,
+) {
+
+    if let (Some((x, y)), Some(viewer)) = (events.cursormoved, events.viewer) {
+        if let Ok((sceneid, transformatrix)) = viewers.get(viewer) {
+                
+            if events.raybox.is_none() {
+                let (vertices, indices) = (CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta()));
+                let state: MeshInstanceState = MeshInstanceState::default();
+                let source = DemoScene::mesh(&mut commands, sceneid.0, sceneid.0, &mut actions,  vertices, indices, state);
+                actions.material.usemat.push(OpsMaterialUse::ops(source, defaultmat.0, DemoScene::PASS_TRANSPARENT));
+                actions.mesh.state.push(OpsMeshStateModify::ops(source, EMeshStateModify::BoundingCullingMode(ECullingStrategy::None)));
+                actions.mesh.render_state.push(OpsRenderState::depth_state(source, DemoScene::PASS_TRANSPARENT, EDepthState::Write(false)));
+                actions.mesh.render_state.push(OpsRenderState::primitive_state(source, DemoScene::PASS_TRANSPARENT, EPrimitiveState::CPolygonMode(PolygonMode::Line)));
+                actions.mesh.render_state.push(OpsRenderState::render_queue(source, 0, i32::MAX));
+                events.raybox = Some(source);
+                log::error!("Collider: {:?}", source);
+            }
+
+            let raybox = events.raybox.unwrap();
+    
+            let x = 0. + ((x / window.width  as f32) * 2. - 1.);
+            let y = 0. - ((y / window.height as f32) * 2. - 1.);
+            let ray = transformatrix.ray(x, y);
+            let result = ray_cast(
+                &scenes,
+                &ray,
+                sceneid.0,
+                false
+            );
+
+            if let Some(result) = &result {
+                if let (Ok(collider), Ok(nodematrix)) = (items.get(result.target), matrixs.get(result.target)) {
+                    let px = collider.maximum.x + collider.minimum.x;
+                    let py = collider.maximum.y + collider.minimum.y;
+                    let pz = collider.maximum.z + collider.minimum.z;
+                    let sx = (collider.maximum.x - collider.minimum.x);
+                    let sy = (collider.maximum.y - collider.minimum.y);
+                    let sz = (collider.maximum.z - collider.minimum.z);
+                    let mut temp = Matrix::identity();
+                    let mut rendermatrix = Matrix::identity();
+                    CoordinateSytem3::matrix4_compose_no_rotation(&Vector3::new(sx, sy, sz), &Vector3::new(px, py, pz),&mut temp);
+                    nodematrix.matrix.mul_to(&temp, &mut rendermatrix);
+                    actions.mesh.pose.push(OpsAbstractMeshPose::ops(raybox, rendermatrix));
+                }
+            }
+
+            actions.transform.enable.push(OpsNodeEnable::ops(raybox, result.is_some()));
+        }
+    }
+    events.cursormoved = None;
+}
+
 pub fn run_loop<T>(mut app:  App, window: Arc<Window>, event_loop: EventLoop<T>) {
+    app.insert_resource(DemoWindowEvent::default());
+    app.add_systems(Update, sys_move_ray_collider);
 
     event_loop.run(move |event, elwt, flow| {
         match event {
@@ -467,7 +540,9 @@ pub fn run_loop<T>(mut app:  App, window: Arc<Window>, event_loop: EventLoop<T>)
                         flow.set_exit()
                     },
                     WindowEvent::Resized(_) => {},
-                    WindowEvent::Moved(_) => {},
+                    WindowEvent::Moved(ev) => {
+                        log::error!("Moved Point: {:?}", (ev.x, ev.y));
+                    },
                     WindowEvent::Destroyed => {},
                     WindowEvent::DroppedFile(_) => {},
                     WindowEvent::HoveredFile(_) => {},
@@ -477,21 +552,58 @@ pub fn run_loop<T>(mut app:  App, window: Arc<Window>, event_loop: EventLoop<T>)
                     WindowEvent::KeyboardInput { device_id, input, is_synthetic } => {},
                     WindowEvent::ModifiersChanged(_) => {},
                     WindowEvent::Ime(_) => {},
-                    WindowEvent::CursorMoved { device_id, position, modifiers } => {},
+                    WindowEvent::CursorMoved { device_id, position, modifiers } => {
+                        // log::error!("CursorMoved: {:?}", (position.x, position.y));
+                        if let Some(events) = app.world.get_resource_mut::<DemoWindowEvent>() {
+                            events.cursormoved = Some((position.x as f32, position.y as f32));
+                        }
+                    },
                     WindowEvent::CursorEntered { device_id } => {},
                     WindowEvent::CursorLeft { device_id } => {},
                     WindowEvent::MouseWheel { device_id, delta, phase, modifiers } => {},
-                    WindowEvent::MouseInput { device_id, state, button, modifiers } => {},
+                    WindowEvent::MouseInput { device_id, state, button, modifiers } => {
+                    },
                     WindowEvent::TouchpadPressure { device_id, pressure, stage } => {},
                     WindowEvent::AxisMotion { device_id, axis, value } => {},
-                    WindowEvent::Touch(_) => {},
+                    WindowEvent::Touch(ev) => {
+                        log::error!("Touch Point: {:?}", (ev.location.x, ev.location.y));
+                    },
                     WindowEvent::ScaleFactorChanged { scale_factor, new_inner_size } => {},
                     WindowEvent::ThemeChanged(_) => {},
                     WindowEvent::Occluded(_) => {},
                 }
             },
-            pi_winit::event::Event::DeviceEvent { device_id, event } => {},
-            pi_winit::event::Event::UserEvent(_) => {},
+            pi_winit::event::Event::DeviceEvent { device_id, event } => {
+                match event {
+                    pi_winit::event::DeviceEvent::Added => {
+                        log::error!("DeviceEvent::Added");
+                    },
+                    pi_winit::event::DeviceEvent::Removed => {
+                        log::error!("DeviceEvent::Removed");
+                    },
+                    pi_winit::event::DeviceEvent::MouseMotion { delta } => {
+                        // log::error!("MouseMotion: {:?}", delta);
+                    },
+                    pi_winit::event::DeviceEvent::MouseWheel { delta } => {
+                        
+                    },
+                    pi_winit::event::DeviceEvent::Motion { axis, value } => {
+                        
+                    },
+                    pi_winit::event::DeviceEvent::Button { button, state } => {
+                        
+                    },
+                    pi_winit::event::DeviceEvent::Key(_) => {
+
+                    },
+                    pi_winit::event::DeviceEvent::Text { codepoint } => {
+                        
+                    },
+                }
+            },
+            pi_winit::event::Event::UserEvent(event) => {
+                
+            },
             pi_winit::event::Event::Suspended => {},
             pi_winit::event::Event::Resumed => {
             },

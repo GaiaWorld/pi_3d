@@ -3,7 +3,7 @@ use std::ops::Range;
 
 use pi_scene_shell::prelude::*;
 
-use crate::{geometry::instance::instanced_buffer::{InstanceBufferAllocator, InstancedInfoComp}, prelude::*};
+use crate::{geometry::instance::{instanced_buffer::{InstanceBufferAllocator, InstancedInfoComp}, types::ModelInstanceAttributes}, prelude::*};
 
 use super::base::{GeometryBounding, SceneBoundingPool, GeometryCullingMode, BoundingBoxDisplay};
 
@@ -81,13 +81,13 @@ pub fn sys_update_culling_by_cullinginfo(
     addeds: ComponentAdded<ItemCullingDirty>,
     changes: ComponentChanged<ItemCullingDirty>,
     items: Query<(&RenderWorldMatrix, &DisposeReady)>,
-    boundings: Query<(&SceneID, &GeometryBounding, &InstanceSourceRefs)>,
+    boundings: Query<(&SceneID, &GeometryBounding, &InstanceSourceRefs, &ModelInstanceAttributes)>,
     modes: Query<&GeometryCullingMode>,
     instances: Query<&InstanceMesh>,
 ) {
     addeds.iter().chain(changes.iter()).for_each(|entity| {
         if let Ok(instance) = instances.get(*entity) {
-            if let Ok((idscene, info, _instances)) = boundings.get(instance.0) {
+            if let Ok((idscene, info, _instances, _)) = boundings.get(instance.0) {
                 if let Ok(mut pool) = scenes.get_mut(idscene.0) {
                     if let Ok(mode) = modes.get(*entity) {
                         if let Ok((worldmatrix, disposed)) = items.get(*entity) {
@@ -100,22 +100,26 @@ pub fn sys_update_culling_by_cullinginfo(
                     }
                 }
             }
-        } else if let Ok((idscene, info, instances)) = boundings.get(*entity) {
+        } else if let Ok((idscene, info, instances, insattr)) = boundings.get(*entity) {
             if let Ok(mut pool) = scenes.get_mut(idscene.0) {
                 if let Ok(mode) = modes.get(*entity) {
-                    if let Ok((worldmatrix, disposed)) = items.get(*entity) {
+                    if let Ok((meshworldmatrix, disposed)) = items.get(*entity) {
                         if disposed.0 == true {
                             pool.remove(*entity);
                         } else {
-                            pool.set(*entity, info, mode, &worldmatrix.0);
+                            if insattr.bytes().len() > 0 {
+                                pool.set(*entity, info, &GeometryCullingMode(ECullingStrategy::None), &meshworldmatrix.0);
+                            } else {
+                                pool.set(*entity, info, mode, &meshworldmatrix.0);
+                            }
 
-                            instances.iter().for_each(|entity| {
-                                let entity = *entity;
-                                if let Ok((worldmatrix, disposed)) = items.get(entity) {
+                            instances.iter().for_each(|instance| {
+                                let instance = *instance;
+                                if let Ok((worldmatrix, disposed)) = items.get(instance) {
                                     if disposed.0 == true {
-                                        pool.remove(entity);
+                                        pool.remove(instance);
                                     } else {
-                                        pool.set(entity, info, mode, &worldmatrix.0);
+                                        pool.set(instance, info, mode, &worldmatrix.0);
                                     }
                                 }
                             });
@@ -146,52 +150,52 @@ pub fn sys_tick_culling_box(
     scenes.iter().for_each(|(boundingboxs, pool)| {
         if boundingboxs.display == false { return; }
         if let Ok((_idsource, idgeo, _meshinsstate, mut instancessortinfos)) = sources.get_mut(boundingboxs.mesh) {
-            let instances = pool.entities();
-            if let Ok(InstancedInfoComp(Some(buffer))) = geometrys.get(idgeo.0) {
-                // if buffer.bytes_per_instance > 0 {
-                //     *renderenable = RenderGeometryEable(false);
-                //     instancessortinfos.reset();
-                // }
-                instancessortinfos.reset();
-                // log::error!("Bounding A: {:?}", instances.len());
+            // let instances = pool.entities();
+            // if let Ok(InstancedInfoComp(Some(buffer))) = geometrys.get(idgeo.0) {
+            //     // if buffer.bytes_per_instance > 0 {
+            //     //     *renderenable = RenderGeometryEable(false);
+            //     //     instancessortinfos.reset();
+            //     // }
+            //     instancessortinfos.reset();
+            //     // log::error!("Bounding A: {:?}", instances.len());
 
-                if instances.len() > 0 {
-                    let mut collected: Vec<u8> = vec![];
-                    let tmp_alphaindex = 0;
-                    let tmp_instance_start = 0;
-                    let mut tmp_instance_end = 0;
-                    instances.iter().for_each(|id| {
-                        if let (Ok((enable, bounding, worldmatrix, culling)), Ok(disposed)) = (actives.get(*id), dispoeds.get(*id)) {
-                            if enable.0 == true && disposed.0 == false && culling.0 == true {
-                                bytemuck::cast_slice(worldmatrix.0.as_slice()).iter().for_each(|v| { collected.push(*v); });
-                                bytemuck::cast_slice(bounding.minimum.as_slice()).iter().for_each(|v| { collected.push(*v); });
-                                bytemuck::cast_slice(bounding.maximum.as_slice()).iter().for_each(|v| { collected.push(*v); });
+            //     if instances.len() > 0 {
+            //         let mut collected: Vec<u8> = vec![];
+            //         let tmp_alphaindex = 0;
+            //         let tmp_instance_start = 0;
+            //         let mut tmp_instance_end = 0;
+            //         instances.iter().for_each(|id| {
+            //             if let (Ok((enable, bounding, worldmatrix, culling)), Ok(disposed)) = (actives.get(*id), dispoeds.get(*id)) {
+            //                 if enable.0 == true && disposed.0 == false && culling.0 == true {
+            //                     bytemuck::cast_slice(worldmatrix.0.as_slice()).iter().for_each(|v| { collected.push(*v); });
+            //                     bytemuck::cast_slice(bounding.minimum.as_slice()).iter().for_each(|v| { collected.push(*v); });
+            //                     bytemuck::cast_slice(bounding.maximum.as_slice()).iter().for_each(|v| { collected.push(*v); });
 
-                                tmp_instance_end += 1;
-                            }
-                        }
-                    });
-                    // log::error!("Bounding: {:?}", tmp_instance_end);
-                    instancessortinfos.ranges.push((tmp_alphaindex, Range { start: tmp_instance_start, end: tmp_instance_end }));
-                    // reset_instances_buffer_single(idgeo.0, buffer, &collected, &mut slots, &instancedcache, &mut allocator, &device, &queue);
-                    {
-                        let instancedinfo = buffer;
-                        if let Ok((desclist, mut buffer, mut keys, mut flag)) = slots.get_mut(idgeo.0) {
-                            match instancedinfo.slot() {
-                                EVertexBufferSlot::Slot01 => { if let Some(buffer) = &mut buffer[0] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[0] = desclist.key(0); *flag = FlagGeometryDirty; } },
-                                EVertexBufferSlot::Slot02 => { if let Some(buffer) = &mut buffer[1] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[1] = desclist.key(1); *flag = FlagGeometryDirty; } },
-                                EVertexBufferSlot::Slot03 => { if let Some(buffer) = &mut buffer[2] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[2] = desclist.key(2); *flag = FlagGeometryDirty; } },
-                                EVertexBufferSlot::Slot04 => { if let Some(buffer) = &mut buffer[3] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[3] = desclist.key(3); *flag = FlagGeometryDirty; } },
-                                EVertexBufferSlot::Slot05 => { if let Some(buffer) = &mut buffer[4] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[4] = desclist.key(4); *flag = FlagGeometryDirty; } },
-                                EVertexBufferSlot::Slot06 => { if let Some(buffer) = &mut buffer[5] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[5] = desclist.key(5); *flag = FlagGeometryDirty; } },
-                                EVertexBufferSlot::Slot07 => { if let Some(buffer) = &mut buffer[6] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[6] = desclist.key(6); *flag = FlagGeometryDirty; } },
-                                EVertexBufferSlot::Slot08 => { if let Some(buffer) = &mut buffer[7] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[7] = desclist.key(7); *flag = FlagGeometryDirty; } },
-                                _ => {}
-                            }
-                        }
-                    }
-                }
-            }
+            //                     tmp_instance_end += 1;
+            //                 }
+            //             }
+            //         });
+            //         // log::error!("Bounding: {:?}", tmp_instance_end);
+            //         instancessortinfos.ranges.push((tmp_alphaindex, Range { start: tmp_instance_start, end: tmp_instance_end }));
+            //         // reset_instances_buffer_single(idgeo.0, buffer, &collected, &mut slots, &instancedcache, &mut allocator, &device, &queue);
+            //         {
+            //             let instancedinfo = buffer;
+            //             if let Ok((desclist, mut buffer, mut keys, mut flag)) = slots.get_mut(idgeo.0) {
+            //                 match instancedinfo.slot() {
+            //                     EVertexBufferSlot::Slot01 => { if let Some(buffer) = &mut buffer[0] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[0] = desclist.key(0); *flag = FlagGeometryDirty; } },
+            //                     EVertexBufferSlot::Slot02 => { if let Some(buffer) = &mut buffer[1] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[1] = desclist.key(1); *flag = FlagGeometryDirty; } },
+            //                     EVertexBufferSlot::Slot03 => { if let Some(buffer) = &mut buffer[2] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[2] = desclist.key(2); *flag = FlagGeometryDirty; } },
+            //                     EVertexBufferSlot::Slot04 => { if let Some(buffer) = &mut buffer[3] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[3] = desclist.key(3); *flag = FlagGeometryDirty; } },
+            //                     EVertexBufferSlot::Slot05 => { if let Some(buffer) = &mut buffer[4] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[4] = desclist.key(4); *flag = FlagGeometryDirty; } },
+            //                     EVertexBufferSlot::Slot06 => { if let Some(buffer) = &mut buffer[5] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[5] = desclist.key(5); *flag = FlagGeometryDirty; } },
+            //                     EVertexBufferSlot::Slot07 => { if let Some(buffer) = &mut buffer[6] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[6] = desclist.key(6); *flag = FlagGeometryDirty; } },
+            //                     EVertexBufferSlot::Slot08 => { if let Some(buffer) = &mut buffer[7] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[7] = desclist.key(7); *flag = FlagGeometryDirty; } },
+            //                     _ => {}
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
         }
     });
 }

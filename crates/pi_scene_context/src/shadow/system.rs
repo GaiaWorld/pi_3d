@@ -23,7 +23,7 @@ pub fn sys_shadow_enabled_modify(
     lights: Query<(&GlobalEnable, &LightLinkedShadowID), Changed<GlobalEnable>>,
     mut shadows: Query<(&ShadowLinkedLightID, &mut ViewerActive)>,
 
-    mut matshadows: Query<(Entity, &mut LinkedMaterialID), Changed<BindEffectReset>>,
+    mut matshadows: Query<(Entity, &mut LinkedMaterialID), Changed<BindEffect>>,
 ) {
     lights.iter().for_each(|(enable, linkedshadow)| {
         if let Some(linkedshadow) = linkedshadow.0 {
@@ -47,9 +47,6 @@ pub fn sys_shadow_param_update(
             Changed<LinkedMaterialID>, Changed<ShadowParam>
         )>
     >,
-    // mut materails: Query<
-    //     (&mut BindEffect, &mut BindEffectValueDirty)
-    // >,
     mut cmds: ResMut<ActionListUniformVal>,
 ) {
     shadows.iter().for_each(|(id_mat, shaow)| {
@@ -180,6 +177,7 @@ pub fn sys_shadow_bind_modify(
                 let uoff = 0.;
                 let voff = 0.;
                 if let Ok(indexlight) = indexs.get(light.0) {
+                    // log::error!("ShadowBind: {:?}", (indexlight.val(), indexshadow.val()));
                     shadowdata.0.as_ref().unwrap().direct_shadow_data(indexlight.val(), indexshadow.val(), matrix.0.as_slice(), shadow.bias, shadow.normalbias, shadow.depthscale, 0., uscale, vscale, uoff, voff)
                 }
             }
@@ -225,7 +223,7 @@ pub fn sys_update_shadow_viewer_model_list_by_viewer<T: TViewerViewMatrix + Comp
 
     // log::debug!("SysModelListUpdateByViewer: {:?}", pi_time::Instant::now() - time1);
 }
-#[inline(never)]
+
 fn _sys_update_shadow_viewer_model_list_by_viewer(
     vieweractive: &ViewerActive, scene: &SceneID, layer: &ShadowLayerMask, list_model: &mut ModelList, flag_list_model: &mut FlagModelList,
     items: &Query<
@@ -270,9 +268,7 @@ pub fn sys_update_shadow_viewer_model_list_by_model<T: TViewerViewMatrix + Compo
         (Entity, &SceneID, &LayerMask, &InstanceSourceRefs, &DisposeReady, &AbstructMesh, &MeshCastShadow),
         Or<(Changed<LayerMask>, Changed<DisposeReady>, Changed<InstanceSourceRefs>, Changed<MeshCastShadow>)>,
     >,
-    // mut record: ResMut<pi_scene_shell::run_stage::RunSystemRecord>,
 ) {
-    // record.0.push(String::from("sys_update_shadow_viewer_model_list_by_model"));
     // let time1 = pi_time::Instant::now();
     // log::debug!("CameraModelListByModel :");
 
@@ -289,7 +285,7 @@ pub fn sys_update_shadow_viewer_model_list_by_model<T: TViewerViewMatrix + Compo
 
     // log::debug!("SysModelListUpdateByModel: {:?}", pi_time::Instant::now() - time1);
 }
-#[inline(never)]
+
 fn _sys_update_shadow_viewer_model_list_by_model(
     id_obj: Entity, iscene: &SceneID, ilayer: &LayerMask, instances: &InstanceSourceRefs, disposestate: &DisposeReady, castshadow: &MeshCastShadow,
     vieweractive: &ViewerActive, scene: &SceneID, layer: &ShadowLayerMask, list_model: &mut ModelList, flag_list_model: &mut FlagModelList,

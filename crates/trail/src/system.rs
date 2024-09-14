@@ -21,9 +21,9 @@ pub fn sys_trail_update(
     >,
     mut buffer: ResMut<ResTrailBuffer>,
     queue: Res<PiRenderQueue>,
-    mut state: ResMut<StateTrail>,
+    mut performance: ResMut<Performance>,
 ) {
-    let time1 = pi_time::Instant::now();
+    if performance.debug { performance.t_trialcalc = pi_time::Instant::now(); }
     
     if let Some(trailbuffer) = &mut buffer.0 {
         items.iter_mut().for_each(|(
@@ -77,9 +77,7 @@ pub fn sys_trail_update(
         trailbuffer.after_collect(&queue);
     }
     
-    let time2 = pi_time::Instant::now();
-    state.calc_time = (time2 - time1).as_millis() as u32;
-    // log::warn!("Trail Update: {:?}", time2 - time1);
+    if performance.debug { performance.trialcalc =  (pi_time::Instant::now() - performance.t_trialcalc).as_micros() as u32; }
 }
 
 pub fn sys_dispose_about_trail_linked(

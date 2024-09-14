@@ -2,7 +2,7 @@
 use pi_scene_shell::prelude::*;
 
 use crate::{
-    cullings::StageCulling, flags::StageEnable, layer_mask::*, object::sys_dispose_ready, prelude::StageRenderer, scene::StageScene, transforms::prelude::*, viewer::prelude::*
+    flags::StageEnable, layer_mask::*, object::sys_dispose_ready, prelude::StageRenderer, scene::StageScene, transforms::prelude::*, viewer::prelude::*
 };
 
 use self::{
@@ -82,10 +82,10 @@ impl Plugin for PluginCamera {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StageCamera::CameraCreate        /* .run_if(runif_3d) */.after(StageScene::_Create))
-        .configure_set(Update, StageCamera::_Create             /* .run_if(runif_3d) */.after(StageCamera::CameraCreate).before(StageLayerMask::Command).before(StageTransform::TransformCommand).before(StageEnable::Command))
-        .configure_set(Update, StageCamera::CameraCommand       /* .run_if(runif_3d) */.after(StageCamera::_Create).before(StageRenderer::Create))
-        .configure_set(Update, StageCamera::CameraCalcMatrix    /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageCamera::CameraCommand).after(EStageAnimation::Running).after(StageTransform::TransformCalcMatrix).after(StageLayerMask::Command).before(StageViewer::TransformCalcMatrix))
+        .configure_set(Update, StageCamera::CameraCreate        .in_set(ERunStageChap::D3).after(StageScene::_Create))
+        .configure_set(Update, StageCamera::_Create             .in_set(ERunStageChap::D3).after(StageCamera::CameraCreate).before(StageLayerMask::Command).before(StageTransform::TransformCommand).before(StageEnable::Command))
+        .configure_set(Update, StageCamera::CameraCommand       .in_set(ERunStageChap::D3).after(StageCamera::_Create).before(StageRenderer::Create))
+        .configure_set(Update, StageCamera::CameraCalcMatrix    .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageCamera::CameraCommand).after(EStageAnimation::Running).after(StageTransform::TransformCalcMatrix).after(StageLayerMask::Command).before(StageViewer::TransformCalcMatrix))
         ;
 
 #[cfg(not(feature = "use_bevy"))]

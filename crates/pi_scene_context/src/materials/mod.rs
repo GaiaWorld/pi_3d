@@ -35,9 +35,9 @@ impl Plugin for PluginMaterial {
             app.insert_resource(StateTextureLoader::default());
             app.insert_resource(ImageTextureViewLoader2::default());
 
-            app.configure_set(Update, StageTextureLoad::TextureRequest.in_set(FrameDataPrepare).after(ERunStageChap::New));
-            app.configure_set(Update, StageTextureLoad::TextureLoading.in_set(FrameDataPrepare).after(StageTextureLoad::TextureRequest));
-            app.configure_set(Update, StageTextureLoad::TextureLoaded.in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoading).before(ERunStageChap::Uniform));
+            app.configure_set(Update, StageTextureLoad::TextureRequest.in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(ERunStageChap::New));
+            app.configure_set(Update, StageTextureLoad::TextureLoading.in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageTextureLoad::TextureRequest));
+            app.configure_set(Update, StageTextureLoad::TextureLoaded .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoading).before(ERunStageChap::Uniform));
 
 #[cfg(feature = "use_bevy")]
             app.add_systems(
@@ -110,10 +110,10 @@ impl Plugin for PluginMaterial {
         app.insert_resource(ActionListUniformValB::default());
         app.insert_resource(StateMaterial::default());
 
-        app.configure_set(Update, StageMaterial::Create /* .run_if(runif_3d) */.after(StageShadowGenerator::_Create).after(StageModel::_InitMesh));
-        app.configure_set(Update, StageMaterial::_Init  /* .run_if(runif_3d) */.after(StageMaterial::Create));
-        app.configure_set(Update, StageMaterial::Command/* .run_if(runif_3d) */.after(StageMaterial::_Init).before(StageTextureLoad::TextureRequest).before(EStageAnimation::Create).before(EStageAnimation::Running));
-        app.configure_set(Update, StageMaterial::Ready  /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageMaterial::Command).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageMaterial::Create .in_set(ERunStageChap::D3).after(StageShadowGenerator::_Create).after(StageModel::_InitMesh));
+        app.configure_set(Update, StageMaterial::_Init  .in_set(ERunStageChap::D3).after(StageMaterial::Create));
+        app.configure_set(Update, StageMaterial::Command.in_set(ERunStageChap::D3).after(StageMaterial::_Init).before(StageTextureLoad::TextureRequest).before(EStageAnimation::Create).before(EStageAnimation::Running));
+        app.configure_set(Update, StageMaterial::Ready  .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageMaterial::Command).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform));
 
 #[cfg(feature = "use_bevy")]
         app.add_systems(

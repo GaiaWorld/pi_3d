@@ -178,15 +178,12 @@ pub fn sys_create_cpu_partilce_system(
                         desclist[0] = Some(slot);
                         datalist[0] = Some(buffer);
 
-                        let mut hasher = DefaultHasher::default();
-                        geo_desc.hash_resource(&mut hasher);
                         let bundle: BundleGeometry = (
                             comp1,
                             geo_desc,
                             (comp2, comp3, comp4, comp5, comp6, desclist, keyslist, datalist),
                             AssetResBufferIndicesComp(None),
                             InstancedInfoComp(None),
-                            GeometryResourceHash(hasher.finish()),
                             FlagGeometryDirty,
                         );
                         // geocommands.insert(bundle);

@@ -14,6 +14,7 @@ pub enum StageGeometry {
     Upload,
 }
 
+/// 用于标识 Mesh 的网格数据是否就绪
 #[derive(Component, Default)]
 pub struct RenderGeometryEable(pub bool);
 
@@ -44,6 +45,7 @@ impl RenderIndicesFrom for RenderIndices {
     }
 }
 
+/// 用于记录 Mesh 的网格数据
 #[derive(Clone, Component, Default, Deref, DerefMut)]
 pub struct RenderGeometryComp(pub Option<RenderGeometry>);
 
@@ -53,6 +55,7 @@ pub struct RenderGeometry {
     pub instances: Vec<RenderVertices>,
     pub indices: Option<RenderIndices>,
     pub instance_slot: Option<u32>,
+    pub hashresource: u64,
 }
 impl RenderGeometry {
 
@@ -95,6 +98,7 @@ impl RenderGeometry {
         mut values: Vec<(wgpu::VertexStepMode, RenderVertices)>,
         indices: (Option<&IndicesBufferDesc>, Option<&AssetResBufferIndices>),
         instance_memory: Option<u32>,
+        hashresource: u64,
     ) -> Self {
         let mut vertices = vec![];
         let mut instances = vec![];
@@ -111,7 +115,8 @@ impl RenderGeometry {
             vertices,
             instances,
             indices,
-            instance_slot: instance_memory
+            instance_slot: instance_memory,
+            hashresource
         }
     }
     pub fn vertex_range(&self) -> Range<u32> {

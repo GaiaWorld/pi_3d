@@ -15,17 +15,19 @@ use pi_curves::curve::{frame::{FrameDataValue, KeyFrameDataTypeAllocator, KeyFra
 use pi_hash::XHashMap;
 use pi_slotmap::DefaultKey;
 
-#[derive(Clone, Copy, Component, Default)]
 /// 标识 Entity 启动了动画, 需要使用记录好的相关数据覆盖对应数据
+#[derive(Clone, Copy, Component, Default)]
 pub struct FlagAnimationStartResetComp;
 
 pub type KeyAnimeCurve = String;
 
 pub type IDAssetTypeFrameCurve = u64;
 
+/// 标识 实体 归属哪个场景
 #[derive(Clone, Copy, PartialEq, Eq, Component, Default, Hash)]
 pub struct SceneID(pub Entity);
 
+/// 附带数据类型描述的动画曲线
 pub struct TypeFrameCurve<F: FrameDataValue+ 'static>(pub FrameCurve<F>);
 impl<F: FrameDataValue+ 'static> pi_assets::asset::Asset for TypeFrameCurve<F> {
     type Key = IDAssetTypeFrameCurve;
@@ -37,6 +39,7 @@ impl<F: FrameDataValue+ 'static> pi_assets::asset::Size for TypeFrameCurve<F> {
     }
 }
 
+/// 附带数据类型描述的动画曲线的 资源句柄
 pub struct AssetTypeFrameCurve<F: FrameDataValue+ 'static>(pub Handle<TypeFrameCurve<F>>);
 impl<F: FrameDataValue+ 'static> From<Handle<TypeFrameCurve<F>>> for AssetTypeFrameCurve<F> {
     fn from(value: Handle<TypeFrameCurve<F>>) -> Self {
@@ -49,6 +52,7 @@ impl<F: FrameDataValue+ 'static> AsRef<FrameCurve<F>> for AssetTypeFrameCurve<F>
     }
 }
 
+/// 附带数据类型描述的动画 的运行上下文
 #[derive(Resource, Deref, DerefMut)]
 pub struct TypeAnimeContext<D: TAnimatableComp> {
     pub ctx: TypeAnimationContext<D, AssetTypeFrameCurve<D>>,
@@ -62,14 +66,6 @@ impl<D: TAnimatableComp> TypeAnimeContext<D> {
 pub trait TAnimatableComp: Default + FrameDataValue + Component + TAssetCapacity {
 
 }
-pub trait TAnimatableCompRecord<T: TAnimatableComp>: Component {
-    fn comp(&self) -> T;
-}
-
-#[derive(Component, Default)]
-pub struct AnimationGroups {
-    pub map: XHashMap<AnimationGroupID, AnimationGroupID>,
-}
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]
 pub struct TagGroupListen;
@@ -82,9 +78,11 @@ impl TagGroupListen {
 
 pub type AnimeFrameEventData = u32;
 
+/// 记录动画组的 Key
 #[derive(Component, Default)]
 pub struct AnimationGroupKey(pub DefaultKey);
 
+/// 记录动画组的 所属场景
 #[derive(Component, Default)]
 pub struct AnimationGroupScene(pub Entity);
 
@@ -93,12 +91,15 @@ pub enum EAnimatorableEntityType {
     Attribute,
 }
 
+/// 标识实体具有 Uniform 数据相关动画
 #[derive(Component, Default)]
 pub struct AnimatorableUniform;
 
+/// 标识实体具有 Attribute 数据相关动画
 #[derive(Component, Default)]
 pub struct AnimatorableAttribute;
 
+/// 记录动画运行相关数据
 #[derive(Resource)]
 pub struct GlobalAnimeAbout {
     pub ty_alloc: KeyFrameDataTypeAllocator,
@@ -141,9 +142,15 @@ impl GlobalAnimeAbout {
     }
 }
 
+/// 记录已产生的动画事件的数据
 #[derive(Resource, Deref, DerefMut, Default)]
 pub struct GlobalAnimeEvents(pub Vec<(Entity, Entity, u8, u32)>);
 
+/// 记录动画目标非动画修改的值,用于动画结束或启动时重置目标属性
+#[derive(Resource, Deref, DerefMut, Default)]
+pub struct AnimeTargetRecordValues<V: TAnimatableComp>(pub XHashMap<Entity, V>);
+
+/// 记录场景中的动画组运行数据
 #[derive(Component)]
 pub struct SceneAnimationContext(pub AnimationContextAmount<Entity, AnimationGroupManagerDefault<Entity>>);
 impl SceneAnimationContext {

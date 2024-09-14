@@ -2,24 +2,23 @@
 use pi_scene_shell::prelude::*;
 
 use crate::{
-    layer_mask::prelude::*,
-    meshes::prelude::*,
-    geometry::prelude::*,
-    cullings::prelude::*,
-    flags::*,
+    cullings::prelude::*, flags::*, geometry::{instance::types::ModelInstanceAttributes, prelude::*}, layer_mask::prelude::*, meshes::prelude::*
 };
 
 use super::base::*;
 
 #[cfg(feature = "use_bevy")]
-struct SceneBoundingFilter<'a, 'w, 's>(pub &'a Query<'w, 's, (&'static GlobalEnable, Option<&'static InstanceSourceRefs>), With<AbstructMesh>>, pub &'a XHashSet<Entity>);
+struct SceneBoundingFilter<'a, 'w, 's>(
+    pub &'a Query<'w, (&'static GlobalEnable, Option<&'static MeshInstanceState>), With<AbstructMesh>>,
+    pub &'a XHashSet<Entity>
+);
 #[cfg(feature = "use_bevy")]
 impl<'a, 'w, 's> TFilter for SceneBoundingFilter<'a, 'w, 's> {
     fn filter(&self, entity: Entity) -> bool {
         if self.1.contains(&entity) {
             if let Ok((enable, instances)) = self.0.get(entity) {
                 if let Some(instances) = instances {
-                    if instances.len() > 0 {
+                    if instances.instance_matrix || instances.instances.len() > 0 {
                         true
                     } else {
                         enable.0
@@ -37,7 +36,10 @@ impl<'a, 'w, 's> TFilter for SceneBoundingFilter<'a, 'w, 's> {
 }
 
 #[cfg(not(feature = "use_bevy"))]
-struct SceneBoundingFilter<'a, 'w>(pub &'a Query<'w, (&'static GlobalEnable, Option<&'static InstanceSourceRefs>), With<AbstructMesh>>, pub &'a XHashSet<Entity>);
+struct SceneBoundingFilter<'a, 'w>(
+    pub &'a Query<'w, (&'static GlobalEnable, Option<&'static MeshInstanceState>), With<AbstructMesh>>,
+    pub &'a XHashSet<Entity>
+);
 #[cfg(not(feature = "use_bevy"))]
 impl<'a, 'w> TFilter for SceneBoundingFilter<'a, 'w> {
     fn filter(&self, entity: Entity) -> bool {
@@ -50,7 +52,7 @@ impl<'a, 'w> TFilter for SceneBoundingFilter<'a, 'w> {
     fn query(&self, entity: Entity) -> bool {
         if let Ok((enable, instances)) = self.0.get(entity) {
             if let Some(instances) = instances {
-                if instances.len() > 0 {
+                if instances.instance_matrix || instances.instances.len() > 0 {
                     true
                 } else {
                     enable.0
@@ -97,7 +99,6 @@ pub fn sys_update_viewer_model_list_by_viewer<T: TViewerViewMatrix + Component, 
     // log::debug!("SysModelListUpdateByViewer: {:?}", pi_time::Instant::now() - time1);
 }
 
-#[inline(never)]
 fn _sys_update_viewer_model_list_by_viewer(
     vieweractive: &ViewerActive, scene: &SceneID, layer: &LayerMask, list_model: &mut ModelList, flag_list_model: &mut FlagModelList,
     items: &Query<
@@ -133,8 +134,8 @@ pub fn sys_update_viewer_model_list_by_model<T: TViewerViewMatrix + Component, T
     mut viewers: Query<
         (&ViewerActive, &SceneID, &LayerMask, &mut ModelList, &mut FlagModelList), (With<T>, With<T2>)
     >,
-    addeds0: ComponentAdded<FlagAbstructMeshForView>,
-    changes0: ComponentChanged<FlagAbstructMeshForView>,
+    addeds0: ComponentAdded<FlagMeshNeedRecheckForView>,
+    changes0: ComponentChanged<FlagMeshNeedRecheckForView>,
     items: Query<
         (Entity, &SceneID, &LayerMask, &InstanceSourceRefs, &DisposeReady, &AbstructMesh),
     >,
@@ -157,7 +158,6 @@ pub fn sys_update_viewer_model_list_by_model<T: TViewerViewMatrix + Component, T
     // log::debug!("SysModelListUpdateByModel: {:?}", pi_time::Instant::now() - time1);
 }
 
-#[inline(never)]
 fn _sys_update_viewer_model_list_by_model(
     id_obj: Entity, iscene: &SceneID, ilayer: &LayerMask, instances: &InstanceSourceRefs, disposestate: &DisposeReady,
     vieweractive: &ViewerActive, scene: &SceneID, layer: &LayerMask, list_model: &mut ModelList, flag_list_model: &mut FlagModelList,
@@ -189,94 +189,81 @@ pub fn sys_tick_viewer_culling(
     mut viewers: Query<
         (&SceneID, &ViewerActive, &ModelList, &ViewerTransformMatrix, &ViewerViewMatrix, &ForceIncludeModelList, &mut ModelListAfterCulling)
     >,
-    items: Query<
-        (&'static GlobalEnable, Option<&'static InstanceSourceRefs>),
-        With<AbstructMesh>
-    >,
+    items: Query< (& GlobalEnable, Option<& MeshInstanceState>), With<AbstructMesh> >,
     mut flags: Query<&mut AbstructMeshCullingFlag>,
-    scenes: Query<
-        &SceneBoundingPool
+    mut meshes: Query<(&mut InstanceSourceRefs, &ModelInstanceAttributes)>,
+    mut scenes: Query<
+        &mut SceneBoundingPool
     >,
+    mut performance: ResMut<Performance>,
 ) {
+    if performance.debug { performance.t_culling = pi_time::Instant::now(); }
     viewers.iter_mut().for_each(|(idscene, vieweractive, list_model, transform, _cameraview, forceincludes, mut cullings)| {
-        // log::warn!("SysViewerCulling: {:?}", vieweractive);
-        _sys_tick_viewer_culling(
-            idscene, vieweractive, list_model, transform, forceincludes, &mut cullings,
-            &scenes, &mut flags, &items
-        );
-    });
-}
-
-#[inline(never)]
-fn _sys_tick_viewer_culling(
-    idscene: &SceneID, vieweractive: &ViewerActive, list_model: &ModelList, transform: &ViewerTransformMatrix, forceincludes: &ForceIncludeModelList, cullings: &mut ModelListAfterCulling,
-    scenes: &Query<&SceneBoundingPool>,
-    flags: &mut Query<&mut AbstructMeshCullingFlag>,
-    items: &Query<
-        (&'static GlobalEnable, Option<&'static InstanceSourceRefs>),
-        With<AbstructMesh>
-    >,
-) {
-    cullings.0.clear();
-    if vieweractive.0 {
-        if let Ok(culling) = scenes.get(idscene.0) {
-            culling.culling(
-                transform,
-                SceneBoundingFilter(&items, &list_model.0),
-                &mut cullings.0
-            );
-        } else {
-            if list_model.0.len() > 2 {
-                // log::error!("No BoundingPool. {:?}", list_model.0.len());
+        cullings.0.clear();
+        if vieweractive.0 {
+            if let Ok(mut culling) = scenes.get_mut(idscene.0) {
+                // log::error!("BoundingPool {:?}", culling.size());
+                culling.culling(
+                    transform,
+                    SceneBoundingFilter(&items, &list_model.0),
+                    &mut cullings.0
+                );
+            } else {
+                // log::warn!("ModelList: {:?}", (list_model.0.len(), forceincludes.0.len()));
+                list_model.0.iter().for_each(|objid| {
+                    // log::debug!("SysModelListAfterCullinUpdateByCamera: 1");
+                    if let Ok((enable, instances)) = items.get(objid.clone()) {
+                        // log::warn!("Moldellist Geo: {:?}, {:?}", enable.0, geo_enable.0);
+                        if let Some(instances) = instances {
+                            if instances.instance_matrix || instances.instances.len() > 0 {
+                                cullings.0.push(objid.clone());
+                            } else if enable.0 {
+                                cullings.0.push(objid.clone());
+                            }
+                        } else {
+                            if enable.0 {
+                                cullings.0.push(objid.clone());
+                            }
+                        }
+                    }
+                });
             }
-            // log::warn!("ModelList: {:?}", (list_model.0.len(), forceincludes.0.len()));
-            list_model.0.iter().for_each(|objid| {
-                // log::debug!("SysModelListAfterCullinUpdateByCamera: 1");
+            
+            forceincludes.0.iter().for_each(|objid: &Entity| {
+                // log::error!("forceincludes: ");
                 if let Ok((enable, instances)) = items.get(objid.clone()) {
                     // log::warn!("Moldellist Geo: {:?}, {:?}", enable.0, geo_enable.0);
                     // log::debug!("SysModelListAfterCullinUpdateByCamera: 2");
-                    if let Some(instances) = instances {
-                        if instances.len() > 0 {
-                            cullings.0.push(objid.clone());
-                        } else if enable.0 {
-                            cullings.0.push(objid.clone());
+                        if let Some(instances) = instances {
+                            if instances.instance_matrix || instances.instances.len() > 0 {
+                                cullings.0.push(objid.clone());
+                            } else if enable.0 {
+                                cullings.0.push(objid.clone());
+                            }
+                        } else {
+                            if enable.0 {
+                                cullings.0.push(objid.clone());
+                            }
                         }
-                    } else {
-                        if enable.0 {
-                            cullings.0.push(objid.clone());
-                        }
+                }
+            });
+
+            // log::error!("Culling. {:?}", cullings.0);
+            cullings.0.iter().for_each(|id| {
+                if let Ok(mut flag) = flags.get_mut(*id) {
+                    *flag = AbstructMeshCullingFlag(true);
+                }
+                if let Ok((mut flag, attrs)) = meshes.get_mut(*id) {
+                    if attrs.bytes().len() > 0 {
+                        flag.dirty = true;
                     }
                 }
             });
         }
-        
-        forceincludes.0.iter().for_each(|objid: &Entity| {
-            // log::error!("forceincludes: ");
-            if let Ok((enable, instances)) = items.get(objid.clone()) {
-                // log::warn!("Moldellist Geo: {:?}, {:?}", enable.0, geo_enable.0);
-                // log::debug!("SysModelListAfterCullinUpdateByCamera: 2");
-                if let Some(instances) = instances {
-                    if instances.len() > 0 {
-                        cullings.0.push(objid.clone());
-                    } else if enable.0 {
-                        cullings.0.push(objid.clone());
-                    }
-                } else {
-                    if enable.0 {
-                        cullings.0.push(objid.clone());
-                    }
-                }
-            }
-        });
-        
-        cullings.0.iter().for_each(|id| {
-            if let Ok(mut flag) = flags.get_mut(*id) {
-                *flag = AbstructMeshCullingFlag(true);
-            }
-        });
-    } else {
-        if list_model.0.len() > 2 {
-            // log::error!("Not Active. {:?}", list_model.0.len());
-        }
-    }
+    });
+    // // 尝试记录已成功剔除的后续不再计算剔除逻辑，但测试结果耗时更长
+    // scenes.iter_mut().for_each(|mut items| {
+    //     items.reset_temp();
+    // });
+    if performance.debug { performance.culling = (pi_time::Instant::now() - performance.t_culling).as_micros() as u32; }
 }

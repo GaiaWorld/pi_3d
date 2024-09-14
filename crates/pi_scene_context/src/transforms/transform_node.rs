@@ -1,39 +1,15 @@
 use pi_scene_shell::prelude::*;
 use pi_scene_math::{Matrix, Vector3, Rotation3, coordiante_system::CoordinateSytem3, Quaternion, vector::TToolMatrix, Translation3, Isometry3, Number, SQuaternion};
 
-#[derive(Clone, Copy, Component, Default)]
-pub struct NodeDown(pub Option<Entity>);
-
-#[derive(Clone, Copy, Component, Default)]
-pub struct NodeUp(pub Entity);
-
-#[derive(Clone, Copy, Component, Default)]
-pub struct NodeBrothers {
-    pub idx: usize,
-    pub pre: Option<Entity>,
-    pub next: Option<Entity>,
-}
-
+/// 标识实体类型 TransformNode
 #[derive(Clone, Copy, Component, Default)]
 pub struct TransformNode;
 
+/// 标识实体 TransformNode 节点树信息是否脏
 #[derive(Clone, Copy, Component, Default)]
 pub struct TransformNodeDirty(pub bool);
 
-#[derive(Clone, Component, Default)]
-pub struct LocalDirtyRotation;
-
-#[derive(Clone, Component, Default)]
-pub struct LocalDirtyScaling;
-
-#[derive(Clone, Component, Default)]
-pub struct RecordLocalPosition(pub LocalPosition);
-impl TAnimatableCompRecord<LocalPosition> for RecordLocalPosition {
-    fn comp(&self) -> LocalPosition {
-        self.0.clone()
-    }
-}
-
+/// 记录 TransformNode 的局部坐标
 #[derive(Clone, Component)]
 pub struct LocalPosition(pub Vector3);
 impl pi_curves::curve::frame::FrameDataValue for LocalPosition {
@@ -79,14 +55,7 @@ impl TAnimatableComp for LocalPosition {
 
 }
 
-#[derive(Clone, Component, Default)]
-pub struct RecordLocalEulerAngles(pub LocalEulerAngles);
-impl TAnimatableCompRecord<LocalEulerAngles> for RecordLocalEulerAngles {
-    fn comp(&self) -> LocalEulerAngles {
-        self.0.clone()
-    }
-}
-
+/// 记录 TransformNode 的局部欧拉角
 #[derive(Clone, Component)]
 pub struct LocalEulerAngles(pub Vector3);
 impl pi_curves::curve::frame::FrameDataValue for LocalEulerAngles {
@@ -132,14 +101,7 @@ impl TAnimatableComp for LocalEulerAngles {
 
 }
 
-#[derive(Clone, Component, Default)]
-pub struct RecordLocalRotationQuaternion(pub LocalRotationQuaternion);
-impl TAnimatableCompRecord<LocalRotationQuaternion> for RecordLocalRotationQuaternion {
-    fn comp(&self) -> LocalRotationQuaternion {
-        self.0.clone()
-    }
-}
-
+/// 记录 TransformNode 的局部四元数
 #[derive(Clone, Component)]
 pub struct LocalRotationQuaternion(pub SQuaternion<Number>);
 impl LocalRotationQuaternion {
@@ -230,20 +192,15 @@ impl TAnimatableComp for LocalRotationQuaternion {
 
 }
 
+/// 标识 TransformNode 的局部旋转是否由四元数影响
 #[derive(Clone, Component, Default)]
 pub struct LocalRoationWithQuaternion(pub bool);
 
+/// 记录 TransformNode 的局部旋转
 #[derive(Clone, Component, Default)]
 pub struct LocalRotation(pub Rotation3);
 
-#[derive(Clone, Component, Default)]
-pub struct RecordLocalScaling(pub LocalScaling);
-impl TAnimatableCompRecord<LocalScaling> for RecordLocalScaling {
-    fn comp(&self) -> LocalScaling {
-        self.0.clone()
-    }
-}
-
+/// 记录 TransformNode 的局部缩放
 #[derive(Clone, Component)]
 pub struct LocalScaling(pub Vector3);
 impl pi_curves::curve::frame::FrameDataValue for LocalScaling {
@@ -289,9 +246,11 @@ impl TAnimatableComp for LocalScaling {
 
 }
 
+/// 标识 TransformNode 的局部矩阵是否脏
 #[derive(Component, Default)]
 pub struct FlagLocalMatrix;
 
+/// 记录 TransformNode 的局部矩阵
 #[derive(Clone, Component)]
 pub struct LocalMatrix(pub Matrix);
 impl LocalMatrix {
@@ -334,6 +293,7 @@ impl pi_curves::curve::frame::FrameDataValue for LocalMatrix {
     }
 }
 
+/// 记录 TransformNode 的全局矩阵
 #[derive(Clone, Component)]
 pub struct GlobalMatrix {
     pub matrix: Matrix,
@@ -354,16 +314,19 @@ impl GlobalMatrix {
     pub fn position(&self) -> Vector3 {
         Vector3::from(self.matrix.fixed_view::<3, 1>(0, 3))
     }
-    pub fn calc(p_m: &Matrix, l_matrix: &LocalMatrix) -> (Self, bool) {
+    pub fn xyz(&self) -> (Number, Number, Number) {
+        let m = self.matrix.as_slice();
+        (m[12], m[13], m[14])
+    }
+    pub fn calc(&mut self, p_m: &Matrix, l_matrix: &LocalMatrix) -> bool {
         let mut flag = true;
-        let mut result = Self::default();
         // result.matrix.copy_from(&(p_m * l_matrix.0));
-        CoordinateSytem3::mul_to(p_m, &l_matrix.0, &mut result.matrix);
+        CoordinateSytem3::mul_to(p_m, &l_matrix.0, &mut self.matrix);
         // p_m.mul_to(&l_matrix.0, &mut result.matrix);
 
-        if result.matrix.as_slice()[0].is_finite() {
-            result.matrix_inv.clone_from(&result.matrix);
-            CoordinateSytem3::try_inverse_mut(&mut result.matrix_inv);
+        if self.matrix.as_slice()[0].is_finite() {
+            self.matrix_inv.clone_from(&self.matrix);
+            CoordinateSytem3::try_inverse_mut(&mut self.matrix_inv);
             // match result.matrix.try_inverse() {
             //     Some(val) => {
             //         result.matrix_inv = val;
@@ -376,14 +339,15 @@ impl GlobalMatrix {
             // }
         } else {
             flag = false;
-            result.matrix = Matrix::identity();
-            result.matrix_inv = Matrix::identity();
+            self.matrix = Matrix::identity();
+            self.matrix_inv = Matrix::identity();
         }
 
-        (result, flag)
+        flag
     }
 }
 
+/// 记录 TransformNode 的全局节点信息
 #[derive(Component)]
 pub struct AbsoluteTransform {
     scaling: Vector3,

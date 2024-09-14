@@ -1,10 +1,6 @@
 
 use pi_scene_shell::prelude::*;
 
-use crate::flags::*;
-
-use super::transform_node::*;
-
 pub struct OpsTransformNode(pub Entity, pub Entity);
 impl OpsTransformNode {
     pub fn ops(scene: Entity, node: Entity) -> Self {
@@ -42,24 +38,6 @@ impl OpsTransformNodeLocalRotationQuaternion {
     }
 }
 pub type ActionListTransformNodeLocalRotationQuaternion = ActionList<OpsTransformNodeLocalRotationQuaternion>;
-
-pub type BundleTransformNode = (
-    Enable,
-    TransformNodeDirty,
-    GlobalEnable,
-    LocalPosition,
-    LocalScaling,
-    LocalRotationQuaternion,
-    LocalEulerAngles,
-    RecordLocalPosition,
-    RecordLocalScaling,
-    RecordLocalEulerAngles,
-    RecordLocalRotationQuaternion,
-    LocalRotation,
-    LocalMatrix,
-    GlobalMatrix,
-    AbsoluteTransform,
-);
 
 #[derive(Default, Resource)]
 pub struct TransformPerformance {

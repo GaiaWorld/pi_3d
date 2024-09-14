@@ -71,12 +71,6 @@ impl TMeshStatePass for PassShader                      { const MESH_STATE: u8 =
 impl TMeshStatePass for PassPipeline                    { const MESH_STATE: u8 = 008; fn is_some(&self) -> bool { self.val().is_some() } }
 impl TMeshStatePass for PassDraw                        { const MESH_STATE: u8 = 009; fn is_some(&self) -> bool { self.val() } }
 
-// #[derive(Clone, Component, Default)]
-// pub struct MeshStates(pub Vec<EMeshState>);
-
-// #[derive(Component, Default)]
-// pub struct DirtyMeshStates;
-
 #[derive(Resource)]
 pub struct StateRecordCfg {
     pub write_state: bool,

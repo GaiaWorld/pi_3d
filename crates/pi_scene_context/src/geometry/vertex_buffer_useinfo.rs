@@ -64,6 +64,7 @@ pub enum EVerticesBufferTmp {
     Buffer(EVerticesBufferUsage),
 }
 
+/// 在 Mesh 实体上记录其使用的 Geometry
 #[derive(Component, Default)]
 pub struct GeometryID(pub ObjectID);
 impl TEntityRef for GeometryID {
@@ -72,18 +73,17 @@ impl TEntityRef for GeometryID {
     }
 }
 
-#[derive(Clone, Component, Default)]
-pub struct DirtyGeometryRef;
-
-pub type GeometryRefs = EntityRefInfo<DirtyGeometryRef>;
-
+/// 在 Geometry 实体上记录使用其的 Mesh
 #[derive(Component, Default)]
 pub struct MeshID(pub ObjectID);
 
+/// 在 Geometry 实体上记录其已加载成功的 VertexBuffer资源的Key
+/// Idx 对应VB的 Slot
 #[derive(Deref, DerefMut, Clone, Hash, Component, Default)]
 // pub struct LoadedKeyVBSlots(pub SmallVec<[Option<KeyVertexBuffer>;VB_SLOTS_COUNT]>);
 pub struct LoadedKeyVBSlots(pub [Option<KeyVertexBuffer>;VB_SLOTS_COUNT]);
 
+/// 在 Geometry 实体上记录其需要加载的 VertexBuffer资源的描述
 #[derive(Deref, DerefMut, Component, Default)]
 // pub struct AssetDescVBSlots(pub SmallVec<[Option<AssetDescVBSlot>;VB_SLOTS_COUNT]>);
 pub struct AssetDescVBSlots(pub [Option<AssetDescVBSlot>;VB_SLOTS_COUNT]);
@@ -95,15 +95,13 @@ impl AssetDescVBSlots {
         }
     }
 }
+
+/// 在 Geometry 实体上记录其已加载的 VertexBuffer资源的引用信息
 #[derive(Deref, DerefMut, Component, Default)]
 // pub struct AssetResVBSlots(pub SmallVec<[Option<AssetResVBSlot>;VB_SLOTS_COUNT]>);
 pub struct AssetResVBSlots(pub [Option<AssetResVBSlot>;VB_SLOTS_COUNT]);
 
-#[derive(Deref, DerefMut, Clone, Hash, Default)]
-pub struct AssetKeyVBSlot(pub KeyVertexBuffer);
-impl AsKeyVertexBuffer for AssetKeyVBSlot {
-    fn create(desc: &VertexBufferDesc) -> Self { Self(desc.bufferkey().clone()) }
-}
+/// VertexBuffer资源的描述
 #[derive(Default, Debug)]
 pub struct AssetDescVBSlot(pub(crate) VertexBufferDesc);
 impl From<VertexBufferDesc> for AssetDescVBSlot {
@@ -119,6 +117,7 @@ impl AssetDescVBSlot {
     }
 }
 
+///  VertexBuffer资源的引用信息
 #[derive(Deref, DerefMut)]
 pub struct AssetResVBSlot(pub EVerticesBufferTmp);
 impl From<EVerticesBufferUsage> for AssetResVBSlot {

@@ -77,7 +77,7 @@ pub fn sys_calc_render_matrix(
 pub fn sys_render_matrix_dirty(
     changes: ComponentChanged<RenderWorldMatrix>,
     mut instances: Query<(&InstanceMesh, &RenderWorldMatrix, &RenderWorldMatrixInv, &mut ModelInstanceAttributes)>,
-    mut meshes: Query<&mut DirtyInstanceSourceRefs>,
+    mut meshes: Query<&mut InstanceSourceRefs>,
 ) {
     // let time = pi_time::Instant::now();
 
@@ -86,7 +86,7 @@ pub fn sys_render_matrix_dirty(
             instanceattributes.update_worldmatrix(&wm.0);
 
             if let Ok(mut flag) = meshes.get_mut(instance.0) {
-                *flag = DirtyInstanceSourceRefs;
+                flag.dirty = true;
             }
         }
     });
@@ -95,7 +95,7 @@ pub fn sys_render_matrix_dirty(
     // log::debug!("SysInstanceRenderMatrixUpdate: {:?}", time1 - time);
 }
 
-#[inline(never)]
+#[inline(always)]
 fn _calc_render_matrix<T>(
     velocity: &ModelVelocity,
     localscaling: &LocalScaling,
@@ -203,35 +203,22 @@ pub fn sys_enable_about_instance(
     instances: Query<&InstanceMesh>,
     changes: ComponentChanged<GlobalEnable>,
     changes2: ComponentChanged<GlobalMatrix>,
-    // changes3: ComponentChanged<ModelInstanceAttributes>,
-    mut meshes: Query<&mut DirtyInstanceSourceRefs>,
+    mut meshes: Query<&mut InstanceSourceRefs>,
 ) {
     changes.iter().for_each(|entity| {
         if let Ok(instance) = instances.get(*entity) {
             if let Ok(mut flag) = meshes.get_mut(instance.0) {
-                *flag = DirtyInstanceSourceRefs;
+                flag.dirty = true;
             }
         }
     });
     changes2.iter().for_each(|entity| {
         if let Ok(instance) = instances.get(*entity) {
             if let Ok(mut flag) = meshes.get_mut(instance.0) {
-                *flag = DirtyInstanceSourceRefs;
+                flag.dirty = true;
             }
         }
     });
-    // changes3.iter().for_each(|entity| {
-    //     if let Ok(instance) = instances.get(*entity) {
-    //         if let Ok(mut flag) = meshes.get_mut(instance.0) {
-    //             *flag = DirtyInstanceSourceRefs;
-    //         }
-    //     }
-    // });
-    // instances.iter().for_each(|instance| {
-    //     if let Ok(mut flag) = meshes.get_mut(instance.0) {
-    //         *flag = DirtyInstanceSourceRefs;
-    //     }
-    // });
 }
 
 pub fn sys_animator_update_instance_attribute(
@@ -244,7 +231,7 @@ pub fn sys_animator_update_instance_attribute(
     changes: ComponentChanged<TargetAnimatorableIsRunning>,
     mut items: Query<(&mut ModelInstanceAttributes, &InstanceAttributeAnimated)>,
     instances: Query<&InstanceMesh>,
-    mut meshes: Query<&mut DirtyInstanceSourceRefs>,
+    mut meshes: Query<&mut InstanceSourceRefs>,
 ) {
     changes.iter().for_each(|entity| {
         if let Ok((mut attributes, animators)) = items.get_mut(*entity) {
@@ -283,10 +270,10 @@ pub fn sys_animator_update_instance_attribute(
             });
             
             if let Ok(mut flag) = meshes.get_mut(*entity) {
-                *flag = DirtyInstanceSourceRefs;
+                flag.dirty = true;
             } else if let Ok(instance) = instances.get(*entity) {
                 if let Ok(mut flag) = meshes.get_mut(instance.0) {
-                    *flag = DirtyInstanceSourceRefs;
+                    flag.dirty = true;
                 }
             }
         }
@@ -377,7 +364,7 @@ pub fn sys_dispose_about_instance(
     changes: ComponentChanged<DisposeReady>,
     items: Query<(Entity, &DisposeReady, &InstanceMesh, &ModelInstanceAttributes)>,
     mut viewers: Query<(&mut ModelList, &mut ForceIncludeModelList)>,
-    mut instancesources: Query<(&mut InstanceSourceRefs, &mut DirtyInstanceSourceRefs, &mut FlagAbstructMeshForView)>,
+    mut instancesources: Query<(&mut InstanceSourceRefs, &mut FlagMeshNeedRecheckForView)>,
     mut _disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
@@ -392,11 +379,10 @@ pub fn sys_dispose_about_instance(
                 }
             });
 
-            if let Ok((mut refs, mut flag, mut flagview)) = instancesources.get_mut(sourceid.0) {
+            if let Ok((mut refs, mut flagview)) = instancesources.get_mut(sourceid.0) {
                 // log::warn!("Remove Instance");
                 refs.remove(&entity);
-                *flag = DirtyInstanceSourceRefs;
-                *flagview = FlagAbstructMeshForView;
+                *flagview = FlagMeshNeedRecheckForView;
             }
 
             viewers.iter_mut().for_each(|(mut list0, mut list1)| {

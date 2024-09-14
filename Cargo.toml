@@ -91,6 +91,7 @@ pi_scene_math           = { path = "../pi_scene/crates/pi_scene_math" }
 [patch.crates-io]
 pi_world                = { path = "../pi_world", features = ["single_thread"] }
 pi_world_macros         = { path = "../pi_world/macros" }
+pi_assets               = { path = "../pi_assets" }
 
 [dev-dependencies]
 wgpu            = { version = "0.1", registry = "yn", package = "pi_wgpu", features = ["use_wgpu"] }
@@ -170,6 +171,9 @@ path = "examples/instance/sprite.rs"
 # [[example]]
 # name = "performance_transform_instance"
 # path = "examples/performance/transform_instance_10000.rs"
+[[example]]
+name = "drawlistperformance"
+path = "examples/performance/drawlistperformance.rs"
 # 
 # [[example]]
 # name = "instance_color_tilloff"

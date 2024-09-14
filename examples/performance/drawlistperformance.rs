@@ -13,6 +13,7 @@ use pi_mesh_builder::{cube::*, ball::BallBuilder};
 use pi_trail_renderer::{OpsTrail, OpsTrailAgeControl};
 use pi_winit::event::WindowEvent;
 use rand::Rng;
+use unlit_material::MainOpacityShader;
 
 #[path = "../base.rs"]
 mod base;
@@ -50,10 +51,13 @@ impl Plugin for PluginTest {
         let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
             (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
         } else { return; };
+        
+
+    ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(MainOpacityShader::KEY), MainOpacityShader::meta());
 
         events.viewer = Some(camera01);
 
-        let tes_size = 10;
+        let tes_size = 20;
         fps.frame_ms = 5;
 
         let limit = assets.1.limits();
@@ -166,6 +170,7 @@ impl Plugin for PluginTest {
     };
     actions.material.usemat.push(OpsMaterialUse::Use(source, planarmat, DemoScene::PASS_SKY_WATER));
     let mut blend = ModelBlend::default(); blend.combine();
+    actions.mesh.render_state.push(OpsRenderState::blend(source, DemoScene::PASS_TRANSPARENT, blend));
     actions.mesh.render_state.push(OpsRenderState::blend(source, DemoScene::PASS_SKY_WATER, blend));
     // actions.mesh.stencil_state.push(OpsStencilState::ops(source, DemoScene::PASS_TRANSPARENT, EStencilState::Write(1)));
     // actions.mesh.stencil_state.push(OpsStencilState::ops(source, DemoScene::PASS_TRANSPARENT, EStencilState::Front(StencilFaceState{
@@ -177,7 +182,7 @@ impl Plugin for PluginTest {
     actions.mesh.render_state.push(OpsRenderState::depth_state(source, DemoScene::PASS_SKY_WATER, EDepthState::Write(false)));
 
     log::error!("lightingmat Ball {:?}", source);
-    actions.material.usemat.push(OpsMaterialUse::Use(source, lightingmat, DemoScene::PASS_OPAQUE));
+    actions.material.usemat.push(OpsMaterialUse::Use(source, lightingmat, DemoScene::PASS_TRANSPARENT));
     actions.mesh.state.push(OpsMeshStateModify::ops(source, EMeshStateModify::CastShadow(true)));
     lights.iter().for_each(|light| {
         actions.mesh.forcelighting.push(OpsMeshForceLighting::ops(source, *light, EMeshForceLighting::ForcePointLighting(true)));
@@ -192,7 +197,8 @@ impl Plugin for PluginTest {
                     // actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(cube, 1.,  1., 1.));
                     actions.instance.attr.push(OpsInstanceAttr::ops(cube, EInstanceAttr::Vec2([(i as f32) / (tes_size as f32 - 1.), (j as f32) / (tes_size as f32 - 1.)]), Atom::from("InsV2")));
                     actions.transform.collider.push(OpsCollider::ops(cube, (-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)));
-                    actions.mesh.state.push(OpsMeshStateModify::ops(cube, EMeshStateModify::BoundingCullingMode(ECullingStrategy::None)));
+                    // actions.mesh.state.push(OpsMeshStateModify::ops(cube, EMeshStateModify::BoundingCullingMode(ECullingStrategy::None)));
+                    actions.mesh.render_state.push(OpsRenderState::render_queue(cube, 0, j as i32));
                 }
             }
         }
@@ -277,7 +283,7 @@ impl Plugin for PluginTest {
             }
 
             let mut random = pi_wy_rng::WyRng::default();
-            for idx in 0..16 {
+            for idx in 0..0 {
                 // let scalescalar = if idx % 2 == 0 { 1. } else { -1. };
 
                 let source = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, node));

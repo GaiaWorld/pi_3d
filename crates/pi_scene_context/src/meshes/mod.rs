@@ -58,15 +58,15 @@ impl crate::Plugin for PluginMesh {
         );
 #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StageModel::MeshCreate            /* .run_if(runif_3d) */.after(StageCamera::_Create))
-        .configure_set(Update, StageModel::_InitMesh             /* .run_if(runif_3d) */.after(StageModel::MeshCreate).before(StageLayerMask::Command).before(StageEnable::Command))
-        .configure_set(Update, StageModel::InstanceCreate        /* .run_if(runif_3d) */.after(StageModel::_InitMesh))
-        .configure_set(Update, StageModel::_InitInstance         /* .run_if(runif_3d) */.after(StageModel::InstanceCreate).before(StageEnable::Command).before(StageTransform::TransformCommand))
-        .configure_set(Update, StageModel::AbstructMeshCommand   /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageModel::_InitInstance).before(ERunStageChap::Uniform).before(EStageAnimation::Create))
-        .configure_set(Update, StageModel::RenderMatrix          /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageModel::AbstructMeshCommand).after(StageTransform::TransformCalcMatrix))
-        .configure_set(Update, StageModel::InstanceEffectMesh    /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageModel::AbstructMeshCommand).after(StageModel::RenderMatrix))
-        .configure_set(Update, StageModel::InstanceEffectGeometry/* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageModel::InstanceEffectMesh).after(StageViewer::Culling).after(EStageAnimation::Running).before(ERunStageChap::Uniform))
-        .configure_set(Update, StageModel::LightingCollect       /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageLighting::LightingCommand).after(StageModel::InstanceEffectGeometry).before(ERunStageChap::Uniform))
+        .configure_set(Update, StageModel::MeshCreate            .in_set(ERunStageChap::D3).after(StageCamera::_Create))
+        .configure_set(Update, StageModel::_InitMesh             .in_set(ERunStageChap::D3).after(StageModel::MeshCreate).before(StageLayerMask::Command).before(StageEnable::Command))
+        .configure_set(Update, StageModel::InstanceCreate        .in_set(ERunStageChap::D3).after(StageModel::_InitMesh))
+        .configure_set(Update, StageModel::_InitInstance         .in_set(ERunStageChap::D3).after(StageModel::InstanceCreate).before(StageEnable::Command).before(StageTransform::TransformCommand))
+        .configure_set(Update, StageModel::AbstructMeshCommand   .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageModel::_InitInstance).before(ERunStageChap::Uniform).before(EStageAnimation::Create))
+        .configure_set(Update, StageModel::RenderMatrix          .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageModel::AbstructMeshCommand).after(StageTransform::TransformCalcMatrix))
+        .configure_set(Update, StageModel::InstanceEffectMesh    .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageModel::AbstructMeshCommand).after(StageModel::RenderMatrix))
+        .configure_set(Update, StageModel::InstanceEffectGeometry.in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageModel::InstanceEffectMesh).after(StageViewer::Culling).after(EStageAnimation::Running).before(StageGeometry::GeometryLoaded).before(ERunStageChap::Uniform))
+        .configure_set(Update, StageModel::LightingCollect       .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageLighting::LightingCommand).after(StageModel::InstanceEffectGeometry).before(ERunStageChap::Uniform))
         ;
 
 #[cfg(feature = "use_bevy")]

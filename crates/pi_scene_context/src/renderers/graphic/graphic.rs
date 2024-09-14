@@ -102,43 +102,17 @@ impl Node for RenderNode {
             param, disposed, _renderer, mut to_final_target
         )) = query.get_mut(self.renderer_id) {
     
-            // log::warn!("Draws: Graphic {:?}", (enable.0, depth_clear, auto_clear_depth));
-            if !param.enable.0 || disposed.0 {
+            if disposed.0 {
                 return Ok(output);
             }
     
             // let (mut x, mut y, mut w, mut h, min_depth, max_depth) = renderer.draws.viewport;
             let need_depth = param.depthstencilformat.need_depth();
-            
-            // let clear_color_ops = if auto_clear_color.0 {
-            //     wgpu::Operations { load: wgpu::LoadOp::Clear(color_clear.color()), store: StoreOp::Store }
-            // } else {
-            //     wgpu::Operations { load: wgpu::LoadOp::Load, store: StoreOp::Discard }
-            // };
-            // let clear_depth_ops = if auto_clear_depth.0 {
-            //     Some(wgpu::Operations { load: wgpu::LoadOp::Clear(depth_clear.0), store: StoreOp::Store, })
-            // } else { None };
-            // let clear_stencil_ops = if auto_clear_stencil.0 {
-            //     Some(wgpu::Operations { load: wgpu::LoadOp::Clear(stencil_clear.0), store: StoreOp::Store, })
-            // } else {
-            //     None
-            // };
-
-            // let color_view = to_final_target.view();
-            // let depth_view = to_final_target.depth_view();
-            
-            // let can_render: bool;
-            // let clear_color_attachments;
-            // let color_attachments;
-            // let clear_depth_stencil_attachment;
-            // let depth_stencil_attachment;
-            // let render_color_view;
-            // let render_depth_view;
             let to_final_target = to_final_target.deref_mut();
 
             match to_final_target {
                 RendererRenderTarget::FinalRender => {},
-                RendererRenderTarget::Custom(_srt) => output.target = input.target.clone(),
+                RendererRenderTarget::Custom(_srt) => {},
                 RendererRenderTarget::None(_) => {
                     let currlist: Vec<ShareTargetView> = vec![];
                     let srt = if let Some(srt) = input.target.clone() {
@@ -214,8 +188,6 @@ impl Node for RenderNode {
         if let Ok((
             param, disposed, renderer, to_final_target
         )) = query.get(self.renderer_id) {
-            // query.
-    
             // log::warn!("Draws: Graphic {:?}", (enable.0, depth_clear, auto_clear_depth));
             if !param.enable.0 || disposed.0 {
                 return Box::pin(
@@ -378,7 +350,7 @@ impl Node for RenderNode {
                 }
 
                 // log::warn!("Draws: {:?}", renderer.draws.list.len());
-                if renderer.draws.list.len() > 0 {
+                if renderer.draws.list.len() > 0 && param.enable.0 {
                     let mut renderpass = commands.begin_render_pass(
                         &wgpu::RenderPassDescriptor {
                             label: Some(self.renderer_id.index().to_string().as_str()),
@@ -392,9 +364,6 @@ impl Node for RenderNode {
                     renderpass.set_viewport(x, y, w, h, 0., max_depth);
                     renderpass.set_scissor_rect(x as u32, y as u32, w as u32, h as u32);
                     DrawList::render(renderer.draws.list.as_slice(), &mut renderpass);
-    
-                    // let time1 = pi_time::Instant::now();
-                    // log::debug!("MainCameraRenderNode: {:?}", time1 - time);
                 }
             }
         }

@@ -41,10 +41,13 @@ impl GLTFBaseLoader {
         .spawn(async move {
             match pi_hal::file::load_from_url(&key).await {
                 Ok(gltffile) => {
+                    let time0 = pi_time::Instant::now();
+                    let url = key.clone();
                     match Gltf::from_slice(&gltffile) {
                         Ok(gltf) => {
                             let mut buffers = vec![];
                             let mut haserror = false;
+                            log::error!("GLTF Parse: {:?}", (url.as_str(), (pi_time::Instant::now() - time0).as_micros() as u32));
                             for buffer in gltf.buffers() {
                                 match buffer.source() {
                                     pi_gltf::buffer::Source::Bin => {
@@ -288,6 +291,7 @@ impl GLTFTempLoaded {
         particlesys_cmds: &mut ActionSetParticleSystem,
         particlesys_res: &mut ResourceParticleSystem,
     ) -> GLTF {
+        let time0 = pi_time::Instant::now();
         let mut result = GLTF::new(gltf.clone(), base_url.to_string());
         // let basekey = self.id.base_url.to_string() + "#";
 
@@ -616,6 +620,8 @@ impl GLTFTempLoaded {
 
         // result.textures = gltf.textures.clone();
 
+        log::error!("GLTF Analy: {:?}", (base_url.to_string(), (pi_time::Instant::now() - time0).as_micros() as u32));
+
         result
     }
 }
@@ -743,7 +749,7 @@ pub fn sys_gltf_analy(
 }
 
 
-fn relative_path(mut file_path: &str, mut dir: &str) -> String {
+pub fn relative_path(mut file_path: &str, mut dir: &str) -> String {
     let (file_path_len, dir_len) = (file_path.len(), dir.len());
     if file_path_len == 0 {
         return "".to_string();

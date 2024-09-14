@@ -21,7 +21,7 @@ impl DemoLight {
         actions.mesh.layermask.push(OpsLayerMask::ops(light, 0xFFFFFFFF));
         actions.light.create.push(OpsLightCreate::ops(scene, light, ELightType::Direct));
         actions.light.param.push(OpsLightParam::ops(light, ELightModify::Directional( Vector3::new(-0., -2., 1.) )));
-        actions.light.param.push(OpsLightParam::ops(light, ELightModify::Color(1. * 1.8, 1. * 1.8, 1. * 1.8)));
+        actions.light.param.push(OpsLightParam::ops(light, ELightModify::Color(0.4, 0.4, 0.4)));
 
         light
     }
@@ -80,6 +80,8 @@ impl DemoLight {
         actions.light.create.push(OpsLightCreate::ops(scene, light, ELightType::Spot));
         actions.light.param.push(OpsLightParam::ops(light, ELightModify::Directional(Vector3::new(direction.0, direction.1, direction.2))));
         actions.light.param.push(OpsLightParam::ops(light, ELightModify::Color(color.0, color.1, color.2)));
+        actions.light.param.push(OpsLightParam::ops(light, ELightModify::SpotAngle(0.5, 1.5)));
+        actions.light.param.push(OpsLightParam::ops(light, ELightModify::Radius(10.)));
 
         light
     }

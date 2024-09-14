@@ -188,10 +188,6 @@ impl TAssetCapacity for ParticleSystemCalculatorID {
     const ASSET_TYPE: &'static str = "ParticleSystemCalculator";
 }
 
-pub struct ParticleSystemCalculatorBufferMatrix {
-    // pub 
-}
-
 #[derive(Clone, Copy)]
 pub enum EParticleAttributeType {
     Matrix,

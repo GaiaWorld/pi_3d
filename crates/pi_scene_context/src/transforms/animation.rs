@@ -3,7 +3,7 @@ use pi_scene_shell::prelude::*;
 
 use super::transform_node::*;
 
-pub type PluginAnimeLocalPosition   = PluginTypeAnime<LocalPosition, RecordLocalPosition>;
-pub type PluginAnimeLocalEuler      = PluginTypeAnime<LocalEulerAngles, RecordLocalEulerAngles>;
-pub type PluginAnimeLocalQuaternion = PluginTypeAnime<LocalRotationQuaternion, RecordLocalRotationQuaternion>;
-pub type PluginAnimeLocalScaling    = PluginTypeAnime<LocalScaling, RecordLocalScaling>;
+pub type PluginAnimeLocalPosition   = PluginTypeAnime<LocalPosition>;
+pub type PluginAnimeLocalEuler      = PluginTypeAnime<LocalEulerAngles>;
+pub type PluginAnimeLocalQuaternion = PluginTypeAnime<LocalRotationQuaternion>;
+pub type PluginAnimeLocalScaling    = PluginTypeAnime<LocalScaling>;

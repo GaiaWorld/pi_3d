@@ -9,26 +9,6 @@ use crate::{
     prelude::SceneAnimationEnable
 };
 
-
-pub fn sys_listen_scene_anime_ctx(
-    // e: Event,
-    // items: Query<(&SceneID, &AnimationGroups)>,
-    // mut scenes: Query<&mut SceneAnimationContext>,
-) {
-    
-    // // log::debug!("Obj Dispose > SysSceneAnime 0");
-    // if let Some((id_scene, groups)) = items.get_by_entity(e.id) {
-    //     // log::debug!("Obj Dispose > SysSceneAnime 1");
-    //     if let Some(mut ctx) = scenes.get_mut(id_scene.0) {
-    //         // log::debug!("Obj Dispose > SysSceneAnime 2");
-    //         groups.map.iter().for_each(|(_, id_group)| {
-    //             ctx.0.pause(id_group.clone());
-    //             ctx.1.push(id_group.clone());
-    //         });
-    //     }
-    // }
-}
-// #[system]
 pub fn sys_scene_anime_ctx(
     mut scenes: Query<(Entity, &SceneTime, &SceneAnimationEnable)>,
     mut animeglobal: ResMut<GlobalAnimeAbout>,

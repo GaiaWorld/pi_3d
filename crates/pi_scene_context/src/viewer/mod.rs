@@ -25,9 +25,9 @@ pub mod prelude;
 pub struct PluginViewerBase;
 impl Plugin for PluginViewerBase {
     fn build(&self, app: &mut App) {
-        app.configure_set(Update, StageViewer::ForceInclude/* .run_if(runif_3d) */.in_set(FrameDataPrepare).before(ERunStageChap::Uniform));
-        app.configure_set(Update, StageViewer::TransformCalcMatrix.in_set(FrameDataPrepare));
-        app.configure_set(Update, StageViewer::Culling.in_set(FrameDataPrepare).after(StageViewer::TransformCalcMatrix).before(StageViewer::ForceInclude).before(StageCulling::CalcBounding).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageViewer::ForceInclude         .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageViewer::TransformCalcMatrix  .in_set(ERunStageChap::D3).in_set(FrameDataPrepare));
+        app.configure_set(Update, StageViewer::Culling              .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageViewer::TransformCalcMatrix).before(StageViewer::ForceInclude).before(StageCulling::CalcBounding).before(ERunStageChap::Uniform));
         app.insert_resource(ActionListViewerForceInclude::default());
         app.add_systems(Update, sys_act_viewer_force_include.in_set(StageViewer::ForceInclude));
         app.add_systems(Update, sys_calc_transform_matrix.in_set(StageViewer::TransformCalcMatrix));

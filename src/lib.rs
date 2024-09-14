@@ -80,8 +80,9 @@ pub fn sys_state_resource(
         Res<TmpTransformWorldCalc1>
     ),
     renderers: Query<&Renderer>,
+    performance: Res<Performance>,
 ) {
-    // if stateglobal.debug == false { return };
+    // if performance.debug == false { return };
 
     stateglobal.count_gltf              = asset_gltf.len();
     stateglobal.count_bindbuffer        = bindbuffers.asset_mgr().len();
@@ -125,39 +126,6 @@ pub fn sys_state_resource(
         if item.is_some() { count += 1; }
     });
     stateglobal.count_passbindgroups = count;
-
-    // count = 0;
-    // passes.4.iter().for_each(|item| {
-    //     if item.is_some() { count += 1; }
-    // });
-    // stateglobal.count_passshader = count;
-
-    // count = 0;
-    // passes.5.iter().for_each(|item| {
-    //     if item.is_some() { count += 1; }
-    // });
-    // stateglobal.count_passpipeline = count;
-
-    // count = 0;
-    // passes.6.iter().for_each(|item| {
-    //     if item.is_some() { count += 1; }
-    // });
-    // stateglobal.count_passdraw = count;
-
-    // count = 0;
-    // passes.7.iter().for_each(|item| {
-    //     if item.0.is_some() { count += 1; }
-    // });
-    // stateglobal.count_passtexs = count;
-
-    // count = 0;
-    // passes.8.iter().for_each(|item| {
-    //     if item.0 != empty.id() { count += 1; }
-    // });
-    // stateglobal.count_passmat = count;
-
-    // *performance = Performance::default();
-    // *particlesysperformance = ParticleSystemPerformance::default();
 
     let mut count_vertex = 0;
     renderers.iter().for_each(|renderer| {
@@ -372,30 +340,32 @@ pub fn sys_info_draw(
         viewer_includes.push(models.0.len() + forcemodels.0.len());
     });
 
-    log::warn!(
-        "Entity: {}, ReadyGeo: {:?}-{:?}, Cullings: {:?}-{:?}-{:?}, Set0: {:?}, Set1: {:?}, Eff: {:?}, Tex: {:?}, BindGroups: {:?}, Shader: {:?}, Pipeline: {:?}, Draw: {:?}",
-        entitycount,
-        count_ready_geo, count_ready_geo_mesh,
-        viewer_includes, viewer_cullings, statecamera.culling_time,
-        count_set0, count_set1, count_effect, count_textures, count_bindgroups, count_shader, count_pipeline, count_draw
-    );
+    // log::warn!(
+    //     "Entity: {}, ReadyGeo: {:?}-{:?}, Cullings: {:?}-{:?}-{:?}, Set0: {:?}, Set1: {:?}, Eff: {:?}, Tex: {:?}, BindGroups: {:?}, Shader: {:?}, Pipeline: {:?}, Draw: {:?}",
+    //     entitycount,
+    //     count_ready_geo, count_ready_geo_mesh,
+    //     viewer_includes, viewer_cullings, statecamera.culling_time,
+    //     count_set0, count_set1, count_effect, count_textures, count_bindgroups, count_shader, count_pipeline, count_draw
+    // );
 }
 
 pub fn sys_info_resource(
     states: Res<StateResource>,
     psperformance: Res<ParticleSystemPerformance>,
-    performance: Res<Performance>,
+    mut performance: ResMut<Performance>,
     errors: Res<ErrorRecord>,
 ) {
     // log::warn!("Errors {:?}", errors.0.len());
+    performance.debug = true;
+    log::warn!("DrawCall: {:?} WorldMatrix: {:?} DrawList {:?} Culling {:?} Uniform: {:?}", performance.drawcalls, performance.worldmatrix, performance.drawobjs, performance.culling, (performance.uniformupdate, performance.uniformbufferupdate));
     // log::warn!(
     //     "Materials: {:?}, BindBuffer: {:?}, VertexBuffer: {:?}, VertexBufferSize: {:?}, Shaders: {:?}, Pipeline: {:?}, ImageTexture: {:?},",
     //     states.count_material, states.count_bindbuffer, states.count_geometrybuffer, states.size_geometrybuffer, states.count_shader, states.count_pipeline, states.count_imgtexture
     // );
     // log::warn!(
-    //     "PSCount: {:?}, PSPerformance: {:?}, sys_emitmatrix: {:?}, sys_direction: {:?}, sys_update_buffer: {:?}, sys_update_buffer_trail: {:?}, sys_emission: {:?}, sys_emitter: {:?}, sys_force_over_life_time: {:?}, sys_gravity: {:?}",
+    //     "PSCount: {:?}, PSPerformance: {:?}, sys_emitmatrix: {:?}, sys_direction: {:?}, sys_update_buffer: {:?}, sys_update_buffer_trail: {:?}, sys_emission: {:?}, sys_emitter: {:?}, sys_force_over_life_time: {:?}, sys_prewarm: {:?}",
     //     psperformance.particles, performance.particlesystem, psperformance.sys_emitmatrix, psperformance.sys_direction, psperformance.sys_update_buffer, psperformance.sys_update_buffer_trail
-    //     , psperformance.sys_emission, psperformance.sys_emitter, psperformance.sys_force_over_life_time, psperformance.sys_gravity
+    //     , psperformance.sys_emission, psperformance.sys_emitmatrix, psperformance.sys_over_life_time, psperformance.sys_prewarm
     // );
 }
 

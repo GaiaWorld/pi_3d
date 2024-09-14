@@ -46,7 +46,7 @@ impl Plugin for PluginTest {
         } else { return; };
 
         let tes_size = 6;
-        fps.frame_ms = 100;
+        fps.frame_ms = 10;
 
         actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 * 2. )));
         

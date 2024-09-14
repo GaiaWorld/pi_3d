@@ -52,7 +52,7 @@ impl PluginImageCopy {
             actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_07, EDepthState::Compare(CompareFunction::Always)));
             actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_08, EDepthState::Compare(CompareFunction::Always)));
 
-            actions.geometry.create.push(OpsGeomeryCreate::ops(plane, id_geo, attrs, Some(QuadBuilder::indices_meta())));
+            actions.geometry.create.push(OpsGeomeryCreate::ops(plane, id_geo, attrs, None));
             actions.material.usemat.push(OpsMaterialUse::ops(plane, copymat, PassTag::PASS_TAG_01));
             
             let copycamera = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(copycamera, scene));
@@ -111,7 +111,7 @@ impl PluginImageCopy {
             actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_07, EDepthState::Compare(CompareFunction::Always)));
             actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_08, EDepthState::Compare(CompareFunction::Always)));
 
-            actions.geometry.create.push(OpsGeomeryCreate::ops(plane, id_geo, attrs, Some(QuadBuilder::indices_meta())));
+            actions.geometry.create.push(OpsGeomeryCreate::ops(plane, id_geo, attrs, None));
             actions.material.usemat.push(OpsMaterialUse::ops(plane, copymat, PassTag::PASS_TAG_01));
             
             let copycamera = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(copycamera, scene));

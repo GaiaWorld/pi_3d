@@ -70,11 +70,11 @@ impl Plugin for PluginGlobalAnimation {
         app.insert_resource(ActionListAnimeGroupDispose::default());
         app.insert_resource(ActionListAnimationGroupAction::default());
 
-        app.configure_set(Update, EStageAnimation::Create       .run_if(runif_3d));
-        app.configure_set(Update, EStageAnimation::_CreateApply /* .run_if(runif_3d) */.after(EStageAnimation::Create));
-        app.configure_set(Update, EStageAnimation::Command      /* .run_if(runif_3d) */.after(EStageAnimation::_CreateApply));
-        app.configure_set(Update, EStageAnimation::Running      /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(EStageAnimation::Command).before(ERunStageChap::Anime));
-        app.configure_set(Update, EStageAnimation::Dispose      /* .run_if(runif_3d) */.after(EStageAnimation::Running).after(ERunStageChap::Dispose));
+        app.configure_set(Update, EStageAnimation::Create       .in_set(ERunStageChap::D3));
+        app.configure_set(Update, EStageAnimation::_CreateApply .in_set(ERunStageChap::D3).after(EStageAnimation::Create));
+        app.configure_set(Update, EStageAnimation::Command      .in_set(ERunStageChap::D3).after(EStageAnimation::_CreateApply));
+        app.configure_set(Update, EStageAnimation::Running      .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(EStageAnimation::Command).before(ERunStageChap::Anime));
+        app.configure_set(Update, EStageAnimation::Dispose      .in_set(ERunStageChap::D3).after(EStageAnimation::Running).after(ERunStageChap::Dispose));
         
 #[cfg(feature="use_bevy")]
 {
@@ -120,17 +120,19 @@ impl Plugin for PluginGlobalAnimation {
     }
 }
 
-pub struct PluginTypeAnime<D: TAnimatableComp, R: TAnimatableCompRecord<D>>(PhantomData<(D, R)>);
-impl<D: TAnimatableComp, R: TAnimatableCompRecord<D>> PluginTypeAnime<D, R> {
+pub struct PluginTypeAnime<D: TAnimatableComp>(PhantomData<D>);
+impl<D: TAnimatableComp> PluginTypeAnime<D> {
     pub fn new() -> Self {
         Self(PhantomData::default())
     }
 }
-impl<D: TAnimatableComp, R: TAnimatableCompRecord<D>> Plugin for PluginTypeAnime<D, R> {
+impl<D: TAnimatableComp> Plugin for PluginTypeAnime<D> {
 
     fn build(&self, app: &mut App) {
         let ty = app.world.get_resource_mut::<GlobalAnimeAbout>().unwrap().ty_alloc.alloc().expect("");
         // log::warn!("AnimeType {:?}", ty);
+
+        app.insert_resource(AnimeTargetRecordValues::<D>::default());
 
         let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<D>();
         // 创建 动画曲线 资产表
@@ -152,7 +154,6 @@ impl<D: TAnimatableComp, R: TAnimatableCompRecord<D>> Plugin for PluginTypeAnime
     app.add_systems(
         Update,
         (
-            sys_calc_reset_animatablecomp::<D, R>   , //.run_if(should_run),
             sys_calc_type_anime::<D>                , // .run_if(should_run_with_animation)
         ).chain().in_set(EStageAnimation::Running)
     );
@@ -162,16 +163,15 @@ impl<D: TAnimatableComp, R: TAnimatableCompRecord<D>> Plugin for PluginTypeAnime
     
     app
         .add_systems(Update, sys_apply_removed_data::<D>     .before(sys_animation_removed_data_clear)    .in_set(EStageAnimation::Dispose))
-        .add_systems(Update, sys_calc_reset_animatablecomp::<D, R>                                               .in_set(EStageAnimation::Running))
-        .add_systems(Update, sys_calc_type_anime::<D>    .after(sys_calc_reset_animatablecomp::<D, R>)   .in_set(EStageAnimation::Running))
+        .add_systems(Update, sys_calc_type_anime::<D>    .in_set(EStageAnimation::Running))
         ;
 }
     }
 }
 
-pub type PluginTypeAnimatorableFloat = PluginTypeAnime<AnimatorableFloat, RecordAnimatorableFloat>;
-pub type PluginTypeAnimatorableVec2 = PluginTypeAnime<AnimatorableVec2, RecordAnimatorableVec2>;
-pub type PluginTypeAnimatorableVec3 = PluginTypeAnime<AnimatorableVec3, RecordAnimatorableVec3>;
-pub type PluginTypeAnimatorableVec4 = PluginTypeAnime<AnimatorableVec4, RecordAnimatorableVec4>;
-pub type PluginTypeAnimatorableUint = PluginTypeAnime<AnimatorableUint, RecordAnimatorableUint>;
-pub type PluginTypeAnimatorableInt = PluginTypeAnime<AnimatorableSint, RecordAnimatorableInt>;
+pub type PluginTypeAnimatorableFloat = PluginTypeAnime<AnimatorableFloat>;
+pub type PluginTypeAnimatorableVec2 = PluginTypeAnime<AnimatorableVec2>;
+pub type PluginTypeAnimatorableVec3 = PluginTypeAnime<AnimatorableVec3>;
+pub type PluginTypeAnimatorableVec4 = PluginTypeAnime<AnimatorableVec4>;
+pub type PluginTypeAnimatorableUint = PluginTypeAnime<AnimatorableUint>;
+pub type PluginTypeAnimatorableInt  = PluginTypeAnime<AnimatorableSint>;

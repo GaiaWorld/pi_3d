@@ -80,12 +80,13 @@ impl SceneItemsQueue {
 
 #[derive(Component, Default)]
 pub struct SceneDirectLightsQueue(pub SceneItemsQueue);
+
 #[derive(Component, Default)]
-pub struct ScenePointLightsQueue(pub SceneItemsQueue);
-#[derive(Component, Default)]
-pub struct SceneSpotLightsQueue(pub SceneItemsQueue);
-#[derive(Component, Default)]
-pub struct SceneHemiLightsQueue(pub SceneItemsQueue);
+pub struct SceneOtherLightsQueue {
+    pub point: SceneItemsQueue,
+    pub spot: SceneItemsQueue,
+    pub hemi: SceneItemsQueue,
+}
 
 #[derive(Component, Default)]
 pub struct SceneShadowQueue(pub SceneItemsQueue);

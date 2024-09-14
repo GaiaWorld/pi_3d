@@ -56,7 +56,7 @@ fn setup(
             for _k in 0..temp {
                 let _item = {
                     let vertices = QuadBuilder::attrs_meta();
-                    let indices = Some(QuadBuilder::indices_meta());
+                    let indices = None;
                     let state = base::particelsystem_mesh_state();
                     let source = base::DemoScene::mesh(&mut commands, scene, node, &mut actions,  vertices, indices, state);
 
@@ -91,7 +91,7 @@ fn setup(
                 // actions.mesh.create.push(OpsMeshCreation::ops(scene, source));
                 // let id_geo = commands.spawn_empty_id();
                 // let mut attrs = QuadBuilder::attrs_meta();
-                // actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(QuadBuilder::indices_meta())));
+                // actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, None));
                 // let idmat = commands.spawn_empty_id();
                 // actions.material.usemat.push(OpsMaterialUse::ops(source, idmat));
                 // actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY, EPassTag::Opaque));

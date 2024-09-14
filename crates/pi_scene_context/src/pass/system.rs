@@ -9,7 +9,7 @@ pub fn sys_modify_pass_effect_by_material(
     passchanges: ComponentChanged<PassMaterialID>,
     changes: ComponentChanged<PassTag>,
     changes2: ComponentChanged<DirtyMaterialRefs>,
-    changes3: ComponentChanged<BindEffectReset>,
+    changes3: ComponentChanged<BindEffect>,
     changes4: ComponentChanged<EffectTextureSamplersComp>,
     materials: Query<&MaterialRefs>,
     mut passes: Query<&mut PassBindGroupsDirty>,

@@ -54,22 +54,22 @@ pub struct Particle;
 
 fn sys_demo_particle(
     particles: Query<(&SceneID, &GeometryID), With<Particle>>,
-    scenes: Query<(&SceneTime, &SceneMainCameraID)>,
+    scenes: Query<&SceneTime>,
     cameras: Query<(&ViewerGlobalPosition, &ViewerViewMatrix)>,
     mut actions: pi_3d::ActionSets,
 ) {
     particles.iter().for_each(|(idscene, idgeo)| {
-        if let Ok((scenetime, maincamera)) = scenes.get(idscene.0) {
+        if let Ok(scenetime) = scenes.get(idscene.0) {
 
-            let (_camerapos, _camerarotationmatrix) = if let Some(maincamera) = maincamera.0 {
-                if let Ok((viewpos, viewmat)) = cameras.get(maincamera) {
-                    (viewpos.0.clone(), viewmat.get_rotation_matrix())
-                } else {
-                    (Vector3::new(0., 0., -1.), Matrix::identity())
-                }
-            } else {
-                (Vector3::new(0., 0., -1.), Matrix::identity())
-            };
+            // let (_camerapos, _camerarotationmatrix) = if let Some(maincamera) = maincamera.0 {
+            //     if let Ok((viewpos, viewmat)) = cameras.get(maincamera) {
+            //         (viewpos.0.clone(), viewmat.get_rotation_matrix())
+            //     } else {
+            //         (Vector3::new(0., 0., -1.), Matrix::identity())
+            //     }
+            // } else {
+            //     (Vector3::new(0., 0., -1.), Matrix::identity())
+            // };
 
             // if let Ok((_, _)) = geometrys.get_mut(idgeo.0) {
             //     let mut buffermatrix = vec![];

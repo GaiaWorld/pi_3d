@@ -1,4 +1,5 @@
 
+use core::f32;
 use std::{sync::Arc, ops::Range};
 
 use pi_scene_shell::prelude::*;
@@ -14,6 +15,7 @@ use super::{*, instanced_buffer::*, types::ModelInstanceAttributes, };
 pub struct TmpInstanceSort {
     pub entity: Entity,
     pub index: i32,
+    pub xyz: (f32, f32, f32),
 }
 impl PartialEq for TmpInstanceSort {
     fn eq(&self, other: &Self) -> bool {
@@ -37,10 +39,10 @@ impl Ord for TmpInstanceSort {
 }
 
     pub fn sys_tick_instanced_buffer_update_single(
-        actives: Query<(&GlobalEnable, &InstanceMesh, &InstanceTransparentIndex, &AbstructMeshCullingFlag), With<AbstructMesh>>,
+        actives: Query<(&GlobalEnable, &InstanceMesh, &InstanceTransparentIndex, &AbstructMeshCullingFlag, &GlobalMatrix), With<AbstructMesh>>,
         instanceattributes: Query<&ModelInstanceAttributes>,
-        added: ComponentAdded<DirtyInstanceSourceRefs>,
-        changes: ComponentChanged<DirtyInstanceSourceRefs>,
+        added: ComponentAdded<InstanceSourceRefs>,
+        changes: ComponentChanged<InstanceSourceRefs>,
         mut sources: Query<
             (
                 Entity, &InstanceSourceRefs, &GeometryID, &MeshInstanceState, &mut InstancedMeshTransparentSortCollection
@@ -57,6 +59,12 @@ impl Ord for TmpInstanceSort {
         mut combinedata: ResMut<CombineDataCommon>,
     ) {
         let changes = changes.iter().chain(added.iter());
+        let mut minx = f32::MAX;
+        let mut miny = f32::MAX;
+        let mut minz = f32::MAX;
+        let mut maxx = f32::MIN;
+        let mut maxy = f32::MIN;
+        let mut maxz = f32::MIN;
         changes.for_each(|entity| {
             if let Ok((idsource, instances, idgeo, meshinsstate, mut instancessortinfos)) = sources.get_mut(*entity) {
                 if let Ok(disposed) = dispoeds.get(idsource) {
@@ -71,9 +79,9 @@ impl Ord for TmpInstanceSort {
                         let sorted_instances = &mut temp.instancesort;
                         sorted_instances.clear();
                         instances.iter().for_each(|id| {
-                            if let (Ok((enable, _, instancelayer, culling)), Ok(disposed)) = (actives.get(*id), dispoeds.get(*id)) {
+                            if let (Ok((enable, _, instancelayer, culling, gtransform)), Ok(disposed)) = (actives.get(*id), dispoeds.get(*id)) {
                                 if enable.0 == true && disposed.0 == false && culling.0 == true {
-                                    sorted_instances.push(TmpInstanceSort { entity: *id, index: instancelayer.0 });
+                                    sorted_instances.push(TmpInstanceSort { entity: *id, index: instancelayer.0, xyz: gtransform.xyz() });
                                 }
                             }
                         });
@@ -87,14 +95,33 @@ impl Ord for TmpInstanceSort {
                             let mut tmp_alphaindex = sorted_instances[0].index;
                             let mut tmp_instance_start = 0;
                             let mut tmp_instance_end = 0;
+                            minx = minx.min(sorted_instances[0].xyz.0);
+                            miny = miny.min(sorted_instances[0].xyz.1);
+                            minz = minz.min(sorted_instances[0].xyz.2);
+                            maxx = maxx.max(sorted_instances[0].xyz.0);
+                            maxy = maxy.max(sorted_instances[0].xyz.1);
+                            maxz = maxz.max(sorted_instances[0].xyz.2);
+
                             sorted_instances.iter().for_each(|instance| {
                                 let idinstance = instance.entity;
                                 if let Ok(instancedata) = instanceattributes.get(idinstance) {
                                     if tmp_alphaindex != instance.index {
-                                        instancessortinfos.ranges.push((tmp_alphaindex, Range { start: tmp_instance_start, end: tmp_instance_end }));
+                                        instancessortinfos.ranges.push((tmp_alphaindex, Range { start: tmp_instance_start, end: tmp_instance_end }, ((minx + maxx) * 0.5, (miny + maxy) * 0.5, (minz + maxz) * 0.5)));
                                         tmp_alphaindex = instance.index;
                                         tmp_instance_start = tmp_instance_end;
+                                        minx = f32::MAX;
+                                        miny = f32::MAX;
+                                        minz = f32::MAX;
+                                        maxx = f32::MIN;
+                                        maxy = f32::MIN;
+                                        maxz = f32::MIN;
                                     }
+                                    minx = minx.min(instance.xyz.0);
+                                    miny = miny.min(instance.xyz.1);
+                                    minz = minz.min(instance.xyz.2);
+                                    maxx = maxx.max(instance.xyz.0);
+                                    maxy = maxy.max(instance.xyz.1);
+                                    maxz = maxz.max(instance.xyz.2);
                                     tmp_instance_end += 1;
     
                                     instancedata.bytes().iter().for_each(|v| { instancessortinfos.data.push(*v); });
@@ -103,23 +130,24 @@ impl Ord for TmpInstanceSort {
                                 idx += 0;
                             });
                             if tmp_instance_start != tmp_instance_end {
-                                instancessortinfos.ranges.push((tmp_alphaindex, Range { start: tmp_instance_start, end: tmp_instance_end }));
+                                instancessortinfos.ranges.push((tmp_alphaindex, Range { start: tmp_instance_start, end: tmp_instance_end }, ((minx + maxx) * 0.5, (miny + maxy) * 0.5, (minz + maxz) * 0.5)));
                             }
                             {
                                 let collected = combinedata.data(&Range { start: 0, end: combinedata.usedsize() });
                                 let instancedinfo = buffer;
                                 if let Ok((desclist, mut buffer, mut keys, mut flag)) = slots.get_mut(idgeo.0) {
-                                    match instancedinfo.slot() {
-                                        EVertexBufferSlot::Slot01 => { if let Some(buffer) = &mut buffer[0] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[0] = desclist.key(0); *flag = FlagGeometryDirty; } },
-                                        EVertexBufferSlot::Slot02 => { if let Some(buffer) = &mut buffer[1] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[1] = desclist.key(1); *flag = FlagGeometryDirty; } },
-                                        EVertexBufferSlot::Slot03 => { if let Some(buffer) = &mut buffer[2] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[2] = desclist.key(2); *flag = FlagGeometryDirty; } },
-                                        EVertexBufferSlot::Slot04 => { if let Some(buffer) = &mut buffer[3] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[3] = desclist.key(3); *flag = FlagGeometryDirty; } },
-                                        EVertexBufferSlot::Slot05 => { if let Some(buffer) = &mut buffer[4] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[4] = desclist.key(4); *flag = FlagGeometryDirty; } },
-                                        EVertexBufferSlot::Slot06 => { if let Some(buffer) = &mut buffer[5] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[5] = desclist.key(5); *flag = FlagGeometryDirty; } },
-                                        EVertexBufferSlot::Slot07 => { if let Some(buffer) = &mut buffer[6] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[6] = desclist.key(6); *flag = FlagGeometryDirty; } },
-                                        EVertexBufferSlot::Slot08 => { if let Some(buffer) = &mut buffer[7] { update_instanced_buffer_for_single(&mut buffer.0, &collected, &instancedcache, &mut allocator, &device, &queue); keys.0[7] = desclist.key(7); *flag = FlagGeometryDirty; } },
-                                        _ => {}
-                                    }
+                                    let buffer = match instancedinfo.slot() {
+                                        EVertexBufferSlot::Slot01 => { if let Some(buffer) = &mut buffer[0] { keys.0[0] = desclist.key(0); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
+                                        EVertexBufferSlot::Slot02 => { if let Some(buffer) = &mut buffer[1] { keys.0[1] = desclist.key(1); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
+                                        EVertexBufferSlot::Slot03 => { if let Some(buffer) = &mut buffer[2] { keys.0[2] = desclist.key(2); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
+                                        EVertexBufferSlot::Slot04 => { if let Some(buffer) = &mut buffer[3] { keys.0[3] = desclist.key(3); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
+                                        EVertexBufferSlot::Slot05 => { if let Some(buffer) = &mut buffer[4] { keys.0[4] = desclist.key(4); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
+                                        EVertexBufferSlot::Slot06 => { if let Some(buffer) = &mut buffer[5] { keys.0[5] = desclist.key(5); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
+                                        EVertexBufferSlot::Slot07 => { if let Some(buffer) = &mut buffer[6] { keys.0[6] = desclist.key(6); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
+                                        EVertexBufferSlot::Slot08 => { if let Some(buffer) = &mut buffer[7] { keys.0[7] = desclist.key(7); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
+                                        _ => { return; }
+                                    };
+                                    update_instanced_buffer_for_single(buffer, &collected, &instancedcache, &mut allocator, &device, &queue);
                                 }
                             }
                         }
@@ -131,9 +159,9 @@ impl Ord for TmpInstanceSort {
 
 
     pub fn sys_tick_instanced_buffer_update(
-        added: ComponentAdded<DirtyInstanceSourceRefs>,
-        changes: ComponentChanged<DirtyInstanceSourceRefs>,
-        actives: Query<(&GlobalEnable, &InstanceMesh, &InstanceTransparentIndex, &AbstructMeshCullingFlag), With<AbstructMesh>>,
+        added: ComponentAdded<InstanceSourceRefs>,
+        changes: ComponentChanged<InstanceSourceRefs>,
+        actives: Query<(&GlobalEnable, &InstanceMesh, &InstanceTransparentIndex, &AbstructMeshCullingFlag, &GlobalMatrix), With<AbstructMesh>>,
         instanceattributes: Query<&ModelInstanceAttributes>,
         mut sources: Query<
             (
@@ -147,6 +175,12 @@ impl Ord for TmpInstanceSort {
         // log::error!("Instance Update");
         let mut counter = 0;
         // let mut size = 0;
+        let mut minx = f32::MAX;
+        let mut miny = f32::MAX;
+        let mut minz = f32::MAX;
+        let mut maxx = f32::MIN;
+        let mut maxy = f32::MIN;
+        let mut maxz = f32::MIN;
         let changes = changes.iter().chain(added.iter());
         changes.for_each(|entity| {
             if let Ok((idsource, instances, idgeo, meshinsstate, mut instancessortinfos)) = sources.get_mut(*entity) {
@@ -164,29 +198,47 @@ impl Ord for TmpInstanceSort {
                         instancessortinfos.sizeperinstance = instancedinfo.bytes_per_instance as usize;
                         let sorted_instances = &mut temp.instancesort;
                         instances.iter().for_each(|id| {
-                            if let (Ok((enable, _, instancelayer, culling)), Ok(disposed)) = (actives.get(*id), dispoeds.get(*id)) {
+                            if let (Ok((enable, _, instancelayer, culling, gtransform)), Ok(disposed)) = (actives.get(*id), dispoeds.get(*id)) {
                                 if enable.0 == true && disposed.0 == false && culling.0 {
-                                    sorted_instances.push(TmpInstanceSort { entity: *id, index: instancelayer.0 });
+                                    sorted_instances.push(TmpInstanceSort { entity: *id, index: instancelayer.0, xyz: gtransform.xyz() });
                                 }
                             }
                         });
                         sorted_instances.sort();
 
-                        // log::error!("InstanceCount: {}", sorted_instances.len());
+                        // log::error!("InstanceCount: {:?}", (instances.len(), sorted_instances.len()));
                         if sorted_instances.len() > 0 {
                             let mut idx: u32 = 0;
                             // let mut collected: Vec<u8> = Vec::with_capacity(sorted_instances.len() * instancedinfo.bytes_per_instance as usize);
                             let mut tmp_alphaindex = sorted_instances[0].index;
                             let mut tmp_instance_start = 0;
                             let mut tmp_instance_end = 0;
+                            minx = minx.min(sorted_instances[0].xyz.0);
+                            miny = miny.min(sorted_instances[0].xyz.1);
+                            minz = minz.min(sorted_instances[0].xyz.2);
+                            maxx = maxx.max(sorted_instances[0].xyz.0);
+                            maxy = maxy.max(sorted_instances[0].xyz.1);
+                            maxz = maxz.max(sorted_instances[0].xyz.2);
                             sorted_instances.iter().for_each(|instance| {
                                 let idinstance = instance.entity;
                                 if let Ok(instancedata) = instanceattributes.get(idinstance) {
                                     if tmp_alphaindex != instance.index {
-                                        instancessortinfos.ranges.push((tmp_alphaindex, Range { start: tmp_instance_start, end: tmp_instance_end }));
+                                        instancessortinfos.ranges.push((tmp_alphaindex, Range { start: tmp_instance_start, end: tmp_instance_end }, ((minx + maxx) * 0.5, (miny + maxy) * 0.5, (minz + maxz) * 0.5)));
                                         tmp_alphaindex = instance.index;
                                         tmp_instance_start = tmp_instance_end;
+                                        minx = f32::MAX;
+                                        miny = f32::MAX;
+                                        minz = f32::MAX;
+                                        maxx = f32::MIN;
+                                        maxy = f32::MIN;
+                                        maxz = f32::MIN;
                                     }
+                                    minx = minx.min(instance.xyz.0);
+                                    miny = miny.min(instance.xyz.1);
+                                    minz = minz.min(instance.xyz.2);
+                                    maxx = maxx.max(instance.xyz.0);
+                                    maxy = maxy.max(instance.xyz.1);
+                                    maxz = maxz.max(instance.xyz.2);
                                     tmp_instance_end += 1;
 
                                     unsafe_vec_append_slice(&mut instancessortinfos.data, instancedata.bytes());
@@ -195,7 +247,7 @@ impl Ord for TmpInstanceSort {
                                 idx += 0;
                             });
                             if tmp_instance_start != tmp_instance_end {
-                                instancessortinfos.ranges.push((tmp_alphaindex, Range { start: tmp_instance_start, end: tmp_instance_end }));
+                                instancessortinfos.ranges.push((tmp_alphaindex, Range { start: tmp_instance_start, end: tmp_instance_end }, ((minx + maxx) * 0.5, (miny + maxy) * 0.5, (minz + maxz) * 0.5)));
                             }
                             counter += 1;
 
@@ -217,7 +269,6 @@ impl Ord for TmpInstanceSort {
         instancedcache.upload(&queue);
     }
 
-#[inline(never)]
 pub fn update_instanced_buffer_for_single(
     oldbuffer: &mut EVerticesBufferTmp,
     collected: &[u8],

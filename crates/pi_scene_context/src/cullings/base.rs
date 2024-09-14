@@ -9,14 +9,15 @@ pub trait TBoundingInfoCalc {
     fn add_fast(&mut self, key: Entity);
     fn add(&mut self, key: Entity, min: (Number, Number, Number), max: (Number, Number, Number));
     fn remove(&mut self, key: Entity);
-    fn culling<F: TFilter>(&self, vp: &Matrix, filter: F, result: &mut Vec<Entity>);
+    fn culling<F: TFilter>(&mut self, vp: &Matrix, filter: F, result: &mut Vec<Entity>);
     fn ray_test(
         &self,
-        org: Vector3,
-        dir: Vector3,
-        result: &mut Option<Entity>,
+        ray: &PiRay,
+        result: &mut Option<PickResult>,
     );
     fn entities(&self) -> Vec<Entity>;
+    fn size(&self) -> usize;
+    fn reset_temp(&mut self);
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -87,6 +88,7 @@ pub enum ECullingStrategy {
     STANDARD,
 }
 
+/// 记录 TransformNode 对应的射线命中盒子
 #[derive(Component, Clone, Copy)]
 pub struct Collider {
     pub minimum: Vector3,
@@ -111,6 +113,7 @@ impl Collider {
     }
 }
 
+/// 记录 Mesh 对应的网格剔除Box信息
 #[derive(Component)]
 pub struct GeometryBounding {
     pub minimum: Vector3,
@@ -141,12 +144,29 @@ pub trait TFilter {
     fn iter(&self) -> std::collections::hash_set::Iter<Entity>;
 }
 
+/// 标识 Mesh 的网格剔除信息是否需要更新
 #[derive(Component, Default)]
 pub struct ItemCullingDirty;
 
+/// 标识 Mesh 的网格剔除模式
 #[derive(Component, Default)]
 pub struct GeometryCullingMode(pub ECullingStrategy);
 
+
+#[derive(Debug, Clone, Copy)]
+pub struct PiRay {
+    pub origin: (Number, Number, Number),
+    pub direction: (Number, Number, Number),
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct PickResult {
+    pub target: Entity,
+    pub min: (Number, Number, Number),
+    pub max: (Number, Number, Number),
+    pub bybounding: bool,
+    pub pickdetail: Option<(Number, Number, Number)>,
+}
 
 #[derive(Component)]
 pub enum SceneColliderPool {
@@ -178,7 +198,7 @@ impl SceneColliderPool {
             adjust_max,
             deep
         );
-        Self::OctTree(BoundingOctTree { fast: XHashSet::default(), tree })
+        Self::OctTree(BoundingOctTree::new(tree))
     }
     pub fn remove(&mut self, entity: Entity) {
         match self {
@@ -205,14 +225,13 @@ impl SceneColliderPool {
     }
     pub fn ray_test(
         &self,
-        org: Vector3,
-        dir: Vector3,
-        result: &mut Option<Entity>,
+        ray: &PiRay,
+        result: &mut Option<PickResult>,
     ) {
         match self {
-            SceneColliderPool::List(item) => item.ray_test(org, dir, result),
+            SceneColliderPool::List(item) => item.ray_test(ray, result),
             SceneColliderPool::QuadTree() => todo!(),
-            SceneColliderPool::OctTree(item) => item.ray_test(org, dir, result),
+            SceneColliderPool::OctTree(item) => item.ray_test(ray, result),
         }
     }
     pub fn entities(&self) -> Vec<Entity> {
@@ -220,6 +239,13 @@ impl SceneColliderPool {
             SceneColliderPool::List(items) => items.entities(),
             SceneColliderPool::QuadTree() => vec![],
             SceneColliderPool::OctTree(items) => items.entities(),
+        }
+    }
+    pub fn size(&self) -> usize {
+        match self {
+            SceneColliderPool::List(items) => items.size(),
+            SceneColliderPool::QuadTree() => 0,
+            SceneColliderPool::OctTree(items) => items.size(),
         }
     }
 }
@@ -238,9 +264,9 @@ impl Default for SceneBoundingPool {
     }
 }
 impl SceneBoundingPool {
-    pub const MODE_LIST: u8 = 0;
-    pub const MODE_QUAD_TREE: u8 = 1;
+    pub const MODE_LIST: u8 = 1;
     pub const MODE_OCTREE: u8 = 2;
+    pub const MODE_QUAD_TREE: u8 = 3;
     pub fn create_vec() -> Self {
         Self::List(VecBoundingInfoCalc::default())
     }
@@ -256,7 +282,7 @@ impl SceneBoundingPool {
             adjust_max,
             deep
         );
-        Self::OctTree(BoundingOctTree { fast: XHashSet::default(), tree })
+        Self::OctTree(BoundingOctTree::new(tree))
     }
     pub fn remove(&mut self, entity: Entity) {
         match self {
@@ -307,7 +333,7 @@ impl SceneBoundingPool {
             SceneBoundingPool::None => {}
         }
     }
-    pub fn culling<F: TFilter>(&self, transform: &ViewerTransformMatrix, filter: F, result: &mut Vec<Entity>) {
+    pub fn culling<F: TFilter>(&mut self, transform: &ViewerTransformMatrix, filter: F, result: &mut Vec<Entity>) {
         let transform = transform.0.clone();
         match self {
             SceneBoundingPool::List(item) => {
@@ -329,14 +355,13 @@ impl SceneBoundingPool {
     }
     pub fn ray_test(
         &self,
-        org: Vector3,
-        dir: Vector3,
-        result: &mut Option<Entity>,
+        ray: &PiRay,
+        result: &mut Option<PickResult>,
     ) {
         match self {
-            SceneBoundingPool::List(item) => item.ray_test(org, dir, result),
+            SceneBoundingPool::List(item) => item.ray_test(ray, result),
             SceneBoundingPool::QuadTree() => todo!(),
-            SceneBoundingPool::OctTree(item) => item.ray_test(org, dir, result),
+            SceneBoundingPool::OctTree(item) => item.ray_test(ray, result),
             SceneBoundingPool::None => {}
         }
     }
@@ -346,6 +371,22 @@ impl SceneBoundingPool {
             SceneBoundingPool::QuadTree() => vec![],
             SceneBoundingPool::OctTree(items) => items.entities(),
             SceneBoundingPool::None => { vec![] }
+        }
+    }
+    pub fn size(&self) -> usize {
+        match self {
+            SceneBoundingPool::List(items) => items.size(),
+            SceneBoundingPool::QuadTree() => 0,
+            SceneBoundingPool::OctTree(items) => items.size(),
+            SceneBoundingPool::None => { 0}
+        }
+    }
+    pub fn reset_temp(&mut self) {
+        match self {
+            SceneBoundingPool::List(items) => items.reset_temp(),
+            SceneBoundingPool::QuadTree() => {},
+            SceneBoundingPool::OctTree(items) => items.reset_temp(),
+            SceneBoundingPool::None => { }
         }
     }
 }

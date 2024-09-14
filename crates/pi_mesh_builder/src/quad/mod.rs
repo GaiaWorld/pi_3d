@@ -32,31 +32,33 @@ impl QuadBuilder {
             ),
         ]
     }
-    pub fn indices_meta() -> IndicesBufferDesc {
-        let key = KeyVertexBuffer::from(Self::KEY_BUFFER_INDICES);
-        IndicesBufferDesc { format: wgpu::IndexFormat::Uint16, buffer_range: None, buffer: key }
-    }
-    pub fn position() -> [f32; 12] {
+    pub fn position() -> [f32; 18] {
         [
             -0.5, -0.5, 0.,   
             0.5, -0.5, 0.,   
-            0.5, 0.5, 0.,  
+            0.5, 0.5, 0.,
+            -0.5, -0.5, 0.,
+            0.5, 0.5, 0.,
             -0.5, 0.5, 0.,  
         ]
     }
-    pub fn normal() -> [f32; 12] {
+    pub fn normal() -> [f32; 18] {
         [
             0., 0., 1.,     
             0., 0., 1.,     
             0., 0., 1.,     
+            0., 0., 1.,  
+            0., 0., 1.,  
             0., 0., 1.,
         ]
     }
-    pub fn vertices() -> [f32; 32] {
+    pub fn vertices() -> [f32; 48] {
         [
             -0.5, -0.5,  0.,      0., 0., 1.,     0., 0.,    
             0.5, -0.5,  0.,      0., 0., 1.,     1., 0.,   
-            0.5,  0.5,  0.,      0., 0., 1.,     1., 1.,     
+            0.5,  0.5,  0.,      0., 0., 1.,     1., 1.,  
+            -0.5, -0.5,  0.,      0., 0., 1.,     0., 0.,   
+            0.5,  0.5,  0.,      0., 0., 1.,     1., 1.,   
             -0.5, 0.5,  0.,      0., 0., 1.,     0., 1.,
         ]
     }
@@ -170,12 +172,12 @@ impl Plugin for PluginQuadBuilder {
                 singequad.0 = Some(range);
             }
         }
-        let key = KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_INDICES);
-        if let Some(bufferrange) = allocator.create_not_updatable_buffer_for_index(&device, &queue, &bytemuck::cast_slice(&QuadBuilder::indices()).iter().map(|v| *v).collect::<Vec<u8>>()) {
-            if let Ok(range) = asset_mgr.insert(key.asset_u64(), bufferrange) {
-                singequad.1 = Some(range);
-            }
-        }
+        // let key = KeyVertexBuffer::from(QuadBuilder::KEY_BUFFER_INDICES);
+        // if let Some(bufferrange) = allocator.create_not_updatable_buffer_for_index(&device, &queue, &bytemuck::cast_slice(&QuadBuilder::indices()).iter().map(|v| *v).collect::<Vec<u8>>()) {
+        //     if let Ok(range) = asset_mgr.insert(key.asset_u64(), bufferrange) {
+        //         singequad.1 = Some(range);
+        //     }
+        // }
         app.insert_resource(singequad);
         // app.add_startup_system(regist);
     }

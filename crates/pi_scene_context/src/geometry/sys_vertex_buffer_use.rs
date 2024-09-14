@@ -1,46 +1,11 @@
 
-use std::ops::Range;
+use std::{hash::{Hash, Hasher}, ops::Range};
 
 use pi_scene_shell::prelude::*;
 
 use super::{
-    base::GeometryDesc, geometry::*, vertex_buffer_useinfo::*, FlagGeometryDirty
+    base::GeometryDesc, geometry::*, vertex_buffer_useinfo::*, FlagGeometryDirty, MeshInstanceState
 };
-
-#[inline(never)]
-fn _sys_vertex_buffer_slots_loaded(
-    mut values: Vec<(wgpu::VertexStepMode, RenderVertices)>,
-    mut instance_memory: Option<u32>,
-    res: &EVerticesBufferTmp,
-    desc: &GeometryDesc,
-    geometry: &mut RenderGeometryComp,
-    rendergeo:&mut RenderGeometryEable,
-    slot: u32,
-    buffer_range: Option<Range<u64>>,
-    buffdesc: &VertexBufferDesc,
-    indicesdesc: Option<&IndicesBufferDesc>,
-    indices: Option<&AssetResBufferIndices>
-) -> Option<(Vec<(wgpu::VertexStepMode, RenderVertices)>, Option<u32>)> {
-    match res {
-        EVerticesBufferTmp::Instance(mem) => { instance_memory = Some(mem.clone()); },
-        EVerticesBufferTmp::Buffer(buf) => {
-            let buff = RenderVertices {
-                slot,
-                buffer: buf.clone(),
-                buffer_range,
-                size_per_value: buffdesc.stride()
-            };
-            values.push((buffdesc.step_mode(), buff));
-        },
-    }
-    if desc.slot_count() == (slot + 1) as usize {
-        geometry.0 = Some(RenderGeometry::create(values, (indicesdesc , indices), instance_memory));
-        *rendergeo = RenderGeometryEable(true);
-        return None;
-    } else {
-        return Some((values, instance_memory));
-    }
-}
 
 pub fn sys_vertex_buffer_slots_loaded(
     addeds: ComponentAdded<FlagGeometryDirty>,
@@ -53,7 +18,7 @@ pub fn sys_vertex_buffer_slots_loaded(
         )
     >,
     mut geometries: Query<&mut RenderGeometryComp>,
-    mut meshes: Query<&mut RenderGeometryEable>,
+    mut meshes: Query<(&mut RenderGeometryEable, &MeshInstanceState)>,
     // devicelimits: Res<DeviceLimits3D>,
 ) {
     let mut counter = 0;
@@ -61,17 +26,17 @@ pub fn sys_vertex_buffer_slots_loaded(
     changes.for_each(|entity| {
         if let Ok((
             idgeo, 
-            (idmesh, desc, indicesdesc, indices, indiceskey)
+            (idmesh, geodesc, indicesdesc, indices, indiceskey)
             , desclist, datalist, _keyslist
         )) = items.get(*entity) {
-            if let (Ok(mut geometry), Ok(mut rendergeo)) = (geometries.get_mut(idgeo), meshes.get_mut(idmesh.0)) {
+            if let (Ok(mut geometry), Ok((mut rendergeo, instancestate))) = (geometries.get_mut(idgeo), meshes.get_mut(idmesh.0)) {
                 counter += 1;
 
                 let mut values = vec![];
                 let mut instance_memory = None;
                 let mut isready = true;
 
-                let max: usize = desc.slot_count();
+                let max: usize = geodesc.slot_count();
                 for slot in 0..max {
                     match (desclist.get(slot), datalist.get(slot)) {
                         (Some(Some(desc)), Some(Some(data))) => {
@@ -105,9 +70,14 @@ pub fn sys_vertex_buffer_slots_loaded(
                     //     log::error!("Geo Ready {:?}", (idgeo, idmesh.0, desclist.get(0)));
                     // }
                     match (&indicesdesc.0, &indiceskey.0, &indices.0) {
-                        (Some(desc), Some(key), Some(_data)) => {
-                            if &desc.buffer == key {
-                                geometry.0 = Some(RenderGeometry::create(values, (indicesdesc.0.as_ref() , indices.0.as_ref()), instance_memory));
+                        (Some(inddesc), Some(key), Some(_data)) => {
+                            if &inddesc.buffer == key {
+                                let mut hasher = DefaultHasher::default();
+                                geodesc.hash_resource(&mut hasher);
+                                if instancestate.use_single_instancebuffer {
+                                    idgeo.hash(&mut hasher);
+                                }
+                                geometry.0 = Some(RenderGeometry::create(values, (indicesdesc.0.as_ref() , indices.0.as_ref()), instance_memory, hasher.finish()));
                                 
                                 *rendergeo = RenderGeometryEable(true);
                             } else {
@@ -117,7 +87,12 @@ pub fn sys_vertex_buffer_slots_loaded(
                             }
                         },
                         (None, None, None) => {
-                            geometry.0 = Some(RenderGeometry::create(values, (indicesdesc.0.as_ref() , indices.0.as_ref()), instance_memory));
+                            let mut hasher = DefaultHasher::default();
+                            geodesc.hash_resource(&mut hasher);
+                            if instancestate.use_single_instancebuffer {
+                                idgeo.hash(&mut hasher);
+                            }
+                            geometry.0 = Some(RenderGeometry::create(values, (indicesdesc.0.as_ref() , indices.0.as_ref()), instance_memory, hasher.finish()));
                             *rendergeo = RenderGeometryEable(true);
                         },
                         _ => {

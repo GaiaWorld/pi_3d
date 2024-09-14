@@ -1,11 +1,17 @@
 use pi_scene_shell::prelude::*;
 use pi_scene_math::{Matrix, Number, Vector3, Vector4};
 
-use super::base::{BoundingKey, TBoundingInfoCalc, TFilter};
+use super::base::{BoundingKey, PiRay, PickResult, TBoundingInfoCalc, TFilter};
 
 pub struct BoundingOctTree {
-    pub fast: XHashSet<Entity>,
-    pub tree: OctTree<BoundingKey, (NAIsometry3<f32>, Cuboid)>,
+    fast: XHashSet<Entity>,
+    tree: OctTree<BoundingKey, (NAIsometry3<f32>, Cuboid)>,
+    temp: XHashSet<Entity>,
+}
+impl BoundingOctTree {
+    pub fn new(tree: OctTree<BoundingKey, (NAIsometry3<f32>, Cuboid)> ) -> Self {
+        Self { fast: XHashSet::default(), tree, temp: XHashSet::default() }
+    }
 }
 
 impl TBoundingInfoCalc for BoundingOctTree {
@@ -47,7 +53,7 @@ impl TBoundingInfoCalc for BoundingOctTree {
         self.tree.remove(BoundingKey(key));
     }
 
-    fn culling<F: TFilter>(&self, transform: &Matrix, filter: F, result: &mut Vec<Entity>) {
+    fn culling<F: TFilter>(&mut self, transform: &Matrix, filter: F, result: &mut Vec<Entity>) {
         if let Some(frustum) = compute_frustum(transform) {
             let aabb = frustum.local_aabb();
 
@@ -68,18 +74,19 @@ impl TBoundingInfoCalc for BoundingOctTree {
 
     fn ray_test(
         &self,
-        origin: Vector3,
-        dir: Vector3,
-        result: &mut Option<Entity>,
+        ray: &PiRay,
+        result: &mut Option<PickResult>,
     ) {
-        let origin = Point3::new(origin.x, origin.y, origin.z);
+        let origin = Point3::new(ray.origin.0, ray.origin.1, ray.origin.2);
+        let dir = Vector3::new(ray.direction.0, ray.direction.1, ray.direction.2);
+        let temp = dir.normalize() * 10000000.;
+
         let ray = Ray::new(origin.clone(), dir);
 
-        let temp = dir.normalize() * 10000000.;
         let max = Point3::new(origin.x + temp.x, origin.y + temp.y, origin.z + temp.z);
         let aabb = Aabb::new(origin, max);
 
-        let mut args: (Ray, f32, &mut Option<Entity>) = (ray, 0., result);
+        let mut args: (Ray, f32, &mut Option<PickResult>) = (ray, 0., result);
 
         self.tree.query(&aabb, intersects, &mut args, ray_test_func);
     }
@@ -89,6 +96,12 @@ impl TBoundingInfoCalc for BoundingOctTree {
         self.fast.iter().for_each(|v| { result.push(*v); });
         self.tree.ab_map.keys().for_each(|v| { result.push(v.0); });
         result
+    }
+    fn size(&self) -> usize {
+        self.fast.len() + self.tree.len()
+    }
+    fn reset_temp(&mut self) {
+        self.temp.clear();
     }
 }
 
@@ -109,7 +122,7 @@ pub fn ab_query_func<F: TFilter>(
 }
 
 pub fn ray_test_func(
-    arg: &mut (Ray, f32, &mut Option<Entity>),
+    arg: &mut (Ray, f32, &mut Option<PickResult>),
     id: BoundingKey,
     _aabb: &Aabb,
     bind: &(NAIsometry3<f32>, Cuboid),
@@ -117,7 +130,15 @@ pub fn ray_test_func(
     if let Some(distance) = bind.1.cast_ray(&bind.0, &arg.0, f32::MAX, false) {
         if distance < arg.1 {
             arg.1 = distance;
-            arg.2.replace(id.0);
+            let min = bind.0.transform_point(&Point3::new(-1., -1., -1.));
+            let max = bind.0.transform_point(&Point3::new( 1.,  1.,  1.));
+            arg.2.replace(PickResult {
+                target: id.0,
+                min: (min.x, min.y, min.z),
+                max: (max.x, max.y, max.z),
+                pickdetail: None,
+                bybounding: false,
+            });
         }
     }
 }

@@ -5,57 +5,6 @@ use crate::{bindgroup::*, prelude::*};
 
 pub use pi_scene_shell::prelude::*;
 
-pub enum DrawObj3D {
-    InstanceNotClip(DrawObjTmp),
-    Draw(Arc<DrawObj>)
-}
-
-#[derive(Clone)]
-pub struct DrawObjInfo {
-    pub instance_memory: Option<Arc<EVerteicesInstance>>,
-    pub pipeline: u64,
-    pub passentity: Entity,
-    pub bindgroupshash: BindGroups3DHashResource,
-    pub vertexentity: Entity,
-    pub vertexhash: GeometryResourceHash,
-    pub indice_range: IndiceRenderRange,
-    pub vertex_range: VertexRenderRange,
-}
-impl DrawObjInfo {
-    pub fn can_batch_instance_memory(&self, other: &Self, _debug: bool, max_combine_bytes: usize) -> bool {
-        // if debug {
-        //     log::warn!(
-        //         "pipeline: {:?}, vertexhash: {:?}, bindgroupshash: {:?}, instance_memory: {:?}",
-        //         (self.pipeline , other.pipeline),
-        //         (self.vertexhash.0 , other.vertexhash.0),
-        //         (self.bindgroupshash.0 , other.bindgroupshash.0),
-        //         (self.instance_memory.is_some() , other.instance_memory.is_some())
-        //     );
-        // }
-        if self.indice_range.is_some() || other.indice_range.is_some() { return false; }
-        if self.vertex_range.is_some() || other.vertex_range.is_some() { return false; }
-        if self.pipeline == other.pipeline
-            && self.vertexhash == other.vertexhash
-            && self.bindgroupshash == other.bindgroupshash
-        {
-            match (&self.instance_memory, &other.instance_memory) {
-                (Some(ins1), Some(ins2)) => {
-                    ins1.data.len() + ins2.data.len() < max_combine_bytes
-                },
-                _ => false,
-            }
-        } else {
-            false
-        }
-    }
-}
-impl Drop for DrawObjInfo {
-    fn drop(&mut self) {
-        self.instance_memory = None;
-        log::error!("DrawObjInfo Drop.");
-    }
-}
-
 #[derive(Clone)]
 pub struct DrawTmpRef<'w> {
     pub rendergeo: &'w RenderGeometry,
@@ -65,8 +14,9 @@ pub struct DrawTmpRef<'w> {
     pub vertexrange: &'w VertexRenderRange,
     pub instancessortinfo: &'w InstancedMeshTransparentSortCollection,
     pub inscombinerange: Range<u32>,
-    pub vertexhash: u64,
-    pub bindgroupshash: u64,
+    pub pass: u8,
+    pub distance: f32,
+    pub queue: TransparentSortParam,
 }
 impl<'w> DrawTmpRef<'w> {
     pub fn can_batch_instance_memory<'a>(&'a self, other: &'a Self, _debug: bool) -> bool {
@@ -82,8 +32,8 @@ impl<'w> DrawTmpRef<'w> {
         if self.indicerange.is_some() || other.indicerange.is_some() { return false; }
         if self.vertexrange.is_some() || other.vertexrange.is_some() { return false; }
         if self.pipeline.key() == other.pipeline.key()
-            && self.vertexhash == other.vertexhash
-            && self.bindgroupshash == other.bindgroupshash
+            && self.rendergeo.hashresource == other.rendergeo.hashresource
+            && self.bindgroups.hashresource == other.bindgroups.hashresource
         {
             match (&self.rendergeo.instance_slot, &other.rendergeo.instance_slot) {
                 (Some(ins1), Some(ins2)) => {
@@ -101,51 +51,67 @@ impl<'w> DrawTmpRef<'w> {
     pub fn instancedatasize<'a>(&'a self) -> usize {
         (self.inscombinerange.end - self.inscombinerange.start) as usize * self.instancessortinfo.sizeperinstance
     }
-}
-
-#[derive(Clone)]
-pub struct DrawObjTmp {
-    pub instance_memory: Option<EVerteicesInstance>,
-    pub pipeline: u64,
-    pub passentity: Entity,
-    pub bindgroupshash: u64,
-    pub vertexentity: Entity,
-    pub vertexhash: u64,
-    pub indice_range: IndiceRenderRange,
-    pub vertex_range: VertexRenderRange,
-}
-impl DrawObjTmp {
-    pub fn can_batch_instance_memory(&self, other: &Self, _debug: bool, max_combine_bytes: usize) -> bool {
-        // if debug {
-        //     log::warn!(
-        //         "pipeline: {:?}, vertexhash: {:?}, bindgroupshash: {:?}, instance_memory: {:?}",
-        //         (self.pipeline , other.pipeline),
-        //         (self.vertexhash.0 , other.vertexhash.0),
-        //         (self.bindgroupshash.0 , other.bindgroupshash.0),
-        //         (self.instance_memory.is_some() , other.instance_memory.is_some())
-        //     );
-        // }
-        if self.indice_range.is_some() || other.indice_range.is_some() { return false; }
-        if self.vertex_range.is_some() || other.vertex_range.is_some() { return false; }
-        if self.pipeline == other.pipeline
-            && self.vertexhash == other.vertexhash
-            && self.bindgroupshash == other.bindgroupshash
-        {
-            match (&self.instance_memory, &other.instance_memory) {
-                (Some(ins1), Some(ins2)) => {
-                    ins1.data.len() + ins2.data.len() < max_combine_bytes
-                },
-                _ => false,
-            }
-        } else {
-            false
+    pub fn cmp_opaque<'a>(a: &'a Self, other: &'a Self) -> std::cmp::Ordering {
+        match a.pass.cmp(&other.pass) {
+            std::cmp::Ordering::Less => std::cmp::Ordering::Less,
+            std::cmp::Ordering::Greater => std::cmp::Ordering::Greater,
+            std::cmp::Ordering::Equal => {
+                match a.pipeline.key().cmp(&other.pipeline.key()) {
+                    std::cmp::Ordering::Less => std::cmp::Ordering::Less,
+                    std::cmp::Ordering::Greater => std::cmp::Ordering::Greater,
+                    std::cmp::Ordering::Equal => {
+                        match a.bindgroups.hashresource.cmp(&other.bindgroups.hashresource) {
+                            std::cmp::Ordering::Less => std::cmp::Ordering::Less,
+                            std::cmp::Ordering::Greater => std::cmp::Ordering::Greater,
+                            std::cmp::Ordering::Equal => {
+                                match a.rendergeo.hashresource.cmp(&other.rendergeo.hashresource) {
+                                    std::cmp::Ordering::Less => std::cmp::Ordering::Less,
+                                    std::cmp::Ordering::Greater => std::cmp::Ordering::Greater,
+                                    std::cmp::Ordering::Equal => {
+                                        match a.distance.partial_cmp(&other.distance) {
+                                            Some(order) => order,
+                                            None => std::cmp::Ordering::Equal,
+                                        }
+                                    },
+                                }
+                            },
+                        }
+                    },
+                }
+            },
         }
     }
-}
-impl Drop for DrawObjTmp {
-    fn drop(&mut self) {
-        self.instance_memory = None;
-        log::error!("DrawObjTmp Drop.");
+    pub fn cmp_transparent<'a>(a: &'a Self, other: &'a Self) -> std::cmp::Ordering {
+        match a.pass.cmp(&other.pass) {
+            std::cmp::Ordering::Less => std::cmp::Ordering::Less,
+            std::cmp::Ordering::Greater => std::cmp::Ordering::Greater,
+            std::cmp::Ordering::Equal => {
+                match a.queue.cmp(&other.queue) {
+                    std::cmp::Ordering::Less => std::cmp::Ordering::Less,
+                    std::cmp::Ordering::Greater => std::cmp::Ordering::Greater,
+                    std::cmp::Ordering::Equal => {
+                        match other.distance.partial_cmp(&a.distance) {
+                            Some(order) => order,
+                            None => {
+                                match a.pipeline.key().cmp(&other.pipeline.key()) {
+                                    std::cmp::Ordering::Less => std::cmp::Ordering::Less,
+                                    std::cmp::Ordering::Greater => std::cmp::Ordering::Greater,
+                                    std::cmp::Ordering::Equal => {
+                                        match a.bindgroups.hashresource.cmp(&other.bindgroups.hashresource) {
+                                            std::cmp::Ordering::Less => std::cmp::Ordering::Less,
+                                            std::cmp::Ordering::Greater => std::cmp::Ordering::Greater,
+                                            std::cmp::Ordering::Equal => {
+                                                a.rendergeo.hashresource.cmp(&other.rendergeo.hashresource)
+                                            },
+                                        }
+                                    },
+                                }
+                            }
+                        }
+                    },
+                }
+            },
+        }
     }
 }
 
@@ -186,33 +152,21 @@ pub trait TPass: Default {
 #[derive(Component, Default)]
 pub struct PassIDs(pub [Entity;8]);
 
-#[derive(Clone, Component, Default)]
-pub struct RecordPassDraw(pub [Option<ObjectID>; 8]);
-
 /// * Set0
 /// * 更新依赖: BindSceneEffect, BindViewer
 #[derive(Clone, Component)]
-pub struct PassBindGroups(BindGroups3D, BindGroups3DHashResource);
+pub struct PassBindGroups(Option<BindGroups3D>);
 impl PassBindGroups {
     pub fn new(val: Option<BindGroups3D>) -> Self {
-        if let Some(val) = val {
-            let hash = BindGroups3DHashResource::from(&val);
-            Self(val, hash)
-        } else {
-            Self(BindGroups3D::default(), BindGroups3DHashResource(0))
-        }
+        Self(val)
     }
     pub fn val(&self) -> Option<&BindGroups3D> {
-        if self.1.0 != 0 {
-            Some(&self.0)
-        } else {
-            None
-        }
+        self.0.as_ref()
     }
 }
 impl Default for PassBindGroups {
     fn default() -> Self {
-        Self(BindGroups3D::default(), BindGroups3DHashResource(0))
+        Self(None)
     }
 }
 
@@ -232,14 +186,6 @@ impl From<(Handle<Shader3D>, Option<()>)> for PassShader {
 
 #[derive(Component, Default)]
 pub struct PassFlagShader;
-
-#[derive(Clone, Component, Default)]
-pub struct PassPipelineKey(pub Option<KeyPipeline3D>);
-impl TPassData<Option<KeyPipeline3D>> for PassPipelineKey {
-    fn new(val: Option<KeyPipeline3D>) -> Self { Self(val) }
-    fn val(&self) -> &Option<KeyPipeline3D> { &self.0 }
-}
-
 
 #[derive(Clone, Component, Default)]
 pub struct PassPipeline(pub Option<Pipeline3DUsage>);

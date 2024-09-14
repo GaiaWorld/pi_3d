@@ -1,11 +1,7 @@
 
 use pi_scene_shell::prelude::*;
 
-use crate::{
-    geometry::prelude::*,
-    pass::*,
-    cullings::prelude::*,
-};
+use crate::cullings::prelude::*;
 
 use super::model::*;
 

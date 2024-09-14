@@ -94,27 +94,28 @@ impl BoundingBox {
         let mut can_return_false = true;
 
         for i in 0..8 {
-            if frustum_planes.near.dot_coordinate(&bounding_vectors[i]) >= 0.0 {
+            let center = &bounding_vectors[i];
+            if frustum_planes.near.dot_coordinate(center.x, center.y, center.z) >= 0.0 {
                 can_return_false = false;
                 break;
             }
-            if frustum_planes.far.dot_coordinate(&bounding_vectors[i]) >= 0.0 {
+            if frustum_planes.far.dot_coordinate(center.x, center.y, center.z) >= 0.0 {
                 can_return_false = false;
                 break;
             }
-            if frustum_planes.left.dot_coordinate(&bounding_vectors[i]) >= 0.0 {
+            if frustum_planes.left.dot_coordinate(center.x, center.y, center.z) >= 0.0 {
                 can_return_false = false;
                 break;
             }
-            if frustum_planes.right.dot_coordinate(&bounding_vectors[i]) >= 0.0 {
+            if frustum_planes.right.dot_coordinate(center.x, center.y, center.z) >= 0.0 {
                 can_return_false = false;
                 break;
             }
-            if frustum_planes.top.dot_coordinate(&bounding_vectors[i]) >= 0.0 {
+            if frustum_planes.top.dot_coordinate(center.x, center.y, center.z) >= 0.0 {
                 can_return_false = false;
                 break;
             }
-            if frustum_planes.bottom.dot_coordinate(&bounding_vectors[i]) >= 0.0 {
+            if frustum_planes.bottom.dot_coordinate(center.x, center.y, center.z) >= 0.0 {
                 can_return_false = false;
                 break;
             }

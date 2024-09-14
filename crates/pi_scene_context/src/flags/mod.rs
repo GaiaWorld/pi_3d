@@ -18,20 +18,10 @@ pub struct SceneCameraID04;
 pub struct SceneCameraID05;
 pub struct SceneCameraID06;
 
-#[derive(Clone, Copy, PartialEq, Eq, Component, Default, Hash)]
-pub struct SceneMainCameraID(pub Option<Entity>);
-
 #[derive(Component, Default)]
 pub struct CameraID(pub usize);
 
-#[derive(Component, Default)]
-pub struct RecordEnable(pub Enable);
-impl TAnimatableCompRecord<Enable> for RecordEnable {
-    fn comp(&self) -> Enable {
-        self.0.clone()
-    }
-}
-
+/// 标识 TransformNode 自身是否激活
 #[derive(Component, Clone)]
 pub struct Enable(pub f32);
 impl Enable {
@@ -80,8 +70,10 @@ impl TAssetCapacity for Enable {
 }
 impl TAnimatableComp for Enable {}
 
-pub type PluginAnimeNodeEnable    = PluginTypeAnime<Enable, RecordEnable>;
+pub type PluginAnimeNodeEnable    = PluginTypeAnime<Enable>;
 
+/// 标识 TransformNode 在全局环境是否激活
+/// 通过节点树受父级影响
 #[derive(Component, Default)]
 pub struct GlobalEnable(pub bool);
 
@@ -100,11 +92,12 @@ pub type ActionListNodeEnable = ActionList<OpsNodeEnable>;
 
 pub fn sys_act_node_enable(
     mut cmds: ResMut<ActionListNodeEnable>,
-    mut items: Query<(&mut Enable, &mut RecordEnable)>,
+    mut items: Query<&mut Enable>,
+    mut records: ResMut<AnimeTargetRecordValues<Enable>>,
 ) {
     cmds.drain().for_each(|OpsNodeEnable(entity, val)| {
-        if let Ok((mut node, mut record)) = items.get_mut(entity) {
-            record.0 = val.clone();
+        if let Ok(mut node) = items.get_mut(entity) {
+            records.insert(entity, val.clone());
             *node = val;
         } else {
             // if count < 2 {
@@ -123,7 +116,7 @@ pub struct PluginFlags;
 impl Plugin for PluginFlags {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListNodeEnable::default());
-        app.configure_set(Update, StageEnable::Command /* .run_if(runif_3d) */.after(StageScene::Create));
+        app.configure_set(Update, StageEnable::Command .in_set(ERunStageChap::D3) .after(StageScene::Create));
         app.add_systems(Update, 
             sys_act_node_enable.in_set(StageEnable::Command)
         );

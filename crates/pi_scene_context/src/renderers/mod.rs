@@ -90,7 +90,6 @@ impl Plugin for PluginRenderer {
         app.insert_resource(ActionListRendererConnect::default());
         app.insert_resource(ActionListRendererModify::default());
         app.insert_resource(ActionListRendererTarget::default());
-        app.insert_resource(RendererDrawCallRecord::default());
 
 #[cfg(feature = "use_bevy")]
         app.configure_sets(Update,
@@ -158,16 +157,16 @@ impl Plugin for PluginRenderer {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StageRenderer::Create            /* .run_if(runif_3d) */.after(StageCamera::_Create).after(StageShadowGenerator::_Create))
-        .configure_set(Update, StageRenderer::_CreateApply      /* .run_if(runif_3d) */.after(StageRenderer::Create))
-        .configure_set(Update, StageRenderer::RenderStateCommand/* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageRenderer::Create).before(StageTransform::TransformCalcMatrix).after(StageRenderer::_CreateApply))
-        .configure_set(Update, StageRenderer::RendererCommand   /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageRenderer::Create).after(StageRenderer::_CreateApply))
-        .configure_set(Update, StageRenderer::PassBindGroup     /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageRenderer::RendererCommand).after(StageViewer::Culling).after(ERunStageChap::Uniform))
-        .configure_set(Update, StageRenderer::PassBindGroups    /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageRenderer::PassBindGroup))
-        .configure_set(Update, StageRenderer::PassShader        /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageRenderer::PassBindGroups))
-        .configure_set(Update, StageRenderer::PassPipeline      /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageRenderer::PassShader))
-        .configure_set(Update, StageRenderer::PassDraw          /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageRenderer::PassPipeline))
-        .configure_set(Update, StageRenderer::DrawList          /* .run_if(runif_3d) */.in_set(FrameDataPrepare).after(StageRenderer::PassDraw).before(ERunStageChap::Dispose))
+        .configure_set(Update, StageRenderer::Create            .in_set(ERunStageChap::D3).after(StageCamera::_Create).after(StageShadowGenerator::_Create))
+        .configure_set(Update, StageRenderer::_CreateApply      .in_set(ERunStageChap::D3).after(StageRenderer::Create))
+        .configure_set(Update, StageRenderer::RenderStateCommand.in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageRenderer::Create).before(StageTransform::TransformCalcMatrix).after(StageRenderer::_CreateApply))
+        .configure_set(Update, StageRenderer::RendererCommand   .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageRenderer::Create).after(StageRenderer::_CreateApply))
+        .configure_set(Update, StageRenderer::PassBindGroup     .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageRenderer::RendererCommand).after(StageViewer::Culling).after(ERunStageChap::Uniform))
+        .configure_set(Update, StageRenderer::PassBindGroups    .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageRenderer::PassBindGroup))
+        .configure_set(Update, StageRenderer::PassShader        .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageRenderer::PassBindGroups))
+        .configure_set(Update, StageRenderer::PassPipeline      .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageRenderer::PassShader))
+        .configure_set(Update, StageRenderer::PassDraw          .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageRenderer::PassPipeline))
+        .configure_set(Update, StageRenderer::DrawList          .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageRenderer::PassDraw).before(ERunStageChap::Dispose))
         ;
 
 #[cfg(not(feature = "use_bevy"))]

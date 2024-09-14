@@ -30,13 +30,14 @@ pub fn sys_create_transform_node(
 
 pub fn sys_act_local_rotation(
     mut cmds: ResMut<ActionListTransformNodeLocalRotationQuaternion>,
-    mut nodes: Query<(&mut LocalRotationQuaternion, &mut RecordLocalRotationQuaternion)>,
+    mut nodes: Query<&mut LocalRotationQuaternion>,
+    mut record: ResMut<AnimeTargetRecordValues<LocalRotationQuaternion>>,
 ) {
     cmds.drain().for_each(|OpsTransformNodeLocalRotationQuaternion(entity, x, y, z, w)| {
-        if let Ok((mut node, mut record)) = nodes.get_mut(entity) {
+        if let Ok(mut node) = nodes.get_mut(entity) {
             let data = LocalRotationQuaternion::create(x, y, z, w);
             // log::error!("act_local_rotation {:?}", (entity, &data));
-            record.0 = data.clone();
+            record.insert(entity, data.clone());
             *node = data;
         }
     });
@@ -51,9 +52,12 @@ pub fn sys_act_local(
     mut tree: EntityTreeMut,
 
     mut cmds: ResMut<ActionListTransformNodeLocal>,
-    mut nodes: Query<(&mut LocalPosition, &mut RecordLocalPosition)>,
-    mut nodes_euler: Query<(&mut LocalEulerAngles, &mut RecordLocalEulerAngles)>,
-    mut nodes_scaling: Query<(&mut LocalScaling, &mut RecordLocalScaling)>,
+    mut nodes: Query<&mut LocalPosition>,
+    mut nodes_euler: Query<&mut LocalEulerAngles>,
+    mut nodes_scaling: Query<&mut LocalScaling>,
+    mut recordpos: ResMut<AnimeTargetRecordValues<LocalPosition>>,
+    mut recordeul: ResMut<AnimeTargetRecordValues<LocalEulerAngles>>,
+    mut recordscl: ResMut<AnimeTargetRecordValues<LocalScaling>>,
 ) {
     treecmds.drain().for_each(|OpsTransformNodeParent(entity, val)| {
         if let Ok(mut flag) = flags.get_mut(entity) {
@@ -79,23 +83,23 @@ pub fn sys_act_local(
     cmds.drain().for_each(|OpsTransformNodeLocal(entity, val)| {
         match val {
             ETransformSRT::Euler(x, y, z) => {
-                if let Ok((mut node, mut record)) = nodes_euler.get_mut(entity) {
+                if let Ok(mut node) = nodes_euler.get_mut(entity) {
                     let val = Vector3::new(x, y, z);
-                    record.0 = LocalEulerAngles(val);
+                    recordeul.insert(entity, LocalEulerAngles(val));
                     *node = LocalEulerAngles(val);
                 }
             },
             ETransformSRT::Translation(x, y, z) => {
-                if let Ok((mut node, mut record)) = nodes.get_mut(entity) {
+                if let Ok(mut node) = nodes.get_mut(entity) {
                     let val = Vector3::new(x, y, z);
-                    record.0 = LocalPosition(val);
+                    recordpos.insert(entity, LocalPosition(val));
                     *node = LocalPosition(val);
                 }
             },
             ETransformSRT::Scaling(x, y, z) => {
-                if let Ok((mut node, mut record)) = nodes_scaling.get_mut(entity) {
+                if let Ok(mut node) = nodes_scaling.get_mut(entity) {
                     let val = Vector3::new(x, y, z);
-                    record.0 = LocalScaling(val);
+                    recordscl.insert(entity, LocalScaling(val));
                     *node = LocalScaling(val);
                 }
             },
@@ -103,10 +107,9 @@ pub fn sys_act_local(
     });
 }
 
-pub type BundleTreeNode = (Down, Up, Layer, Enable, RecordEnable, GlobalEnable);
+pub type BundleTreeNode = (Down, Up, Layer, Enable, GlobalEnable);
 pub type BundleTransform = (
     TransformNodeDirty, LocalPosition, LocalScaling, LocalRotationQuaternion, LocalEulerAngles,
-    RecordLocalPosition, RecordLocalScaling, RecordLocalRotationQuaternion, RecordLocalEulerAngles,
     LocalRotation, FlagLocalMatrix, LocalMatrix, GlobalMatrix, AbsoluteTransform, FlagAnimationStartResetComp,
 );
 
@@ -134,10 +137,6 @@ impl ActionTransformNode {
             LocalScaling::default(),
             LocalRotationQuaternion::default(),
             LocalEulerAngles::default(),
-            RecordLocalPosition::default(),
-            RecordLocalScaling::default(),
-            RecordLocalRotationQuaternion::default(),
-            RecordLocalEulerAngles::default(),
             LocalRotation(Rotation3::identity()),
             FlagLocalMatrix,
             LocalMatrix::new(Matrix::identity()),
@@ -154,10 +153,7 @@ impl ActionTransformNode {
             Up::default(),
             Layer::default(),
             Enable::default(),
-            RecordEnable::default(),
             GlobalEnable(false),
-            // .insert(NodeChilds::default())
-            // .insert(NodeParent(None))
         )
     }
 

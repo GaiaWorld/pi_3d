@@ -22,7 +22,7 @@ pub fn runif_particlesystem(
 }
 
 pub fn sys_particle_active(
-    mut items: Query<(Entity, &GlobalEnable, &SceneID, &ParticleSystemActive, &mut ParticleSystemRunningState, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission, &mut MeshInstanceState, &mut DirtyInstanceSourceRefs), Or<(Changed<GlobalEnable>, Changed<ParticleSystemActive>)>>,
+    mut items: Query<(Entity, &GlobalEnable, &SceneID, &ParticleSystemActive, &mut ParticleSystemRunningState, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission, &MeshInstanceState), Or<(Changed<GlobalEnable>, Changed<ParticleSystemActive>)>>,
     performance: Res<ParticleSystemPerformance>,
     calculators: Query<&ParticleCalculatorBase>,
     scenes: Query<&SceneTime>,
@@ -30,7 +30,7 @@ pub fn sys_particle_active(
     mut cmds: ResMut<ActionListCPUParticleSystemState>,
 ) {
     // let time0 = pi_time::Instant::now();
-    items.iter_mut().for_each(|(entity, enable, idscene, active, mut state, mut ids, mut time, mut emission, mut instancestate, mut flag)| {
+    items.iter_mut().for_each(|(entity, enable, idscene, active, mut state, mut ids, mut time, mut emission, instancestate)| {
         if enable.0 == true && active.0 == true {
             if state.isrunning == false {
                 if let (Ok(calculator), Ok(scenetime)) = (calculators.get(ids.calculator.as_ref().unwrap().0), scenes.get(idscene.0)) {
@@ -44,8 +44,6 @@ pub fn sys_particle_active(
                     let timescale = time.time_scale;
                     *time = ParticleSystemTime::new(performance.frame_time_ms); time.time_scale = timescale;
                     *emission = ParticleSystemEmission::new();
-                    instancestate.use_single_instancebuffer = true;
-                    *flag = DirtyInstanceSourceRefs;
                     ids.reset();
 
                     state.isrunning = true;
@@ -670,7 +668,7 @@ pub fn sys_update_buffer(
     mut particle_sys: Query<
         (Entity, &ParticleAttributes, &mut ParticleSystemRunningState, &ParticleSystemTime, &ParticleIDs, &ParticleLocal, &ParticleDirection, &ParticleEmitMatrix),
     >,
-    mut meshes: Query<(&GlobalEnable, &GeometryID, &ModelInstanceAttributes, &mut InstancedMeshTransparentSortCollection)>,
+    mut meshes: Query<(&GlobalEnable, &GeometryID, &ModelInstanceAttributes, &mut InstancedMeshTransparentSortCollection, &GlobalMatrix)>,
     // mut meshrenderenables: Query<&mut RenderGeometryEable>,
     instanceinfos: Query<&InstancedInfoComp>,
     mut performance: ResMut<ParticleSystemPerformance>,
@@ -704,7 +702,7 @@ pub fn sys_update_buffer(
             // log::warn!("sys_update_buffer A {:?}", particle_count);
 
             // if time.running_delta_ms <= 0 { return; }
-            if let Ok((enable, idgeo, _instanceattributes, mut instancesort)) = meshes.get_mut(entity) {
+            if let Ok((enable, idgeo, _instanceattributes, mut instancesort, gmatrix)) = meshes.get_mut(entity) {
 
                 if state.isrunning == false || particle_count == 0 {
                     // if let Ok(mut rendergeometry) = meshrenderenables.get_mut(entity) {
@@ -845,7 +843,7 @@ pub fn sys_update_buffer(
                             });
 
                             // bytemuck::cast_slice(&collect_float.as_slice()[0..(index * stripe)]).iter().for_each(|v| { instancesort.data.push(*v); });
-                            instancesort.ranges.push((0, Range { start: 0, end: index as u32 }));
+                            instancesort.ranges.push((0, Range { start: 0, end: index as u32 }, gmatrix.xyz()));
                             instancesort.count = index;
                         }
                     }

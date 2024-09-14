@@ -51,22 +51,22 @@ impl BoundingSphere {
     pub fn is_center_in_frustum(&self, frustum_planes: &FrustumPlanes) -> bool {
         let center = &self.center_world;
 
-        if frustum_planes.near.dot_coordinate(center) < 0.0 {
+        if frustum_planes.near.dot_coordinate(center.x, center.y, center.z) < 0.0 {
             return false;
         }
-        if frustum_planes.far.dot_coordinate(center) < 0.0 {
+        if frustum_planes.far.dot_coordinate(center.x, center.y, center.z) < 0.0 {
             return false;
         }
-        if frustum_planes.left.dot_coordinate(&center) < 0.0 {
+        if frustum_planes.left.dot_coordinate(center.x, center.y, center.z) < 0.0 {
             return false;
         }
-        if frustum_planes.right.dot_coordinate(center) < 0.0 {
+        if frustum_planes.right.dot_coordinate(center.x, center.y, center.z) < 0.0 {
             return false;
         }
-        if frustum_planes.top.dot_coordinate(center) < 0.0 {
+        if frustum_planes.top.dot_coordinate(center.x, center.y, center.z) < 0.0 {
             return false;
         }
-        if frustum_planes.bottom.dot_coordinate(center) < 0.0 {
+        if frustum_planes.bottom.dot_coordinate(center.x, center.y, center.z) < 0.0 {
             return false;
         }
 
@@ -77,22 +77,22 @@ impl BoundingSphere {
         let center = &self.center_world;
         let radius = self.radius_world;
 
-        if frustum_planes.near.dot_coordinate(center) <= -radius {
+        if frustum_planes.near.dot_coordinate(center.x, center.y, center.z) <= -radius {
             return false;
         }
-        if frustum_planes.far.dot_coordinate(center) <= -radius {
+        if frustum_planes.far.dot_coordinate(center.x, center.y, center.z) <= -radius {
             return false;
         }
-        if frustum_planes.left.dot_coordinate(&center) <= -radius {
+        if frustum_planes.left.dot_coordinate(center.x, center.y, center.z) <= -radius {
             return false;
         }
-        if frustum_planes.right.dot_coordinate(center) <= -radius {
+        if frustum_planes.right.dot_coordinate(center.x, center.y, center.z) <= -radius {
             return false;
         }
-        if frustum_planes.top.dot_coordinate(center) <= -radius {
+        if frustum_planes.top.dot_coordinate(center.x, center.y, center.z) <= -radius {
             return false;
         }
-        if frustum_planes.bottom.dot_coordinate(center) <= -radius {
+        if frustum_planes.bottom.dot_coordinate(center.x, center.y, center.z) <= -radius {
             return false;
         }
 

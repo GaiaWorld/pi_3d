@@ -35,6 +35,7 @@ pub fn sys_model_direct_lighting_modify_by_light(
                                     }
                                 }
                             });
+                            // log::error!("Model Direct: {:?}", &indexlight);
                             ids.direct_light_data(&indexlight);
                         }
                     }
@@ -69,6 +70,7 @@ pub fn sys_model_direct_lighting_modify_by_model(
                                 }
                             }
                         });
+                        // log::error!("Model Direct2: {:?}", &indexlight);
                         ids.direct_light_data(&indexlight);
                     }
                 }
@@ -78,22 +80,22 @@ pub fn sys_model_direct_lighting_modify_by_model(
 }
 
 pub fn sys_model_point_lighting_modify_by_model(
-    scenes: Query<&ScenePointLightsQueue>,
+    scenes: Query<&SceneOtherLightsQueue>,
     transforms: Query<&GlobalMatrix>,
     enabledpoint: Query<(&GlobalEnable, &PointLight)>,
     enabledspot: Query<(&GlobalEnable, &SpotLight)>,
+    enabledhemi: Query<(&GlobalEnable, &HemisphericLight)>,
     layermask: Query<&LayerMask>,
     lightindex: Query<&SceneItemIndex>,
     
     addeds: ComponentAdded<LayerMask>,
     changes: ComponentChanged<LayerMask>,
-    addeds2: ComponentAdded<ModelForcePointLightings>,
-    changes2: ComponentChanged<ModelForcePointLightings>,
-    meshes: Query<(Entity, &SceneID, &ModelLightingIndexs, &ModelForcePointLightings)>,
+    changes3: ComponentChanged<ModelForceLightings>,
+    meshes: Query<(Entity, &SceneID, &ModelLightingIndexs, &ModelForceLightings)>,
     // mut record: ResMut<pi_scene_shell::run_stage::RunSystemRecord>,
 ) {
     // record.0.push(String::from("sys_model_point_lighting_modify_by_model"));
-    addeds.iter().chain(changes.iter()).chain(addeds2.iter()).chain(changes2.iter()).for_each(|entity| {
+    addeds.iter().chain(changes.iter()).chain(changes3.iter()).for_each(|entity| {
         if let Ok((idm, idscene, ids, forcelights)) = meshes.get(*entity) {
             if let Ok(queuepoint) = scenes.get(idscene.0) {
                 if let Ok(my) = layermask.get(idm) {
@@ -101,14 +103,17 @@ pub fn sys_model_point_lighting_modify_by_model(
     
                         let mut indexlightpoint = vec![];
                         let mut indexlightspot = vec![];
+                        let mut indexlighthemi = vec![];
     
-                        forcelights.0.iter().for_each(|idlight| {
+                        forcelights.point.iter().for_each(|idlight| {
                             if let (Ok(_lp), Ok(_ly), Ok(lidx), Ok((enable, _))) = (transforms.get(*idlight), layermask.get(*idlight), lightindex.get(*idlight), enabledpoint.get(*idlight)) {
                                 if enable.0 {
                                     let idx = lidx.val();
                                     if indexlightpoint.contains(&idx) == false { indexlightpoint.push(idx); }
                                 }
                             }
+                        });
+                        forcelights.spot.iter().for_each(|idlight| {
                             if let (Ok(_lp), Ok(_ly), Ok(lidx), Ok((enable, _))) = (transforms.get(*idlight), layermask.get(*idlight), lightindex.get(*idlight), enabledspot.get(*idlight)) {
                                 if enable.0 {
                                     let idx = lidx.val();
@@ -116,13 +121,23 @@ pub fn sys_model_point_lighting_modify_by_model(
                                 }
                             }
                         });
-                        queuepoint.0.items().for_each(|idlight| {
+                        forcelights.spot.iter().for_each(|idlight| {
+                            if let (Ok(_lp), Ok(_ly), Ok(lidx), Ok((enable, _))) = (transforms.get(*idlight), layermask.get(*idlight), lightindex.get(*idlight), enabledhemi.get(*idlight)) {
+                                if enable.0 {
+                                    let idx = lidx.val();
+                                    if indexlighthemi.contains(&idx) == false { indexlighthemi.push(idx); }
+                                }
+                            }
+                        });
+                        queuepoint.point.items().for_each(|idlight| {
                             if let (Ok(_lp), Ok(ly), Ok(lidx), Ok((enabled, _))) = (transforms.get(*idlight), layermask.get(*idlight), lightindex.get(*idlight), enabledpoint.get(*idlight)) {
                                 if enabled.0 && ly.include(my.0) {
                                     let idx = lidx.val();
                                     if indexlightpoint.contains(&idx) == false { indexlightpoint.push(idx); }
                                 }
                             }
+                        });
+                        queuepoint.spot.items().for_each(|idlight| {
                             if let (Ok(_lp), Ok(ly), Ok(lidx), Ok((enabled, _))) = (transforms.get(*idlight), layermask.get(*idlight), lightindex.get(*idlight), enabledspot.get(*idlight)) {
                                 if enabled.0 && ly.include(my.0) {
                                     let idx = lidx.val();
@@ -130,8 +145,17 @@ pub fn sys_model_point_lighting_modify_by_model(
                                 }
                             }
                         });
+                        queuepoint.hemi.items().for_each(|idlight| {
+                            if let (Ok(_lp), Ok(ly), Ok(lidx), Ok((enabled, _))) = (transforms.get(*idlight), layermask.get(*idlight), lightindex.get(*idlight), enabledhemi.get(*idlight)) {
+                                if enabled.0 && ly.include(my.0) {
+                                    let idx = lidx.val();
+                                    if indexlighthemi.contains(&idx) == false { indexlighthemi.push(idx); }
+                                }
+                            }
+                        });
                         ids.point_light_data(&indexlightpoint);
                         ids.spot_light_data(&indexlightspot);
+                        ids.hemi_light_data(&indexlighthemi);
                     }
                 }
             }

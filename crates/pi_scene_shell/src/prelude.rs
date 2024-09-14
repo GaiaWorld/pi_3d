@@ -69,6 +69,7 @@ pub use pi_hash::{XHashSet, XHashMap, DefaultHasher};
 pub use pi_async_rt::prelude::AsyncRuntime;
 pub use pi_hal::{runtime::RENDER_RUNTIME, loader::AsyncLoader};
 pub use pi_share::{Share, ThreadSync, ShareRefCell};
+use wgpu::RenderPass;
 
 pub use crate::run_stage::{ERunStageChap, runif_3d};
 pub use crate::object::ObjectID;
@@ -294,6 +295,7 @@ pub struct Performance {
     pub trialcalc: u32,
     pub uniformbufferupdate: u32,
     pub uniformupdate: u32,
+    pub drawcalls: u32,
 }
 impl Default for Performance {
     fn default() -> Self {
@@ -319,6 +321,7 @@ impl Default for Performance {
             trialcalc: 0,
             uniformbufferupdate: 0,
             uniformupdate: 0,
+            drawcalls: 0,
         }
     }
 }

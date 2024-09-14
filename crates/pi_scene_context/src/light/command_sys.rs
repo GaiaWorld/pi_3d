@@ -13,17 +13,17 @@ use super::{
 
 pub fn sys_create_light(
     mut cmds: ResMut<ActionListLightCreate>,
-    mut commands: Commands,
+    // mut commands: Commands,
     mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
-    mut scenes: Query<(&mut SceneDirectLightsQueue, &mut ScenePointLightsQueue, &mut SceneSpotLightsQueue, &mut SceneHemiLightsQueue, &mut SceneLightingInfosDirty)>,
-    // mut alterdirect: Alter<(), (), (SceneItemIndex, TransformNodeBundle, BundleDirectLight), ()>,
-    // mut alterpoint: Alter<(), (), (SceneItemIndex, TransformNodeBundle, BundlePointLight), ()>,
-    // mut alterspot: Alter<(), (), (SceneItemIndex, TransformNodeBundle, BundleSpotLight), ()>,
-    // mut alterhemi: Alter<(), (), (SceneItemIndex, TransformNodeBundle, BundleHemiLight), ()>,
+    mut scenes: Query<(&mut SceneDirectLightsQueue, &mut SceneOtherLightsQueue, &mut SceneLightingInfosDirty)>,
+    mut alterdirect: Alter<(), (), (SceneItemIndex, TransformNodeBundle, BundleDirectLight), ()>,
+    mut alterpoint: Alter<(), (), (SceneItemIndex, TransformNodeBundle, BundlePointLight), ()>,
+    mut alterspot: Alter<(), (), (SceneItemIndex, TransformNodeBundle, BundleSpotLight), ()>,
+    mut alterhemi: Alter<(), (), (SceneItemIndex, TransformNodeBundle, BundleHemiLight), ()>,
 ) {
     cmds.drain().for_each(|OpsLightCreate(scene, entity, ltype)| {
-        let (mut lightcmd, itemidx) = if let (Some(cmd), Ok((mut queuedirect, mut queuepoint, mut queuespot, mut queuehemi, mut dirty))) = (commands.get_entity(entity), scenes.get_mut(scene)) {
+        let itemidx = if let Ok((mut queuedirect, mut queuepoint, mut dirty)) = scenes.get_mut(scene) {
             let itemidx = match ltype {
                 ELightType::Direct => {
                     *dirty = SceneLightingInfosDirty;
@@ -31,18 +31,18 @@ pub fn sys_create_light(
                 },
                 ELightType::Spot => {
                     *dirty = SceneLightingInfosDirty;
-                    queuespot.0.add(entity)
+                    queuepoint.spot.add(entity)
                 },
                 ELightType::Point => {
                     *dirty = SceneLightingInfosDirty;
-                    queuepoint.0.add(entity)
+                    queuepoint.point.add(entity)
                 },
                 ELightType::Hemispheric => {
                     *dirty = SceneLightingInfosDirty;
-                    queuehemi.0.add(entity)
+                    queuepoint.hemi.add(entity)
                 }
             };
-            (cmd, itemidx)
+            itemidx
         } else {
             disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
             return;
@@ -51,23 +51,23 @@ pub fn sys_create_light(
         match ltype {
             ELightType::Direct =>       {
                 let bundle = (itemidx, ActionTransformNode::init(scene), ActionLight::as_direct_light());
-                lightcmd.insert(bundle);
-                // alterdirect.alter(entity, bundle);
+                // lightcmd.insert(bundle);
+                alterdirect.alter(entity, bundle);
             },
             ELightType::Spot =>         {
                 let bundle = (itemidx, ActionTransformNode::init(scene), ActionLight::as_spot_light());
-                lightcmd.insert(bundle);
-                // alterspot.alter(entity, bundle);
+                // lightcmd.insert(bundle);
+                alterspot.alter(entity, bundle);
             },
             ELightType::Point =>        {
                 let bundle = (itemidx, ActionTransformNode::init(scene), ActionLight::as_point_light());
-                lightcmd.insert(bundle);
-                // alterpoint.alter(entity, bundle);
+                // lightcmd.insert(bundle);
+                alterpoint.alter(entity, bundle);
             },
             ELightType::Hemispheric =>  {
                 let bundle = (itemidx, ActionTransformNode::init(scene), ActionLight::as_hemi_light());
-                lightcmd.insert(bundle);
-                // alterhemi.alter(entity, bundle);
+                // lightcmd.insert(bundle);
+                alterhemi.alter(entity, bundle);
             },
         };
     });
@@ -104,13 +104,9 @@ pub fn sys_act_light_param(
     });
 }
 
-pub type LightBaseBundle = (
+pub type BundleDirectLight = (
     LightParam,
     LightLinkedShadowID,
-);
-
-pub type BundleDirectLight = (
-    LightBaseBundle,
     DirectLight,
     LayerMask,
     ViewerDistanceCompute,
@@ -118,14 +114,16 @@ pub type BundleDirectLight = (
 );
 
 pub type BundlePointLight = (
-    LightBaseBundle,
+    LightParam,
+    LightLinkedShadowID,
     PointLight,
     LayerMask,
     ViewerDistanceCompute,
 );
 
 pub type BundleSpotLight = (
-    LightBaseBundle,
+    LightParam,
+    LightLinkedShadowID,
     SpotLight,
     LayerMask,
     LightDirection,
@@ -134,7 +132,8 @@ pub type BundleSpotLight = (
 );
 
 pub type BundleHemiLight = (
-    LightBaseBundle,
+    LightParam,
+    LightLinkedShadowID,
     HemisphericLight,
     LayerMask,
     HemiGrounds,
@@ -143,50 +142,44 @@ pub type BundleHemiLight = (
 
 pub struct ActionLight;
 impl ActionLight {
-    pub(crate) fn as_light() -> LightBaseBundle {
-        // log::warn!("CreateLight {:?}", commands.id());
+    pub(crate) fn as_direct_light() -> BundleDirectLight {
         (
             LightParam::default(),
             LightLinkedShadowID(None),
-        )
-    }
-    pub(crate) fn as_direct_light() -> BundleDirectLight {
-        (
-            Self::as_light(),
             DirectLight,
             LayerMask::default(),
-            ViewerDistanceCompute::Direction,
+            ViewerDistanceCompute::new(EViewerDistanceCompute::Direction),
             LightDirection::default(),
         )
     }
     pub(crate) fn as_spot_light() -> BundleSpotLight {
         (
-            Self::as_light(),
-        // Self::as_shadow_light(commands);
+            LightParam::default(),
+            LightLinkedShadowID(None),
             SpotLight,
             LayerMask::default(),
             LightDirection::default(),
             SpotLightAngle{ in_value: 0.2, out_value: 0.3 },
-            ViewerDistanceCompute::Base,
+            ViewerDistanceCompute::default(),
         )
     }
     pub(crate) fn as_point_light() -> BundlePointLight {
         (
-            Self::as_light(),
-        // Self::as_shadow_light(commands);
+            LightParam::default(),
+            LightLinkedShadowID(None),
             PointLight,
             LayerMask::default(),
-            ViewerDistanceCompute::Base,
+            ViewerDistanceCompute::default(),
         )
     }
     pub(crate) fn as_hemi_light() -> BundleHemiLight {
         (
-            Self::as_light(),
-        // Self::as_shadow_light(commands);
+            LightParam::default(),
+            LightLinkedShadowID(None),
             HemisphericLight,
             LayerMask::default(),
             HemiGrounds::default(),
-            ViewerDistanceCompute::Base,
+            ViewerDistanceCompute::default(),
         )
     }
 }

@@ -1,32 +1,7 @@
 
 use pi_scene_shell::prelude::*;
 
-use crate::prelude::InstanceTransparentIndex;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Component)]
-pub enum ERenderSortParam {
-    Opaque(OpaqueSortParam),
-    Tansparent(TransparentSortParam),
-}
-impl Default for ERenderSortParam {
-    fn default() -> Self {
-        Self::Opaque(OpaqueSortParam { disance: 0. })
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialOrd, Component, Default)]
-pub struct OpaqueSortParam {
-    pub disance: f32,
-}
-impl PartialEq for OpaqueSortParam {
-    fn eq(&self, other: &Self) -> bool {
-        self.disance == other.disance
-    }
-}
-impl Eq for OpaqueSortParam {
-    fn assert_receiver_is_total_eq(&self) {}
-}
-
+/// 标识 Mesh 的渲染排序参数
 #[derive(Debug, Clone, Copy, Component, Default)]
 pub struct TransparentSortParam {
     /// 同 渲染类型 中的 渲染分组

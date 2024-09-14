@@ -318,7 +318,7 @@ pub fn sys_image_texture_view_loaded_check<K: std::ops::Deref<Target = EKeyTextu
         }
     }
 }
-#[inline(never)]
+
 fn _sys_image_texture_view_loaded_check(
     wait: &Share<SegQueue<(ObjectID, KeyImageTextureView, IDImageTextureLoad, usize)>>,
     success: &Share<SegQueue<(ObjectID, EKeyTexture, ETextureViewUsage, usize)>>,
@@ -392,9 +392,9 @@ impl<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewU
             app.insert_resource(ImageTextureLoader::default());
             app.insert_resource(StateTextureLoader::default());
 
-            app.configure_set(Update, StageTextureLoad::TextureRequest  .run_if(runif_3d));
-            app.configure_set(Update, StageTextureLoad::TextureLoading  /* .run_if(runif_3d) */.after(StageTextureLoad::TextureRequest));
-            app.configure_set(Update, StageTextureLoad::TextureLoaded   /* .run_if(runif_3d) */.after(StageTextureLoad::TextureLoading).before(ERunStageChap::Uniform));
+            app.configure_set(Update, StageTextureLoad::TextureRequest  .in_set(ERunStageChap::D3));
+            app.configure_set(Update, StageTextureLoad::TextureLoading  .in_set(ERunStageChap::D3).after(StageTextureLoad::TextureRequest));
+            app.configure_set(Update, StageTextureLoad::TextureLoaded   .in_set(ERunStageChap::D3).after(StageTextureLoad::TextureLoading).before(ERunStageChap::Uniform));
 
 #[cfg(feature="use_pi_ecs")]
 {
@@ -414,18 +414,6 @@ impl<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewU
             }
         }
         app.insert_resource(ImageTextureViewLoader::<K>::default());
-        // app.add_systems(
-		// 	Update,
-        //     (
-        //         sys_image_texture_view_load_launch::<K, D>,
-        //     ).chain().in_set(StageTextureLoad::TextureRequest)
-        // );
-        // app.add_systems(
-		// 	Update,
-        //     (
-        //         sys_image_texture_view_loaded_check::<K, D>,
-        //     ).in_set(StageTextureLoad::TextureLoaded)
-        // );
     }
 }
 impl<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewUsage> + Component> Default for PluginImageTextureViewLoad<K, D> {
@@ -473,7 +461,6 @@ pub fn sys_image_texture_view_load_launch2(
     });
 }
 
-#[inline(never)]
 fn _sys_image_texture_view_load_launch2(
     entity: Entity,
     slot: usize,
@@ -598,7 +585,7 @@ pub fn sys_image_texture_view_loaded_check2(
         }
     }
 }
-#[inline(never)]
+
 fn _sys_image_texture_view_loaded_check2(
     wait: &Share<SegQueue<(ObjectID, KeyImageTextureView, IDImageTextureLoad, usize)>>,
     success: &Share<SegQueue<(ObjectID, EKeyTexture, ETextureViewUsage, usize)>>,

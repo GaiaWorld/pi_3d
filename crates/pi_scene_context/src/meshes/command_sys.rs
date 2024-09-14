@@ -15,7 +15,7 @@ use crate::{
 };
 
 use super::{
-    abstract_mesh::AbstructMesh, command::*, lighting::*, model::*, prelude::FlagAbstructMeshForView
+    abstract_mesh::AbstructMesh, command::*, lighting::*, model::*, prelude::FlagMeshNeedRecheckForView
 };
 
 
@@ -26,27 +26,21 @@ pub type BundleModel = (
     BundleInstanceSource,
     TargetAnimatorableIsRunning, InstanceAttributeAnimated,
     BundleMeshLighting,
-    // MeshStates, DirtyMeshStates, 
     ModelInstanceAttributes, MeshInstanceState
 );
 
 pub type BundleMesh = (
     (
         AbstructMesh,
-        FlagAbstructMeshForView,
+        FlagMeshNeedRecheckForView,
         Mesh,
         GeometryID,
         RenderGeometryEable,
         RenderWorldMatrix,
         RenderWorldMatrixInv,
         FlagRenderWorldMatrix,
-        // RenderMatrixDirty,
         MeshCastShadow,
         MeshReceiveShadow,
-        // PassDirtyBindEffectValue,
-        // FlagPassDirtyBindEffectValue,
-        // PassDirtyBindEffectTextures,
-        // FlagPassDirtyBindEffectTextures,
         LayerMask,
         AbstructMeshCullingFlag,
     ),
@@ -57,7 +51,6 @@ pub type BundleMesh = (
         RenderAlignment,
         ScalingMode,
         IndiceRenderRange,
-        RecordIndiceRenderRange,
         VertexRenderRange,
         GeometryBounding,
         GeometryCullingMode,
@@ -69,13 +62,12 @@ pub type BundleMesh = (
 
 pub type BundleInstanceSource = (
     InstanceSourceRefs,
-    DirtyInstanceSourceRefs,
     DirtyInstanceSourceForSingleBuffer,
 );
 
 pub type BundleInstance = (
     AbstructMesh,
-    FlagAbstructMeshForView,
+    FlagMeshNeedRecheckForView,
     AbstructMeshCullingFlag,
     InstanceTransparentIndex,
     InstanceMesh,
@@ -93,9 +85,7 @@ pub type BundleInstance = (
 pub type BundleMeshLighting = (
     MeshLightingMode,
     ModelLightingIndexs,
-    ModelForcePointLightings,
-    ModelForceSpotLightings,
-    ModelForceHemiLightings,
+    ModelForceLightings,
 );
 
 pub fn sys_create_mesh(
@@ -133,12 +123,12 @@ pub fn sys_create_mesh(
 
 pub fn sys_create_instanced_mesh(
     mut cmds: ResMut<ActionListInstanceMeshCreate>,
-    mut commands: Commands,
-    mut meshes: Query<(&SceneID, &mut InstanceSourceRefs, &mut DirtyInstanceSourceRefs, &ModelInstanceAttributes, &mut FlagAbstructMeshForView)>,
-    // mut alter: Alter<(), (), (ModelInstanceAttributes, TargetAnimatorableIsRunning, InstanceAttributeAnimated, (TransformNodeBundle, BundleInstance)), ()>,
+    // mut commands: Commands,
+    mut meshes: Query<(&SceneID, &mut InstanceSourceRefs, &ModelInstanceAttributes, &mut FlagMeshNeedRecheckForView)>,
+    mut alter: Alter<(), (), (ModelInstanceAttributes, TargetAnimatorableIsRunning, InstanceAttributeAnimated, (TransformNodeBundle, BundleInstance)), ()>,
 ) {
     cmds.drain().for_each(|OpsInstanceMeshCreation(source, instance, count)| {
-        if let Ok((id_scene, mut instancelist, mut flag, instanceattrs, mut flagview)) = meshes.get_mut(source) {
+        if let Ok((id_scene, mut instancelist, instanceattrs, mut flagview)) = meshes.get_mut(source) {
 
             let instanceattrs = instanceattrs.clone();
 
@@ -148,12 +138,11 @@ pub fn sys_create_instanced_mesh(
                 InstanceAttributeAnimated::default(),
                 ActionInstanceMesh::init(source, id_scene.0),
             );
-            commands.get_entity(instance).unwrap().insert(bundle);
-            // alter.alter(instance, bundle);
+            // commands.get_entity(instance).unwrap().insert(bundle);
+            alter.alter(instance, bundle);
 
             instancelist.insert(instance);
-            *flag = DirtyInstanceSourceRefs;
-            *flagview = FlagAbstructMeshForView;
+            *flagview = FlagMeshNeedRecheckForView;
             // 
         } else {
             // if count < 2 {
@@ -165,11 +154,13 @@ pub fn sys_create_instanced_mesh(
 
 pub fn sys_create_abstract_posematrix(
     mut cmds: ResMut<ActionListAbstractMeshPose>,
+    mut flagrendermatrix: Query<&mut FlagRenderWorldMatrix>,
     mut commands: Commands,
 ) {
     cmds.drain().for_each(|OpsAbstractMeshPose(entity, matrix)| {
-        if let Some(mut entitycmd) = commands.get_entity(entity) {
+        if let (Some(mut entitycmd), Ok(mut flag)) = (commands.get_entity(entity), flagrendermatrix.get_mut(entity)) {
             entitycmd.insert(RenderPoseMatrix(matrix));
+            *flag = FlagRenderWorldMatrix;
         }
     })
 }
@@ -188,7 +179,7 @@ pub fn sys_act_target_animation_attribute(
     mut anime_contexts: TypeAnimeContexts,
     mut targetanimations: ResMut<ActionListAnimationGroupAction>,
     instances: Query<&InstanceMesh>,
-    mut meshes: Query<&mut DirtyInstanceSourceRefs>,
+    mut meshes: Query<&mut InstanceSourceRefs>,
 ) {
     cmds.drain().for_each(|OpsTargetAnimationAttribute(item, attr, group, curve)| {
         let mut mesh = item;
@@ -232,7 +223,7 @@ pub fn sys_act_target_animation_attribute(
                 
             }
             if let Ok(mut flag) = meshes.get_mut(mesh) {
-                *flag = DirtyInstanceSourceRefs;
+                flag.dirty = true;
             }
         }
     });
@@ -246,10 +237,11 @@ pub fn sys_act_mesh_modify(
     mut align_items: Query<&mut RenderAlignment>,
     mut scalingode_items: Query<&mut ScalingMode>,
     mut velocity_items: Query<&mut ModelVelocity>,
-    mut indices_items: Query<(&mut IndiceRenderRange, &mut RecordIndiceRenderRange)>,
+    mut indices_items: Query<&mut IndiceRenderRange>,
     mut vertexrange_items: Query<&mut VertexRenderRange>,
     mut culling_items: Query<(&mut GeometryCullingMode, &mut ItemCullingDirty)>,
     mut flagrendermatrix: Query<&mut FlagRenderWorldMatrix>,
+    mut records: ResMut<AnimeTargetRecordValues<IndiceRenderRange>>,
     skinoff_items: Query<&BindModel>,
 ) {
     cmds.drain().for_each(|OpsMeshStateModify(entity, cmd)| {
@@ -294,8 +286,8 @@ pub fn sys_act_mesh_modify(
             EMeshValueStateModify::BoneOffset(val) => if let Ok(bind) = skinoff_items.get(entity) {
                 bind.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_U32_A as usize, bytemuck::cast_slice(&[val]));
             },
-            EMeshValueStateModify::IndiceRange(val) => if let Ok((mut item, mut record)) = indices_items.get_mut(entity) {
-                *record = RecordIndiceRenderRange(IndiceRenderRange::new(val.clone()));
+            EMeshValueStateModify::IndiceRange(val) => if let Ok(mut item) = indices_items.get_mut(entity) {
+                records.insert(entity, IndiceRenderRange::new(val.clone()));
                 *item = IndiceRenderRange::new(val);
             },
             EMeshValueStateModify::VertexRange(val) => if let Ok(mut item) = vertexrange_items.get_mut(entity) {
@@ -324,10 +316,8 @@ pub fn sys_act_instance_attribute(
     mut animator_sint: ResMut<ActionListAnimatorableSint>,
 
     mut forcelight_cmds: ResMut<ActionListMeshForceLighting>,
-    mut pointlight_items: Query<&mut ModelForcePointLightings>,
-    mut spotlight_items: Query<&mut ModelForceSpotLightings>,
-    mut hemilight_items: Query<&mut ModelForceHemiLightings>,
-    mut meshes: Query<&mut DirtyInstanceSourceRefs>,
+    mut light_items: Query<&mut ModelForceLightings>,
+    mut meshes: Query<&mut InstanceSourceRefs>,
 ) {
 
     cmdsfloat.drain().for_each(|OpsInstanceAttr(instance, val, attr)| {
@@ -357,7 +347,7 @@ pub fn sys_act_instance_attribute(
                 }
                 
                 if let Ok(mut flag) = meshes.get_mut(inssource.0) {
-                    *flag = DirtyInstanceSourceRefs;
+                    flag.dirty = true;
                 }
             }
         }
@@ -366,25 +356,25 @@ pub fn sys_act_instance_attribute(
     forcelight_cmds.drain().for_each(|OpsMeshForceLighting(entity, light, isadd)| {
         // log::warn!("Range: {:?}", val);
         match isadd {
-            EMeshForceLighting::ForcePointLighting(isadd) => if let Ok(mut item) = pointlight_items.get_mut(entity) {
+            EMeshForceLighting::ForcePointLighting(isadd) => if let Ok(mut item) = light_items.get_mut(entity) {
                 // *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
-                match item.0.binary_search(&light) {
-                    Ok(idx)  => { if isadd == false { item.0.remove(idx); } },
-                    Err(idx) => { if isadd == true  { item.0.insert(idx, light); } },
+                match item.point.binary_search(&light) {
+                    Ok(idx)  => { if isadd == false { item.point.remove(idx); } },
+                    Err(idx) => { if isadd == true  { item.point.insert(idx, light); } },
                 }
             },
-            EMeshForceLighting::ForceSpotLighting(isadd) => if let Ok(mut item) = spotlight_items.get_mut(entity) {
+            EMeshForceLighting::ForceSpotLighting(isadd) => if let Ok(mut item) = light_items.get_mut(entity) {
                 // *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
-                match item.0.binary_search(&light) {
-                    Ok(idx)  => { if isadd == false { item.0.remove(idx); } },
-                    Err(idx) => { if isadd == true  { item.0.insert(idx, light); } },
+                match item.spot.binary_search(&light) {
+                    Ok(idx)  => { if isadd == false { item.spot.remove(idx); } },
+                    Err(idx) => { if isadd == true  { item.spot.insert(idx, light); } },
                 }
             },
-            EMeshForceLighting::ForceHemiLighting(isadd) => if let Ok(mut item) = hemilight_items.get_mut(entity) {
+            EMeshForceLighting::ForceHemiLighting(isadd) => if let Ok(mut item) = light_items.get_mut(entity) {
                 // *record = RecordIndiceRenderRange(IndiceRenderRange(val.clone()));
-                match item.0.binary_search(&light) {
-                    Ok(idx)  => { if isadd == false { item.0.remove(idx); } },
-                    Err(idx) => { if isadd == true  { item.0.insert(idx, light); } },
+                match item.hemi.binary_search(&light) {
+                    Ok(idx)  => { if isadd == false { item.hemi.remove(idx); } },
+                    Err(idx) => { if isadd == true  { item.hemi.insert(idx, light); } },
                 }
             },
         }
@@ -443,9 +433,7 @@ impl ActionMesh {
         let lightbundle = (
             MeshLightingMode::default(),
             modellightidx,
-            ModelForcePointLightings::default(),
-            ModelForceSpotLightings::default(),
-            ModelForceHemiLightings::default(),
+            ModelForceLightings::default(),
         );
         let bundle: BundleModel = (
             ActionTransformNode::init(scene),
@@ -481,7 +469,7 @@ impl ActionMesh {
         let unclipdepth = false;
         ((
             AbstructMesh,
-            FlagAbstructMeshForView,
+            FlagMeshNeedRecheckForView,
             Mesh,
             GeometryID(geometry),
             RenderGeometryEable(false),
@@ -505,7 +493,6 @@ impl ActionMesh {
             RenderAlignment::default(),
             ScalingMode::default(),
             IndiceRenderRange::default(),
-            RecordIndiceRenderRange::default(),
             VertexRenderRange::default(),
             GeometryBounding::default(),
             GeometryCullingMode::default(),
@@ -518,7 +505,6 @@ impl ActionMesh {
     pub fn as_instance_source() -> BundleInstanceSource {
         (
             InstanceSourceRefs::default(),
-            DirtyInstanceSourceRefs::default(),
             DirtyInstanceSourceForSingleBuffer::default(),
         )
     }
@@ -539,7 +525,7 @@ impl ActionInstanceMesh {
     ) -> BundleInstance {
         (
             AbstructMesh,
-            FlagAbstructMeshForView,
+            FlagMeshNeedRecheckForView,
             AbstructMeshCullingFlag(false),
             InstanceTransparentIndex(0),
             InstanceMesh(source),
