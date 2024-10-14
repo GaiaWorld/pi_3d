@@ -28,6 +28,7 @@ fn animatorable_type(val: &ECustomVertexType) -> EAnimatorableType {
     }
 }
 
+/// 记录模型实例动画的属性名
 #[derive(Component, Default)]
 pub struct InstanceAttributeAnimated(pub Vec<Atom>);
 impl InstanceAttributeAnimated {
@@ -59,6 +60,7 @@ impl InstanceAttributeOffset {
     pub fn entity(&self) -> Option<Entity> { self.entity }
 }
 
+/// 记录模型实例的属性数据 及 存储信息
 #[derive(Component, Default)]
 pub struct ModelInstanceAttributes {
     bytes: Vec<u8>,

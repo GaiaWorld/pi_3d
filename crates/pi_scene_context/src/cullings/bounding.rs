@@ -63,17 +63,22 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
         let ray = parry3d::query::Ray::new(origin, Vector3::new(ray.direction.0, ray.direction.1, ray.direction.2));
         let mut dest = f32::MAX;
         // println!("========= ray: {:?}", ray);
+        let mut aabb = Aabb::new(
+            Point3::new(0., 0., 0.01),
+            Point3::new(0., 0., 0.01),
+        );
         self.pool.iter().for_each(|(entity, item)| {
-            let aabb = Aabb::new(
-                Point3::new(item.0 .0, item.0 .1, item.0 .2),
-                Point3::new(item.1 .0, item.1 .1, item.1 .2),
-            );
-            
-            
-            if let Some(d) = aabb.cast_ray(&Isometry3::identity(), &ray, f32::MAX, false) {
+            aabb.mins.x = item.0 .0;
+            aabb.mins.y = item.0 .1;
+            aabb.mins.z = item.0 .2;
+            aabb.maxs.x = item.1 .0;
+            aabb.maxs.y = item.1 .1;
+            aabb.maxs.z = item.1 .2;
+
+            if let Some(d) = aabb.cast_local_ray(&ray, f32::MAX, false) {
                 // println!("========= id: {:?}, aabb: {:?}, dest: {}",  entity, aabb, d);
                 // println!("========= dest： {}", dest);
-                if dest > d  {
+                if d < dest  {
                     dest = d;
                     result.replace(PickResult {
                         target: *entity,

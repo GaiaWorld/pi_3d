@@ -178,7 +178,7 @@ pub fn sys_shadow_bind_modify(
                 let voff = 0.;
                 if let Ok(indexlight) = indexs.get(light.0) {
                     // log::error!("ShadowBind: {:?}", (indexlight.val(), indexshadow.val()));
-                    shadowdata.0.as_ref().unwrap().direct_shadow_data(indexlight.val(), indexshadow.val(), matrix.0.as_slice(), shadow.bias, shadow.normalbias, shadow.depthscale, 0., uscale, vscale, uoff, voff)
+                    shadowdata.0.as_ref().unwrap().direct_shadow_data(indexlight.val(), indexshadow.val(), matrix.0.as_slice(), shadow.bias, shadow.normalbias, shadow.minz, shadow.maxz, uscale, vscale, uoff, voff)
                 }
             }
         });

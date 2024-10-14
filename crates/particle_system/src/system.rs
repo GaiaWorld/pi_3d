@@ -734,7 +734,7 @@ pub fn sys_update_buffer(
                 
                 let id_geo = idgeo.0;
                 if let Ok(InstancedInfoComp(Some(instanceinfo))) = instanceinfos.get(id_geo) {
-                    instancesort.sizeperinstance = instanceinfo.bytes_per_instance as usize;
+                    instancesort.sizeperinstance = instanceinfo.bytes_per_instance as u16;
 
                     count_particles += particle_count;
 

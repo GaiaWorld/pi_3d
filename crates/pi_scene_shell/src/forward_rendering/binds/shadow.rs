@@ -24,15 +24,15 @@ impl ShaderBindShadowData {
     pub const SIZE_SHADOW_DATA: u32             = ((4 + 4 + 4 + 4) + 4 + 4 + 4) * 4;
 
     pub fn direct_shadow_data(
-        &self, indexlight: u32, indexshadow: u32, matrix: &[f32], bias: f32, normalbias: f32, depthscale: f32, v: f32, uscale: f32, vscale: f32, uoff: f32, voff: f32
+        &self, indexlight: u32, indexshadow: u32, matrix: &[f32], bias: f32, normalbias: f32, minz: f32, maxz: f32, uscale: f32, vscale: f32, uoff: f32, voff: f32
     ) {
         self.data.0.write_data( (indexlight as usize * 4 + 0) * 4, bytemuck::cast_slice(&[indexshadow]));
         let mut temp = [0.; 28];
         for i in 0..16 {
             temp[i] = matrix[i];
         }
-        temp[16] = bias; temp[17] = normalbias; temp[18] = depthscale;
-        temp[20] = depthscale; temp[21] = v;
+        temp[16] = bias; temp[17] = normalbias; temp[18] = minz; temp[19] = maxz;
+        temp[20] = minz; temp[21] = maxz;
         temp[24] = uscale; temp[25] = vscale; temp[26] = uoff; temp[27] = voff;
         self.data.0.write_data( (self.shadow_data_offset + indexshadow * Self::SIZE_SHADOW_DATA) as usize , bytemuck::cast_slice(&temp));
     }

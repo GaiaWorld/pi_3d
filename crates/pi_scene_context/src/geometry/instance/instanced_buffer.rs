@@ -8,11 +8,11 @@ pub struct InstancedInfoComp(pub Option<InstancedInfo>);
 
 pub struct InstancedInfo {
     // pub state: u32,
-    pub bytes_per_instance: u32,
+    pub bytes_per_instance: u16,
     pub slot: EVertexBufferSlot,
 }
 impl InstancedInfo {
-    pub fn new(bytes_per_instance: u32, slot: EVertexBufferSlot) -> Self {
+    pub fn new(bytes_per_instance: u16, slot: EVertexBufferSlot) -> Self {
         Self {
             // state,
             bytes_per_instance,
@@ -25,7 +25,7 @@ impl InstancedInfo {
     pub fn slot(&self) -> EVertexBufferSlot {
         self.slot
     }
-    pub fn bytes_per_instance(&self) -> u32 {
+    pub fn bytes_per_instance(&self) -> u16{
         self.bytes_per_instance
     }
     // pub fn geo_desc(&self) -> VertexBufferDesc {

@@ -3,7 +3,7 @@ use std::{hash::{Hash, Hasher}, sync::Arc};
 use crossbeam::queue::SegQueue;
 use pi_scene_shell::prelude::*;
 use pi_futures::BoxFuture;
-use pi_gltf::Gltf;
+use pi_gltf::{animation::Interpolation, Gltf};
 use pi_particle_system::prelude::{IParticleSystemConfig, ParticleSystemCalculatorID, OpsCPUParticleCalculator, KeyParticleSystemCalculator, ActionSetParticleSystem, ResourceParticleSystem};
 use pi_scene_context::prelude::*;
 
@@ -97,7 +97,7 @@ impl GLTFBaseLoader {
                             if haserror == false {
                                 let mut size = 0;
                                 buffers.iter().for_each(|val| { size += val.len(); });
-                                let result = GLTFBase { gltf: Arc::new(gltf), size, buffers };
+                                let result = GLTFBase { gltf, size, buffers };
                                 success.push((key, result));
                             }
                         },
@@ -126,9 +126,9 @@ impl GLTFBaseLoader {
 
 #[derive(Clone)]
 pub struct GLTFBase{
-    gltf: Arc<Gltf>,
-    size: usize,
-    buffers: Vec<Share<Vec<u8>>>,
+    pub gltf: Gltf,
+    pub size: usize,
+    pub buffers: Vec<Share<Vec<u8>>>,
 }
 
 pub struct GLTF {
@@ -155,7 +155,6 @@ pub struct GLTF {
     pub errors: Vec<EError>,
     pub animecount: usize,
     pub path: String,
-    pub gltf: GLTFBase,
 }
 impl  GLTF {
     pub fn key_accessor(&self, index: usize) -> String {
@@ -182,7 +181,7 @@ impl  GLTF {
 
         key
     }
-    pub fn new(_base: GLTFBase, path: String) -> Self {
+    pub fn new(path: String) -> Self {
         Self {
             textures:               vec![],
             vbs:                    vec![],
@@ -207,7 +206,6 @@ impl  GLTF {
             errors: vec![],
             animecount: 0,
             path,
-            gltf: _base
         }
     }
 }
@@ -292,7 +290,7 @@ impl GLTFTempLoaded {
         particlesys_res: &mut ResourceParticleSystem,
     ) -> GLTF {
         let time0 = pi_time::Instant::now();
-        let mut result = GLTF::new(gltf.clone(), base_url.to_string());
+        let mut result = GLTF::new(base_url.to_string());
         // let basekey = self.id.base_url.to_string() + "#";
 
         // VertexBuffer
@@ -376,218 +374,29 @@ impl GLTFTempLoaded {
                         property_id = EAnimePropertyType::from_u8(val.as_u64().unwrap() as u8);
                     }
                 }
+                let accessor = channel.sampler().input();
+                let offset = accessor.offset();
+                let count = accessor.count();
 
                 if let (Some(property_id), Some(mode)) = (property_id, baseinterpolation) {
                     if p3d_anime_curve_query(&anime_assets, curve_key_u64, property_id) == false {
-                        let accessor = channel.sampler().input();
                         let view = accessor.view().unwrap();
-                        if let Some(bufferdata) = gltf.buffers.get(accessor.view().unwrap().buffer().index()) {
-                            let bufferdata = &bufferdata;
-                            let start = view.offset() + accessor.offset();
-                            let end = start + accessor.count() * accessor.size();
-                            let times = bytemuck::try_cast_slice(&bufferdata[start..end]);
-
-                            // let times = channel.reader(|buffer| {
-                            //     match self.buffers.get(&buffer.index()) {
-                            //         Some(val) => Some(val.as_slice()),
-                            //         None => None,
-                            //     }
-                            // }).read_inputs().map(|v| v.collect::<Vec<f32>>());
+                        if let Some(time_bufferdata) = gltf.buffers.get(accessor.view().unwrap().buffer().index()) {
+                            let start = view.offset() + offset;
+                            let end = start + count * accessor.size();
+                            let time_range = (start, end);
             
                             let accessor = channel.sampler().output();
                             let view = accessor.view().unwrap();
-                            if let Some(bufferdata) = gltf.buffers.get(accessor.view().unwrap().buffer().index()) {
-                                let bufferdata = &bufferdata;
-                                let start = view.offset() + accessor.offset();
-                                let end = start + accessor.count() * accessor.size();
-                                let values = bytemuck::try_cast_slice(&bufferdata[start..end]);
-                                // let values = channel.reader(|buffer| {
-                                //     match self.buffers.get(&buffer.index()) {
-                                //         Some(val) => Some(val.as_slice()),
-                                //         None => None,
-                                //     }
-                                // }).read_outputs().map(|v| v.collect::<Vec<f32>>());
-
-                                // log::debug!("Curve: {:?}, {:?}, {:?}", curve_key_u64, property_id, mode);
+                            let offset = accessor.offset();
+                            let count = accessor.count();
+                            if let Some(value_bufferdata) = gltf.buffers.get(accessor.view().unwrap().buffer().index()) {
+                                let start = view.offset() + offset;
+                                let end = start + count * accessor.size();
+                                let value_range = (start, end);
 
                                 let design_frame_per_second = 120;
-                                if let (Ok(times), Ok(values)) = (times, values) {
-                                    match property_id {
-                                        EAnimePropertyType::LocalPosition => {
-                                            let curve = curve_gltf::<3, LocalPosition>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.position.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.position.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::LocalRotation => {
-                                            let curve = curve_gltf::<4, LocalRotationQuaternion>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.quaternion.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.quaternion.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::LocalScaling => {
-                                            let curve = curve_gltf::<3, LocalScaling>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.scaling.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.scaling.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::CameraOrthSize => {
-                                            let curve = curve_gltf::<1, CameraOrthSize>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.camerasize.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.camerasize.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::CameraFov => {
-                                            let curve = curve_gltf::<1, CameraFov>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.camerafov.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.camerafov.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::Enable => {
-                                            let curve = curve_gltf::<1, Enable>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.enable.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.enable.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::LocalEulerAngles => {
-                                            let curve = curve_gltf::<3, LocalEulerAngles>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.euler.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.euler.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::Intensity => {
-                                            // let curve = curve_gltf::<1, Intensity>(&times, &values, design_frame_per_second, mode);
-                                        },
-                                        EAnimePropertyType::CellId => {
-                                            // let curve = curve_gltf::<1, CellId>(&times, &values, design_frame_per_second, mode);
-                                        },
-                                        EAnimePropertyType::IndicesRange => {
-                                            let curve = curve_gltf::<2, IndiceRenderRange>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.indicerange_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.indicerange_curves.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::MainTexUScale => {
-                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.float.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::MainTexVScale => {
-                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.float.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::MainTexUOffset => {
-                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.float.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::MainTexVOffset => {
-                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.float.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::Alpha => {
-                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.float.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::MainColor => {
-                                            let curve = curve_gltf::<3, AnimatorableVec3>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.vec3s.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.vec3s.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::LightDiffuse => {
-                                            // let curve = curve_gltf::<3, Lightdiffuse>(&times, &values, design_frame_per_second, mode);
-                                        },
-                                        EAnimePropertyType::AlphaCutoff => {
-                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.float.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::OpacityTexUScale => {
-                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.float.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::OpacityTexVScale => {
-                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.float.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::OpacityTexUOffset => {
-                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.float.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::OpacityTexVOffset => {
-                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.float.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::MaskCutoff => {
-                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.float.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::MaskTexUScale => {
-                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.float.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::MaskTexVScale => {
-                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.float.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::MaskTexUOffset => {
-                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.float.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::MaskTexVOffset => {
-                                            let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.float.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::MainTexTilloff => {
-                                            let curve = curve_gltf::<4, AnimatorableVec4>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.vec4s.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.vec4s.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::MaskTexTilloff => {
-                                            let curve = curve_gltf::<4, AnimatorableVec4>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.vec4s.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.vec4s.push(curve);
-                                            };
-                                        },
-                                        EAnimePropertyType::OpacityTexTilloff => {
-                                            let curve = curve_gltf::<4, AnimatorableVec4>(&times, &values, design_frame_per_second, mode);
-                                            if let Ok(curve) = anime_assets.vec4s.insert(curve_key_u64, TypeFrameCurve(curve)) {
-                                                result.vec4s.push(curve);
-                                            };
-                                        },
-                                    }
-                                } else {
-                                    result.errors.push(ErrorRecord::ERROR_GLTF_ANIMATION);
-                                }
+                                Self::animation_curve(&mut result, time_bufferdata, value_bufferdata, time_range, value_range, property_id, mode, anime_assets, design_frame_per_second, curve_key_u64);
                             }
                         };
                     }
@@ -598,6 +407,44 @@ impl GLTFTempLoaded {
         
             // log::debug!("channels: {:?}, ", index_chanel);
         }
+
+        // for animation in gltf.gltf.pianimations() {
+        //     index_group += 1;
+        //     let mut index_chanel = 0;
+        //     if let Some(channels) = animation.channels() {
+        //         for channel in channels {
+        //             index_chanel += 1;
+        //             let curve_key_u64 = result.key_anime_curve(index_group, index_chanel);
+        //             let property_id = EAnimePropertyType::from_u8(channel.0 as u8);
+        //             let baseinterpolation = interpolation_from_u8(channel.10 as u8);
+        //             if let (Some(property_id), Some(mode)) = (property_id, baseinterpolation) {
+        //                 if p3d_anime_curve_query(&anime_assets, curve_key_u64, property_id) == false {
+        //                     if let Some(bufferdata) = gltf.buffers.get(animation.buffer()) {
+        //                         let time_bufferdata = bufferdata;
+        //                         let value_bufferdata = bufferdata;
+
+        //                         let offset = channel.2 as usize;
+        //                         let count = channel.3 as usize;
+        //                         let start = channel.4 as usize + offset;
+        //                         let end = start + count * 4;
+        //                         let time_range = (start, end);
+
+        //                         let offset = channel.6 as usize;
+        //                         let count = channel.7 as usize;
+        //                         let start = channel.8 as usize + offset;
+        //                         let end = start + count * property_id.size();
+        //                         let value_range = (start, end);
+
+        //                         let design_frame_per_second = 120;
+        //                         Self::animation_curve(&mut result, time_bufferdata, value_bufferdata, time_range, value_range, property_id, mode, anime_assets, design_frame_per_second, curve_key_u64);
+        //                     }
+        //                 }
+        //             } else {
+        //                 log::error!("Not Prop {:?}", (channel, baseinterpolation.is_some()));
+        //             }
+        //         }
+        //     }
+        // }
 
         // ParticleSystemCalculator
         for node in gltf.gltf.nodes() {
@@ -623,6 +470,198 @@ impl GLTFTempLoaded {
         log::error!("GLTF Analy: {:?}", (base_url.to_string(), (pi_time::Instant::now() - time0).as_micros() as u32));
 
         result
+    }
+    fn animation_curve(
+        result: &mut GLTF,
+        time_bufferdata: &Arc<Vec<u8>>,
+        value_bufferdata: &Arc<Vec<u8>>,
+        time_range: (usize, usize),
+        value_range: (usize, usize),
+        property_id: EAnimePropertyType,
+        mode: Interpolation,
+        anime_assets: &TypeAnimeAssetMgrs,
+        design_frame_per_second: FramePerSecond,
+        curve_key_u64: u64,
+    ) {
+        let times = bytemuck::try_cast_slice(&time_bufferdata[time_range.0..time_range.1]);
+        let values = bytemuck::try_cast_slice(&value_bufferdata[value_range.0..value_range.1]);
+        if let (Ok(times), Ok(values)) = (times, values) {
+            match property_id {
+                EAnimePropertyType::LocalPosition => {
+                    let curve = curve_gltf::<3, LocalPosition>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.position.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.position.push(curve);
+                    };
+                },
+                EAnimePropertyType::LocalRotation => {
+                    let curve = curve_gltf::<4, LocalRotationQuaternion>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.quaternion.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.quaternion.push(curve);
+                    };
+                },
+                EAnimePropertyType::LocalScaling => {
+                    let curve = curve_gltf::<3, LocalScaling>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.scaling.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.scaling.push(curve);
+                    };
+                },
+                EAnimePropertyType::CameraOrthSize => {
+                    let curve = curve_gltf::<1, CameraOrthSize>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.camerasize.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.camerasize.push(curve);
+                    };
+                },
+                EAnimePropertyType::CameraFov => {
+                    let curve = curve_gltf::<1, CameraFov>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.camerafov.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.camerafov.push(curve);
+                    };
+                },
+                EAnimePropertyType::Enable => {
+                    let curve = curve_gltf::<1, Enable>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.enable.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.enable.push(curve);
+                    };
+                },
+                EAnimePropertyType::LocalEulerAngles => {
+                    let curve = curve_gltf::<3, LocalEulerAngles>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.euler.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.euler.push(curve);
+                    };
+                },
+                EAnimePropertyType::Intensity => {
+                    // let curve = curve_gltf::<1, Intensity>(&times, &values, design_frame_per_second, mode);
+                },
+                EAnimePropertyType::CellId => {
+                    // let curve = curve_gltf::<1, CellId>(&times, &values, design_frame_per_second, mode);
+                },
+                EAnimePropertyType::IndicesRange => {
+                    let curve = curve_gltf::<2, IndiceRenderRange>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.indicerange_curves.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.indicerange_curves.push(curve);
+                    };
+                },
+                EAnimePropertyType::MainTexUScale => {
+                    let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.float.push(curve);
+                    };
+                },
+                EAnimePropertyType::MainTexVScale => {
+                    let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.float.push(curve);
+                    };
+                },
+                EAnimePropertyType::MainTexUOffset => {
+                    let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.float.push(curve);
+                    };
+                },
+                EAnimePropertyType::MainTexVOffset => {
+                    let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.float.push(curve);
+                    };
+                },
+                EAnimePropertyType::Alpha => {
+                    let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.float.push(curve);
+                    };
+                },
+                EAnimePropertyType::MainColor => {
+                    let curve = curve_gltf::<3, AnimatorableVec3>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.vec3s.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.vec3s.push(curve);
+                    };
+                },
+                EAnimePropertyType::LightDiffuse => {
+                    // let curve = curve_gltf::<3, Lightdiffuse>(&times, &values, design_frame_per_second, mode);
+                },
+                EAnimePropertyType::AlphaCutoff => {
+                    let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.float.push(curve);
+                    };
+                },
+                EAnimePropertyType::OpacityTexUScale => {
+                    let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.float.push(curve);
+                    };
+                },
+                EAnimePropertyType::OpacityTexVScale => {
+                    let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.float.push(curve);
+                    };
+                },
+                EAnimePropertyType::OpacityTexUOffset => {
+                    let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.float.push(curve);
+                    };
+                },
+                EAnimePropertyType::OpacityTexVOffset => {
+                    let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.float.push(curve);
+                    };
+                },
+                EAnimePropertyType::MaskCutoff => {
+                    let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.float.push(curve);
+                    };
+                },
+                EAnimePropertyType::MaskTexUScale => {
+                    let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.float.push(curve);
+                    };
+                },
+                EAnimePropertyType::MaskTexVScale => {
+                    let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.float.push(curve);
+                    };
+                },
+                EAnimePropertyType::MaskTexUOffset => {
+                    let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.float.push(curve);
+                    };
+                },
+                EAnimePropertyType::MaskTexVOffset => {
+                    let curve = curve_gltf::<1, AnimatorableFloat>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.float.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.float.push(curve);
+                    };
+                },
+                EAnimePropertyType::MainTexTilloff => {
+                    let curve = curve_gltf::<4, AnimatorableVec4>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.vec4s.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.vec4s.push(curve);
+                    };
+                },
+                EAnimePropertyType::MaskTexTilloff => {
+                    let curve = curve_gltf::<4, AnimatorableVec4>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.vec4s.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.vec4s.push(curve);
+                    };
+                },
+                EAnimePropertyType::OpacityTexTilloff => {
+                    let curve = curve_gltf::<4, AnimatorableVec4>(&times, &values, design_frame_per_second, mode);
+                    if let Ok(curve) = anime_assets.vec4s.insert(curve_key_u64, TypeFrameCurve(curve)) {
+                        result.vec4s.push(curve);
+                    };
+                },
+            }
+        } else {
+            result.errors.push(ErrorRecord::ERROR_GLTF_ANIMATION);
+        }
     }
 }
 

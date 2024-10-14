@@ -49,7 +49,7 @@ impl<'w> DrawTmpRef<'w> {
         self.inscombinerange.end - self.inscombinerange.start
     }
     pub fn instancedatasize<'a>(&'a self) -> usize {
-        (self.inscombinerange.end - self.inscombinerange.start) as usize * self.instancessortinfo.sizeperinstance
+        (self.inscombinerange.end - self.inscombinerange.start) as usize * self.instancessortinfo.sizeperinstance as usize
     }
     pub fn cmp_opaque<'a>(a: &'a Self, other: &'a Self) -> std::cmp::Ordering {
         match a.pass.cmp(&other.pass) {

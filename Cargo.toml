@@ -44,7 +44,7 @@ pi_bevy_log             = { version = "0.1", registry = "yn" }
 
 pi_scene_math           = { version = "0.0.*", registry = "yn" }
 pi_animation            = { version = "0.1", registry = "yn" }
-pi_curves               = { version = "0.1", registry = "yn" }
+pi_curves               = { version = "*", registry = "yn" }
 pi_atom                 = { version = "0.5", features = ["serde"] }
 pi_hal                  = { version = "0.1", registry = "yn" }
 pi_assets               = "0.14"
@@ -87,6 +87,7 @@ pi_wgpu                 = { path = "../pi_wgpu" }
 pi_hal                  = { path = "../pi_hal" }
 pi_postprocess          = { path = "../pi_post_process_new"}
 pi_scene_math           = { path = "../pi_scene/crates/pi_scene_math" }
+pi_gltf                 = { path = "../pi_gltf", features = ["extras"] }
 
 [patch.crates-io]
 pi_world                = { path = "../pi_world", features = ["single_thread"] }
@@ -106,7 +107,7 @@ bevy_input      = "0.11"
 
 pi_postprocess      = { version = "0.1", registry = "yn" }
 
-pi_gltf         = { path = "../pi_gltf", features = ["extras"] }
+pi_gltf             = { path = "../pi_gltf", features = ["extras"] }
 env_logger          = "0.9"
 # pi_wgpu         = { version = "*", features = ["single_thread", "use_wgpu"] }
 

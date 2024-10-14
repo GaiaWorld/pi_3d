@@ -9,9 +9,11 @@ use crate::prelude::ActionList;
 
 use super::{base::*, float::AnimatorableFloat, vec2::AnimatorableVec2, vec3::AnimatorableVec3, vec4::AnimatorableVec4, uint::AnimatorableUint, int::AnimatorableSint};
 
+/// 记录动画操作的实体ID
 #[derive(Component, Default, Deref)]
 pub struct AnimatorableLink(pub(crate) Entity);
 
+/// 标识动画是否启动
 #[derive(Component, Default)]
 pub struct TargetAnimatorableIsRunning;
 

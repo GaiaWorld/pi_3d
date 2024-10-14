@@ -7,6 +7,7 @@ use pi_scene_context::scene::StageScene;
 mod load;
 mod base;
 mod particle_system;
+mod factory;
 
 
 pub struct PluginGLTF2Res;

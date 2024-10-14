@@ -81,11 +81,27 @@ impl EAnimePropertyType {
             }
         }
     }
+    pub fn size(&self) -> usize {
+        match self {
+            EAnimePropertyType::LocalPosition       => 4 * 3,
+            EAnimePropertyType::LocalScaling        => 4 * 3,
+            EAnimePropertyType::MainColor           => 4 * 3,
+            EAnimePropertyType::LocalEulerAngles    => 4 * 3,
+            EAnimePropertyType::LightDiffuse        => 4 * 3,
+
+            EAnimePropertyType::LocalRotation       => 4 * 4,
+
+            EAnimePropertyType::IndicesRange        => 4 * 2,
+
+            _ => 4 * 1,
+        }
+    }
 }
 
 
 pub fn interpolation_from_u8(val: u8) -> Option<Interpolation> {
     match val {
+        0 => { Some(Interpolation::Linear) },
         1 => { Some(Interpolation::Linear) },
         2 => { Some(Interpolation::Step) },
         3 => { Some(Interpolation::CubicSpline) },

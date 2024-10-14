@@ -20,8 +20,8 @@ impl DemoLight {
         actions.transform.localsrt.push(OpsTransformNodeLocal::ops(light, ETransformSRT::Translation(0., 20., -10.)));
         actions.mesh.layermask.push(OpsLayerMask::ops(light, 0xFFFFFFFF));
         actions.light.create.push(OpsLightCreate::ops(scene, light, ELightType::Direct));
-        actions.light.param.push(OpsLightParam::ops(light, ELightModify::Directional( Vector3::new(-0., -2., 1.) )));
-        actions.light.param.push(OpsLightParam::ops(light, ELightModify::Color(0.4, 0.4, 0.4)));
+        actions.light.param.push(OpsLightParam::ops(light, ELightModify::Directional( Vector3::new(-0., -1., 1.) )));
+        actions.light.param.push(OpsLightParam::ops(light, ELightModify::Color(1.4, 1.4, 1.4)));
 
         light
     }

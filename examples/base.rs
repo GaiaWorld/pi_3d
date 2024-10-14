@@ -137,7 +137,7 @@ impl DemoScene {
             None => None,
         };
         
-        let shadowtarget = targets.create(KeySampler::linear_clamp(), ColorFormat::Rgba16Float, DepthStencilFormat::Depth32Float, 2048, 2048);
+        let shadowtarget = targets.create(KeySampler::linear_clamp(), ColorFormat::Rgba16Float, DepthStencilFormat::Depth32Float, 1024, 1024);
 
         let scene = commands.spawn_empty_id();
         // animegroupres.scene_ctxs.init_scene(scene);
@@ -370,7 +370,7 @@ pub fn test_plugins_with_gltf() -> (App, Arc<Window>, EventLoop<()>) {
     let height = 600;
 
     let mut opt = PiRenderOptions::default();
-    // opt.backends = Backends::GL;
+    opt.backends = Backends::VULKAN;
     app.insert_resource(opt);
     
 	let (w, event_loop) = {

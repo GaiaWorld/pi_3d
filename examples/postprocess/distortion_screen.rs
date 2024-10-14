@@ -308,8 +308,8 @@ impl Plugin for PluginTest {
                 actions.mesh.render_state.push(OpsRenderState::depth_state(trail, DemoScene::PASS_TRANSPARENT, EDepthState::Compare(CompareFunction::Always)));
             }
             
-            let mut param = AnimationGroupParam::default(); param.fps = 60; param.speed = 2.;param.loop_mode = ELoopMode::PositivePly(None);
-            actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, param, 0., pi_animation::base::EFillMode::NONE));
+            // let mut param = AnimationGroupParam::default(); param.fps = 60; param.speed = 2.;param.loop_mode = ELoopMode::PositivePly(None);
+            // actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, param, 0., pi_animation::base::EFillMode::NONE));
         }
 }
 

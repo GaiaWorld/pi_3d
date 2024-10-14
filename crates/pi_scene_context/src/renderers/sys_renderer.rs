@@ -880,7 +880,7 @@ fn _combine_instance(
     if let Some(slot) = &drawinfo.rendergeo.instance_slot {
         // log::warn!("_combine_instance {:?}", &drawinfo.inscombinerange);
         if drawinfo.instancessortinfo.count > 0 && drawinfo.inscombinerange.start < drawinfo.inscombinerange.end {
-            let size = drawinfo.instancessortinfo.data.len() / drawinfo.instancessortinfo.count;
+            let size = drawinfo.instancessortinfo.data.len() / drawinfo.instancessortinfo.count as usize;
             let start = drawinfo.inscombinerange.start as usize * size;
             let end = drawinfo.inscombinerange.end as usize * size;
 

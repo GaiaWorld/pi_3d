@@ -37,7 +37,6 @@ pub type BundleMesh = (
         GeometryID,
         RenderGeometryEable,
         RenderWorldMatrix,
-        RenderWorldMatrixInv,
         FlagRenderWorldMatrix,
         MeshCastShadow,
         MeshReceiveShadow,
@@ -71,14 +70,10 @@ pub type BundleInstance = (
     AbstructMeshCullingFlag,
     InstanceTransparentIndex,
     InstanceMesh,
-    // RenderMatrixDirty,
     RenderWorldMatrix,
-    RenderWorldMatrixInv,
     FlagRenderWorldMatrix,
     ModelVelocity,
     ScalingMode,
-    GeometryBounding,
-    GeometryCullingMode,
     ItemCullingDirty,
 );
 
@@ -474,7 +469,6 @@ impl ActionMesh {
             GeometryID(geometry),
             RenderGeometryEable(false),
             RenderWorldMatrix(Matrix::identity()),
-            RenderWorldMatrixInv(Matrix::identity()),
             FlagRenderWorldMatrix,
 
             // RenderMatrixDirty(true),
@@ -531,13 +525,10 @@ impl ActionInstanceMesh {
             InstanceMesh(source),
             // RenderMatrixDirty(true),
             RenderWorldMatrix(Matrix::identity()),
-            RenderWorldMatrixInv(Matrix::identity()),
             FlagRenderWorldMatrix,
 
             ModelVelocity::default(),
             ScalingMode::default(),
-            GeometryBounding::default(),
-            GeometryCullingMode::default(),
             ItemCullingDirty::default(),
         )
     }

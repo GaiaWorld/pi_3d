@@ -247,67 +247,21 @@ pub struct FlagRenderWorldMatrix;
 /// 用于记录 AbstructMesh 的渲染矩阵
 #[derive(Clone, Component, Default)]
 pub struct RenderWorldMatrix(pub Matrix);
-impl RenderWorldMatrix {
-    pub fn new(m: Matrix) -> Self {
-        Self(m)
-    }
-}
-impl TInstanceData for RenderWorldMatrix {
-    fn vertex_kind(&self) -> EVertexDataKind {
-        EVertexDataKind::InsWorldRow1
-    }
-
-    fn collect(list: &Vec<&Self>) -> Vec<u8> {
-        let mut result = vec![];
-
-        list.iter().for_each(|v| {
-            bytemuck::cast_slice(v.0.as_slice()).iter().for_each(|v| {
-                result.push(*v);
-            })
-        });
-
-        result
-    }
-
-    // fn size() -> usize {
-    //     16
-    // }
-
-    // fn bytes_size() -> usize {
-    //     16 * 4
-    // }
-
-    // fn local_offset(&self) -> usize {
-    //     0
-    // }
-}
-
-/// 用于记录 AbstructMesh 的渲染矩阵逆矩阵
-#[derive(Clone, Component, Default)]
-pub struct RenderWorldMatrixInv(pub Matrix);
-impl RenderWorldMatrixInv {
-    pub fn new(m: Matrix) -> Self {
-        Self(m)
-    }
-}
 
 /// 用于记录 Mesh 的实例的排序后实例数据
 #[derive(Clone, Component, Default)]
 pub struct InstancedMeshTransparentSortCollection {
     pub ranges: Vec<(i32, Range<u32>, (Number, Number, Number))>,
     pub data: Vec<u8>,
-    pub dataidx: usize,
-    pub count: usize,
-    pub sizeperinstance: usize,
+    pub count: u32,
+    pub sizeperinstance: u16,
     pub use_single_instancebuffer: bool,
 }
 impl InstancedMeshTransparentSortCollection {
     pub fn reset(&mut self) {
         self.ranges.clear();
         self.data.clear();
-        self.count = 0;
         self.sizeperinstance = 0;
-        self.dataidx = 0;
     }
 }
 

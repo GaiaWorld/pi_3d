@@ -154,7 +154,9 @@ impl Plugin for PluginTest {
                 actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), lightroot, animation));
             }
         }
-        actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, AnimationGroupParam::default(), 0., pi_animation::base::EFillMode::NONE));
+        let mut param = AnimationGroupParam::default();
+        param.speed = 0.2;
+        actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, param, 0., pi_animation::base::EFillMode::NONE));
 }
 
 

@@ -1,7 +1,7 @@
 use crate::ecs::*;
 
 use pi_bevy_asset::{TAssetCapacity, AssetCapacity};
-use pi_scene_math::{Vector2, Number};
+use pi_scene_math::{Number, Vector2};
 
 use super::TAnimatableComp;
 

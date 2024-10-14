@@ -180,7 +180,7 @@ fn init_geometry_vertices_slot
                 buffer = Some(EVerticesBufferUsage::Other(data));
             }
         } else {
-            let info = InstancedInfo::new(desc.stride() as u32, EVertexBufferSlot::from_u8_unsafe(slot_index as u8));
+            let info = InstancedInfo::new(desc.stride() as u16, EVertexBufferSlot::from_u8_unsafe(slot_index as u8));
             // log::error!("Geometry Instance: {:?}", EVertexBufferSlot::from_u8_unsafe(slot_index as u8));
             // let data = instanceallocator.instance_initial_buffer();
             // buffer = Some(EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(data.0, data.1, data.2))));

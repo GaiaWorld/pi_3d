@@ -1,6 +1,4 @@
 
-use std::ops::Range;
-
 use pi_scene_shell::prelude::*;
 
 use crate::{geometry::instance::{instanced_buffer::{InstanceBufferAllocator, InstancedInfoComp}, types::ModelInstanceAttributes}, prelude::*};
@@ -9,11 +7,19 @@ use super::base::{GeometryBounding, SceneBoundingPool, GeometryCullingMode, Boun
 
 pub fn sys_update_collider_by_matrix(
     changes2: ComponentChanged<GlobalMatrix>,
+    changes1: ComponentChanged<RenderWorldMatrix>,
     mut items: Query<&mut Collider>,
 ) {
+    changes1.iter().for_each(|entity| {
+        if let Ok(mut collider) = items.get_mut(*entity) {
+            collider.set_changed();
+            // *collider = collider.clone();
+        }
+    });
     changes2.iter().for_each(|entity| {
         if let Ok(mut collider) = items.get_mut(*entity) {
-            *collider = collider.clone();
+            collider.set_changed();
+            // *collider = collider.clone();
         }
     });
 }
@@ -23,35 +29,45 @@ pub fn sys_update_collider(
     addeds: ComponentAdded<Collider>,
     changes: ComponentChanged<Collider>,
     changes0: ComponentChanged<DisposeReady>,
-    items: Query<(Entity, &Collider, &GlobalMatrix, &SceneID, &DisposeReady)>,
+    gmatrix: Query<&GlobalMatrix>,
+    rmatrix: Query<&RenderWorldMatrix>,
+    items: Query<(&Collider, &SceneID, &DisposeReady)>,
 ) {
     changes.iter().for_each(|entity| {
-        if let Ok((entity, collider, worldmatrix, idscene, dispose)) = items.get(*entity) {
+        if let Ok((collider, idscene, dispose)) = items.get(*entity) {
             if let Ok(mut pool) = scenes.get_mut(idscene.0) {
                 if dispose.0 == true {
-                    pool.remove(entity);
+                    pool.remove(*entity);
                 } else {
-                    pool.set(entity, collider, worldmatrix.matrix());
+                    if let Ok(worldmatrix) = rmatrix.get(*entity) {
+                        pool.set(*entity, collider, &worldmatrix.0);
+                    } else if let Ok(worldmatrix) = gmatrix.get(*entity) {
+                        pool.set(*entity, collider, worldmatrix.matrix());
+                    }
                 }
             }
         }
     });
     addeds.iter().for_each(|entity| {
-        if let Ok((entity, collider, worldmatrix, idscene, dispose)) = items.get(*entity) {
+        if let Ok((collider, idscene, dispose)) = items.get(*entity) {
             if let Ok(mut pool) = scenes.get_mut(idscene.0) {
                 if dispose.0 == true {
-                    pool.remove(entity);
+                    pool.remove(*entity);
                 } else {
-                    pool.set(entity, collider, worldmatrix.matrix());
+                    if let Ok(worldmatrix) = rmatrix.get(*entity) {
+                        pool.set(*entity, collider, &worldmatrix.0);
+                    } else if let Ok(worldmatrix) = gmatrix.get(*entity) {
+                        pool.set(*entity, collider, worldmatrix.matrix());
+                    }
                 }
             }
         }
     });
     changes0.iter().for_each(|entity| {
-        if let Ok((entity, _collider, _worldmatrix, idscene, dispose)) = items.get(*entity) {
+        if let Ok((_collider, idscene, dispose)) = items.get(*entity) {
             if let Ok(mut pool) = scenes.get_mut(idscene.0) {
                 if dispose.0 == true {
-                    pool.remove(entity);
+                    pool.remove(*entity);
                 }
             }
         }
@@ -81,49 +97,44 @@ pub fn sys_update_culling_by_cullinginfo(
     addeds: ComponentAdded<ItemCullingDirty>,
     changes: ComponentChanged<ItemCullingDirty>,
     items: Query<(&RenderWorldMatrix, &DisposeReady)>,
-    boundings: Query<(&SceneID, &GeometryBounding, &InstanceSourceRefs, &ModelInstanceAttributes)>,
-    modes: Query<&GeometryCullingMode>,
+    boundings: Query<(&SceneID, &GeometryBounding, &GeometryCullingMode, &InstanceSourceRefs, &ModelInstanceAttributes)>,
     instances: Query<&InstanceMesh>,
 ) {
     addeds.iter().chain(changes.iter()).for_each(|entity| {
         if let Ok(instance) = instances.get(*entity) {
-            if let Ok((idscene, info, _instances, _)) = boundings.get(instance.0) {
+            if let Ok((idscene, info, mode, _instances, _)) = boundings.get(instance.0) {
                 if let Ok(mut pool) = scenes.get_mut(idscene.0) {
-                    if let Ok(mode) = modes.get(*entity) {
-                        if let Ok((worldmatrix, disposed)) = items.get(*entity) {
-                            if disposed.0 == true {
-                                pool.remove(*entity);
-                            } else {
-                                pool.set(*entity, info, mode, &worldmatrix.0);
-                            }
+                    if let Ok((worldmatrix, disposed)) = items.get(*entity) {
+                        if disposed.0 == true {
+                            pool.remove(*entity);
+                        } else {
+                            pool.set(*entity, info, mode, &worldmatrix.0);
                         }
                     }
                 }
             }
-        } else if let Ok((idscene, info, instances, insattr)) = boundings.get(*entity) {
+        } else if let Ok((idscene, info, mode, instances, insattr)) = boundings.get(*entity) {
             if let Ok(mut pool) = scenes.get_mut(idscene.0) {
-                if let Ok(mode) = modes.get(*entity) {
-                    if let Ok((meshworldmatrix, disposed)) = items.get(*entity) {
-                        if disposed.0 == true {
-                            pool.remove(*entity);
+                if let Ok((meshworldmatrix, disposed)) = items.get(*entity) {
+                    if disposed.0 == true {
+                        pool.remove(*entity);
+                    } else {
+                        if insattr.bytes().len() > 0 {
+                            pool.set(*entity, info, &GeometryCullingMode(ECullingStrategy::None), &meshworldmatrix.0);
                         } else {
-                            if insattr.bytes().len() > 0 {
-                                pool.set(*entity, info, &GeometryCullingMode(ECullingStrategy::None), &meshworldmatrix.0);
-                            } else {
-                                pool.set(*entity, info, mode, &meshworldmatrix.0);
-                            }
-
-                            instances.iter().for_each(|instance| {
-                                let instance = *instance;
-                                if let Ok((worldmatrix, disposed)) = items.get(instance) {
-                                    if disposed.0 == true {
-                                        pool.remove(instance);
-                                    } else {
-                                        pool.set(instance, info, mode, &worldmatrix.0);
-                                    }
-                                }
-                            });
+                            pool.set(*entity, info, mode, &meshworldmatrix.0);
                         }
+
+                        instances.iter().for_each(|instance| {
+                            let instance = *instance;
+                            if let Ok((worldmatrix, disposed)) = items.get(instance) {
+                                if disposed.0 == true {
+                                    pool.remove(instance);
+                                } else {
+                                    pool.set(instance, info, mode, &worldmatrix.0);
+                                }
+                            }
+                        });
                     }
                 }
             }

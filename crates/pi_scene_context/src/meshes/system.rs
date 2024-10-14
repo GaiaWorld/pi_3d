@@ -37,12 +37,13 @@ pub fn sys_calc_render_matrix(
     instances: Query<&InstanceMesh>,
     renderalignments: Query<&RenderAlignment>,
     pose: Query<&RenderPoseMatrix>,
-    mut matrixs: Query<(&mut RenderWorldMatrix, &mut RenderWorldMatrixInv)>,
+    mut matrixs: Query<&mut RenderWorldMatrix>,
 ) {
     // let time = pi_time::Instant::now();
     let mut rotation = Rotation3::identity();
     let mut tempmatrix = Matrix::identity();
     let mut tempmatrix2 = Matrix::identity();
+    let mut tempmatrix3 = Matrix::identity();
     changes.iter().for_each(|entity| {
         if let Ok((
             _,
@@ -54,7 +55,7 @@ pub fn sys_calc_render_matrix(
                 renderalignments.get(*entity)
             };
             if let Ok(renderalignment) = renderalignment {
-                if let Ok((mut wm, mut wmi)) = matrixs.get_mut(*entity) {
+                if let Ok(mut wm) = matrixs.get_mut(*entity) {
         
                     // log::warn!("calc_render_matrix:");
                     // render_wm.0.clone_from(&worldmatrix.0);
@@ -62,8 +63,8 @@ pub fn sys_calc_render_matrix(
     
                     _calc_render_matrix(
                         velocity, localscaling, scalingmode, renderalignment, transform,
-                        &mut abstransform, &mut wm, &mut wmi, pose.get(*entity),
-                        &mut rotation, &mut tempmatrix, &mut tempmatrix2
+                        &mut abstransform, &mut wm, pose.get(*entity),
+                        &mut rotation, &mut tempmatrix, &mut tempmatrix2, &mut tempmatrix3
                     );
                 }
             }
@@ -76,13 +77,13 @@ pub fn sys_calc_render_matrix(
 
 pub fn sys_render_matrix_dirty(
     changes: ComponentChanged<RenderWorldMatrix>,
-    mut instances: Query<(&InstanceMesh, &RenderWorldMatrix, &RenderWorldMatrixInv, &mut ModelInstanceAttributes)>,
+    mut instances: Query<(&InstanceMesh, &RenderWorldMatrix, &mut ModelInstanceAttributes)>,
     mut meshes: Query<&mut InstanceSourceRefs>,
 ) {
     // let time = pi_time::Instant::now();
 
     changes.iter().for_each(|entity| {
-        if let Ok((instance, wm, _wmi, mut instanceattributes)) = instances.get_mut(*entity) {
+        if let Ok((instance, wm, mut instanceattributes)) = instances.get_mut(*entity) {
             instanceattributes.update_worldmatrix(&wm.0);
 
             if let Ok(mut flag) = meshes.get_mut(instance.0) {
@@ -104,11 +105,11 @@ fn _calc_render_matrix<T>(
     transform: &GlobalMatrix,
     abstransform: &mut AbsoluteTransform,
     wm: &mut RenderWorldMatrix,
-    wmi: &mut RenderWorldMatrixInv,
     pose: Result<&RenderPoseMatrix, T>,
     tmprotation: &mut Rotation3,
     tmpmatrix: &mut Matrix,
     tmpmatrix2: &mut Matrix,
+    tmpmatrix3: &mut Matrix,
 ) {
     let pos = transform.position();
     let mut scl = Vector3::new(1., 1., 1.);
@@ -124,16 +125,12 @@ fn _calc_render_matrix<T>(
                     CoordinateSytem3::mul_to(&transform.matrix, &pose.0, &mut wm.0);
                     // transform.matrix.mul_to(&pose.0, &mut wm.0);
 
-                    wmi.0.clone_from(&wm.0);
-                    // wmi.0.try_inverse_mut();
-                    CoordinateSytem3::try_inverse_mut(&mut wmi.0);
-                    // log::warn!("Normal Alignment {:?}", (m, obj));
+                    // wm.1.clone_from(&wm.0);
+                    // CoordinateSytem3::try_inverse_mut(&mut wm.1);
                     return;
                 }
-                // log::warn!("Normal Alignment 2 {:?}", (obj));
                 wm.0.clone_from(&transform.matrix);
-                wmi.0.clone_from(&transform.matrix_inv);
-                // log::warn!("Normal Alignment");
+                // wm.1.clone_from(&transform.matrix_inv);
                 return;
             }
             scl.clone_from(abstransform.scaling(transform.matrix()));
@@ -149,9 +146,9 @@ fn _calc_render_matrix<T>(
     }
 
     let m0 = &mut wm.0;
-    let m1 = &mut wmi.0;
+    // let m1 = &mut wm.1;
     m0.fill_with_identity();
-    m1.fill_with_identity();
+    // m1.fill_with_identity();
     tmpmatrix.fill_with_identity();
     tmpmatrix2.fill_with_identity();
     if renderalignment.0.calc_rotation(g_rotation, velocity, tmprotation) {
@@ -159,8 +156,8 @@ fn _calc_render_matrix<T>(
     } else {
         pi_scene_shell::prelude::matrix4_compose_no_rotation(&scl, &pos, m0);
     }
-    if renderalignment.0.calc_local(velocity, 1., 0., tmpmatrix, tmpmatrix2, m1) {
-        CoordinateSytem3::mul_to(&m0, &m1, tmpmatrix);
+    if renderalignment.0.calc_local(velocity, 1., 0., tmpmatrix, tmpmatrix2, tmpmatrix3) {
+        CoordinateSytem3::mul_to(&m0, &tmpmatrix3, tmpmatrix);
         // m0.mul_to(m1, tmpmatrix);
         m0.copy_from(tmpmatrix);
     }
@@ -171,23 +168,23 @@ fn _calc_render_matrix<T>(
         m0.copy_from(tmpmatrix);
     }
 
-    m1.clone_from(&m0);
-    // m1.try_inverse_mut();
-    CoordinateSytem3::try_inverse_mut(m1);
+    // m1.clone_from(&m0);
+    // CoordinateSytem3::try_inverse_mut(m1);
 }
 
 pub fn sys_model_for_uniform(
     changes: ComponentChanged<RenderWorldMatrix>,
-    meshes: Query<(&RenderWorldMatrix, &RenderWorldMatrixInv, &BindModel, &ModelStatic)>,
+    meshes: Query<(&RenderWorldMatrix, &BindModel, &ModelStatic)>,
     velocitychanges: ComponentChanged<ModelVelocity>,
     velocitymeshes: Query<(&ModelVelocity, &BindModel, &ModelStatic)>,
 ) {
+    let matrix = Matrix::identity();
     changes.iter().for_each(|entity| {
-        if let Ok((worldmatrix, worldmatrix_inv, bind_model, meshstatic)) = meshes.get(*entity) {
+        if let Ok((worldmatrix, bind_model, meshstatic)) = meshes.get(*entity) {
         // log::warn!("SysModelUniformUpdate: {:?}", worldmatrix.0.as_slice());
             if meshstatic.0 { return; }
             bind_model.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX as usize, bytemuck::cast_slice(worldmatrix.0.as_slice()));
-            bind_model.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX_INV as usize, bytemuck::cast_slice(worldmatrix_inv.0.as_slice()));
+            bind_model.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX_INV as usize, bytemuck::cast_slice(matrix.as_slice()));
         }
     });
     velocitychanges.iter().for_each(|entity| {

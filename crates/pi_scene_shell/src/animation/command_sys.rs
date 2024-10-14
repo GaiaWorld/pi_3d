@@ -165,22 +165,22 @@ pub fn sys_create_animatorable_entity(
 
 pub fn sys_create_animation_group(
     mut cmds: ResMut<ActionListAnimeGroupCreate>,
-    mut commands: Commands,
+    // mut commands: Commands,
     mut scenes: Query<&mut SceneAnimationContext>,
     mut globals: ResMut<GlobalAnimeAbout>,
-    // mut alter: Alter<(), (), BundleAnimGroup, ()>,
+    mut alter: Alter<(), (), BundleAnimGroup, ()>,
 ) {
     cmds.drain().for_each(|OpsAnimationGroupCreation(scene, entity)| {
         if let Ok(mut ctx) = scenes.get_mut(scene) {
-            if let Some(mut commands) = commands.get_entity(entity) {
+            // if let Some(mut commands) = commands.get_entity(entity) {
                 let id_group = ctx.0.create_animation_group();
 
                 let bundle = (AnimationGroupKey(id_group), AnimationGroupScene(scene));
-                commands.insert(bundle);
-                // alter.alter(entity, bundle);
+                // commands.insert(bundle);
+                alter.alter(entity, bundle);
 
                 globals.record_group(id_group, entity);
-            }
+            // }
         }
     });
 }

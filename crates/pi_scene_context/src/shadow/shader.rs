@@ -39,12 +39,26 @@ layout(location = 0) out float vDepthMetricSM;
                 ), 
                 running: Atom::from("
 vec3 position = A_POSITION;
+vec3 normal = A_NORMAL;
 mat4 finalWorld = PI_ObjectToWorld;
+mat3 normWorldSM = mat3(finalWorld);
 
 vec3 positionUpdated = position;
 vec4 worldPos = finalWorld*vec4(positionUpdated, 1.0);
+
+vec3 vNormalW = normalize(normWorldSM*normal);
+vec3 worldLightDirSM = normalize(
+    PI_MATRIX_P[3][3] * PI_MATRIX_P[2].xyz
+    +
+    (1.0 - PI_MATRIX_P[3][3]) * (PI_CAMERA_POSITION.xyz - worldPos.xyz)
+);
+float ndlSM = dot(vNormalW, worldLightDirSM);
+float sinNLSM = sqrt(1.0-ndlSM*ndlSM);
+float normalBiasSM = uShadowNormalBias*sinNLSM;
+worldPos.xyz -= vNormalW*normalBiasSM;
+
 gl_Position = PI_MATRIX_VP*worldPos;
-vDepthMetricSM = gl_Position.z;
+vDepthMetricSM = (gl_Position.z + uShadowMinZ) / uShadowMaxZ + uShadowDepthBias ;
 "
                 )
             },
@@ -54,11 +68,7 @@ layout(location = 0) out vec4 gl_FragColor;
 layout(location = 0) in float vDepthMetricSM;
 "), 
                 running: Atom::from("
-if (vDepthMetricSM <= 0.00001) {
-    discard;
-}
-float depthSM = vDepthMetricSM * uShadowDepthScale;
-gl_FragColor = vec4(depthSM, 0.0, 0.0, 0.0);
+gl_FragColor = vec4(vDepthMetricSM, 0.0, 0.0, 0.0);
 "
                 )
             },

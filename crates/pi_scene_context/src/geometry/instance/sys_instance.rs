@@ -72,7 +72,7 @@ impl Ord for TmpInstanceSort {
                     if meshinsstate.use_single_instancebuffer == false { return; }
                     if let Ok(InstancedInfoComp(Some(buffer))) = geometrys.get(idgeo.0) {
                         instancessortinfos.reset();
-                        instancessortinfos.sizeperinstance = buffer.bytes_per_instance as usize;
+                        instancessortinfos.sizeperinstance = buffer.bytes_per_instance as u16;
                         instancessortinfos.use_single_instancebuffer = meshinsstate.use_single_instancebuffer;
     
                         // 实例按渲染队列排序
@@ -195,7 +195,7 @@ impl Ord for TmpInstanceSort {
                         temp.instancesort.clear();
                         instancessortinfos.reset();
                         instancessortinfos.use_single_instancebuffer = meshinsstate.use_single_instancebuffer;
-                        instancessortinfos.sizeperinstance = instancedinfo.bytes_per_instance as usize;
+                        instancessortinfos.sizeperinstance = instancedinfo.bytes_per_instance as u16;
                         let sorted_instances = &mut temp.instancesort;
                         instances.iter().for_each(|id| {
                             if let (Ok((enable, _, instancelayer, culling, gtransform)), Ok(disposed)) = (actives.get(*id), dispoeds.get(*id)) {
@@ -251,7 +251,7 @@ impl Ord for TmpInstanceSort {
                             }
                             counter += 1;
 
-                            instancessortinfos.count = tmp_instance_end as usize;
+                            instancessortinfos.count = tmp_instance_end as u32;
                         }
                     }
                 }

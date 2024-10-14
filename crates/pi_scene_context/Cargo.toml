@@ -63,7 +63,7 @@ pi_bevy_asset           = { version = "0.1", registry = "yn" }
 
 pi_scene_math       = { version = "0.0.*", registry = "yn" }
 pi_animation        = { version = "0.1", registry = "yn" }
-pi_curves           = { version = "0.1", registry = "yn" }
+pi_curves           = { version = "*", registry = "yn" }
 
 pi_scene_shell      = { version = "1.0", registry = "yn", path = "../pi_scene_shell" }
 pi_mesh_builder     = { version = "1.0", registry = "yn", path = "../pi_mesh_builder" }
