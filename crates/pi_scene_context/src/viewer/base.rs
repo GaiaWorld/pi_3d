@@ -93,14 +93,12 @@ impl ViewerTransformMatrix {
         CoordinateSytem3::transform_coordinates_floats(x, y, 0., &invtransform, &mut origin);
         CoordinateSytem3::transform_coordinates_floats(x, y, 1., &invtransform, &mut far);
 
-        far.x -= origin.x;
-        far.y -= origin.y;
-        far.z -= origin.z;
-        far.normalize_mut();
-        let direction = far;
+        let mut direction = far - origin;
+        direction.normalize_mut();
 
         PiRay {
             origin: (origin.x, origin.y, origin.z),
+            far: (far.x, far.y, far.z),
             direction: (direction.x, direction.y, direction.z),
         }
     }

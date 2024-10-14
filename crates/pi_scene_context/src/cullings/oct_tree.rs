@@ -1,16 +1,23 @@
+use pi_scene_math::{frustum::FrustumPlanes, Matrix, Number, Vector3};
 use pi_scene_shell::prelude::*;
-use pi_scene_math::{Matrix, Number, Vector3, Vector4};
 
-use super::base::{BoundingKey, PiRay, PickResult, TBoundingInfoCalc, TFilter};
+use super::{
+    base::{BoundingKey, PiRay, PickResult, TBoundingInfoCalc, TFilter},
+    bounding::is_in_frustum,
+};
 
 pub struct BoundingOctTree {
     fast: XHashSet<Entity>,
-    tree: OctTree<BoundingKey, (NAIsometry3<f32>, Cuboid)>,
+    tree: OctTree<BoundingKey, ()>,
     temp: XHashSet<Entity>,
 }
 impl BoundingOctTree {
-    pub fn new(tree: OctTree<BoundingKey, (NAIsometry3<f32>, Cuboid)> ) -> Self {
-        Self { fast: XHashSet::default(), tree, temp: XHashSet::default() }
+    pub fn new(tree: OctTree<BoundingKey, ()>) -> Self {
+        Self {
+            fast: XHashSet::default(),
+            tree,
+            temp: XHashSet::default(),
+        }
     }
 }
 
@@ -20,21 +27,22 @@ impl TBoundingInfoCalc for BoundingOctTree {
         self.tree.remove(BoundingKey(key));
     }
     fn add(&mut self, key: Entity, min: (Number, Number, Number), max: (Number, Number, Number)) {
+        // println!("add: {:?}", (key, min, max));
         self.fast.remove(&key);
         self.tree.remove(BoundingKey(key));
         // let box_point = info.bounding_box.vectors_world;
-        let points = vec![
-            Point3::new(min.0, min.1, min.2),
-            Point3::new(max.0, min.1, min.2),
-            Point3::new(min.0, max.1, min.2),
-            Point3::new(max.0, max.1, min.2),
-            Point3::new(min.0, min.1, max.2),
-            Point3::new(max.0, min.1, max.2),
-            Point3::new(min.0, max.1, max.2),
-            Point3::new(max.0, max.1, max.2),
-        ];
+        // let points = vec![
+        //     Point3::new(min.0, min.1, min.2),
+        //     Point3::new(max.0, min.1, min.2),
+        //     Point3::new(min.0, max.1, min.2),
+        //     Point3::new(max.0, max.1, min.2),
+        //     Point3::new(min.0, min.1, max.2),
+        //     Point3::new(max.0, min.1, max.2),
+        //     Point3::new(min.0, max.1, max.2),
+        //     Point3::new(max.0, max.1, max.2),
+        // ];
 
-        let obb = parry3d::utils::obb(&points);
+        // let obb = parry3d::utils::obb(&points);
         // let aadd_maxs = obb.0 * obb.1.local_aabb().maxs;
         // let aadd_mins = obb.0 * obb.1.local_aabb().mins;
 
@@ -44,7 +52,7 @@ impl TBoundingInfoCalc for BoundingOctTree {
                 Point3::new(min.0, min.1, min.2),
                 Point3::new(max.0, max.1, max.2),
             ),
-            obb,
+            (),
         );
     }
 
@@ -54,47 +62,72 @@ impl TBoundingInfoCalc for BoundingOctTree {
     }
 
     fn culling<F: TFilter>(&mut self, transform: &Matrix, filter: F, result: &mut Vec<Entity>) {
-        if let Some(frustum) = compute_frustum(transform) {
-            let aabb = frustum.local_aabb();
-
-            let aabb = Aabb::new(
-                Point3::new(aabb.mins.x, aabb.mins.y, aabb.mins.z),
-                Point3::new(aabb.maxs.x, aabb.maxs.y, aabb.maxs.z),
-            );
-
-            let mut args: (ConvexPolyhedron, &mut Vec<Entity>, F) = (frustum, result, filter);
-
-            self.tree.query(&aabb, intersects, &mut args, ab_query_func);
+        let iter =  filter.iter();
+        let len = iter.len();
+        if len == 0 {
+            return;
         }
 
         self.fast.iter().for_each(|item| {
-            result.push(*item);
+            if filter.filter(*item) {
+                result.push(*item);
+            }
         });
+
+        if len > result.len() {
+            if let Some(frustum) = compute_frustum(transform) {
+                let mut frustum_planes = FrustumPlanes::default();
+                frustum_planes.from_transform_matrix(transform);
+                let aabb = frustum.local_aabb();
+
+                let aabb = Aabb::new(
+                    Point3::new(aabb.mins.x, aabb.mins.y, aabb.mins.z),
+                    Point3::new(aabb.maxs.x, aabb.maxs.y, aabb.maxs.z),
+                );
+                let mut args: (
+                    ConvexPolyhedron,
+                    FrustumPlanes,
+                    &mut Vec<Entity>,
+                    F,
+                ) = (frustum, frustum_planes, result, filter);
+
+                self.tree.query(&aabb, intersects, &mut args, ab_query_func);
+            }
+        }
+
     }
 
-    fn ray_test(
-        &self,
-        ray: &PiRay,
-        result: &mut Option<PickResult>,
-    ) {
-        let origin = Point3::new(ray.origin.0, ray.origin.1, ray.origin.2);
-        let dir = Vector3::new(ray.direction.0, ray.direction.1, ray.direction.2);
-        let temp = dir.normalize() * 10000000.;
+    fn ray_test(&self, piray: &PiRay, result: &mut Option<PickResult>) {
+        let ray = Ray::new(
+            Point3::new(piray.origin.0, piray.origin.1, piray.origin.2),
+            Vector3::new(piray.direction.0, piray.direction.1, piray.direction.2),
+        );
 
-        let ray = Ray::new(origin.clone(), dir);
+        let minx = piray.origin.0.min(piray.far.0);
+        let miny = piray.origin.1.min(piray.far.1);
+        let minz = piray.origin.2.min(piray.far.2);
+        let maxx = piray.origin.0.max(piray.far.0);
+        let maxy = piray.origin.1.max(piray.far.1);
+        let maxz = piray.origin.2.max(piray.far.2);
 
-        let max = Point3::new(origin.x + temp.x, origin.y + temp.y, origin.z + temp.z);
-        let aabb = Aabb::new(origin, max);
+        let aabb = Aabb::new(
+            Point3::new(minx, miny, minz),
+            Point3::new(maxx, maxy, maxz),
+        );
 
-        let mut args: (Ray, f32, &mut Option<PickResult>) = (ray, 0., result);
+        let mut args: (Ray, f32, &mut Option<PickResult>) = (ray,f32::MAX, result);
 
         self.tree.query(&aabb, intersects, &mut args, ray_test_func);
     }
     fn entities(&self) -> Vec<Entity> {
         let count = self.fast.len() + self.tree.len();
         let mut result = Vec::with_capacity(count);
-        self.fast.iter().for_each(|v| { result.push(*v); });
-        self.tree.ab_map.keys().for_each(|v| { result.push(v.0); });
+        self.fast.iter().for_each(|v| {
+            result.push(*v);
+        });
+        self.tree.ab_map.keys().for_each(|v| {
+            result.push(v.0);
+        });
         result
     }
     fn size(&self) -> usize {
@@ -106,17 +139,25 @@ impl TBoundingInfoCalc for BoundingOctTree {
 }
 
 pub fn ab_query_func<F: TFilter>(
-    arg: &mut (ConvexPolyhedron, &mut Vec<Entity>, F),
+    arg: &mut (
+        ConvexPolyhedron,
+        FrustumPlanes,
+        &mut Vec<Entity>,
+        F,
+        // &mut u128,
+    ),
     id: BoundingKey,
-    _aabb: &Aabb,
-    bind: &(NAIsometry3<f32>, Cuboid),
+    aabb: &Aabb,
+    _bind: &(),
 ) {
-    if arg.2.filter(id.0) {
-        // 优化:是否需要先判断frustum与aabb
-        if parry3d::query::intersection_test(&NAIsometry3::identity(), &arg.0, &bind.0, &bind.1)
-            .unwrap()
+    if arg.3.filter(id.0) {
+        if is_in_frustum(
+            (aabb.mins.x, aabb.mins.y, aabb.mins.z),
+            (aabb.maxs.x, aabb.maxs.y, aabb.maxs.z),
+            &arg.1,
+        )
         {
-            arg.1.push(id.0);
+            arg.2.push(id.0);
         }
     }
 }
@@ -124,18 +165,18 @@ pub fn ab_query_func<F: TFilter>(
 pub fn ray_test_func(
     arg: &mut (Ray, f32, &mut Option<PickResult>),
     id: BoundingKey,
-    _aabb: &Aabb,
-    bind: &(NAIsometry3<f32>, Cuboid),
+    aabb: &Aabb,
+    _bind: &(),
 ) {
-    if let Some(distance) = bind.1.cast_ray(&bind.0, &arg.0, f32::MAX, false) {
+    if let Some(distance) = aabb.cast_ray(&Isometry3::identity(), &arg.0, f32::MAX, false) {
         if distance < arg.1 {
             arg.1 = distance;
-            let min = bind.0.transform_point(&Point3::new(-1., -1., -1.));
-            let max = bind.0.transform_point(&Point3::new( 1.,  1.,  1.));
+            // let min = bind.0.transform_point(&Point3::new(-1., -1., -1.));
+            // let max = bind.0.transform_point(&Point3::new(1., 1., 1.));
             arg.2.replace(PickResult {
                 target: id.0,
-                min: (min.x, min.y, min.z),
-                max: (max.x, max.y, max.z),
+                min: (aabb.mins.x, aabb.mins.y, aabb.mins.z),
+                max: (aabb.maxs.x, aabb.maxs.y, aabb.maxs.z),
                 pickdetail: None,
                 bybounding: false,
             });
@@ -158,15 +199,29 @@ pub fn compute_frustum(view_projection: &Matrix) -> Option<ConvexPolyhedron> {
     let mut t = view_projection.clone();
     CoordinateSytem3::try_inverse_mut(&mut t);
 
-    let p0 = t * Vector4::new(1., 1., 1., 1.);
-    let p1 = t * Vector4::new(1., 1., -1., 1.);
-    let p2 = t * Vector4::new(-1., 1., -1., 1.);
-    let p3 = t * Vector4::new(-1., 1., 1., 1.);
+    let mut p0 = Vector3::zeros();
+    CoordinateSytem3::transform_coordinates_floats(1., 1., 1., &t, &mut p0);
 
-    let p4 = t * Vector4::new(1., -1., 1., 1.);
-    let p5 = t * Vector4::new(1., -1., -1., 1.);
-    let p6 = t * Vector4::new(-1., -1., -1., 1.);
-    let p7 = t * Vector4::new(-1., -1., 1., 1.);
+    let mut p1 = Vector3::zeros();
+    CoordinateSytem3::transform_coordinates_floats(1., 1., 0., &t, &mut p1);
+
+    let mut p2 = Vector3::zeros();
+    CoordinateSytem3::transform_coordinates_floats(-1., 1., -0., &t, &mut p2);
+
+    let mut p3 = Vector3::zeros();
+    CoordinateSytem3::transform_coordinates_floats(-1., 1., 1., &t, &mut p3);
+
+    let mut p4 = Vector3::zeros();
+    CoordinateSytem3::transform_coordinates_floats(1., -1., 1., &t, &mut p4);
+
+    let mut p5 = Vector3::zeros();
+    CoordinateSytem3::transform_coordinates_floats(1., -1., -0., &t, &mut p5);
+
+    let mut p6 = Vector3::zeros();
+    CoordinateSytem3::transform_coordinates_floats(-1., -1., -0., &t, &mut p6);
+
+    let mut p7 = Vector3::zeros();
+    CoordinateSytem3::transform_coordinates_floats(-1., -1., 1., &t, &mut p7);
 
     let points = vec![
         Point3::new(p0[0], p0[1], p0[2]),

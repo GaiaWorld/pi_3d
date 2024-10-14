@@ -156,6 +156,7 @@ pub struct GeometryCullingMode(pub ECullingStrategy);
 #[derive(Debug, Clone, Copy)]
 pub struct PiRay {
     pub origin: (Number, Number, Number),
+    pub far: (Number, Number, Number),
     pub direction: (Number, Number, Number),
 }
 
@@ -186,17 +187,28 @@ impl SceneColliderPool {
     pub fn create_vec() -> Self {
         Self::List(VecBoundingInfoCalc::default())
     }
-    pub fn create_oct(min: (Number, Number, Number), max: (Number, Number, Number), adjust_min: usize, adjust_max: usize, deep: usize) -> Self {
+    pub fn create_oct(
+        mins: (Number, Number, Number),
+        maxs: (Number, Number, Number),
+        max_loose: (Number, Number, Number), 
+        min_loose: (Number, Number, Number),
+        adjust_min: usize,
+        adjust_max: usize,
+        deep: usize,
+    ) -> Self {
+        let max = Vector3::new(max_loose.0, max_loose.1, max_loose.2);
+        let min = Vector3::new(min_loose.0, min_loose.1, min_loose.2);
+
         let tree = OctTree::new(
             Aabb::new(
-                Point3::new(min.0, min.1, min.2),
-                Point3::new(max.0, max.1, max.2),
+                Point3::new(mins.0, mins.1, mins.2),
+                Point3::new(maxs.0, maxs.1, maxs.2),
             ),
-            Vector3::new(max.0, max.1, max.2),
-            Vector3::new(min.0, min.1, min.2),
+            max,
+            min,
             adjust_min,
             adjust_max,
-            deep
+            deep,
         );
         Self::OctTree(BoundingOctTree::new(tree))
     }
@@ -270,17 +282,28 @@ impl SceneBoundingPool {
     pub fn create_vec() -> Self {
         Self::List(VecBoundingInfoCalc::default())
     }
-    pub fn create_oct(min: (Number, Number, Number), max: (Number, Number, Number), adjust_min: usize, adjust_max: usize, deep: usize) -> Self {
+    pub fn create_oct(
+        mins: (Number, Number, Number),
+        maxs: (Number, Number, Number),
+        max_loose: (Number, Number, Number), 
+        min_loose: (Number, Number, Number),
+        adjust_min: usize,
+        adjust_max: usize,
+        deep: usize,
+    ) -> Self {
+        let max = Vector3::new(max_loose.0, max_loose.1, max_loose.2);
+        let min = Vector3::new(min_loose.0, min_loose.1, min_loose.2);
+
         let tree = OctTree::new(
             Aabb::new(
-                Point3::new(min.0, min.1, min.2),
-                Point3::new(max.0, max.1, max.2),
+                Point3::new(mins.0, mins.1, mins.2),
+                Point3::new(maxs.0, maxs.1, maxs.2),
             ),
-            Vector3::new(max.0, max.1, max.2),
-            Vector3::new(min.0, min.1, min.2),
+            max,
+            min,
             adjust_min,
             adjust_max,
-            deep
+            deep,
         );
         Self::OctTree(BoundingOctTree::new(tree))
     }

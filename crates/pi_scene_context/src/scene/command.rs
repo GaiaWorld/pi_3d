@@ -15,6 +15,8 @@ impl OpsSceneCreation {
                     SceneBoundingPool::create_oct(
                         (param[0] as Number, param[1] as Number, param[2] as Number),
                         (param[3] as Number, param[4] as Number, param[5] as Number),
+                        (100f32, 100f32, 100f32),
+                        (1f32, 1f32, 1f32),
                         param[6] as usize,
                         param[7] as usize,
                         param[8] as usize
@@ -22,6 +24,8 @@ impl OpsSceneCreation {
                     SceneColliderPool::create_oct(
                         (param[0] as Number, param[1] as Number, param[2] as Number),
                         (param[3] as Number, param[4] as Number, param[5] as Number),
+                        (100f32, 100f32, 100f32),
+                        (1f32, 1f32, 1f32),
                         param[6] as usize,
                         param[7] as usize,
                         param[8] as usize
