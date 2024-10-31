@@ -1,7 +1,7 @@
 
 use pi_scene_shell::prelude::*;
 
-use crate::cullings::prelude::*;
+use crate::{cullings::prelude::*, geometry::instance::EInstanceSortMode};
 
 use super::model::*;
 
@@ -60,6 +60,7 @@ pub enum EMeshStateModify {
     CastShadow(bool),
     ReceiveShadow(bool),
     BoundingCullingMode(ECullingStrategy),
+    InstanceSortMode(EInstanceSortMode),
 }
 pub struct OpsMeshStateModify(pub(crate) Entity, pub(crate) EMeshStateModify);
 impl OpsMeshStateModify {

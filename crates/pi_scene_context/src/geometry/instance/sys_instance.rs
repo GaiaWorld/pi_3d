@@ -16,10 +16,11 @@ pub struct TmpInstanceSort {
     pub entity: Entity,
     pub index: i32,
     pub xyz: (f32, f32, f32),
+    pub sortparam: f32,
 }
 impl PartialEq for TmpInstanceSort {
     fn eq(&self, other: &Self) -> bool {
-        self.index == other.index
+        self.index == other.index && self.sortparam == other.sortparam
     }
 }
 impl Eq for TmpInstanceSort {
@@ -29,7 +30,15 @@ impl Eq for TmpInstanceSort {
 }
 impl PartialOrd for TmpInstanceSort {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.index.partial_cmp(&other.index)
+        match self.index.partial_cmp(&other.index) {
+            Some(order) => match order {
+                std::cmp::Ordering::Equal => {
+                    self.sortparam.partial_cmp(&other.sortparam)
+                },
+                _ => Some(order),
+            },
+            None => None,
+        }
     }
 }
 impl Ord for TmpInstanceSort {
@@ -39,13 +48,13 @@ impl Ord for TmpInstanceSort {
 }
 
     pub fn sys_tick_instanced_buffer_update_single(
-        actives: Query<(&GlobalEnable, &InstanceMesh, &InstanceTransparentIndex, &AbstructMeshCullingFlag, &GlobalMatrix), With<AbstructMesh>>,
+        actives: Query<(&GlobalEnable, &InstanceMesh, &InstanceTransparentIndex, &AbstructMeshCullingFlag, &GlobalMatrix, &LocalPosition), With<AbstructMesh>>,
         instanceattributes: Query<&ModelInstanceAttributes>,
         added: ComponentAdded<InstanceSourceRefs>,
         changes: ComponentChanged<InstanceSourceRefs>,
         mut sources: Query<
             (
-                Entity, &InstanceSourceRefs, &GeometryID, &MeshInstanceState, &mut InstancedMeshTransparentSortCollection
+                Entity, &EInstanceSortMode, &InstanceSourceRefs, &GeometryID, &MeshInstanceState, &mut InstancedMeshTransparentSortCollection
             )
         >,
         dispoeds: Query<&DisposeReady>,
@@ -66,7 +75,7 @@ impl Ord for TmpInstanceSort {
         let mut maxy = f32::MIN;
         let mut maxz = f32::MIN;
         changes.for_each(|entity| {
-            if let Ok((idsource, instances, idgeo, meshinsstate, mut instancessortinfos)) = sources.get_mut(*entity) {
+            if let Ok((idsource, sortmode, instances, idgeo, meshinsstate, mut instancessortinfos)) = sources.get_mut(*entity) {
                 if let Ok(disposed) = dispoeds.get(idsource) {
                     if disposed.0 == true { return; }
                     if meshinsstate.use_single_instancebuffer == false { return; }
@@ -78,10 +87,41 @@ impl Ord for TmpInstanceSort {
                         // 实例按渲染队列排序
                         let sorted_instances = &mut temp.instancesort;
                         sorted_instances.clear();
+                        
+                        let sortparmaidx = match sortmode {
+                            EInstanceSortMode::LocalPositionX => 0,
+                            EInstanceSortMode::LocalPositionY => 1,
+                            EInstanceSortMode::LocalPositionZ => 2,
+                            EInstanceSortMode::NagativeLocalPositionX => 3,
+                            EInstanceSortMode::NagativeLocalPositionY => 4,
+                            EInstanceSortMode::NagativeLocalPositionZ => 5,
+                            EInstanceSortMode::GlobalPositionX => 6,
+                            EInstanceSortMode::GlobalPositionY => 7,
+                            EInstanceSortMode::GlobalPositionZ => 8,
+                            EInstanceSortMode::NagativeGlobalPositionX => 9,
+                            EInstanceSortMode::NagativeGlobalPositionY => 10,
+                            EInstanceSortMode::NagativeGlobalPositionZ => 11,
+                        };
+                        let mut tmpsortparam = [0.;12];
                         instances.iter().for_each(|id| {
-                            if let (Ok((enable, _, instancelayer, culling, gtransform)), Ok(disposed)) = (actives.get(*id), dispoeds.get(*id)) {
+                            if let (Ok((enable, _, instancelayer, culling, gtransform, localpos)), Ok(disposed)) = (actives.get(*id), dispoeds.get(*id)) {
                                 if enable.0 == true && disposed.0 == false && culling.0 == true {
-                                    sorted_instances.push(TmpInstanceSort { entity: *id, index: instancelayer.0, xyz: gtransform.xyz() });
+                                    let xyz = gtransform.xyz();
+                                    tmpsortparam = [
+                                        localpos.0.x,
+                                        localpos.0.y,
+                                        localpos.0.z,
+                                        -localpos.0.x,
+                                        -localpos.0.y,
+                                        -localpos.0.z,
+                                        xyz.0,
+                                        xyz.1,
+                                        xyz.2,
+                                        -xyz.0,
+                                        -xyz.1,
+                                        -xyz.2,
+                                    ];
+                                    sorted_instances.push(TmpInstanceSort { entity: *id, index: instancelayer.0, xyz, sortparam: tmpsortparam[sortparmaidx] });
                                 }
                             }
                         });
@@ -161,11 +201,11 @@ impl Ord for TmpInstanceSort {
     pub fn sys_tick_instanced_buffer_update(
         added: ComponentAdded<InstanceSourceRefs>,
         changes: ComponentChanged<InstanceSourceRefs>,
-        actives: Query<(&GlobalEnable, &InstanceMesh, &InstanceTransparentIndex, &AbstructMeshCullingFlag, &GlobalMatrix), With<AbstructMesh>>,
+        actives: Query<(&GlobalEnable, &InstanceMesh, &InstanceTransparentIndex, &AbstructMeshCullingFlag, &GlobalMatrix, &LocalPosition), With<AbstructMesh>>,
         instanceattributes: Query<&ModelInstanceAttributes>,
         mut sources: Query<
             (
-                Entity, &InstanceSourceRefs, &GeometryID, &MeshInstanceState, &mut InstancedMeshTransparentSortCollection
+                Entity, &EInstanceSortMode, &InstanceSourceRefs, &GeometryID, &MeshInstanceState, &mut InstancedMeshTransparentSortCollection
             )
         >,
         dispoeds: Query<&DisposeReady>,
@@ -183,7 +223,7 @@ impl Ord for TmpInstanceSort {
         let mut maxz = f32::MIN;
         let changes = changes.iter().chain(added.iter());
         changes.for_each(|entity| {
-            if let Ok((idsource, instances, idgeo, meshinsstate, mut instancessortinfos)) = sources.get_mut(*entity) {
+            if let Ok((idsource, sortmode, instances, idgeo, meshinsstate, mut instancessortinfos)) = sources.get_mut(*entity) {
                 if let Ok(disposed) = dispoeds.get(idsource) {
                     if disposed.0 == true { return; }
                     if meshinsstate.use_single_instancebuffer == true { return; }
@@ -191,6 +231,23 @@ impl Ord for TmpInstanceSort {
                     if let Ok(InstancedInfoComp(Some(instancedinfo))) = geometrys.get(idgeo.0) {
                         // *renderenable = RenderGeometryEable(false);
     
+                        let sortparmaidx = match sortmode {
+                            EInstanceSortMode::LocalPositionX => 0,
+                            EInstanceSortMode::LocalPositionY => 1,
+                            EInstanceSortMode::LocalPositionZ => 2,
+                            EInstanceSortMode::NagativeLocalPositionX => 3,
+                            EInstanceSortMode::NagativeLocalPositionY => 4,
+                            EInstanceSortMode::NagativeLocalPositionZ => 5,
+                            EInstanceSortMode::GlobalPositionX => 6,
+                            EInstanceSortMode::GlobalPositionY => 7,
+                            EInstanceSortMode::GlobalPositionZ => 8,
+                            EInstanceSortMode::NagativeGlobalPositionX => 9,
+                            EInstanceSortMode::NagativeGlobalPositionY => 10,
+                            EInstanceSortMode::NagativeGlobalPositionZ => 11,
+                        };
+                        
+                        let mut tmpsortparam = [0.;12];
+
                         // 实例按渲染队列排序
                         temp.instancesort.clear();
                         instancessortinfos.reset();
@@ -198,9 +255,24 @@ impl Ord for TmpInstanceSort {
                         instancessortinfos.sizeperinstance = instancedinfo.bytes_per_instance as u16;
                         let sorted_instances = &mut temp.instancesort;
                         instances.iter().for_each(|id| {
-                            if let (Ok((enable, _, instancelayer, culling, gtransform)), Ok(disposed)) = (actives.get(*id), dispoeds.get(*id)) {
+                            if let (Ok((enable, _, instancelayer, culling, gtransform, localpos)), Ok(disposed)) = (actives.get(*id), dispoeds.get(*id)) {
                                 if enable.0 == true && disposed.0 == false && culling.0 {
-                                    sorted_instances.push(TmpInstanceSort { entity: *id, index: instancelayer.0, xyz: gtransform.xyz() });
+                                    let xyz = gtransform.xyz();
+                                    tmpsortparam = [
+                                        localpos.0.x,
+                                        localpos.0.y,
+                                        localpos.0.z,
+                                        -localpos.0.x,
+                                        -localpos.0.y,
+                                        -localpos.0.z,
+                                        xyz.0,
+                                        xyz.1,
+                                        xyz.2,
+                                        -xyz.0,
+                                        -xyz.1,
+                                        -xyz.2,
+                                    ];
+                                    sorted_instances.push(TmpInstanceSort { entity: *id, index: instancelayer.0, xyz, sortparam: tmpsortparam[sortparmaidx] });
                                 }
                             }
                         });

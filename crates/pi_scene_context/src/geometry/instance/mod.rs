@@ -26,6 +26,44 @@ impl TEntityRef for InstanceMesh {
     }
 }
 
+/// 标识同Mesh的实例同层级时如何排序
+#[derive(Debug, Clone, Component, Default, PartialEq, Eq)]
+pub enum EInstanceSortMode {
+    LocalPositionX = 0,
+    LocalPositionY = 1,
+    LocalPositionZ = 2,
+    NagativeLocalPositionX = 3,
+    NagativeLocalPositionY = 4,
+    NagativeLocalPositionZ = 5,
+    GlobalPositionX = 6,
+    GlobalPositionY = 7,
+    #[default]
+    GlobalPositionZ = 8,
+    NagativeGlobalPositionX = 9,
+    NagativeGlobalPositionY = 10,
+    NagativeGlobalPositionZ = 11,
+}
+impl EInstanceSortMode {
+    pub fn from_u8(val: u8) -> Self {
+        match val {
+            0 => EInstanceSortMode::LocalPositionX,
+            1 => EInstanceSortMode::LocalPositionY,
+            2 => EInstanceSortMode::LocalPositionZ,
+            3 => EInstanceSortMode::NagativeLocalPositionX,
+            4 => EInstanceSortMode::NagativeLocalPositionY,
+            5 => EInstanceSortMode::NagativeLocalPositionZ,
+            6 => EInstanceSortMode::GlobalPositionX,
+            7 => EInstanceSortMode::GlobalPositionY,
+
+            
+            9 =>  EInstanceSortMode::NagativeGlobalPositionX,
+            10 => EInstanceSortMode::NagativeGlobalPositionY,
+            11 => EInstanceSortMode::NagativeGlobalPositionZ,
+            _ => EInstanceSortMode::GlobalPositionZ,
+        }
+    }
+}
+
 /// 标识实例对应的源Mesh是否脏
 #[derive(Debug, Clone, Component, Default)]
 pub struct DirtyInstanceSourceRefs;

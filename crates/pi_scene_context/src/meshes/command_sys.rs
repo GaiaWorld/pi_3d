@@ -3,7 +3,7 @@ use pi_scene_shell::prelude::*;
 
 use crate::{
     cullings::prelude::*, geometry::{
-        instance::{types::{InstanceAttributeAnimated, ModelInstanceAttributes}, DirtyInstanceSourceForSingleBuffer}, prelude::*
+        instance::{types::{InstanceAttributeAnimated, ModelInstanceAttributes}, DirtyInstanceSourceForSingleBuffer, EInstanceSortMode}, prelude::*
     },
     layer_mask::prelude::*,
     object::ActionEntity,
@@ -42,6 +42,7 @@ pub type BundleMesh = (
         MeshReceiveShadow,
         LayerMask,
         AbstructMeshCullingFlag,
+        EInstanceSortMode,
     ),
     (
         TransparentSortParam,
@@ -234,6 +235,7 @@ pub fn sys_act_mesh_modify(
     mut velocity_items: Query<&mut ModelVelocity>,
     mut indices_items: Query<&mut IndiceRenderRange>,
     mut vertexrange_items: Query<&mut VertexRenderRange>,
+    mut instance_sortmodes: Query<&mut EInstanceSortMode>,
     mut culling_items: Query<(&mut GeometryCullingMode, &mut ItemCullingDirty)>,
     mut flagrendermatrix: Query<&mut FlagRenderWorldMatrix>,
     mut records: ResMut<AnimeTargetRecordValues<IndiceRenderRange>>,
@@ -273,6 +275,11 @@ pub fn sys_act_mesh_modify(
                 }
             } else {
                 // log::error!("BoundingCullingMode Not Found. {:?}", entity);
+            },
+            EMeshStateModify::InstanceSortMode(val) => if let Ok(mut mode) = instance_sortmodes.get_mut(entity) {
+                if val != *mode {
+                    *mode = val;
+                }
             },
         }
     });
@@ -480,6 +487,7 @@ impl ActionMesh {
             // FlagPassDirtyBindEffectTextures,
             LayerMask::default(),
             AbstructMeshCullingFlag(false),
+            EInstanceSortMode::default(),
         ),(
             TransparentSortParam::opaque(),
             BindSkinValue(None),
