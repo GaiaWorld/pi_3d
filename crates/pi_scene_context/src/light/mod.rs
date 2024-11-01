@@ -34,13 +34,18 @@ impl Plugin for PluginLighting {
         app.configure_set(Update, StageLighting::LightingCommand .in_set(ERunStageChap::D3).after(StageLighting::_LightCreate));
         app.configure_set(Update, StageLighting::LightingUniform .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageLighting::LightingCommand).after(EStageAnimation::Running).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Uniform));
 
+        if app.world.contains_resource::<SceneLightLimit>() == false {
+            app.insert_resource(SceneLightLimit(LightLimitInfo { max_direct_light_count: 8, max_point_light_count: 128, max_spot_light_count: 128, max_hemi_light_count: 8 }));
+        }
+        if app.world.contains_resource::<ModelLightLimit>() == false {
+            app.insert_resource(ModelLightLimit(LightLimitInfo { max_direct_light_count: 4, max_point_light_count: 16, max_spot_light_count: 16, max_hemi_light_count: 4 }));
+        }
 
-        app.insert_resource(SceneLightLimit(LightLimitInfo { max_direct_light_count: 8, max_point_light_count: 256, max_spot_light_count: 128, max_hemi_light_count: 16 }));
-        app.insert_resource(ModelLightLimit(LightLimitInfo { max_direct_light_count: 4, max_point_light_count: 16, max_spot_light_count: 16, max_hemi_light_count: 4 }));
-    
-        app.insert_resource(SceneShadowLimit(
-            ShadowLimitInfo { max_count: 1, max_width: 1024, max_height: 1024, color_format: ColorFormat::Rgba16Float, depth_stencil_format: DepthStencilFormat::Depth32Float }
-        ));
+        if app.world.contains_resource::<SceneShadowLimit>() == false {
+            app.insert_resource(SceneShadowLimit(
+                ShadowLimitInfo { max_count: 1, max_width: 1024, max_height: 1024, color_format: ColorFormat::Rgba16Float, depth_stencil_format: DepthStencilFormat::Depth32Float }
+            ));
+        }
 
         let enginepugins = app.world.get_resource::<EngineCustomPlugins>().unwrap();
         if enginepugins.lighting {
