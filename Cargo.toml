@@ -17,7 +17,7 @@ use_bevy = []
 use_pi_ecs = []
 
 [dependencies]
-pi_scene_context        = { version = "1.1.*", registry = "yn", path = "crates/pi_scene_context" }
+pi_scene_context        = { version = "1.*", registry = "yn", path = "crates/pi_scene_context" }
 pi_scene_shell          = { version = "1.0.*", registry = "yn", path = "crates/pi_scene_shell" }
 pi_mesh_builder         = { version = "1.0.*", registry = "yn", path = "crates/pi_mesh_builder" }
 skybox                  = { version = "1.0.*", registry = "yn", path = "crates/skybox" }
