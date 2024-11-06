@@ -16,7 +16,7 @@ pub struct DrawTmpRef<'w> {
     pub inscombinerange: Range<u32>,
     pub pass: u8,
     pub distance: f32,
-    pub queue: TransparentSortParam,
+    pub queue: RenderQueueSortParam,
 }
 impl<'w> DrawTmpRef<'w> {
     pub fn can_batch_instance_memory<'a>(&'a self, other: &'a Self, _debug: bool) -> bool {

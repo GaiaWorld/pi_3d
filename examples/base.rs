@@ -141,7 +141,7 @@ impl DemoScene {
 
         let scene = commands.spawn_empty_id();
         // animegroupres.scene_ctxs.init_scene(scene);
-        actions.scene.create.push(OpsSceneCreation::ops(scene, SceneBoundingPool::MODE_OCTREE, [-9999, -9999, -9999, 9999, 9999, 9999, 0, 0, 0]));
+        actions.scene.create.push(OpsSceneCreation::ops(scene, SceneBoundingPool::MODE_OCTREE, SceneColliderPool::MODE_OCTREE, [-9999, -9999, -9999, 9999, 9999, 9999, 0, 0, 0]));
 
         let camera = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(camera, scene));
         actions.camera.create.push(OpsCameraCreation::ops(scene, camera));
@@ -475,6 +475,7 @@ pub fn sys_move_ray_collider(
     mut actions: pi_3d::ActionSets,
     mut commands: Commands,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
+    sortparam: Query<(&RenderQueueSortParam, &GlobalEnable)>,
 ) {
 
     if let (Some((x, y)), Some(viewer)) = (events.cursormoved, events.viewer) {
@@ -502,7 +503,8 @@ pub fn sys_move_ray_collider(
                 &scenes,
                 &ray,
                 sceneid.0,
-                false
+                false,
+                &sortparam
             );
 
             if let Some(result) = &result {

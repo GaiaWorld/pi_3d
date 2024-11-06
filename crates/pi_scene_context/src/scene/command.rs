@@ -8,35 +8,43 @@ use super::environment::fog::*;
 
 pub struct OpsSceneCreation(pub(crate) Entity, pub(crate) SceneBoundingPool, pub(crate) SceneColliderPool);
 impl OpsSceneCreation {
-    pub fn ops(scene: Entity, cullingmode: u8, param: [i32;9]) -> Self {
-        let (pool, pool2) = match cullingmode {
+    pub fn ops(scene: Entity, cullingmode: u8, collidermode: u8, param: [i32;9]) -> Self {
+        let pool = match cullingmode {
             2 => {
-                (
-                    SceneBoundingPool::create_oct(
-                        (param[0] as Number, param[1] as Number, param[2] as Number),
-                        (param[3] as Number, param[4] as Number, param[5] as Number),
-                        (100f32, 100f32, 100f32),
-                        (1f32, 1f32, 1f32),
-                        param[6] as usize,
-                        param[7] as usize,
-                        param[8] as usize
-                    ),
-                    SceneColliderPool::create_oct(
-                        (param[0] as Number, param[1] as Number, param[2] as Number),
-                        (param[3] as Number, param[4] as Number, param[5] as Number),
-                        (100f32, 100f32, 100f32),
-                        (1f32, 1f32, 1f32),
-                        param[6] as usize,
-                        param[7] as usize,
-                        param[8] as usize
-                    )
+                SceneBoundingPool::create_oct(
+                    (param[0] as Number, param[1] as Number, param[2] as Number),
+                    (param[3] as Number, param[4] as Number, param[5] as Number),
+                    (100f32, 100f32, 100f32),
+                    (1f32, 1f32, 1f32),
+                    param[6] as usize,
+                    param[7] as usize,
+                    param[8] as usize
                 )
             },
             1 => {
-                (SceneBoundingPool::create_vec(), SceneColliderPool::create_vec())
+                SceneBoundingPool::create_vec()
             },
             _ => {
-                (SceneBoundingPool::default(), SceneColliderPool::default())
+                SceneBoundingPool::default()
+            }
+        };
+        let pool2 = match collidermode {
+            2 => {
+                SceneColliderPool::create_oct(
+                    (param[0] as Number, param[1] as Number, param[2] as Number),
+                    (param[3] as Number, param[4] as Number, param[5] as Number),
+                    (100f32, 100f32, 100f32),
+                    (1f32, 1f32, 1f32),
+                    param[6] as usize,
+                    param[7] as usize,
+                    param[8] as usize
+                )
+            },
+            1 => {
+                SceneColliderPool::create_vec()
+            },
+            _ => {
+                SceneColliderPool::default()
             }
         };
         Self(scene, pool, pool2)

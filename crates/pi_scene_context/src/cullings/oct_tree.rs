@@ -1,6 +1,8 @@
 use pi_scene_math::{frustum::FrustumPlanes, Matrix, Number, Vector3};
 use pi_scene_shell::prelude::*;
 
+use crate::{flags::GlobalEnable, prelude::RenderQueueSortParam};
+
 use super::{
     base::{BoundingKey, PiRay, PickResult, TBoundingInfoCalc, TFilter},
     bounding::is_in_frustum,
@@ -97,7 +99,10 @@ impl TBoundingInfoCalc for BoundingOctTree {
 
     }
 
-    fn ray_test(&self, piray: &PiRay, result: &mut Option<PickResult>) {
+    fn ray_test(
+        &self, piray: &PiRay, result: &mut Option<PickResult>,
+        sortparams: &Query<(&RenderQueueSortParam, &GlobalEnable)>,
+    ) {
         let ray = Ray::new(
             Point3::new(piray.origin.0, piray.origin.1, piray.origin.2),
             Vector3::new(piray.direction.0, piray.direction.1, piray.direction.2),
@@ -115,7 +120,7 @@ impl TBoundingInfoCalc for BoundingOctTree {
             Point3::new(maxx, maxy, maxz),
         );
 
-        let mut args: (Ray, f32, &mut Option<PickResult>) = (ray,f32::MAX, result);
+        let mut args: (Ray, f32, &mut Option<PickResult>, &Query<'_, (&RenderQueueSortParam, &GlobalEnable)>) = (ray,f32::MAX, result, sortparams);
 
         self.tree.query(&aabb, intersects, &mut args, ray_test_func);
     }
@@ -163,23 +168,28 @@ pub fn ab_query_func<F: TFilter>(
 }
 
 pub fn ray_test_func(
-    arg: &mut (Ray, f32, &mut Option<PickResult>),
+    arg: &mut (Ray, f32, &mut Option<PickResult>, &Query<(&RenderQueueSortParam, &GlobalEnable)>),
     id: BoundingKey,
     aabb: &Aabb,
     _bind: &(),
 ) {
-    if let Some(distance) = aabb.cast_ray(&Isometry3::identity(), &arg.0, f32::MAX, false) {
-        if distance < arg.1 {
-            arg.1 = distance;
-            // let min = bind.0.transform_point(&Point3::new(-1., -1., -1.));
-            // let max = bind.0.transform_point(&Point3::new(1., 1., 1.));
-            arg.2.replace(PickResult {
-                target: id.0,
-                min: (aabb.mins.x, aabb.mins.y, aabb.mins.z),
-                max: (aabb.maxs.x, aabb.maxs.y, aabb.maxs.z),
-                pickdetail: None,
-                bybounding: false,
-            });
+    if let Ok((sortparam, genble)) = arg.3.get(id.0) {
+        if genble.0 == false {
+            return;
+        }
+        if let Some(distance) = aabb.cast_ray(&Isometry3::identity(), &arg.0, f32::MAX, false) {
+            if distance < arg.1 {
+                arg.1 = distance;
+                // let min = bind.0.transform_point(&Point3::new(-1., -1., -1.));
+                // let max = bind.0.transform_point(&Point3::new(1., 1., 1.));
+                arg.2.replace(PickResult {
+                    target: id.0,
+                    min: (aabb.mins.x, aabb.mins.y, aabb.mins.z),
+                    max: (aabb.maxs.x, aabb.maxs.y, aabb.maxs.z),
+                    pickdetail: None,
+                    bybounding: false,
+                });
+            }
         }
     }
 }

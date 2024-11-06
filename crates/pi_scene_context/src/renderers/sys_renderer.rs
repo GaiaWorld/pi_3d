@@ -455,7 +455,7 @@ use pi_slotmap::Key;
         scenes: Query< (&BatchParamOpaque, &BatchParamTransparent) >,
         models: Query<
             (
-                &GlobalEnable, &GlobalMatrix, &TransparentSortParam, &InstancedMeshTransparentSortCollection,
+                &GlobalEnable, &GlobalMatrix, &RenderQueueSortParam, &InstancedMeshTransparentSortCollection,
                 &PassIDs, &GeometryID, &IndiceRenderRange, &VertexRenderRange, &RenderGeometryEable,
             )
         >,
@@ -790,7 +790,7 @@ fn collect_draw<'w>(
     indicerange: &'w IndiceRenderRange,
     vertexrange: &'w VertexRenderRange,
     distance: f32,
-    sort_param: &'w TransparentSortParam,
+    sort_param: &'w RenderQueueSortParam,
     opaque_list: & mut Vec<DrawTmpRef<'w>>,
     transparent_list: & mut Vec<DrawTmpRef<'w>>,
     instancessortinfo: &'w InstancedMeshTransparentSortCollection,
@@ -820,7 +820,7 @@ fn collect_draw<'w>(
                         opaque_list.push(draw);
                     } else {
                         // let mut queue = sort_param.clone();
-                        draw.queue.index += *alphaindex;
+                        draw.queue.index = *alphaindex;
                         transparent_list.push(draw);
 
                     }

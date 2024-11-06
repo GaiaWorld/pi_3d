@@ -47,7 +47,7 @@ impl GLTFBaseLoader {
                         Ok(gltf) => {
                             let mut buffers = vec![];
                             let mut haserror = false;
-                            log::error!("GLTF Parse: {:?}", (url.as_str(), (pi_time::Instant::now() - time0).as_micros() as u32));
+                            // log::error!("GLTF Parse: {:?}", (url.as_str(), (pi_time::Instant::now() - time0).as_micros() as u32));
                             for buffer in gltf.buffers() {
                                 match buffer.source() {
                                     pi_gltf::buffer::Source::Bin => {
@@ -467,7 +467,7 @@ impl GLTFTempLoaded {
 
         // result.textures = gltf.textures.clone();
 
-        log::error!("GLTF Analy: {:?}", (base_url.to_string(), (pi_time::Instant::now() - time0).as_micros() as u32));
+        // log::error!("GLTF Analy: {:?}", (base_url.to_string(), (pi_time::Instant::now() - time0).as_micros() as u32));
 
         result
     }

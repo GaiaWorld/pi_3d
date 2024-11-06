@@ -45,9 +45,9 @@ impl Default for RenderPoseMatrix {
     }
 }
 
-#[derive(Component, Default)]
-/// InstancedMesh 相对于 SourceMesh 的 AlphaIndex
-pub struct InstanceTransparentIndex(pub i32);
+// #[derive(Component, Default)]
+// /// InstancedMesh 的 AlphaIndex
+// pub struct InstanceTransparentIndex(pub i32);
 
 /// 用于标识 AbstructMesh 是否通过视口剔除
 #[derive(Component, Default)]

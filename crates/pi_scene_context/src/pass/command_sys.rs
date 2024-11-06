@@ -1,6 +1,6 @@
 use pi_scene_shell::prelude::*;
 
-use crate::{prelude::InstanceTransparentIndex, renderers::prelude::*};
+use crate::{prelude::RenderQueueSortParam, renderers::prelude::*};
 
 use super::{command::*, pass_object::*};
 
@@ -39,17 +39,13 @@ pub fn sys_act_pass_object(
     models: Query<&PassIDs>,
     mut items: Query<&mut RenderState>,
     mut cmds: ResMut<ActionListRenderState>,
-    mut itemsqueue: Query<&mut TransparentSortParam>,
-    mut instances: Query<&mut InstanceTransparentIndex>,
+    mut itemsqueue: Query<&mut RenderQueueSortParam>,
 ) {
     cmds.drain().for_each(|cmd| {
         match cmd {
             OpsRenderState::RenderQueue(entity, val) => {
                 if let Ok(mut item) = itemsqueue.get_mut(entity) {
                     *item = val;
-                }
-                if let Ok(mut item) = instances.get_mut(entity) {
-                    *item = InstanceTransparentIndex(val.index);
                 }
             },
             OpsRenderState::Blend(entity, tag, value) => {

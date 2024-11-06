@@ -48,7 +48,7 @@ impl Ord for TmpInstanceSort {
 }
 
     pub fn sys_tick_instanced_buffer_update_single(
-        actives: Query<(&GlobalEnable, &InstanceMesh, &InstanceTransparentIndex, &AbstructMeshCullingFlag, &GlobalMatrix, &LocalPosition), With<AbstructMesh>>,
+        actives: Query<(&GlobalEnable, &InstanceMesh, &RenderQueueSortParam, &AbstructMeshCullingFlag, &GlobalMatrix, &LocalPosition), With<AbstructMesh>>,
         instanceattributes: Query<&ModelInstanceAttributes>,
         added: ComponentAdded<InstanceSourceRefs>,
         changes: ComponentChanged<InstanceSourceRefs>,
@@ -121,7 +121,7 @@ impl Ord for TmpInstanceSort {
                                         -xyz.1,
                                         -xyz.2,
                                     ];
-                                    sorted_instances.push(TmpInstanceSort { entity: *id, index: instancelayer.0, xyz, sortparam: tmpsortparam[sortparmaidx] });
+                                    sorted_instances.push(TmpInstanceSort { entity: *id, index: instancelayer.index, xyz, sortparam: tmpsortparam[sortparmaidx] });
                                 }
                             }
                         });
@@ -201,7 +201,7 @@ impl Ord for TmpInstanceSort {
     pub fn sys_tick_instanced_buffer_update(
         added: ComponentAdded<InstanceSourceRefs>,
         changes: ComponentChanged<InstanceSourceRefs>,
-        actives: Query<(&GlobalEnable, &InstanceMesh, &InstanceTransparentIndex, &AbstructMeshCullingFlag, &GlobalMatrix, &LocalPosition), With<AbstructMesh>>,
+        actives: Query<(&GlobalEnable, &InstanceMesh, &RenderQueueSortParam, &AbstructMeshCullingFlag, &GlobalMatrix, &LocalPosition), With<AbstructMesh>>,
         instanceattributes: Query<&ModelInstanceAttributes>,
         mut sources: Query<
             (
@@ -272,7 +272,7 @@ impl Ord for TmpInstanceSort {
                                         -xyz.1,
                                         -xyz.2,
                                     ];
-                                    sorted_instances.push(TmpInstanceSort { entity: *id, index: instancelayer.0, xyz, sortparam: tmpsortparam[sortparmaidx] });
+                                    sorted_instances.push(TmpInstanceSort { entity: *id, index: instancelayer.index, xyz, sortparam: tmpsortparam[sortparmaidx] });
                                 }
                             }
                         });

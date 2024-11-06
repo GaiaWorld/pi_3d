@@ -1,6 +1,6 @@
 use pi_scene_shell::prelude::*;
 
-use crate::prelude::{EDepthState, EPrimitiveState, EStencilState, TransparentSortParam};
+use crate::prelude::{EDepthState, EPrimitiveState, EStencilState, RenderQueueSortParam};
 
 
 
@@ -13,7 +13,7 @@ impl OpsPassObject {
 pub type ActionListPassObject = ActionList<OpsPassObject>;
 
 pub enum OpsRenderState {
-    RenderQueue(Entity, TransparentSortParam),
+    RenderQueue(Entity, RenderQueueSortParam),
     Blend(Entity, PassTag, ModelBlend),
     DepthState(Entity, PassTag, EDepthState),
     StencilState(Entity, PassTag, EStencilState),
@@ -33,7 +33,7 @@ impl OpsRenderState {
         Self::PrimitiveState(model, passtag, cmd)
     }
     pub fn render_queue(mesh: Entity, group: i32, index: i32) -> Self {
-        Self::RenderQueue(mesh, TransparentSortParam { group, index })
+        Self::RenderQueue(mesh, RenderQueueSortParam { group, index })
     }
 }
 pub type ActionListRenderState = ActionList<OpsRenderState>;

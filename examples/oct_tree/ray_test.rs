@@ -151,6 +151,7 @@ pub fn sys_test(
     mut list: ResMut<ActionListTestData>,
     scenes: Query<(&SceneColliderPool, &SceneBoundingPool)>,
     viewers: Query<(&ViewerTransformMatrix, &ViewerViewMatrix, &GlobalMatrix)>,
+    sortparam: Query<(&RenderQueueSortParam, &GlobalEnable)>,
     window: Res<PiRenderWindow>,
 ) {
     let mut temp = replace(&mut list.0, vec![]);
@@ -162,7 +163,7 @@ pub fn sys_test(
 
             let ray = transformatrix.ray(x, y);
 
-            let result = ray_cast(&scenes, &ray, scene, false);
+            let result = ray_cast(&scenes, &ray, scene, false, &sortparam);
 
             log::error!("Ray : {:?}", result);
         } else {

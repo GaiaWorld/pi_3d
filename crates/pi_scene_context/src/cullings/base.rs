@@ -1,7 +1,7 @@
 use pi_scene_shell::prelude::*;
 use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::TToolVector3, Vector3, Matrix, Number, Point3};
 
-use crate::{viewer::prelude::ViewerTransformMatrix, prelude::MeshInstanceState};
+use crate::{flags::GlobalEnable, prelude::{MeshInstanceState, RenderQueueSortParam}, viewer::prelude::ViewerTransformMatrix};
 
 use super::{oct_tree::BoundingOctTree, bounding::VecBoundingInfoCalc};
 
@@ -14,6 +14,7 @@ pub trait TBoundingInfoCalc {
         &self,
         ray: &PiRay,
         result: &mut Option<PickResult>,
+        sortparams: &Query<(&RenderQueueSortParam, &GlobalEnable)>,
     );
     fn entities(&self) -> Vec<Entity>;
     fn size(&self) -> usize;
@@ -239,11 +240,12 @@ impl SceneColliderPool {
         &self,
         ray: &PiRay,
         result: &mut Option<PickResult>,
+        sortparams: &Query<(&RenderQueueSortParam, &GlobalEnable)>,
     ) {
         match self {
-            SceneColliderPool::List(item) => item.ray_test(ray, result),
+            SceneColliderPool::List(item) => item.ray_test(ray, result, sortparams),
             SceneColliderPool::QuadTree() => todo!(),
-            SceneColliderPool::OctTree(item) => item.ray_test(ray, result),
+            SceneColliderPool::OctTree(item) => item.ray_test(ray, result, sortparams),
         }
     }
     pub fn entities(&self) -> Vec<Entity> {
@@ -380,11 +382,12 @@ impl SceneBoundingPool {
         &self,
         ray: &PiRay,
         result: &mut Option<PickResult>,
+        sortparams: &Query<(&RenderQueueSortParam, &GlobalEnable)>,
     ) {
         match self {
-            SceneBoundingPool::List(item) => item.ray_test(ray, result),
+            SceneBoundingPool::List(item) => item.ray_test(ray, result, sortparams),
             SceneBoundingPool::QuadTree() => todo!(),
-            SceneBoundingPool::OctTree(item) => item.ray_test(ray, result),
+            SceneBoundingPool::OctTree(item) => item.ray_test(ray, result, sortparams),
             SceneBoundingPool::None => {}
         }
     }

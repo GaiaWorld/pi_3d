@@ -4,6 +4,8 @@ use pi_scene_math::{
     Number, Point3, Vector3,
 };
 
+use crate::{flags::GlobalEnable, prelude::RenderQueueSortParam};
+
 use super::base::{PiRay, PickResult, TBoundingInfoCalc, TFilter};
 
 #[derive(Default, Clone)]
@@ -58,7 +60,10 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
         // });
     }
 
-    fn ray_test(&self, ray: &PiRay, result: &mut Option<PickResult>) {
+    fn ray_test(
+        &self, ray: &PiRay, result: &mut Option<PickResult>,
+        sortparams: &Query<(&RenderQueueSortParam, &GlobalEnable)>,
+    ) {
         let origin = Point3::new(ray.origin.0, ray.origin.1, ray.origin.2);
         let ray = parry3d::query::Ray::new(origin, Vector3::new(ray.direction.0, ray.direction.1, ray.direction.2));
         let mut dest = f32::MAX;
@@ -67,7 +72,18 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
             Point3::new(0., 0., 0.01),
             Point3::new(0., 0., 0.01),
         );
+        let mut temp = vec![];
         self.pool.iter().for_each(|(entity, item)| {
+            if let Ok((sortparam, genable)) = sortparams.get(*entity) {
+                if genable.0 {
+                    temp.push((*entity, item, *sortparam));
+                }
+            }
+        });
+        temp.sort_by(|a, b| b.2.cmp(&a.2));
+        let mut lastalphaindex = i32::MAX;
+        let mut isok = false;
+        for (entity, item, sortparam) in temp.iter() {
             aabb.mins.x = item.0 .0;
             aabb.mins.y = item.0 .1;
             aabb.mins.z = item.0 .2;
@@ -75,11 +91,16 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
             aabb.maxs.y = item.1 .1;
             aabb.maxs.z = item.1 .2;
 
+            if isok && lastalphaindex != sortparam.index {
+                break;
+            }
+            lastalphaindex = sortparam.index;
             if let Some(d) = aabb.cast_local_ray(&ray, f32::MAX, false) {
                 // println!("========= id: {:?}, aabb: {:?}, dest: {}",  entity, aabb, d);
                 // println!("========= dest： {}", dest);
                 if d < dest  {
                     dest = d;
+                    isok = true;
                     result.replace(PickResult {
                         target: *entity,
                         min: item.0,
@@ -89,7 +110,7 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
                     });
                 }
             }
-        });
+        }
     }
     fn entities(&self) -> Vec<Entity> {
         let count = self.fast.len() + self.pool.len();

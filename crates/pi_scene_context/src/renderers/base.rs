@@ -1,7 +1,7 @@
 
 use pi_scene_shell::prelude::*;
 
-use super::render_sort::TransparentSortParam;
+use super::render_sort::RenderQueueSortParam;
 
 // pub type DrawObj3D = DrawObj;
 pub type DrawList3D = DrawList;
@@ -59,7 +59,7 @@ pub struct TmpSortDrawTransparent {
     pub idx: u16,
     pub pass: u8,
     pub distance: f32,
-    pub queue: TransparentSortParam,
+    pub queue: RenderQueueSortParam,
     pub pipeline: u64,
     pub resourcehash: (u64, u64),
 }
