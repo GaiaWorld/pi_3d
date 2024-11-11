@@ -114,17 +114,35 @@ impl Plugin for PluginParticleSystem {
             #[cfg(not(feature = "use_bevy"))]
             app
             .add_systems(Update, sys_create_particle_calculator.in_set(StageScene::Create))
-            .add_systems(Update, sys_create_cpu_partilce_system.in_set(StageParticleSystem::ParticleSysCreate))
-            .add_systems(Update, sys_act_partilce_system_state.in_set(StageParticleSystem::ParticleSysCommand))
+            .add_systems(Update, sys_create_cpu_partilce_system
+                .run_if(runif_acts::<OpsCPUParticleSystem>)
+                .in_set(StageParticleSystem::ParticleSysCreate))
+            .add_systems(Update, sys_act_partilce_system_state
+                .run_if(runif_acts2::<OpsCPUParticleSystemState, OpsCPUParticleSystemTrailMaterial>)
+                .in_set(StageParticleSystem::ParticleSysCommand))
             .add_systems(Update, sys_particle_active .in_set(StageParticleSystem::ParticleSysParamStart))
-            .add_systems(Update, sys_ids.in_set(StageParticleSystem::ParticleSysEmission))
+            .add_systems(Update, sys_ids
+                // .run_if(runif_changes::<ParticleSystemModifyState>)
+                .in_set(StageParticleSystem::ParticleSysEmission))
             .add_systems(Update, sys_emission.after(sys_ids).in_set(StageParticleSystem::ParticleSysEmission))
-            .add_systems(Update, sys_start.after(sys_emission).in_set(StageParticleSystem::ParticleSysCalc))
-            .add_systems(Update, sys_over_lifetime.after(sys_start).in_set(StageParticleSystem::ParticleSysCalc))
-            .add_systems(Update, sys_direction.after(sys_over_lifetime).in_set(StageParticleSystem::ParticleSysCalc))
-            .add_systems(Update, sys_by_speed.after(sys_direction).in_set(StageParticleSystem::ParticleSysCalc))
-            .add_systems(Update, sys_emitmatrix      .after(sys_particle_active).in_set(StageParticleSystem::ParticleSysMatrix))
-            .add_systems(Update, sys_prewarm         .after(sys_emitmatrix).in_set(StageParticleSystem::ParticleSysMatrix))
+            .add_systems(Update, sys_start
+                // .run_if(runif_changes::<ParticleSystemModifyState>)
+                .after(sys_emission).in_set(StageParticleSystem::ParticleSysCalc))
+            .add_systems(Update, sys_over_lifetime
+                // .run_if(runif_changes::<ParticleSystemModifyState>)
+                .after(sys_start).in_set(StageParticleSystem::ParticleSysCalc))
+            .add_systems(Update, sys_direction
+                // .run_if(runif_changes::<ParticleSystemModifyState>)
+                .after(sys_over_lifetime).in_set(StageParticleSystem::ParticleSysCalc))
+            .add_systems(Update, sys_by_speed
+                // .run_if(runif_changes::<ParticleSystemModifyState>)
+                .after(sys_direction).in_set(StageParticleSystem::ParticleSysCalc))
+            .add_systems(Update, sys_emitmatrix
+                // .run_if(runif_changes::<ParticleSystemModifyState>)      
+                .after(sys_particle_active).in_set(StageParticleSystem::ParticleSysMatrix))
+            .add_systems(Update, sys_prewarm
+                // .run_if(runif_changes::<ParticleSystemRunningState>)         
+                .after(sys_emitmatrix).in_set(StageParticleSystem::ParticleSysMatrix))
             .add_systems(Update, sys_update_buffer           .in_set(StageParticleSystem::ParticleSysUpdate))
             .add_systems(Update, sys_update_buffer_trail     .after(sys_update_buffer).in_set(StageParticleSystem::ParticleSysUpdate))
             .add_systems(Update, sys_dispose_about_particle_system.after(sys_dispose_ready).in_set(ERunStageChap::StateCheck))

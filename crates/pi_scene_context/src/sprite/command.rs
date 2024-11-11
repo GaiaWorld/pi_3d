@@ -12,10 +12,10 @@ pub enum SpriteModify{
     Idx(IdxTextureFrame),
     Data([u16;14]),
 }
-pub struct OpsSpriteModify(pub(crate) Entity, pub(crate) SpriteModify);
+pub struct OpsSpriteModify(pub(crate) Entity, pub(crate) SpriteModify, pub(crate) Atom);
 impl OpsSpriteModify {
-    pub fn ops(sprite: Entity, frame: SpriteModify) -> Self {
-        Self(sprite, frame)
+    pub fn ops(sprite: Entity, frame: SpriteModify, tilloffkey: Atom) -> Self {
+        Self(sprite, frame, tilloffkey)
     }
 }
 pub type ActionListSpriteModify = ActionList<OpsSpriteModify>;

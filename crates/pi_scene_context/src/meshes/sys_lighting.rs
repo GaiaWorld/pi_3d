@@ -11,9 +11,9 @@ use crate::{
 
 use super::model::*;
 
-
 pub fn sys_model_direct_lighting_modify_by_light(
-    scenes: Query<(Entity, &SceneDirectLightsQueue), Changed<SceneDirectLightsQueue>>,
+    changes: ComponentChanged<SceneDirectLightsQueue>,
+    scenes: Query<(Entity, &SceneDirectLightsQueue)>,
     layermask: Query<&LayerMask>,
     viewers: Query<(&SceneID, &ModelList)>,
     lightindex: Query<&SceneItemIndex>,
@@ -21,27 +21,29 @@ pub fn sys_model_direct_lighting_modify_by_light(
     // mut record: ResMut<pi_scene_shell::run_stage::RunSystemRecord>,
 ) {
     // record.0.push(String::from("sys_model_direct_lighting_modify_by_light"));
-    scenes.iter().for_each(|(scene, queuedirect)| {
-        viewers.iter().for_each(|(idscene, models)| {
-            if idscene.0 == scene {
-                models.0.iter().for_each(|idm| {
-                    if let (Ok(ids), Ok(my)) = (meshes.get(*idm), layermask.get(*idm)) {
-                        if let Some(ids) = &ids.bind {
-                            let mut indexlight = vec![];
-                            queuedirect.0.items().for_each(|idlight| {
-                                if let (Ok(ly), Ok(lidx)) = (layermask.get(*idlight), lightindex.get(*idlight)) {
-                                    if ly.include(my.0) {
-                                        indexlight.push(lidx.val());
+    changes.iter().for_each(|entity| {
+        if let Ok((scene, queuedirect)) = scenes.get(*entity) {
+            viewers.iter().for_each(|(idscene, models)| {
+                if idscene.0 == scene {
+                    models.0.iter().for_each(|idm| {
+                        if let (Ok(ids), Ok(my)) = (meshes.get(*idm), layermask.get(*idm)) {
+                            if let Some(ids) = &ids.bind {
+                                let mut indexlight = vec![];
+                                queuedirect.0.items().for_each(|idlight| {
+                                    if let (Ok(ly), Ok(lidx)) = (layermask.get(*idlight), lightindex.get(*idlight)) {
+                                        if ly.include(my.0) {
+                                            indexlight.push(lidx.val());
+                                        }
                                     }
-                                }
-                            });
-                            // log::error!("Model Direct: {:?}", &indexlight);
-                            ids.direct_light_data(&indexlight);
+                                });
+                                // log::error!("Model Direct: {:?}", &indexlight);
+                                ids.direct_light_data(&indexlight);
+                            }
                         }
-                    }
-                });
-            }
-        });
+                    });
+                }
+            });
+        }
     });
 }
 

@@ -9,22 +9,30 @@ fn _strip(val: &ECustomVertexType) -> usize {
         ECustomVertexType::Float    => 1 * 4,
         ECustomVertexType::Uint     => 1 * 4,
         ECustomVertexType::Int      => 1 * 4,
-        ECustomVertexType::UVec4    => 4 * 4,
+        ECustomVertexType::IVec4    => 4 * 4,
         ECustomVertexType::U16x2    => 2 * 2,
+        ECustomVertexType::U16x4    => 2 * 4,
         ECustomVertexType::U8x4     => 1 * 4,
+        ECustomVertexType::Unorm16x2 => 2 * 2,
+        ECustomVertexType::Unorm16x4 => 2 * 4,
+        ECustomVertexType::Unorm8x4 => 1 * 4,
     }
 }
-fn animatorable_type(val: &ECustomVertexType) -> EAnimatorableType {
+fn animatorable_type(val: &ECustomVertexType) -> Option<EAnimatorableType> {
     match val {
-        ECustomVertexType::Vec4     => EAnimatorableType::Vec4,
-        ECustomVertexType::Vec3     => EAnimatorableType::Vec3,
-        ECustomVertexType::Vec2     => EAnimatorableType::Vec2,
-        ECustomVertexType::Float    => EAnimatorableType::Float,
-        ECustomVertexType::Uint     => EAnimatorableType::Uint,
-        ECustomVertexType::Int      => EAnimatorableType::Int,
-        ECustomVertexType::UVec4    => EAnimatorableType::Vec4,
-        ECustomVertexType::U16x2    => EAnimatorableType::Vec2,
-        ECustomVertexType::U8x4     => EAnimatorableType::Vec4,
+        ECustomVertexType::Vec4     => Some(EAnimatorableType::Vec4),
+        ECustomVertexType::Vec3     => Some(EAnimatorableType::Vec3),
+        ECustomVertexType::Vec2     => Some(EAnimatorableType::Vec2),
+        ECustomVertexType::Float    => Some(EAnimatorableType::Float),
+        ECustomVertexType::Uint     => Some(EAnimatorableType::Uint),
+        ECustomVertexType::Int      => Some(EAnimatorableType::Int ),
+        ECustomVertexType::IVec4    => None,
+        ECustomVertexType::U16x2    => None,
+        ECustomVertexType::U16x4    => None,
+        ECustomVertexType::U8x4     => None,
+        ECustomVertexType::Unorm16x2 => None,
+        ECustomVertexType::Unorm16x4 => None,
+        ECustomVertexType::Unorm8x4  => None,
     }
 }
 
@@ -54,8 +62,10 @@ impl InstanceAttributeOffset {
     ) -> Self {
         Self { vtype, offset, entity }
     }
+    /// 值类型
     pub fn vtype(&self) -> ECustomVertexType { self.vtype }
-    pub fn atype(&self) -> EAnimatorableType { animatorable_type(&self.vtype) }
+    /// 对应值动画类型
+    pub fn atype(&self) -> Option<EAnimatorableType> { animatorable_type(&self.vtype) }
     pub fn offset(&self) -> u32 { self.offset }
     pub fn entity(&self) -> Option<Entity> { self.entity }
 }
@@ -89,41 +99,57 @@ impl ModelInstanceAttributes {
             // let entity = command.spawn_empty_id();
             let atype = animatorable_type(&attr.vtype());
             attributes.push((Atom::from(attr.var_code()), InstanceAttributeOffset::new(attr.vtype(), offset, None)));
-            match atype {
-                EAnimatorableType::Vec4     => {
-                    // animatorablevec4s.push(OpsAnimatorableVec4::ops(entity, linked, AnimatorableVec4::from(&tmp)));
-                    // bytemuck::cast_slice(&tmp[0..4]).iter().for_each(|byte| { bytes.push(*byte) });
+            match attr.vtype() {
+                ECustomVertexType::Vec4     => {
                     unsafe_vec_append_slice(&mut bytes, bytemuck::cast_slice(&tmp[0..4]));
                     offset += 16;
                 },
-                EAnimatorableType::Vec3     => {
-                    // animatorablevec3s.push(OpsAnimatorableVec3::ops(entity, linked, AnimatorableVec3::from(&[0., 0., 0.])));
-                    // bytemuck::cast_slice(&tmp[0..3]).iter().for_each(|byte| { bytes.push(*byte) });
+                ECustomVertexType::Vec3     => {
                     unsafe_vec_append_slice(&mut bytes, bytemuck::cast_slice(&tmp[0..3]));
                     offset += 12;
                 },
-                EAnimatorableType::Vec2     => {
-                    // animatorablevec2s.push(OpsAnimatorableVec2::ops(entity, linked, AnimatorableVec2::from(&[0., 0.])));
-                    // bytemuck::cast_slice(&tmp[0..2]).iter().for_each(|byte| { bytes.push(*byte) });
+                ECustomVertexType::Vec2     => {
                     unsafe_vec_append_slice(&mut bytes, bytemuck::cast_slice(&tmp[0..2]));
                     offset += 8;
                 },
-                EAnimatorableType::Float    => {
-                    // animatorablefloats.push(OpsAnimatorableFloat::ops(entity, linked, AnimatorableFloat(0.)));
-                    // bytemuck::cast_slice(&[0.]).iter().for_each(|byte| { bytes.push(*byte) });
+                ECustomVertexType::Float    => {
                     unsafe_vec_append_slice(&mut bytes, bytemuck::cast_slice(&tmp[0..1]));
                     offset += 4;
                 },
-                EAnimatorableType::Uint     => {
-                    // animatorableuints.push(OpsAnimatorableUint::ops(entity, linked, AnimatorableUint(0)));
-                    // bytemuck::cast_slice(&[0u32]).iter().for_each(|byte| { bytes.push(*byte) });
+                ECustomVertexType::Uint     => {
                     unsafe_vec_append_slice(&mut bytes, bytemuck::cast_slice(&[0u32]));
                     offset += 4;
                 },
-                EAnimatorableType::Int      => {
-                    // animatorablesints.push(OpsAnimatorableSint::ops(entity, linked, AnimatorableInt(0)));
-                    // bytemuck::cast_slice(&[0i32]).iter().for_each(|byte| { bytes.push(*byte) });
+                ECustomVertexType::Int      => {
                     unsafe_vec_append_slice(&mut bytes, bytemuck::cast_slice(&[0i32]));
+                    offset += 4;
+                },
+                ECustomVertexType::IVec4    => {
+                    unsafe_vec_append_slice(&mut bytes, bytemuck::cast_slice(&[0i32, 0i32, 0i32, 0i32]));
+                    offset += 16;
+                },
+                ECustomVertexType::U16x2    => {
+                    unsafe_vec_append_slice(&mut bytes, bytemuck::cast_slice(&[0u16, 0u16]));
+                    offset += 4;
+                },
+                ECustomVertexType::U16x4    => {
+                    unsafe_vec_append_slice(&mut bytes, bytemuck::cast_slice(&[0u16, 0u16, 0u16, 0u16]));
+                    offset += 8;
+                },
+                ECustomVertexType::U8x4     => {
+                    unsafe_vec_append_slice(&mut bytes, bytemuck::cast_slice(&[0u8, 0u8, 0u8, 0u8]));
+                    offset += 4;
+                },
+                ECustomVertexType::Unorm16x2 => {
+                    unsafe_vec_append_slice(&mut bytes, bytemuck::cast_slice(&[0u16, 0u16]));
+                    offset += 4;
+                },
+                ECustomVertexType::Unorm16x4 => {
+                    unsafe_vec_append_slice(&mut bytes, bytemuck::cast_slice(&[0u16, 0u16, 0u16, 0u16]));
+                    offset += 8;
+                },
+                ECustomVertexType::Unorm8x4  => {
+                    unsafe_vec_append_slice(&mut bytes, bytemuck::cast_slice(&[0u8, 0u8, 0u8, 0u8]));
                     offset += 4;
                 },
             }
@@ -193,37 +219,39 @@ impl ModelInstanceAttributes {
                 if offset.entity.is_none() {
                     let entity = command.spawn_empty_id();
                     offset.entity = Some(entity);
-                    match offset.atype() {
-                        EAnimatorableType::Vec4     => {
-                            let start = offset.offset as usize; let end = offset.offset as usize + 16;
-                            let data = bytemuck::cast_slice(&self.bytes[start..end]);
-                            animatorablevec4s.push(OpsAnimatorableVec4::ops(entity, linked, AnimatorableVec4::from(data), EAnimatorableEntityType::Attribute));
-                        },
-                        EAnimatorableType::Vec3     => {
-                            let start = offset.offset as usize; let end = offset.offset as usize + 12;
-                            let data = bytemuck::cast_slice(&self.bytes[start..end]);
-                            animatorablevec3s.push(OpsAnimatorableVec3::ops(entity, linked, AnimatorableVec3::from(data), EAnimatorableEntityType::Attribute));
-                        },
-                        EAnimatorableType::Vec2     => {
-                            let start = offset.offset as usize; let end = offset.offset as usize + 8;
-                            let data = bytemuck::cast_slice(&self.bytes[start..end]);
-                            animatorablevec2s.push(OpsAnimatorableVec2::ops(entity, linked, AnimatorableVec2::from(data), EAnimatorableEntityType::Attribute));
-                        },
-                        EAnimatorableType::Float    => {
-                            let start = offset.offset as usize; let end = offset.offset as usize + 4;
-                            let data = bytemuck::cast_slice(&self.bytes[start..end]);
-                            animatorablefloat.push(OpsAnimatorableFloat::ops(entity, linked, AnimatorableFloat(data[0]), EAnimatorableEntityType::Attribute));
-                        },
-                        EAnimatorableType::Uint     => {
-                            let start = offset.offset as usize; let end = offset.offset as usize + 4;
-                            let data = bytemuck::cast_slice(&self.bytes[start..end]);
-                            animatorableuints.push(OpsAnimatorableUint::ops(entity, linked, AnimatorableUint(data[0]), EAnimatorableEntityType::Attribute));
-                        },
-                        EAnimatorableType::Int      => {
-                            let start = offset.offset as usize; let end = offset.offset as usize + 4;
-                            let data = bytemuck::cast_slice(&self.bytes[start..end]);
-                            animatorablesints.push(OpsAnimatorableSint::ops(entity, linked, AnimatorableSint(data[0]), EAnimatorableEntityType::Attribute));
-                        },
+                    if let Some(atype) = offset.atype() {
+                        match atype {
+                            EAnimatorableType::Vec4     => {
+                                let start = offset.offset as usize; let end = offset.offset as usize + 16;
+                                let data = bytemuck::cast_slice(&self.bytes[start..end]);
+                                animatorablevec4s.push(OpsAnimatorableVec4::ops(entity, linked, AnimatorableVec4::from(data), EAnimatorableEntityType::Attribute));
+                            },
+                            EAnimatorableType::Vec3     => {
+                                let start = offset.offset as usize; let end = offset.offset as usize + 12;
+                                let data = bytemuck::cast_slice(&self.bytes[start..end]);
+                                animatorablevec3s.push(OpsAnimatorableVec3::ops(entity, linked, AnimatorableVec3::from(data), EAnimatorableEntityType::Attribute));
+                            },
+                            EAnimatorableType::Vec2     => {
+                                let start = offset.offset as usize; let end = offset.offset as usize + 8;
+                                let data = bytemuck::cast_slice(&self.bytes[start..end]);
+                                animatorablevec2s.push(OpsAnimatorableVec2::ops(entity, linked, AnimatorableVec2::from(data), EAnimatorableEntityType::Attribute));
+                            },
+                            EAnimatorableType::Float    => {
+                                let start = offset.offset as usize; let end = offset.offset as usize + 4;
+                                let data = bytemuck::cast_slice(&self.bytes[start..end]);
+                                animatorablefloat.push(OpsAnimatorableFloat::ops(entity, linked, AnimatorableFloat(data[0]), EAnimatorableEntityType::Attribute));
+                            },
+                            EAnimatorableType::Uint     => {
+                                let start = offset.offset as usize; let end = offset.offset as usize + 4;
+                                let data = bytemuck::cast_slice(&self.bytes[start..end]);
+                                animatorableuints.push(OpsAnimatorableUint::ops(entity, linked, AnimatorableUint(data[0]), EAnimatorableEntityType::Attribute));
+                            },
+                            EAnimatorableType::Int      => {
+                                let start = offset.offset as usize; let end = offset.offset as usize + 4;
+                                let data = bytemuck::cast_slice(&self.bytes[start..end]);
+                                animatorablesints.push(OpsAnimatorableSint::ops(entity, linked, AnimatorableSint(data[0]), EAnimatorableEntityType::Attribute));
+                            },
+                        }
                     }
                 }
                 Some(offset.clone())

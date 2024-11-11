@@ -111,7 +111,7 @@ pub struct ParticleSystemPerformance {
 impl Default for ParticleSystemPerformance {
     fn default() -> Self {
         Self {
-            debug: true,
+            debug: false,
             time: pi_time::Instant::now(),
             sys_ids: 0,
             sys_prewarm: 0,

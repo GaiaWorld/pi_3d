@@ -4,7 +4,6 @@ use crate::{prelude::RenderQueueSortParam, renderers::prelude::*};
 
 use super::{command::*, pass_object::*};
 
-
 pub fn sys_create_pass_object(
     mut cmds: ResMut<ActionListPassObject>,
     mut commands: Commands,
@@ -36,9 +35,9 @@ pub fn sys_create_pass_object(
 }
 
 pub fn sys_act_pass_object(
+    mut cmds: ResMut<ActionListRenderState>,
     models: Query<&PassIDs>,
     mut items: Query<&mut RenderState>,
-    mut cmds: ResMut<ActionListRenderState>,
     mut itemsqueue: Query<&mut RenderQueueSortParam>,
 ) {
     cmds.drain().for_each(|cmd| {

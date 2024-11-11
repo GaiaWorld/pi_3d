@@ -36,6 +36,10 @@ pub enum EInstanceAttr {
     Vec4([Number; 4]),
     Vec3([Number; 3]),
     Vec2([Number; 2]),
+    IVec4([i32; 4]),
+    U8x4([u8; 4]),
+    U16x4([u16; 4]),
+    U16x2([u16; 2]),
 }
 
 pub struct OpsInstanceAttr(pub(crate) Entity, pub(crate) EInstanceAttr, pub Atom);

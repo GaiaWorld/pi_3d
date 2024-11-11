@@ -118,18 +118,14 @@ fn _calc_render_matrix<T>(
         crate::prelude::EScalingMode::Hierarchy => {
             if renderalignment.0 == ERenderAlignment::Local {
                 if let Ok(pose) = pose {
-                    // let mut m = Matrix::identity();
-                    // m.clone_from(&transform.matrix);
-                    // m = m * pose.0;
-                    // wm.0.clone_from(&m);
-                    CoordinateSytem3::mul_to(&transform.matrix, &pose.0, &mut wm.0);
-                    // transform.matrix.mul_to(&pose.0, &mut wm.0);
-
-                    // wm.1.clone_from(&wm.0);
-                    // CoordinateSytem3::try_inverse_mut(&mut wm.1);
-                    return;
+                    if pose.0.is_identity(Number::EPSILON) == false {
+                        CoordinateSytem3::mul_to(&transform.matrix, &pose.0, &mut wm.0);
+                    } else {
+                        wm.0.clone_from(&transform.matrix);
+                    }
+                } else {
+                    wm.0.clone_from(&transform.matrix);
                 }
-                wm.0.clone_from(&transform.matrix);
                 // wm.1.clone_from(&transform.matrix_inv);
                 return;
             }
@@ -163,9 +159,11 @@ fn _calc_render_matrix<T>(
     }
 
     if let Ok(pose) = pose {
-        CoordinateSytem3::mul_to(&m0, &pose.0, tmpmatrix);
-        // m0.mul_to(&pose.0, tmpmatrix);
-        m0.copy_from(tmpmatrix);
+        if pose.0.is_identity(Number::EPSILON) == false {
+            CoordinateSytem3::mul_to(&m0, &pose.0, tmpmatrix);
+            // m0.mul_to(&pose.0, tmpmatrix);
+            m0.copy_from(tmpmatrix);
+        }
     }
 
     // m1.clone_from(&m0);
@@ -236,31 +234,33 @@ pub fn sys_animator_update_instance_attribute(
                 if let Some(offset) = attributes.offset(key) {
                     let mut idx = offset.offset() as usize;
                     if let Some(entity) = offset.entity() {
-                        match offset.atype() {
-                            EAnimatorableType::Vec4 => if let Ok((data, _)) = _vec4s.get(entity) {
-                                if data.is_changed() == false { return; }
-                                bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
-                            },
-                            EAnimatorableType::Vec3 => if let Ok((data, _)) = _vec3s.get(entity) {
-                                if data.is_changed() == false { return; }
-                                bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
-                            },
-                            EAnimatorableType::Vec2 => if let Ok((data, _)) = _vec2s.get(entity) {
-                                if data.is_changed() == false { return; }
-                                bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
-                            },
-                            EAnimatorableType::Float => if let Ok((data, _)) = floats.get(entity) {
-                                if data.is_changed() == false { return; }
-                                bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
-                            },
-                            EAnimatorableType::Uint => if let Ok((data, _)) = _uints.get(entity) {
-                                if data.is_changed() == false { return; }
-                                bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
-                            },
-                            EAnimatorableType::Int => if let Ok((data, _)) = _sints.get(entity) {
-                                if data.is_changed() == false { return; }
-                                bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
-                            },
+                        if let Some(atype) = offset.atype() {
+                            match atype {
+                                EAnimatorableType::Vec4 => if let Ok((data, _)) = _vec4s.get(entity) {
+                                    if data.is_changed() == false { return; }
+                                    bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                                },
+                                EAnimatorableType::Vec3 => if let Ok((data, _)) = _vec3s.get(entity) {
+                                    if data.is_changed() == false { return; }
+                                    bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                                },
+                                EAnimatorableType::Vec2 => if let Ok((data, _)) = _vec2s.get(entity) {
+                                    if data.is_changed() == false { return; }
+                                    bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                                },
+                                EAnimatorableType::Float => if let Ok((data, _)) = floats.get(entity) {
+                                    if data.is_changed() == false { return; }
+                                    bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                                },
+                                EAnimatorableType::Uint => if let Ok((data, _)) = _uints.get(entity) {
+                                    if data.is_changed() == false { return; }
+                                    bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                                },
+                                EAnimatorableType::Int => if let Ok((data, _)) = _sints.get(entity) {
+                                    if data.is_changed() == false { return; }
+                                    bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                                },
+                            }
                         }
                     }
                 }

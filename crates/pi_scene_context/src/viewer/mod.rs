@@ -1,4 +1,5 @@
 
+use command::OpsViewerForceInclude;
 use pi_scene_shell::prelude::*;
 use prelude::sys_tick_viewer_culling;
 use sys::{sys_calc_transform_matrix, sys_update_viewer_uniform};
@@ -29,7 +30,9 @@ impl Plugin for PluginViewerBase {
         app.configure_set(Update, StageViewer::TransformCalcMatrix  .in_set(ERunStageChap::D3).in_set(FrameDataPrepare));
         app.configure_set(Update, StageViewer::Culling              .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageViewer::TransformCalcMatrix).before(StageViewer::ForceInclude).before(StageCulling::CalcBounding).before(ERunStageChap::Uniform));
         app.insert_resource(ActionListViewerForceInclude::default());
-        app.add_systems(Update, sys_act_viewer_force_include.in_set(StageViewer::ForceInclude));
+        app.add_systems(Update, sys_act_viewer_force_include
+            // .run_if(runif_acts::<OpsViewerForceInclude>)
+            .in_set(StageViewer::ForceInclude));
         app.add_systems(Update, sys_calc_transform_matrix.in_set(StageViewer::TransformCalcMatrix));
         app.add_systems(Update, sys_tick_viewer_culling.in_set(StageViewer::Culling));
         app.add_systems(Update, sys_update_viewer_uniform.in_set(ERunStageChap::Uniform));

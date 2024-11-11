@@ -8,8 +8,6 @@ use crate::{
 use super::{
     _set0_modify, _set1_modify, base::*, render_depth_and_stencil::*, render_object::RenderState, render_primitive::*, render_sort::*, render_target_state::*, renderer::*
 };
-use pi_slotmap::Key;
-
     pub fn sys_pass_bind_groups(
         addeds: ComponentAdded<PassBindGroupsDirty>,
         changes: ComponentChanged<PassBindGroupsDirty>,

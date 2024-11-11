@@ -673,9 +673,7 @@ pub fn sys_update_buffer(
     instanceinfos: Query<&InstancedInfoComp>,
     mut performance: ResMut<ParticleSystemPerformance>,
 ) {
-    performance.debug = true;
-    let time0 = pi_time::Instant::now();
-    if performance.debug { performance.time = time0; }
+    if performance.debug { performance.time = pi_time::Instant::now(); }
 
     let mut count_particles = 0;
 

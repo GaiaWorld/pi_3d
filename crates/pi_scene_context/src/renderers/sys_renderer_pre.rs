@@ -80,7 +80,6 @@ fn __sets_modify_by_viewer(
         // log::warn!("__sets_modify_by_viewer {:?}", (idviewer));
     }
 }
-
 pub fn sys_passrendererid_pass_reset(
     viewers: Query<(&SceneID, &ModelList, &ForceIncludeModelList, &ViewerRenderersInfo)>,
     renderers: Query<(&RendererParam, &PassTag)>,

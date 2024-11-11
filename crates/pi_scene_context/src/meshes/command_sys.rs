@@ -43,6 +43,7 @@ pub type BundleMesh = (
         LayerMask,
         AbstructMeshCullingFlag,
         EInstanceSortMode,
+        RenderPoseMatrix,
     ),
     (
         RenderQueueSortParam,
@@ -76,6 +77,7 @@ pub type BundleInstance = (
     ModelVelocity,
     ScalingMode,
     ItemCullingDirty,
+    RenderPoseMatrix,
 );
 
 pub type BundleMeshLighting = (
@@ -187,31 +189,33 @@ pub fn sys_act_target_animation_attribute(
                 match offset.entity() {
                     Some(target) => {
                         animated.add(&attr);
-                        match offset.atype() {
-                            EAnimatorableType::Vec4 => if let Some(curve) = anime_assets.vec4s.get(&curve) {
-                                let anime = anime_contexts.vec4s.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
-                                targetanimations.push(OpsAnimationGroupAction::addtarget(group, target, anime));
-                            },
-                            EAnimatorableType::Vec3 => if let Some(curve) = anime_assets.vec3s.get(&curve) {
-                                let anime = anime_contexts.vec3s.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
-                                targetanimations.push(OpsAnimationGroupAction::addtarget(group, target, anime));
-                            },
-                            EAnimatorableType::Vec2 => if let Some(curve) = anime_assets.vec2s.get(&curve) {
-                                let anime = anime_contexts.vec2s.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
-                                targetanimations.push(OpsAnimationGroupAction::addtarget(group, target, anime));
-                            },
-                            EAnimatorableType::Float => if let Some(curve) = anime_assets.float.get(&curve) {
-                                let anime = anime_contexts.float.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
-                                targetanimations.push(OpsAnimationGroupAction::addtarget(group, target, anime));
-                            },
-                            EAnimatorableType::Uint => if let Some(curve) = anime_assets.uints.get(&curve) {
-                                let anime = anime_contexts.uints.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
-                                targetanimations.push(OpsAnimationGroupAction::addtarget(group, target, anime));
-                            },
-                            EAnimatorableType::Int => if let Some(curve) = anime_assets._ints.get(&curve) {
-                                let anime = anime_contexts._ints.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
-                                targetanimations.push(OpsAnimationGroupAction::addtarget(group, target, anime));
-                            },
+                        if let Some(atype) = offset.atype() {
+                            match atype {
+                                EAnimatorableType::Vec4 => if let Some(curve) = anime_assets.vec4s.get(&curve) {
+                                    let anime = anime_contexts.vec4s.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
+                                    targetanimations.push(OpsAnimationGroupAction::addtarget(group, target, anime));
+                                },
+                                EAnimatorableType::Vec3 => if let Some(curve) = anime_assets.vec3s.get(&curve) {
+                                    let anime = anime_contexts.vec3s.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
+                                    targetanimations.push(OpsAnimationGroupAction::addtarget(group, target, anime));
+                                },
+                                EAnimatorableType::Vec2 => if let Some(curve) = anime_assets.vec2s.get(&curve) {
+                                    let anime = anime_contexts.vec2s.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
+                                    targetanimations.push(OpsAnimationGroupAction::addtarget(group, target, anime));
+                                },
+                                EAnimatorableType::Float => if let Some(curve) = anime_assets.float.get(&curve) {
+                                    let anime = anime_contexts.float.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
+                                    targetanimations.push(OpsAnimationGroupAction::addtarget(group, target, anime));
+                                },
+                                EAnimatorableType::Uint => if let Some(curve) = anime_assets.uints.get(&curve) {
+                                    let anime = anime_contexts.uints.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
+                                    targetanimations.push(OpsAnimationGroupAction::addtarget(group, target, anime));
+                                },
+                                EAnimatorableType::Int => if let Some(curve) = anime_assets._ints.get(&curve) {
+                                    let anime = anime_contexts._ints.ctx.create_animation(0, AssetTypeFrameCurve::from(curve));
+                                    targetanimations.push(OpsAnimationGroupAction::addtarget(group, target, anime));
+                                },
+                            }
                         }
                     },
                     None => { },
@@ -324,8 +328,9 @@ pub fn sys_act_instance_attribute(
 
     cmdsfloat.drain().for_each(|OpsInstanceAttr(instance, val, attr)| {
         if let Ok((inssource, mut attributes)) = instances.get_mut(instance) {
-            if let Some(offset) = attributes.offset(&attr) {
-                if let Some(target) = offset.entity() {
+            if let Some(info) = attributes.offset(&attr) {
+                let mut offset = info.offset() as usize;
+                if let Some(target) = info.entity() {
                     // log::error!("Push 。。。。");
                     match val {
                         EInstanceAttr::Float(val)   => { animator_float.push(OpsAnimatorableFloat::ops(target, instance, AnimatorableFloat(val), EAnimatorableEntityType::Attribute)); },
@@ -334,9 +339,12 @@ pub fn sys_act_instance_attribute(
                         EInstanceAttr::Vec4(val) => { animator_vec4.push(OpsAnimatorableVec4::ops(target, instance, AnimatorableVec4::from(val.as_slice()), EAnimatorableEntityType::Attribute)); },
                         EInstanceAttr::Vec3(val) => { animator_vec3.push(OpsAnimatorableVec3::ops(target, instance, AnimatorableVec3::from(val.as_slice()), EAnimatorableEntityType::Attribute)); },
                         EInstanceAttr::Vec2(val) => { animator_vec2.push(OpsAnimatorableVec2::ops(target, instance, AnimatorableVec2::from(val.as_slice()), EAnimatorableEntityType::Attribute)); },
+                        EInstanceAttr::U8x4(val)   => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
+                        EInstanceAttr::U16x4(val) => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
+                        EInstanceAttr::U16x2(val) => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
+                        EInstanceAttr::IVec4(val) => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
                     };
                 } else {
-                    let mut offset = offset.offset() as usize;
                     match val {
                         EInstanceAttr::Float(val) => bytemuck::cast_slice(&[val]).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
                         EInstanceAttr::Uint(val) => bytemuck::cast_slice(&[val]).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
@@ -344,6 +352,10 @@ pub fn sys_act_instance_attribute(
                         EInstanceAttr::Vec4(val) => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
                         EInstanceAttr::Vec3(val) => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
                         EInstanceAttr::Vec2(val) => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
+                        EInstanceAttr::U8x4(val)   => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
+                        EInstanceAttr::U16x4(val) => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
+                        EInstanceAttr::U16x2(val) => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
+                        EInstanceAttr::IVec4(val) => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
                     }
                     ;
                 }
@@ -488,6 +500,7 @@ impl ActionMesh {
             LayerMask::default(),
             AbstructMeshCullingFlag(false),
             EInstanceSortMode::default(),
+            RenderPoseMatrix::default(),
         ),(
             RenderQueueSortParam::opaque(),
             BindSkinValue(None),
@@ -538,6 +551,7 @@ impl ActionInstanceMesh {
             ModelVelocity::default(),
             ScalingMode::default(),
             ItemCullingDirty::default(),
+            RenderPoseMatrix::default(),
         )
     }
 }

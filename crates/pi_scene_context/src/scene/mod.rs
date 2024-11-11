@@ -102,8 +102,12 @@ impl Plugin for PluginScene {
             .add_systems(Update, sys_image_texture_view_load_launch::<BRDFTextureSlot, BRDFTexture>  .in_set(StageScene::TextureRequest))
             .add_systems(Update, sys_env_texture_loaded_check                                        .in_set(StageScene::TextureLoaded))
             .add_systems(Update, sys_image_texture_view_loaded_check::<BRDFTextureSlot, BRDFTexture> .in_set(StageScene::TextureLoaded))
-            .add_systems(Update, sys_create_scene                .in_set(StageScene::Create))
-            .add_systems(Update, sys_act_scene_ambient           .in_set(StageScene::Command))
+            .add_systems(Update, sys_create_scene
+                // .run_if(runif_acts::<OpsSceneCreation>)        
+                .in_set(StageScene::Create))
+            .add_systems(Update, sys_act_scene_ambient
+                // .run_if(runif_acts::<OpsSceneOption>)           
+                .in_set(StageScene::Command))
             .add_systems(Update, sys_bind_update_scene_ambient   .in_set(ERunStageChap::Uniform))
             .add_systems(Update, sys_dispose_about_scene             .after(sys_dispose_ready)       .in_set(ERunStageChap::Dispose))
             ;

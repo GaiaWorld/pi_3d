@@ -185,7 +185,9 @@ impl Plugin for PluginDispose {
 #[cfg(not(feature = "use_bevy"))]
 {
     app
-    .add_systems(Update, sys_act_scene_dispose                                            .in_set(ERunStageChap::Dispose))
+    .add_systems(Update, sys_act_scene_dispose
+        // .run_if(runif_acts::<OpsSceneDispose>)                         
+        .in_set(ERunStageChap::Dispose))
     .add_systems(Update, sys_dispose_ready    .after(sys_act_scene_dispose)       .in_set(ERunStageChap::Dispose))
     .add_systems(Update, sys_dispose_can      .after(sys_dispose_ready)           .in_set(ERunStageChap::Dispose))
     .add_systems(Update, sys_dispose          .after(sys_dispose_can)             .in_set(ERunStageChap::Dispose))

@@ -60,7 +60,9 @@ impl Plugin for PluginMaterial {
             app
                 .add_systems(Update, sys_image_texture_load_launch                                                   .in_set(StageTextureLoad::TextureLoading))
                 .add_systems(Update, sys_image_texture_loaded        .after(sys_image_texture_load_launch)   .in_set(StageTextureLoad::TextureLoading))
-                .add_systems(Update, sys_image_texture_view_load_launch2         .in_set(StageTextureLoad::TextureRequest))
+                .add_systems(Update, sys_image_texture_view_load_launch2
+                    // .run_if(runif_changes::<TextureKeyList>)         
+                    .in_set(StageTextureLoad::TextureRequest))
                 .add_systems(Update, sys_image_texture_view_loaded_check2        .in_set(StageTextureLoad::TextureLoaded))
                 ;
         }
@@ -138,12 +140,22 @@ impl Plugin for PluginMaterial {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-            .add_systems(Update, sys_create_material                     .in_set(StageMaterial::Create) )
-            .add_systems(Update, sys_act_material_use                                                            .in_set(StageMaterial::Command) )
+            .add_systems(Update, sys_create_material
+                // .run_if(runif_acts::<OpsMaterialCreate>)             
+                .in_set(StageMaterial::Create) )
+            .add_systems(Update, sys_act_material_use
+                // .run_if(runif_acts::<OpsMaterialUse>)                               
+                .in_set(StageMaterial::Command) )
             .add_systems(Update, sys_act_material_value                  .after(sys_act_material_use)   .in_set(StageMaterial::Command) )
-            .add_systems(Update, sys_material_textures_modify            .after(sys_act_material_value)                .in_set(StageMaterial::Command) )
-            .add_systems(Update, sys_texture_ready                 .in_set(StageMaterial::Ready) )
-            .add_systems(Update, sys_material_uniform_apply          .in_set(ERunStageChap::Uniform) )
+            .add_systems(Update, sys_material_textures_modify
+                // .run_if(runif_comp::<UniformTextureWithSamplerParamsDirty>)
+                .after(sys_act_material_value)                .in_set(StageMaterial::Command) )
+            .add_systems(Update, sys_texture_ready
+                // .run_if(runif_comp::<EffectBindTexture2DList>)
+                .in_set(StageMaterial::Ready) )
+            .add_systems(Update, sys_material_uniform_apply
+                // .run_if(runif_comp::<TargetAnimatorableIsRunning>)
+                .in_set(ERunStageChap::Uniform) )
             .add_systems(Update, sys_dispose_about_material          .after(sys_dispose_ready)   .in_set(ERunStageChap::Dispose) )
             ;
 

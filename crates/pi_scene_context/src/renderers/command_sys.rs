@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use pi_scene_shell::prelude::*;
 
 use crate::{
@@ -11,7 +13,6 @@ use super::{
     graphic::*,
     command::*,
 };
-
 pub fn sys_create_renderer(
     mut cmds: ResMut<ActionListRendererCreate>,
     mut graphic: ResMut<PiRenderGraph>,
@@ -196,24 +197,20 @@ pub fn sys_act_renderer_connect(
         }
     });
 }
-
 pub fn sys_dispose_renderer(
     mut render_graphic: ResMut<PiRenderGraph>,
-    changes: ComponentChanged<DisposeCan>,
-    renderers: Query<(Entity, &GraphId, &RendererParam, &DisposeCan, &ViewerID)>,
+    renderers: Query<(Entity, &GraphId, &RendererParam, &DisposeCan, &ViewerID), Changed<DisposeCan>>,
     mut viewers: Query<&mut ViewerRenderersInfo>,
     mut error: ResMut<ErrorRecord>,
 ) {
-    changes.iter().for_each(|entity| {
-        if let Ok((entity, nodeid, _, flag, idviewer)) = renderers.get(*entity) {
-            if flag.0 == false { return; }
-            
-            if let Err(err) = render_graphic.remove_node(nodeid.0) {
-                error.graphic(entity, err);
-            }
-            if let Ok(mut renderinfos) = viewers.get_mut(idviewer.0) {
-                renderinfos.remove(entity);
-            }
+    renderers.iter().for_each(|(entity, nodeid, _, flag, idviewer)| {
+        if flag.0 == false { return; }
+        
+        if let Err(err) = render_graphic.remove_node(nodeid.0) {
+            error.graphic(entity, err);
+        }
+        if let Ok(mut renderinfos) = viewers.get_mut(idviewer.0) {
+            renderinfos.remove(entity);
         }
     });
 }

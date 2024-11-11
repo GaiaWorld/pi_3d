@@ -23,36 +23,39 @@ pub fn sys_create_sprite(
 pub fn sys_modify_sprite(
     mut cmds: ResMut<ActionListSpriteModify>,
     mut items: Query<&mut RenderPoseMatrix>,
-    sprites: Query<&Sprite>,
-    atlasmgr: Res<TextureFrameAtlasManager>,
+    // sprites: Query<&Sprite>,
+    // atlasmgr: Res<TextureFrameAtlasManager>,
     mut cmdsfloat: ResMut<ActionListInstanceAttr>,
     mut flagrendermatrix: Query<&mut FlagRenderWorldMatrix>,
 ) {
     let rotmat = Rotation3::from_euler_angles(0., 0., -std::f32::consts::PI * 0.5);
+    let mut tmp = Matrix::identity();
     let mut tempparent = Matrix::identity();
     let mut tempscaline = Vector3::zeros();
     let mut tempposition = Vector3::zeros();
-    cmds.drain().for_each(|OpsSpriteModify(entity, keyframe)| {
+    let max = u16::MAX as f32;
+    cmds.drain().for_each(|OpsSpriteModify(entity, keyframe, tilloffkey)| {
         if let Ok(mut posematrix) = items.get_mut(entity) {
             let (frame, atlaswidth, atlasheight) = match keyframe {
                 super::SpriteModify::Idx(keyframe) => {
-                    if let Ok(spriteinfo) = sprites.get(entity) {
-                        if let Some(keyatlas) = &spriteinfo.atlas {
-                            if let Some(atlas) = atlasmgr.get(keyatlas) {
-                                if let Some(frame) = atlas.get_frame_by_idx(keyframe) {
-                                    (frame.clone(), atlas.width, atlas.height)
-                                } else {
-                                    return;
-                                }
-                            } else {
-                                return;
-                            }
-                        } else {
-                            return;
-                        }
-                    } else {
-                        return;
-                    }
+                    // if let Ok(spriteinfo) = sprites.get(entity) {
+                    //     if let Some(keyatlas) = &spriteinfo.atlas {
+                    //         if let Some(atlas) = atlasmgr.get(keyatlas) {
+                    //             if let Some(frame) = atlas.get_frame_by_idx(keyframe) {
+                    //                 (frame.clone(), atlas.width, atlas.height)
+                    //             } else {
+                    //                 return;
+                    //             }
+                    //         } else {
+                    //             return;
+                    //         }
+                    //     } else {
+                    //         return;
+                    //     }
+                    // } else {
+                    //     return;
+                    // }
+                    return;
                 },
                 super::SpriteModify::Data(data) => {
                     (TextureFrame::from_data(&data.as_slice()[0..12]), data[12], data[13])
@@ -72,11 +75,15 @@ pub fn sys_modify_sprite(
             let dx = frame.sprite_source_size_x as f32 / frame.source_size_w as f32;
             let dy = (frame.source_size_h as f32 - frame.sprite_source_size_y as f32 - frame.sprite_source_size_h as f32) / frame.source_size_h as f32;
         
-            cmdsfloat.push(OpsInstanceAttr::ops(entity, crate::prelude::EInstanceAttr::Vec4([su, sv, ou, ov]), Atom::from("InsTilloff")));
+            let su = (su * max).round().min(max).max(0.) as u16;
+            let sv = (sv * max).round().min(max).max(0.) as u16;
+            let ou = (ou * max).round().min(max).max(0.) as u16;
+            let ov = (ov * max).round().min(max).max(0.) as u16;
+            cmdsfloat.push(OpsInstanceAttr::ops(entity, crate::prelude::EInstanceAttr::U16x4([su, sv, ou, ov]), tilloffkey));
 
             tempposition.x = dx - 0.5;
             tempposition.y = -dy + 0.5;
-            tempposition.z= 0.;
+            tempposition.z = 0.;
 
             tempscaline.x = sx;
             tempscaline.y = sy;
@@ -88,16 +95,16 @@ pub fn sys_modify_sprite(
                 // tempparent.append_translation_mut(&tempposition);
             }
             {
-                posematrix.0.fill_with_identity();
+                tmp.fill_with_identity();
                 if frame.rotated {
-                    posematrix.0.fixed_view_mut::<3, 3>(0, 0).copy_from(rotmat.matrix());
+                    tmp.fixed_view_mut::<3, 3>(0, 0).copy_from(rotmat.matrix());
                     // posematrix.0.copy_from(&rotmat.to_homogeneous());
                 }
                 tempposition.x = 0.5;tempposition.y = -0.5; tempposition.z = 0.;
-                posematrix.0.append_translation_mut(&tempposition);
+                tmp.append_translation_mut(&tempposition);
             }
-            
-            posematrix.0 = tempparent * posematrix.0;
+            CoordinateSytem3::mul_to(&tempparent, &tmp, &mut posematrix.0);
+            // posematrix.0 = tempparent * posematrix.0;
 
             if let Ok(mut flag) = flagrendermatrix.get_mut(entity) {
                 *flag = FlagRenderWorldMatrix;

@@ -258,6 +258,9 @@ impl<T: Send + Sync> ActionList<T> {
         // self.0.drain().collect()
         replace(&mut self.0, other)
     }
+    pub fn len(&self) -> usize {
+        return self.0.len();
+    }
 }
 
 #[derive(Resource)]
@@ -701,4 +704,33 @@ pub fn unsafe_vec_append_slice<T>(vec: &mut Vec<T>, slice: &[T]) {
         std::ptr::copy_nonoverlapping(other as *const T, vec.as_mut_ptr().add(len), count);
         vec.set_len(len + count);
     }
+}
+
+pub fn runif_acts<T: Send + Sync + 'static>(
+    acts: Res<ActionList<T>>
+) -> bool {
+    acts.len() > 0
+}
+pub fn runif_acts2<T: Send + Sync + 'static, T2: Send + Sync + 'static>(
+    acts: Res<ActionList<T>>,
+    acts2: Res<ActionList<T2>>,
+) -> bool {
+    acts.len() + acts2.len() > 0
+}
+pub fn runif_comp<T: Component>(
+    acts: ComponentChanged<T>,
+    acts2: ComponentAdded<T>
+) -> bool {
+    acts.len() + acts2.len() > 0
+}
+pub fn runif_changes<T: Component>(
+    acts: ComponentChanged<T>
+) -> bool {
+    acts.len() > 0
+}
+pub fn runif_changes2<T: Component, T2: Component>(
+    acts: ComponentChanged<T>,
+    acts2: ComponentChanged<T2>
+) -> bool {
+    acts.len() + acts2.len() > 0
 }

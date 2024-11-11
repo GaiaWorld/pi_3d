@@ -81,8 +81,12 @@ impl Plugin for PluginPassObject {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-        .add_systems(Update, sys_create_pass_object  .in_set(StagePassObject::Create))
-        .add_systems(Update, sys_act_pass_object     .in_set(StagePassObject::Command))
+        .add_systems(Update, sys_create_pass_object
+            // .run_if(runif_acts::<OpsPassObject>)  
+            .in_set(StagePassObject::Create))
+        .add_systems(Update, sys_act_pass_object
+            // .run_if(runif_acts::<OpsRenderState>)     
+            .in_set(StagePassObject::Command))
         .add_systems(Update, sys_modify_pass_effect_by_material  .in_set(StagePassObject::EffectModify))
         ;
     }

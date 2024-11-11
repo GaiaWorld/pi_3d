@@ -106,7 +106,9 @@ impl Plugin for PluginFlags {
         app.insert_resource(ActionListNodeEnable::default());
         app.configure_set(Update, StageEnable::Command .in_set(ERunStageChap::D3) .after(StageScene::Create));
         app.add_systems(Update, 
-            sys_act_node_enable.in_set(StageEnable::Command)
+            sys_act_node_enable
+            // .run_if(runif_acts::<OpsNodeEnable>)
+            .in_set(StageEnable::Command)
         );
     }
 }
