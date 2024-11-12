@@ -53,7 +53,7 @@ impl Plugin for PluginTest {
 
         events.viewer = Some(camera01);
 
-        let tes_size = 10;
+        let tes_size = 2;
         fps.frame_ms = 5;
 
         let limit = assets.1.limits();

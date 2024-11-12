@@ -51,44 +51,60 @@ pub struct RenderGeometryComp(pub Option<RenderGeometry>);
 
 #[derive(Clone)]
 pub struct RenderGeometry {
-    pub vertices: Vec<RenderVertices>,
-    pub instances: Vec<RenderVertices>,
-    pub indices: Option<RenderIndices>,
-    pub instance_slot: Option<u32>,
-    pub hashresource: u64,
+    pub(crate) vertices: Vec<(RenderVertices, u32)>,
+    pub(crate) vertexrange: Range<u32>,
+    pub(crate) instancesrange: Range<u32>,
+    pub(crate) indices: Option<RenderIndices>,
+    pub(crate) instance_slot: Option<u32>,
+    pub(crate) hashresource: u64,
 }
 impl RenderGeometry {
-
+    /// 粒子系统 、 Trail 更新网格数据
+    pub fn update_vertices(&mut self, idx: usize, buffer: EVerticesBufferUsage) {
+        match self.vertices.get_mut(idx) {
+            Some((val, _)) => {
+                val.buffer = buffer;
+                self.vertexrange = val.value_range();
+            },
+            None => {},
+        }
+    }
     pub fn vertices(&self) -> SmallVecMap<RenderVertices, 3> {
-        let mut result = SmallVecMap::default();
-        let mut index = 0;
-        self.vertices.iter().for_each(|item| {
-            result.insert(index, item.clone());
-            index += 1;
-        });
-        self.instances.iter().for_each(|item| {
-            result.insert(index, item.clone());
-            index += 1;
-        });
+        // let mut result = SmallVecMap::default();
+        // let mut index = 0;
+        // self.vertices.iter().for_each(|item| {
+        //     result.insert(index, item.clone());
+        //     index += 1;
+        // });
+        // self.instances.iter().for_each(|item| {
+        //     result.insert(index, item.clone());
+        //     index += 1;
+        // });
 
-        result
+        // result
+
+        SmallVecMap::from(self.vertices.clone())
     }
     pub fn instances(&self) -> Range<u32> {
-        if let Some(item) = self.instances.get(0) {
-            item.value_range()
-        } else {
-            0..1
-        }
+        self.instancesrange.clone()
+        // if let Some(item) = self.instances.get(0) {
+        //     item.value_range()
+        // } else {
+        //     0..1
+        // }
     }
     pub fn isok(&self) -> bool {
         let mut flag = true;
-        let range = self.vertices[0].value_range();
+        let range = &self.vertexrange;
         flag = flag && (range.end > range.start);
 
-        if let Some(item) = self.instances.get(0) {
-            let range = item.value_range();
-            flag = flag && (range.end > range.start);
-        }
+        // if let Some(item) = self.instances.get(0) {
+        //     let range = item.value_range();
+        //     flag = flag && (range.end > range.start);
+        // }
+
+        let range = &self.instancesrange;
+        flag = flag && (range.end > range.start);
 
         // log::warn!("flag: {:?}, {:?}, {:?}", flag, range.end, range.start);
 
@@ -101,10 +117,18 @@ impl RenderGeometry {
         hashresource: u64,
     ) -> Self {
         let mut vertices = vec![];
-        let mut instances = vec![];
-
+        let mut vertexrange = Range { start: 0, end: 1 };
+        let mut instancesrange = Range { start: 0, end: 1 };
+        let mut idx = 0;
         values.drain(..).for_each(|(step_mode, render_vertices)| {
-            if step_mode == wgpu::VertexStepMode::Vertex { vertices.push(render_vertices) } else { instances.push(render_vertices) };
+            if step_mode == wgpu::VertexStepMode::Vertex {
+                vertexrange = render_vertices.value_range();
+                vertices.push((render_vertices, idx))
+            } else {
+                instancesrange = render_vertices.value_range();
+                vertices.push((render_vertices, idx))
+            };
+            idx += 1;
         });
 
         let indices = if let (Some(desc), Some(val)) = indices {
@@ -113,16 +137,18 @@ impl RenderGeometry {
 
         Self {
             vertices,
-            instances,
+            vertexrange,
+            instancesrange,
             indices,
             instance_slot: instance_memory,
             hashresource
         }
     }
     pub fn vertex_range(&self) -> Range<u32> {
-        let range = self.vertices[0].value_range();
-        // range.end = range.end - range.start;
-        // range.start = 0;
-        range
+        self.vertexrange.clone()
+        // let range = self.vertices[0].value_range();
+        // // range.end = range.end - range.start;
+        // // range.start = 0;
+        // range
     }
 }

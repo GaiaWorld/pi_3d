@@ -36,7 +36,7 @@ impl KeyBindGroupTextureSamplers {
         effect_texture_samplers: EffectTextureSamplers,
         meta: Handle<ShaderEffectMeta>,
     ) -> Option<Self> {
-        let mut key_bindgroup = KeyBindGroup::default();
+        let mut key_binds = Vec::with_capacity(8);
         let count = effect_texture_samplers.textures.len();
         
         let mut error = false;
@@ -44,7 +44,7 @@ impl KeyBindGroupTextureSamplers {
             if error == false {
                 let tex = &effect_texture_samplers.textures[idx];
                 if let Some(key) = texture_key_bind(BindDataTexture2D(tex.clone()), idx, &meta) {
-                    key_bindgroup.0.push(key);
+                    key_binds.push(key);
                 } else { error = true; }
             }
         }
@@ -53,12 +53,13 @@ impl KeyBindGroupTextureSamplers {
             if error == false {
                 let val = &effect_texture_samplers.samplers[idx];
                 if let Some(key) = sampler_key_bind(val.clone(), idx, &meta) {
-                    key_bindgroup.0.push(key);
+                    key_binds.push(key);
                 } else { error = true; }
             }
         }
 
         if error == false && count > 0 {
+            let key_bindgroup = KeyBindGroup::new(key_binds);
             Some(Self { meta, key_bindgroup, count })
         } else {
             None

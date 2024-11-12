@@ -17,11 +17,9 @@ use super::prelude::*;
     ) {
         changed.iter().for_each(|entity| {
             if let (Ok(euler), Ok((mut loacl_quaternion, mut local_rotation))) = (localmatrixs.get(*entity), loacl_quaternions.get_mut(*entity)) {
-                let rotation = Rotation3::from_euler_angles(euler.0.x, euler.0.y, euler.0.z);
-                let quaternion = Quaternion::from_rotation_matrix(&rotation);
-                *loacl_quaternion = LocalRotationQuaternion(quaternion.quaternion().clone());
+                CoordinateSytem3::rotation_matrix_from_euler_angles_toref(euler.0.x, euler.0.y, euler.0.z, &mut local_rotation.0);
+                CoordinateSytem3::quaternion_from_rotation(&mut loacl_quaternion.0, &local_rotation.0);
                 // log::error!("loacl_quaternion from euler {:?}", (entity, loacl_quaternion));
-                *local_rotation = LocalRotation(rotation);
             }
         });
     }
@@ -37,10 +35,9 @@ use super::prelude::*;
         changed.iter().for_each(|entity| {
             if let (Ok(quat), Ok(mut local_rotation)) = (localmatrixs.get(*entity), local_rotation.get_mut(*entity)) {
                 // log::warn!("Quaternion: {:?}", quat);
-                let rotation = Quaternion::from_quaternion(quat.0).to_rotation_matrix();
+                CoordinateSytem3::quaternion_to_rotation(&quat.0, &mut local_rotation.0);
                 // log::warn!("Quaternion: Ok");
                 // *loacl_quaternion = LocalRotationQuaternion(quaternion);
-                *local_rotation = LocalRotation(rotation);
                 if let Ok(mut flag) = localflags.get_mut(*entity) {
                     *flag = FlagLocalMatrix;
                 }
@@ -64,18 +61,7 @@ use super::prelude::*;
         changes.iter().for_each(|entity| {
             if let Ok((_entity, position, scaling, rotation, mut localmatrix)) = localmatrixs.get_mut(*entity) {
                 // log::warn!("LocalMatrixCalc: {:?}", entity);
-                let mut matrix = Matrix::identity();
-                pi_scene_shell::prelude::matrix4_compose_rotation(&scaling.0, &rotation.0, &position.0, &mut matrix);
-    
-                // let mut affine = Matrix::identity();
-                // affine.append_nonuniform_scaling_mut(&scaling.0);
-                // rotation.0.to_homogeneous().mul_to(&affine, &mut matrix);
-                // matrix.append_translation_mut(&position.0);
-                
-                // commands.entity(obj).insert(LocalMatrix(matrix, true));
-                // localmatrix.0 = matrix;
-                // localmatrix.1 = true;
-                *localmatrix = LocalMatrix::new(matrix);
+                CoordinateSytem3::matrix4_compose_rotation(&scaling.0, &rotation.0, &position.0, &mut localmatrix.0);
             }
         });
 

@@ -26,7 +26,7 @@ pub use pi_bevy_render_plugin::{
 };
 pub use pi_null::Null;
 pub use pi_map::smallvecmap::SmallVecMap;
-use pi_scene_math::{Quaternion, Vector4};
+use pi_scene_math::{Quaternion, SQuaternion, Vector4};
 pub use pi_scene_math::{Vector3, Matrix, Rotation3, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolRotation, TToolVector3}, Number, Isometry3};
 pub use pi_render::{
     asset::*,
@@ -69,6 +69,7 @@ pub use pi_hash::{XHashSet, XHashMap, DefaultHasher};
 pub use pi_async_rt::prelude::AsyncRuntime;
 pub use pi_hal::{runtime::RENDER_RUNTIME, loader::AsyncLoader};
 pub use pi_share::{Share, ThreadSync, ShareRefCell};
+use simba::simd::{SimdBool, SimdComplexField, SimdPartialOrd, SimdRealField};
 use wgpu::RenderPass;
 
 pub use crate::run_stage::{ERunStageChap, runif_3d};
@@ -231,33 +232,41 @@ impl<T: Send + Sync> Default for ActionList<T> {
     }
 }
 impl<T: Send + Sync> ActionList<T> {
+    #[inline(always)]
     pub fn capacity(&self) -> usize {
         self.0.capacity() * size_of::<T>()
     }
+    #[inline(always)]
     pub fn append(&mut self, val: &mut Self) -> &mut Self {
         self.0.append(&mut val.0);
         self
     }
+    #[inline(always)]
     pub fn push_some(&mut self, val: impl IntoIterator<Item = T>) -> &mut Self {
         self.0.extend(val);
         self
     }
+    #[inline(always)]
     pub fn push(&mut self, val: T) -> &mut Self {
         // self.0.extend([val]);
         self.0.push(val);
         self
     }
+    #[inline(always)]
     pub fn drain(&mut self) -> Drain<T> {
         self.0.drain(..)
     }
+    #[inline(always)]
     pub fn exchange_empty(&mut self) -> Vec<T> {
         // self.0.drain().collect()
         replace(&mut self.0, vec![])
     }
+    #[inline(always)]
     pub fn exchange(&mut self, other: Vec<T>) -> Vec<T> {
         // self.0.drain().collect()
         replace(&mut self.0, other)
     }
+    #[inline(always)]
     pub fn len(&self) -> usize {
         return self.0.len();
     }
@@ -335,6 +344,7 @@ pub trait TRenderAlignmentCalc {
     fn calc_matrix(&self, g_positon: &Vector3, g_scale: &Vector3, g_rotation: &Rotation3, g_velocity: &Vector3, l_positon: &Vector3, l_scale: &Vector3, l_rotation: &Rotation3, l_euler: &Vector3, refwmatrix: & mut Matrix, reflmatrix: & mut Matrix, result: & mut Matrix);
 }
 impl TRenderAlignmentCalc for ERenderAlignment {
+    #[inline(always)]
     fn calc_rotation(&self, g_rotation: &Rotation3, g_velocity: &Vector3, result: &mut Rotation3) -> bool {
         // let mut m = Rotation3::identity();
         match self {
@@ -413,6 +423,7 @@ impl TRenderAlignmentCalc for ERenderAlignment {
             },
         }
     }
+    #[inline(always)]
     fn calc_local(&self, _g_velocity: &Vector3, length_scale: Number, length_modify: Number, temp: &mut Matrix, temp2: &mut Matrix, result: &mut Matrix) -> bool {
         match self {
             ERenderAlignment::View => false,
@@ -450,6 +461,7 @@ impl TRenderAlignmentCalc for ERenderAlignment {
         }
     }
 
+    #[inline(always)]
     fn calc_matrix(&self, g_positon: &Vector3, g_scale: &Vector3, g_rotation: &Rotation3, g_velocity: &Vector3, l_positon: &Vector3, l_scale: &Vector3, l_rotation: &Rotation3, l_euler: &Vector3, refwmatrix: & mut Matrix, reflmatrix: & mut Matrix, result: & mut Matrix) {
 
         match self {
@@ -481,6 +493,7 @@ impl TRenderAlignmentCalc for ERenderAlignment {
     }
 }
 
+#[inline(always)]
 pub fn calc_matrix_view<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rotation: &'a Rotation3, _g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, l_rotation: &'a Rotation3, _l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
     // let mut matrix = Matrix::identity();
     
@@ -493,6 +506,7 @@ pub fn calc_matrix_view<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rot
 
     CoordinateSytem3::mul_to(&refwmatrix, &reflmatrix, result);
 }
+#[inline(always)]
 pub fn calc_matrix_world<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rotation: &'a Rotation3, _g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, l_rotation: &'a Rotation3, _l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
     // let mut matrix = Matrix::identity();
 
@@ -505,6 +519,7 @@ pub fn calc_matrix_world<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_ro
 
     CoordinateSytem3::mul_to(&refwmatrix, &reflmatrix, result);
 }
+#[inline(always)]
 pub fn calc_matrix_local<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, g_rotation: &'a Rotation3, _g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, l_rotation: &'a Rotation3, _l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
     // let mut matrix = Matrix::identity();
     
@@ -515,6 +530,7 @@ pub fn calc_matrix_local<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, g_rot
     CoordinateSytem3::mul_to(&refwmatrix, &reflmatrix, result);
     // refwmatrix.mul_to(reflmatrix, result);
 }
+#[inline(always)]
 pub fn calc_matrix_facing<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rotation: &'a Rotation3, _g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, l_rotation: &'a Rotation3, _l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
     // let mut matrix = Matrix::identity();
     
@@ -528,6 +544,7 @@ pub fn calc_matrix_facing<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_r
     CoordinateSytem3::mul_to(&refwmatrix, &reflmatrix, result);
     // refwmatrix.mul_to(reflmatrix, result);
 }
+#[inline(always)]
 pub fn calc_matrix_velocity<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rotation: &'a Rotation3, g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, l_rotation: &'a Rotation3, _l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
     // let mut matrix = Matrix::identity();
 
@@ -552,6 +569,7 @@ pub fn calc_matrix_velocity<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g
         result.copy_from(&refwmatrix);
     }
 }
+#[inline(always)]
 pub fn calc_matrix_strentched<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rotation: &'a Rotation3, _g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, _l_rotation: &'a Rotation3, _l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
     // let mut matrix = Matrix::identity();
     
@@ -565,6 +583,7 @@ pub fn calc_matrix_strentched<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, 
 
     CoordinateSytem3::mul_to(&refwmatrix, &reflmatrix, result);
 }
+#[inline(always)]
 pub fn calc_matrix_horizontal<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rotation: &'a Rotation3, _g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, _l_rotation: &'a Rotation3, l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
     // let mut matrix = Matrix::identity();
     
@@ -578,6 +597,7 @@ pub fn calc_matrix_horizontal<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, 
 
     CoordinateSytem3::mul_to(&refwmatrix, &reflmatrix, result);
 }
+#[inline(always)]
 pub fn calc_matrix_vertical<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rotation: &'a Rotation3, _g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, _l_rotation: &'a Rotation3, l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
     // let mut matrix = Matrix::identity();
     
@@ -591,7 +611,7 @@ pub fn calc_matrix_vertical<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g
 
     CoordinateSytem3::mul_to(&refwmatrix, &reflmatrix, result);
 }
-
+#[inline(always)]
 pub fn calc_local_strentched<'a>(_g_velocity: &'a Vector3, length_scale: Number, length_modify: Number) -> Option<Matrix> {
     let mut result = Matrix::identity();
     // log::warn!("Velocity: {:?}", _g_velocity);
@@ -618,6 +638,7 @@ pub fn calc_local_strentched<'a>(_g_velocity: &'a Vector3, length_scale: Number,
     Some(result * temp)
 }
 
+#[inline(always)]
 pub fn calc_local_strentched_call<'a>(_g_velocity: &'a Vector3, length_scale: Number, length_modify: Number, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
     result.fill_with_identity();
     refwmatrix.fill_with_identity();
@@ -648,6 +669,7 @@ pub fn calc_local_strentched_call<'a>(_g_velocity: &'a Vector3, length_scale: Nu
     // Some(result * temp)
 }
 
+#[inline(always)]
 pub fn matrix4_compose_rotation(scaling: &Vector3, rotmat: &Rotation3, translation: &Vector3, result: &mut Matrix) {
     result.fill_with_identity();
 
@@ -658,6 +680,7 @@ pub fn matrix4_compose_rotation(scaling: &Vector3, rotmat: &Rotation3, translati
     result.append_translation_mut(translation);
     // CoordinateSytem3::matrix4_compose_rotation(scaling, rotmat, translation, result)
 }
+#[inline(always)]
 pub fn matrix4_compose_no_rotation(scaling: &Vector3, translation: &Vector3, result: &mut Matrix) {
     result.fill_with_identity();
     result.append_nonuniform_scaling_mut(scaling);
@@ -665,6 +688,7 @@ pub fn matrix4_compose_no_rotation(scaling: &Vector3, translation: &Vector3, res
     // CoordinateSytem3::matrix4_compose_rotation(scaling, rotmat, translation, result)
 }
 
+#[inline(always)]
 pub fn matrix4_compose_quaternion(scale: &Vector3, rotation: &Quaternion, translation: &Vector3, result: &mut Matrix) {
     let x = rotation.i; let y = rotation.j; let z = rotation.k; let w = rotation.w;
     let x2 = x + x; let y2 = y + y; let z2 = z + z;
@@ -689,12 +713,12 @@ pub fn matrix4_compose_quaternion(scale: &Vector3, rotation: &Quaternion, transl
     result[14] = translation.z;
     result[15] = 1.;
 }
-
-
+#[inline(always)]
 pub fn calc_local_other<'a>(_g_velocity: &'a Vector3, _length_scale: Number, _length_modify: Number) -> Option<Matrix> {
     None
 }
 
+#[inline(always)]
 pub fn unsafe_vec_append_slice<T>(vec: &mut Vec<T>, slice: &[T]) {
     unsafe {
         let other = slice as *const [T];

@@ -913,19 +913,15 @@ pub fn sys_update_buffer_trail(
                             });
 
                             if let Some(geometry) = &mut geometry.0 {
-                                if let Some(vertices) = geometry.vertices.get_mut(0) {
-                                    if start < end {
-                                        vertices.buffer = EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), start, end)));
-                                    } else {
-                                        vertices.buffer = EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0)));
-                                    }
+                                if start < end {
+                                    geometry.update_vertices(0, EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), start, end))));
+                                } else {
+                                    geometry.update_vertices(0, EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0))));
                                 }
                             }
                         } else {
                             if let Some(geometry) = &mut geometry.0 {
-                                if let Some(vertices) = geometry.vertices.get_mut(0) {
-                                    vertices.buffer = EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0)));
-                                }
+                                geometry.update_vertices(0, EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0))));
                             }
                         }
                     }

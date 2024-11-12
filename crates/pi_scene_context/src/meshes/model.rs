@@ -121,7 +121,7 @@ pub struct CommonBindModel(pub BindModel);
 
 /// 用于记录 Mesh 的可渲染顶点范围(当使用 Indices 时)
 #[derive(Component, Clone)]
-pub struct IndiceRenderRange(pub Range<u32>);
+pub struct IndiceRenderRange(Range<u32>);
 impl IndiceRenderRange {
     pub fn new(val: Option<(u32, u32)>) -> Self {
         if let Some((start, end)) = val {

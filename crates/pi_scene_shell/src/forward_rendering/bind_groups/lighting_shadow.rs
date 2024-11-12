@@ -43,11 +43,11 @@ impl KeyBindGroupSetExtend {
         let mut lighting_enable: bool = false;
         let mut shadow_enable: bool = false;
         let mut binding = 0;
-        let mut key_bindgroup = KeyBindGroup::default();
+        let mut key_binds = Vec::with_capacity(8);
 
         if let Some(bind) = &lighting {
             if let Some(key) = bind.key_bind() {
-                key_bindgroup.0.push(key);
+                key_binds.push(key);
                 binding += 1;
                 lighting_enable = true;
             }
@@ -55,7 +55,7 @@ impl KeyBindGroupSetExtend {
 
         if let Some((v0, v1, v2)) = &shadowmap {
             if let (Some(key0), Some(key1), Some(key2)) = (v0.key_bind(), v1.key_bind(), v2.key_bind()) {
-                key_bindgroup.0.push(key0); key_bindgroup.0.push(key1); key_bindgroup.0.push(key2);
+                key_binds.push(key0); key_binds.push(key1); key_binds.push(key2);
                 binding += 3;
                 shadow_enable = true;
             }
@@ -63,28 +63,28 @@ impl KeyBindGroupSetExtend {
         
         if let Some((v0, v1)) = &bind_brdf {
             if let (Some(key0), Some(key1)) = (v0.key_bind(), v1.key_bind()) {
-                key_bindgroup.0.push(key0); key_bindgroup.0.push(key1);
+                key_binds.push(key0); key_binds.push(key1);
                 binding += 2;
             }
         }
         
         if let Some((v0, v1)) = &camera_opaque {
             if let (Some(key0), Some(key1)) = (v0.key_bind(), v1.key_bind()) {
-                key_bindgroup.0.push(key0); key_bindgroup.0.push(key1);
+                key_binds.push(key0); key_binds.push(key1);
                 binding += 2;
             }
         }
 
         if let Some((v0, v1)) = &camera_depth {
             if let (Some(key0), Some(key1)) = (v0.key_bind(), v1.key_bind()) {
-                key_bindgroup.0.push(key0); key_bindgroup.0.push(key1); 
+                key_binds.push(key0); key_binds.push(key1); 
                 binding += 2;
             }
         }
         
         if let Some((v0, v1, v2)) = &env {
             if let (Some(key0), Some(key1), Some(key2)) = (v0.key_bind(), v1.key_bind(), v2.key_bind()) {
-                key_bindgroup.0.push(key0); key_bindgroup.0.push(key1); key_bindgroup.0.push(key2);
+                key_binds.push(key0); key_binds.push(key1); key_binds.push(key2);
                 binding += 3;
             }
         }
@@ -98,7 +98,7 @@ impl KeyBindGroupSetExtend {
             env,
             isactived: binding > 0,
             bind_count: binding,
-            key_bindgroup,
+            key_bindgroup: KeyBindGroup::new(key_binds),
             key: KeyShaderSetExtend { lighting_enable, shadow_enable }
         };
 

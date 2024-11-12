@@ -33,13 +33,13 @@ impl KeyBindGroupModel {
         lightingidxs: Option<Arc<BindModelLightIndexs>>,
     ) -> Self {
         let mut key = KeyShaderSetModel::default();
-        let mut key_bindgroup = KeyBindGroup::default();
+        let mut key_binds = Vec::with_capacity(4);
 
         let mut binding = 0;
 
         if let Some(bind) = &matrix {
             if let Some(key) = bind.key_bind() {
-                key_bindgroup.0.push(key);
+                key_binds.push(key);
                 binding += 1;
             }
         }
@@ -47,21 +47,21 @@ impl KeyBindGroupModel {
         if let Some(bind) = &skin {
             key.skin = bind.skin;
             if let Some(key) = bind.key_bind() {
-                key_bindgroup.0.push(key);
+                key_binds.push(key);
                 binding += 1;
             }
         }
 
         if let Some(bind) = &effect_value {
             if let Some(key) = bind.key_bind() {
-                key_bindgroup.0.push(key);
+                key_binds.push(key);
                 binding += 1;
             }
         }
 
         if let Some(bind) = &lightingidxs {
             if let Some(key) = bind.key_bind() {
-                key_bindgroup.0.push(key);
+                key_binds.push(key);
                 binding += 1;
             }
         }
@@ -73,7 +73,7 @@ impl KeyBindGroupModel {
             lightingidxs,
             key,
             bind_count: binding,
-            key_bindgroup
+            key_bindgroup: KeyBindGroup::new(key_binds)
         };
 
         result
