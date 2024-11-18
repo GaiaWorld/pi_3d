@@ -100,6 +100,7 @@ pi_map                  = { path = "../pi_map" }
 wgpu            = { version = "0.1", registry = "yn", package = "pi_wgpu", features = ["use_wgpu"] }
 pi_winit        = { version = "0.27", registry = "yn", package = "winit" }
 rand            = "0.8"
+ktx             = "0.3"
 # jemallocator    = "0.5"
 
 bevy_a11y       = "0.11"

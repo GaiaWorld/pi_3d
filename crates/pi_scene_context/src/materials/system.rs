@@ -8,7 +8,6 @@ use super::{
 };
 
 pub fn sys_material_textures_modify(
-    addeds: ComponentAdded<UniformTextureWithSamplerParamsDirty>,
     changes: ComponentChanged<UniformTextureWithSamplerParamsDirty>,
     mut materials: Query<
         (
@@ -21,7 +20,7 @@ pub fn sys_material_textures_modify(
     asset_samp: Res<ShareAssetMgr<SamplerRes>>,
 ) {
     // log::debug!("SysMaterialMetaChange: ");
-    addeds.iter().chain(changes.iter()).for_each(|entity| {
+    changes.iter().for_each(|entity| {
         if let Ok((
             effect, mut texparams,
             mut slots,
@@ -66,7 +65,6 @@ pub fn sys_material_textures_modify(
 }
 
 pub fn sys_material_uniform_apply(
-    addeds: ComponentAdded<TargetAnimatorableIsRunning>,
     changes: ComponentChanged<TargetAnimatorableIsRunning>,
     floats: Query<(Ticker<&AnimatorableFloat>, &AnimatorableUniform)>,
     _vec2s: Query<(Ticker<&AnimatorableVec2 >, &AnimatorableUniform)>,
@@ -78,7 +76,7 @@ pub fn sys_material_uniform_apply(
 ) {
     if performance.debug { performance.t_uniformbufferupdate = pi_time::Instant::now(); }
 
-    addeds.iter().chain(changes.iter()).for_each(|entity| {
+    changes.iter().for_each(|entity| {
         if let Ok((bind, animated)) = items.get(*entity) {
             if let Some(bind) = &bind.0 {
                 animated.0.iter().for_each(|_k| {
@@ -132,7 +130,6 @@ pub fn sys_material_uniform_apply(
 }
 
 pub fn sys_texture_ready(
-    addes: ComponentAdded<EffectBindTexture2DList>,
     changes: ComponentChanged<EffectBindTexture2DList>,
     mut items: Query<
         (
@@ -143,7 +140,7 @@ pub fn sys_texture_ready(
         )
     >,
 ) {
-    changes.iter().chain(addes.iter()).for_each(|entity| {
+    changes.iter().for_each(|entity| {
         if let Ok((
             _entity, binddesc, keys
             , textures, samplers

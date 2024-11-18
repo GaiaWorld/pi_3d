@@ -136,6 +136,16 @@ pub fn sys_image_texture_load_launch(
         item = loader.wait.pop();
 
         // log::warn!("Image Load {:?}", (param.url));
+        if let Some(res) = image_assets_mgr.get(&param) {
+            // log::warn!("Image Load Success {:?}", (id, &param));
+            if id > 0 {
+                loader.success_load.push(id);
+                loader.success.insert(id, res);
+            }
+            continue;
+        // } else {
+        //     log::warn!("Image Load {:?}", (id, &param));
+        }
         let imageresult = AssetMgr::load(&image_assets_mgr, &param);
         match imageresult {
             pi_assets::mgr::LoadResult::Ok(res) => {

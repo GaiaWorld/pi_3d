@@ -50,7 +50,6 @@ impl Ord for TmpInstanceSort {
     pub fn sys_tick_instanced_buffer_update_single(
         actives: Query<(&GlobalEnable, &InstanceMesh, &RenderQueueSortParam, &AbstructMeshCullingFlag, &GlobalMatrix, &LocalPosition), With<AbstructMesh>>,
         instanceattributes: Query<&ModelInstanceAttributes>,
-        added: ComponentAdded<InstanceSourceRefs>,
         changes: ComponentChanged<InstanceSourceRefs>,
         mut sources: Query<
             (
@@ -67,14 +66,13 @@ impl Ord for TmpInstanceSort {
         mut temp: ResMut<TmpCommonVec>,
         mut combinedata: ResMut<CombineDataCommon>,
     ) {
-        let changes = changes.iter().chain(added.iter());
         let mut minx = f32::MAX;
         let mut miny = f32::MAX;
         let mut minz = f32::MAX;
         let mut maxx = f32::MIN;
         let mut maxy = f32::MIN;
         let mut maxz = f32::MIN;
-        changes.for_each(|entity| {
+        changes.iter().for_each(|entity| {
             if let Ok((idsource, sortmode, instances, idgeo, meshinsstate, mut instancessortinfos)) = sources.get_mut(*entity) {
                 if let Ok(disposed) = dispoeds.get(idsource) {
                     if disposed.0 == true { return; }

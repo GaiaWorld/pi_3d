@@ -1,9 +1,16 @@
-use std::mem::size_of;
+use std::{mem::size_of, sync::Arc};
 
-use pi_assets::asset::Asset;
+use pi_async_rt::prelude::AsyncRuntime;
+use pi_hal::runtime::RENDER_RUNTIME;
+use crossbeam::queue::SegQueue;
+use pi_assets::asset::{Asset, Handle};
+use pi_atom::Atom;
 use pi_bevy_asset::ShareAssetMgr;
-use pi_hash::XHashMap;
-use pi_render::asset::TAssetKeyU64;
+use pi_bevy_render_plugin::PiRenderQueue;
+use pi_hash::{XHashMap, XHashSet};
+use pi_render::{asset::TAssetKeyU64, renderer::texture::{KeyImageTexture, ResImageTexture}};
+use pi_world::single_res::{SingleRes, SingleResMut};
+use pi_world_macros::Resource;
 
 
 pub type KeyTextureFrameAtlas   = u64;
@@ -165,3 +172,159 @@ impl TextureFrameAtlas {
 }
 
 pub type TextureFrameAtlasManager = ShareAssetMgr<TextureFrameAtlas>;
+
+
+#[derive(Resource, Default)]
+pub struct TextureCombineCmds {
+    pub loaded_quene: Arc<SegQueue<(Atom, Atom, Arc<Vec<u8>>)>>,
+    pub loaded_quene2: Arc<SegQueue<(Atom, Atom, pi_hal::image::DynamicImage)>>,
+    pub failed_quene: Arc<SegQueue<(Atom, Atom, u16, u32)>>,
+    pub cmds: XHashMap<Atom, XHashMap<Atom, (u32, u16, bool, u32, u32, u32, u32)>>,
+    pub records: XHashMap<Atom, XHashMap<Atom, (u32, u16, bool, u32, u32, u32, u32)>>,
+    pub textures: XHashMap<Atom, Handle<ResImageTexture>>,
+    pub check_loaded: XHashMap<u32, i32>,
+    pub success: XHashSet<u32>,
+    pub faileds: XHashSet<u32>,
+}
+impl TextureCombineCmds {
+    pub fn request(&mut self, requestid: u32, keytex: KeyImageTexture, atlas: XHashMap<Atom, (u32, u16, bool, u32, u32, u32, u32)>, assets: &ShareAssetMgr<ResImageTexture>) {
+
+        if let Some(texture) = assets.get(&keytex) {
+            let key = keytex.url;
+            self.check_loaded.insert(requestid, atlas.len() as i32);
+            self.cmds.insert(key.clone(), atlas);
+            self.textures.insert(key, texture);
+        } else {
+            self.faileds.insert(requestid);
+        }
+    }
+    pub fn remove(&mut self, requestid: u32, key: Atom) {
+        self.check_loaded.remove(&requestid);
+        self.cmds.remove(&key);
+        self.records.remove(&key);
+        self.textures.remove(&key);
+    }
+    pub fn successed(&mut self) -> std::collections::hash_set::Drain<u32> {
+        self.success.drain()
+    }
+    pub fn failed(&mut self) -> std::collections::hash_set::Drain<u32> {
+        self.faileds.drain()
+    }
+}
+pub fn sys_texture_combine(
+    mut cmds: SingleResMut<TextureCombineCmds>,
+    queue: SingleRes<PiRenderQueue>,
+) {
+    let mut requests = vec![];
+    cmds.cmds.drain().for_each(|(key, cmd)| {
+        requests.push((key, cmd));
+    });
+    requests.drain(..).for_each(|(key, cmd)| {
+        cmd.iter().for_each(|(file, (requestid, idx, iscompress, _, _, _, _))| {
+            let idx = *idx;
+            let requestid = *requestid;
+            let iscompress = *iscompress;
+            let key = key.clone();
+            let file = file.clone();
+            let loaded = cmds.loaded_quene.clone();
+            let failed = cmds.failed_quene.clone();
+            let loaded2 = cmds.loaded_quene2.clone();
+            RENDER_RUNTIME
+            .spawn(async move {
+                if iscompress {
+                    match pi_hal::file::load_from_url(&file).await {
+                        Ok(res) => {
+                            loaded.push((key, file, res));
+                        }
+                        Err(_e) => {
+                            failed.push((key, file, idx, requestid));
+                        }
+                    }
+                } else {
+                    match pi_hal::image::load_from_url(&file).await {
+                        Ok(res) => {
+                            loaded2.push((key, file, res));
+                        }
+                        Err(_e) => {
+                            failed.push((key, file, idx, requestid));
+                        }
+                    }
+                }
+            })
+            .unwrap();
+        });
+        cmds.records.insert(key, cmd);
+    });
+
+    let mut success = vec![];
+    while let Some((key, file, data)) = cmds.loaded_quene.pop() {
+        if let Some(atlas) = cmds.records.get(&key) {
+            if let Some((requestid, _, _, xoffset, yoffset, width, height)) = atlas.get(&file) {
+                let dataoffset = 0;
+                let depth_or_array_layers = 1;
+                let aspect = None;
+                if let Some(tex) = cmds.textures.get(&key) {
+                    let ktx = ktx::Ktx::new(data.as_slice());
+                    for data in ktx.textures() {
+                        tex.update(&queue, *xoffset, *yoffset, *width, *height, depth_or_array_layers, aspect, data, dataoffset);
+                    }
+                    let requestid = *requestid;
+                    if let Some(check) = cmds.check_loaded.get_mut(&requestid) {
+                        *check -= 1;
+                        if *check <= 0 {
+                            success.push(requestid);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    while let Some((key, file, data)) = cmds.loaded_quene2.pop() {
+        if let Some(atlas) = cmds.records.get(&key) {
+            if let Some((requestid, _, _, xoffset, yoffset, width, height)) = atlas.get(&file) {
+                let dataoffset = 0;
+                let depth_or_array_layers = 1;
+                let aspect = None;
+                if let Some(tex) = cmds.textures.get(&key) {
+                    match &data {
+                        pi_hal::image::DynamicImage::ImageLuma8(image_buffer) => {
+                            tex.update(&queue, *xoffset, *yoffset, *width, *height, depth_or_array_layers, aspect, &image_buffer.as_raw(), dataoffset);
+                        },
+                        pi_hal::image::DynamicImage::ImageLumaA8(image_buffer) => {
+                            tex.update(&queue, *xoffset, *yoffset, *width, *height, depth_or_array_layers, aspect, &image_buffer.as_raw(), dataoffset);
+                        },
+                        pi_hal::image::DynamicImage::ImageRgb8(image_buffer) => {
+                            tex.update(&queue, *xoffset, *yoffset, *width, *height, depth_or_array_layers, aspect, &data.to_rgba8(), dataoffset);
+                        },
+                        pi_hal::image::DynamicImage::ImageRgba8(image_buffer) => {
+                            tex.update(&queue, *xoffset, *yoffset, *width, *height, depth_or_array_layers, aspect, &image_buffer.as_raw(), dataoffset);
+                        },
+                        pi_hal::image::DynamicImage::ImageLuma16(image_buffer) => todo!(),
+                        pi_hal::image::DynamicImage::ImageLumaA16(image_buffer) => todo!(),
+                        pi_hal::image::DynamicImage::ImageRgb16(image_buffer) => todo!(),
+                        pi_hal::image::DynamicImage::ImageRgba16(image_buffer) => todo!(),
+                        pi_hal::image::DynamicImage::ImageRgb32F(image_buffer) => todo!(),
+                        pi_hal::image::DynamicImage::ImageRgba32F(image_buffer) => todo!(),
+                        _ => todo!(),
+                    }
+                    let requestid = *requestid;
+                    if let Some(check) = cmds.check_loaded.get_mut(&requestid) {
+                        *check -= 1;
+                        if *check <= 0 {
+                            success.push(requestid);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    success.drain(..).for_each(|requestid| {
+        cmds.success.insert(requestid);
+        cmds.check_loaded.remove(&requestid);
+    });
+    while let Some((key, file, idx, requestid)) = cmds.failed_quene.pop() {
+        cmds.faileds.insert(requestid);
+        cmds.check_loaded.remove(&requestid);
+    }
+}

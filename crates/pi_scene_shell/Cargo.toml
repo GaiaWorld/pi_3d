@@ -1,6 +1,6 @@
 [package]
 name = "pi_scene_shell"
-version = "1.0.2"
+version = "1.0.3"
 authors = ["baip0002 <2494156981@qq.com>"]
 edition = "2021"
 description = "Framework."
@@ -40,7 +40,7 @@ lazy_static         = "1.4"
 pi_spatial          = "0.5"
 matrixmultiply      = "0.3"
 
-
+ktx                 = "0.3"
 approx              = "0.5"
 bytemuck            = { version = "1.4", features = ["derive"] }
 

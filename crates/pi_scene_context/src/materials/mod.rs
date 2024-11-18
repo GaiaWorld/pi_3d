@@ -58,6 +58,7 @@ impl Plugin for PluginMaterial {
 
 #[cfg(not(feature = "use_bevy"))]
             app
+                .add_systems(Update, sys_texture_combine                .in_set(StageTextureLoad::TextureLoading))
                 .add_systems(Update, sys_image_texture_load_launch                                                   .in_set(StageTextureLoad::TextureLoading))
                 .add_systems(Update, sys_image_texture_loaded        .after(sys_image_texture_load_launch)   .in_set(StageTextureLoad::TextureLoading))
                 .add_systems(Update, sys_image_texture_view_load_launch2
@@ -67,6 +68,9 @@ impl Plugin for PluginMaterial {
                 ;
         }
 
+        if app.world.get_resource::<TextureCombineCmds>().is_none() {
+            app.insert_resource(TextureCombineCmds::default());
+        };
         if app.world.get_resource::<ShareAssetMgr<SamplerRes>>().is_none() {
             let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<SamplerRes>();
             app.insert_resource(
