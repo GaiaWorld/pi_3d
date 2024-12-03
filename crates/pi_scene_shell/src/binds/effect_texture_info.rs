@@ -55,7 +55,7 @@ impl BindEffectTextureInfo {
     }
     pub fn update(&self, matidx: usize, tilloff: &[u8], wrap_u: u32, wrap_v: u32, wrap_w: u32, coord: u32) {
         let address_offset = if let Some(maxcount) = self.maxcount {
-            self.data.write_data(matidx * Self::ITEM_SIZE, tilloff);
+            self.data.write_data(matidx * Self::TILLOFF_SIZE, tilloff);
             self.data.write_data(maxcount as usize * Self::TILLOFF_SIZE + matidx * Self::ADDRESS_SIZE, bytemuck::cast_slice(&[wrap_u, wrap_v, wrap_w, coord]));
         } else {
             self.data.write_data(0, tilloff);

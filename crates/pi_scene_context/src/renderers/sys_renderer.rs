@@ -31,13 +31,13 @@ use super::{
                 let (idscene, idviewer) = if let Ok((idscene, idviewer)) = renderers.get(idrenderer.0) {
                     (idscene.0, idviewer.0)
                 } else {
-                    log::error!("Bindgroups viewer Fail");
+                    // log::error!("Bindgroups viewer Fail");
                     return;
                 };
                 let bind_passindex = if let Some(bindpassindex) = bindpassindexs.get(passidx.index()) {
                     bindpassindex
                 } else { 
-                    log::error!("Bindgroups bind_passindex Fail");
+                    // log::error!("Bindgroups bind_passindex Fail");
                     return;
                 };
 

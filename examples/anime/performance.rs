@@ -33,31 +33,31 @@ fn setup(
         (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
     } else { return; };
 
-    let tes_size = 100;
+    let tes_size = 10;
     fps.frame_ms = 4;
 
     actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
 
     let vertices = CubeBuilder::attrs_meta();
     let indices = Some(CubeBuilder::indices_meta());
-    let state = base::instance_attr(true, false, true);
-    let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
+    // let state = base::instance_attr(true, false, true);
+    // let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 
-    let idmat = commands.spawn_empty_id();
-    actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
-    actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
-    actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
-        slotname: Atom::from(BlockMainTexture::KEY_TEX),
-        sample: KeySampler::default(),
-        url: EKeyTexture::from("assets/images/bubbles.png"),
-        ..Default::default()
-    }));
-    actions.material.val.push(OpsUniformVal::vec4(
-            idmat, 
-            Atom::from(BlockEmissiveTexture::KEY_INFO), 
-            1., 0., 0., 1.
-        )
-    );
+    // let idmat = commands.spawn_empty_id();
+    // actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
+    // actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
+    // actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
+    //     slotname: Atom::from(BlockMainTexture::KEY_TEX),
+    //     sample: KeySampler::default(),
+    //     url: EKeyTexture::from("assets/images/bubbles.png"),
+    //     ..Default::default()
+    // }));
+    // actions.material.val.push(OpsUniformVal::vec4(
+    //         idmat, 
+    //         Atom::from(BlockEmissiveTexture::KEY_INFO), 
+    //         1., 0., 0., 1.
+    //     )
+    // );
     
     // let key_group = pi_atom::Atom::from("key_group");
     let id_group = commands.spawn_empty_id();
@@ -72,8 +72,28 @@ fn setup(
         for j in 0..tes_size {
             for k in 0..1 {
                 
-                let cube: Entity = commands.spawn_empty_id();
-                actions.instance.create.push(OpsInstanceMeshCreation::ops(source, cube));
+                
+                let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices.clone(), indices.clone(), base::instance_attr(false, false, false));
+                let idmat = commands.spawn_empty_id();
+                actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
+                actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
+                actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
+                    slotname: Atom::from(BlockMainTexture::KEY_TEX),
+                    sample: KeySampler::default(),
+                    url: EKeyTexture::from("assets/images/bubbles.png"),
+                    ..Default::default()
+                }));
+                actions.material.val.push(OpsUniformVal::vec4(
+                        idmat, 
+                        Atom::from(BlockEmissiveTexture::KEY_INFO), 
+                        1., 0., 0., 1.
+                    )
+                );
+
+                let cube: Entity = source;
+
+                // let cube: Entity = commands.spawn_empty_id();
+                // actions.instance.create.push(OpsInstanceMeshCreation::ops(source, cube));
 
                 actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Translation(i as f32 * 2. - (tes_size) as f32, j as f32 * 2. - (tes_size) as f32, k as f32 * 2. - (tes_size) as f32)));
 
