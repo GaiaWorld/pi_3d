@@ -2,7 +2,6 @@ use pi_atom::Atom;
 
 use crate::base::TNodeMaterialBlock;
 
-
 pub struct BlockColorGray;
 impl TNodeMaterialBlock for BlockColorGray {
     const KEY: &'static str = "COLOR_GRAY";

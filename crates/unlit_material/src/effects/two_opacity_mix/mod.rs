@@ -11,7 +11,7 @@ impl TwoOpacityMixShader {
     pub const KEY_MIX_CHANNEL: &'static str = "uTwoOpacityMixChannel";
     
 
-    pub fn create(infos: &NodeMaterialBlocks) -> ShaderEffectMeta {
+    pub fn create(infos: &NodeMaterialBlocks, engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.fs_define = String::from(S_BREAK) + "layout(location = 0) out vec4 gl_FragColor;" + S_BREAK;
 
@@ -70,6 +70,6 @@ impl TwoOpacityMixShader {
         nodemat.include(&Atom::from(BlockMaskTexture::KEY), infos);
         nodemat.include(&Atom::from(BlockMaskTextureUVOffsetSpeed::KEY), infos);
         
-        nodemat.meta()
+        nodemat.meta(engineopt)
     }
 }

@@ -21,7 +21,7 @@ pub struct UnlitShader {
 impl UnlitShader {
     pub const KEY: &'static str = "UnlitShader";
 
-    pub fn meta() -> ShaderEffectMeta {
+    pub fn meta(engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
 
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.fs_define = String::from(include_str!("./unlit_define.frag"));
@@ -50,14 +50,12 @@ impl UnlitShader {
             ]
         );
 
-        nodemat.values.vec4_list.push(UniformPropertyVec4(Atom::from("uMainAtlas"), [11., 11., 0., 0.], true));
-
         nodemat.apply::<BlockUVAtlas>();
         nodemat.apply::<BlockUVOffsetSpeed>();
         nodemat.apply::<BlockMainTexture>();
         nodemat.apply::<BlockMainTextureUVOffsetSpeed>();
 
-        nodemat.meta()
+        nodemat.meta(engineopt)
     }
 }
 
@@ -67,7 +65,7 @@ impl Plugin for PluginUnlitMaterial {
     fn build(&self, app: &mut App) {
 
         let asset_mgr = app.world.get_resource::<ShareAssetMgr<ShaderEffectMeta>>().unwrap().clone();
-        ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(UnlitShader::KEY), UnlitShader::meta());
+        ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(UnlitShader::KEY), UnlitShader::meta(&app.world.get_resource::<EngineCustomPlugins>().unwrap()));
         // app.add_startup_system(setup);
     }
 }

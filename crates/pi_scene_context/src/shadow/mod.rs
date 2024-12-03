@@ -133,11 +133,12 @@ impl Plugin for PluginShadowGenerator {
 }
 
 fn setup(
-    metas: Res<ShareAssetMgr<ShaderEffectMeta>>
+    metas: Res<ShareAssetMgr<ShaderEffectMeta>>,
+    engineopt: Res<EngineCustomPlugins>,
 ) {
     ActionMaterial::regist_material_meta(
         &metas,
         KeyShaderMeta::from(ShaderShadowGenerator::KEY),
-        ShaderShadowGenerator::res(),
+        ShaderShadowGenerator::res(&engineopt),
     );
 }

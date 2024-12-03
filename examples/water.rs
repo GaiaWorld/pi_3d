@@ -6,7 +6,7 @@ pub struct ShaderWater;
 impl ShaderWater {
     pub const KEY: &'static str = "ShaderWater";
 
-    pub fn meta(nodeblocks: &mut NodeMaterialBlocks) -> ShaderEffectMeta {
+    pub fn meta(nodeblocks: &mut NodeMaterialBlocks, engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
 
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.values.stage = wgpu::ShaderStages::VERTEX_FRAGMENT;
@@ -42,15 +42,15 @@ impl ShaderWater {
 ");
         nodemat.fs = String::from("
         vec4 baseColor          = vColor;
-        float alpha             = opacity() * baseColor.a;
+        float alpha             = opacity(matParam) * baseColor.a;
         vec2 screenUV           = v_pos_SS.xy / v_pos_SS.w * 0.5 + 0.5;
     
-        baseColor.rgb           *= mainColor();
+        baseColor.rgb           *= mainColor(matParam);
         
-        vec4 mainTextureColor   = mainTexture(vUV * 10., applyUVOffsetSpeed(uMainUVOS) + vec2(Random1DTo1D(screenUV.x * 200., PI_Time.y, .762) * 2., Random1DTo1D(screenUV.y * 200., PI_Time.y, .762) * 2.));
+        vec4 mainTextureColor   = mainTexture(vUV * 10., applyUVOffsetSpeed(matParam.uMainUVOS) + vec2(Random1DTo1D(screenUV.x * 200., PI_Time.y, .762) * 2., Random1DTo1D(screenUV.y * 200., PI_Time.y, .762) * 2.), matParam);
     
-        vec4 emissiveTexture    = emissiveTexture(screenUV, vec2(0., 0.));
-        float dDepth            = emissiveTexture.r + mainTextureColor.r * 0.01 * mainStrength();
+        vec4 emissiveTexture    = emissiveTexture(screenUV, vec2(0., 0.), matParam);
+        float dDepth            = emissiveTexture.r + mainTextureColor.r * 0.01 * mainStrength(matParam);
         dDepth                  = dDepth - (v_pos_SS.z);
         if (dDepth < 0.) {
             discard;
@@ -71,7 +71,7 @@ impl ShaderWater {
         nodemat.include(&pi_atom::Atom::from(BlockMainTextureUVOffsetSpeed::KEY), nodeblocks);
         nodemat.include(&pi_atom::Atom::from(BlockEmissiveTexture::KEY), nodeblocks);
 
-        nodemat.meta()
+        nodemat.meta(engineopt)
     }
 }
 
@@ -79,7 +79,6 @@ pub fn setup(
     asset_mgr: Res<ShareAssetMgr<ShaderEffectMeta>>,
     mut nodematblocks: ResMut<NodeMaterialBlocks>,
 ) {
-    ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(ShaderWater::KEY), ShaderWater::meta(&mut nodematblocks));
     // log::warn!("PluginShaderWater Regist!!!");
 }
 

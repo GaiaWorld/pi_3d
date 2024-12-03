@@ -10,7 +10,6 @@ pub struct PluginImageCopy;
 impl Plugin for PluginImageCopy {
     fn build(&self, app: &mut App) {
         let asset_mgr = app.world.get_resource::<ShareAssetMgr<ShaderEffectMeta>>().unwrap().clone();
-        ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(ShaderImageCopy::KEY), ShaderImageCopy::res());
     }
 }
 impl PluginImageCopy {
@@ -136,13 +135,13 @@ impl PluginImageCopy {
 pub struct ShaderImageCopy;
 impl ShaderImageCopy {
     pub const KEY: &'static str = "ImageCopy";
-    pub fn res() -> ShaderEffectMeta {
+    pub fn res(engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.fs_define = String::from("
         layout(location = 0) out vec4 gl_FragColor;
         ");
 
-        nodemat.binddefines = BindDefines::EFFECT_VALUE_BIND;
+        nodemat.binddefines = BindDefines::EFFECT_VALUE_BIND | BindDefines::EFFECT_TEXTURE_BIND;
 
         nodemat.vs = String::from("
         gl_Position = vec4(A_POSITION, 1.);
@@ -150,7 +149,7 @@ impl ShaderImageCopy {
         gl_Position.xy *= 2.;
         ");
         nodemat.fs = String::from("
-        gl_FragColor = mainTexture(v_uv, vec2(0., 0.));
+        gl_FragColor = mainTexture(v_uv, vec2(0., 0.), matParam);
         ");
 
         nodemat.varyings = Varyings(
@@ -162,6 +161,6 @@ impl ShaderImageCopy {
         nodemat.apply::<BlockUVAtlas>();
         nodemat.apply::<BlockMainTexture>();
 
-        nodemat.meta()
+        nodemat.meta(engineopt)
     }
 }

@@ -104,7 +104,7 @@ pub fn sys_act_scene_ambient(
                 *comp = SceneAnimationEnable(val);
             },
             ESceneOps::BRDF(val, compressed) => if let Ok(mut comp) = scenes_brdf.get_mut(entity) {
-                *comp = BRDFTextureSlot(EKeyTexture::Image(KeyImageTextureView::new( KeyImageTexture { url: val, srgb: false, file: true, compressed, ..Default::default() }, TextureViewDesc::default() ) ));
+                *comp = BRDFTextureSlot(EKeyTexture::ImageFrame(KeyImageTextureViewFrame::new( KeyImageTextureFrame { url: val, file: true, compressed, ..Default::default() }, TextureViewDesc::default() ) ));
             // } else {
             //     cmds.push(OpsSceneBRDF(entity, val, compressed));
             },
@@ -174,14 +174,7 @@ impl ActionScene {
         asset_samp: &ShareAssetMgr<SamplerRes>, 
     ) -> Option<BundleScene> {
 
-        let (bindeffect0, bindeffect1, bindeffect2) = match (BindSceneEffect::new(dynbuffer), SceneLightingInfos::new(dynbuffer, lightlimit), SceneShadowInfos::new(dynbuffer, lightlimit, shadowlimit)) {
-            (Some(bindeffect0), Some(bindeffect1), Some(bindeffect2)) => {
-                (bindeffect0, bindeffect1, bindeffect2)
-            },
-            _ => {
-                return None;
-            }
-        };
+        let (bindeffect0, bindeffect1, bindeffect2) = (BindSceneEffect::new(dynbuffer), SceneLightingInfos::new(dynbuffer, lightlimit), SceneShadowInfos::new(dynbuffer, lightlimit, shadowlimit));
         let brdfsampler = BRDFSampler::new(device, asset_samp);
         let slot = BRDFTextureSlot(EKeyTexture::Tex(KeyTexture::from( DefaultTexture::WHITE_2D )));
         Some((
@@ -196,15 +189,15 @@ impl ActionScene {
                 SceneAnimationEnable::default(),
             ),
             (
-                SceneDirectLightsQueue(SceneItemsQueue::new(lightlimit.max_direct_light_count)),
+                SceneDirectLightsQueue(SceneItemsQueue::new(lightlimit.max_direct_light_count as u32)),
                 SceneOtherLightsQueue {
-                    point: SceneItemsQueue::new(lightlimit.max_point_light_count),
-                    spot: SceneItemsQueue::new(lightlimit.max_spot_light_count),
-                    hemi: SceneItemsQueue::new(lightlimit.max_hemi_light_count),
+                    point: SceneItemsQueue::new(lightlimit.max_point_light_count as u32),
+                    spot: SceneItemsQueue::new(lightlimit.max_spot_light_count as u32),
+                    hemi: SceneItemsQueue::new(lightlimit.max_hemi_light_count as u32),
                 },
                 SceneLightingInfosDirty,
                 SceneShadowInfosDirty,
-                SceneShadowQueue(SceneItemsQueue::new(shadowlimit.max_count)),
+                SceneShadowQueue(SceneItemsQueue::new(shadowlimit.max_count as u32)),
             ),
             (
                 MainCameraOpaqueTarget(None),

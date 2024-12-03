@@ -6,7 +6,7 @@ use pi_render::renderer::{
     bind::{TKeyBind, KeyBindBuffer, KeyBindLayoutBuffer},
     shader_stage::EShaderStage
 };
-use crate::shader::*;
+use crate::{prelude::{BindDefines, TBindDefine}, shader::*};
 
 
 #[derive(Clone, Hash, PartialEq, Eq)]
@@ -77,15 +77,8 @@ impl TKeyBind for ShaderBindSceneAboutEffect {
         )
     }
 }
-
-
-#[derive(Clone, Hash, PartialEq, Eq)]
-pub struct BindUseSceneAboutEffect {
-    pub(crate) bind: u32,
-    pub(crate) data: Arc<ShaderBindSceneAboutEffect>,
-}
-impl BindUseSceneAboutEffect {
-    pub fn new(bind: u32, data: Arc<ShaderBindSceneAboutEffect>) -> Self {
-        Self { bind, data }
+impl TBindDefine for ShaderBindSceneAboutEffect {
+    fn bind_include(&self) -> u32 {
+        BindDefines::SCENE_EFFECT
     }
 }

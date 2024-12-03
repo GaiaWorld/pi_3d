@@ -51,9 +51,9 @@ pub fn setup(
         actions.material.create.push(OpsMaterialCreate::ops(idmattrail, UnlitShader::KEY));
         actions.material.valb.push(OpsUniformValB::texture(idmattrail, UniformTextureWithSamplerParam {
             slotname: Atom::from(BlockMainTexture::KEY_TEX),
-            filter: true,
             sample: KeySampler::linear_repeat(),
             url: EKeyTexture::from("assets/images/eff_daoguang_lf_004.png"),
+            ..Default::default()
         }));
         mats.push(idmattrail);
     }
@@ -63,9 +63,9 @@ pub fn setup(
         actions.material.create.push(OpsMaterialCreate::ops(idmattrail, UnlitShader::KEY));
         actions.material.valb.push(OpsUniformValB::texture(idmattrail, UniformTextureWithSamplerParam {
             slotname: Atom::from(BlockMainTexture::KEY_TEX),
-            filter: true,
             sample: KeySampler::linear_repeat(),
             url: EKeyTexture::from("assets/images/4.png"),
+            ..Default::default()
         }));
         mats.push(idmattrail);
     }
@@ -227,9 +227,9 @@ pub fn main() {
     app.add_startup_system(Update, base::setup_demoinit);
 
     app.add_plugins(PluginTest);
-    // app.add_systems(Update, pi_3d::sys_info_node.in_set(StageScene::Create));
-    // app.add_systems(Update, pi_3d::sys_info_draw.in_set(StageScene::Create));
-    // app.add_systems(Update, pi_3d::sys_info_resource.in_set(StageScene::Create));
+    app.add_systems(Update, pi_3d::sys_info_node.in_set(StageScene::Create));
+    app.add_systems(Update, pi_3d::sys_info_draw.in_set(StageScene::Create));
+    app.add_systems(Update, pi_3d::sys_info_resource.in_set(StageScene::Create));
 
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
     

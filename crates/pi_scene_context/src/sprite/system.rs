@@ -58,7 +58,7 @@ pub fn sys_modify_sprite(
                     return;
                 },
                 super::SpriteModify::Data(data) => {
-                    (TextureFrame::from_data(&data.as_slice()[0..12]), data[12], data[13])
+                    (SpriteFrame::from_data(&data.as_slice()[0..12]), data[12], data[13])
                 }
             };
 

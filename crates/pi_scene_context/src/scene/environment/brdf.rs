@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use pi_scene_shell::prelude::*;
 
 #[derive(Clone, Hash, Component, Default)]
@@ -18,23 +16,19 @@ impl std::ops::Deref for BRDFTextureSlot {
 }
 
 #[derive(Clone, Deref, Hash, PartialEq, Eq, Component, Default)]
-pub struct BRDFTexture(pub Option<Arc<ShaderBindBRDFTexture>>);
+pub struct BRDFTexture(pub Option<ShaderBindBRDFTexture>);
 impl From<ETextureViewUsage> for BRDFTexture {
-    fn from(value: ETextureViewUsage) -> Self { Self( Some(Arc::new(ShaderBindBRDFTexture(BindDataTexture2D(value)))) ) }
+    fn from(value: ETextureViewUsage) -> Self { Self( Some(ShaderBindBRDFTexture(BindDataTexture2D(value))) ) }
 }
 impl From<Handle<ImageTextureView>> for BRDFTexture {
-    fn from(value: Handle<ImageTextureView>) -> Self { Self( Some(Arc::new(ShaderBindBRDFTexture(BindDataTexture2D(ETextureViewUsage::Image(value))))) ) }
+    fn from(value: Handle<ImageTextureView>) -> Self { Self( Some(ShaderBindBRDFTexture(BindDataTexture2D(ETextureViewUsage::Image(value)))) ) }
 }
 
 #[derive(Component, Default)]
-pub struct BRDFSampler(pub Option<Arc<ShaderBindBRDFSampler>>);
+pub struct BRDFSampler(pub Option<ShaderBindBRDFSampler>);
 impl BRDFSampler {
-    pub fn new(device: &RenderDevice, asset: &Share<AssetMgr<SamplerRes>>) -> Self {
+    pub fn new(device: &RenderDevice, asset: &ShareAssetMgr<SamplerRes>) -> Self {
         let desc = SamplerDesc::linear_clamp();
-        if let Some(sampler) = BindDataSampler::create(desc, device, asset) {
-            Self(Some(Arc::new(ShaderBindBRDFSampler(sampler))))
-        } else {
-            Self(None)
-        }
+        Self(ShaderBindBRDFSampler::new(desc, device, asset))
     }
 }

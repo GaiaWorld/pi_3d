@@ -9,7 +9,7 @@ pub struct PerlinNoiseShader {
 impl PerlinNoiseShader {
     pub const KEY: &'static str     = "PerlinNoiseShader";
 
-    pub fn meta() -> ShaderEffectMeta {
+    pub fn meta(engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
         ShaderEffectMeta::new(
             MaterialValueBindDesc {
                 stage: wgpu::ShaderStages::VERTEX_FRAGMENT,
@@ -41,7 +41,8 @@ impl PerlinNoiseShader {
                 define: Atom::from(include_str!("./perlin_noise_define.frag")),
                 running: Atom::from(include_str!("./perlin_noise.frag"))
             },
-            ShaderDefinesSet::default()
+            ShaderDefinesSet::default(),
+            engineopt
         )
     }
 }

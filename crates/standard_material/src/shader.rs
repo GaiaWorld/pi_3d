@@ -12,7 +12,7 @@ pub struct StandardShader {
 impl StandardShader {
     pub const KEY: &'static str = "Standard";
 
-    pub fn meta() -> ShaderEffectMeta {
+    pub fn meta(engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
 
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.fs_define = String::from(S_BREAK) + "layout(location = 0) out vec4 gl_FragColor;" + S_BREAK;
@@ -49,6 +49,6 @@ impl StandardShader {
         nodemat.apply::<BlockShadowMapping>();
         nodemat.apply::<BlockStandardLighting>();
 
-        nodemat.meta()
+        nodemat.meta(engineopt)
     }
 }

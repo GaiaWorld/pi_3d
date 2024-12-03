@@ -23,7 +23,7 @@ impl TNodeMaterialBlock for BlockEmissiveTexture {
 
     fn vec3() -> Vec<UniformPropertyVec3> {
         vec![
-            UniformPropertyVec3(Atom::from(Self::KEY_INFO), [0., 0., 0.], true),
+            UniformPropertyVec3(Atom::from(Self::KEY_INFO), [1., 1., 1.], true),
         ]
     }
 

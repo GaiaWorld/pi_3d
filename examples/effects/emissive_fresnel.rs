@@ -23,6 +23,7 @@ fn setup(
     mut fps: ResMut<SingleFrameTimeCommand>,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
     demooption: Res<base::DemoOption>,
+    engineopt: Res<EngineCustomPlugins>,
 ) {
     let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
         (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
@@ -31,7 +32,7 @@ fn setup(
     ActionMaterial::regist_material_meta(
         &matmetas,
         KeyShaderMeta::from(EmissiveFresnelShader::KEY),
-        EmissiveFresnelShader::meta(),
+        EmissiveFresnelShader::meta(&engineopt),
     );
 
     let tes_size = 5;
@@ -67,6 +68,12 @@ fn setup(
         0.2,
         4.,
     ));
+    actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
+        slotname: Atom::from(BlockEmissiveTexture::KEY_TEX),
+        sample: KeySampler::linear_repeat(),
+        url: EKeyTexture::from("assets/images/icon_city.png"),
+        ..Default::default()
+    }));
 }
 
 fn sys_setup_ball(
@@ -135,7 +142,6 @@ pub fn main() {
         camera_position: (0., 0., -10.),
         ..Default::default()
     });
-    app.add_startup_system(Update, base::setup_demoinit);
 
     app.add_plugins(PluginTest);
 
@@ -149,6 +155,7 @@ pub fn main() {
     #[cfg(not(feature = "use_bevy"))]
     app.add_startup_system(Update, setup.after(base::setup_default_mat));
     
+    app.add_startup_system(Update, base::setup_demoinit);
 
     // app.run()
     crate::base::run_loop(app, window, event_loop)

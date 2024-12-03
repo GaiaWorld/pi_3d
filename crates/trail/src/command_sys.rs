@@ -54,6 +54,7 @@ pub fn sys_create_trail_mesh(
                     GeometryID(id_geo),
                     // 显式重置为默认
                     commonbindmodel.0.clone(),
+                    commonbindmodel.1.clone(),
                     // ModelStatic,
                 ));
             }

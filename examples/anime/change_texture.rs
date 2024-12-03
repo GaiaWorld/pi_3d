@@ -35,15 +35,16 @@ fn setup(
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
     mut list: ResMut<ActionListTestData>,
     demooption: Res<base::DemoOption>,
-    image_assets_mgr: Res<ShareAssetMgr<ResImageTexture>>,
+    image_assets_mgr: Res<ShareAssetMgr<ImageTextureFrame>>,
     queue: Res<PiRenderQueue>,
     mut testtex: ResMut<ResDemoTex>,
+    engineopt: Res<EngineCustomPlugins>,
 ) {
     let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
         (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
     } else { return; };
 
-    ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(OpacityClipShader::KEY), OpacityClipShader::create(&nodematblocks));
+    ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(OpacityClipShader::KEY), OpacityClipShader::create(&nodematblocks, &engineopt));
 
     let tes_size = 2;
     fps.frame_ms = 50;
@@ -59,24 +60,23 @@ fn setup(
         let width = 1024;
         let height = 1024;
         let dimension = wgpu::TextureViewDimension::D2;
-        let format = wgpu::TextureFormat::Rgba8Unorm;
+        let format = wgpu::TextureFormat::Bc3RgbaUnorm;
 
-        let texkey = KeyImageTexture { url: key.clone(), srgb: false, file: false, compressed: false, depth_or_array_layers: 0, 
-            useage: wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::TEXTURE_BINDING
+        let texkey = KeyImageTextureFrame { url: key.clone(), file: false, compressed: true, cancombine: false
         };
 
         let device = &assets.1;
         let queue = &queue;
-        let texture = ResImageTexture::create_data_texture(
-            &device, &queue, &texkey, width, height, format,
+        let texture = ImageTextureFrame::create_data_texture(
+            &device, &queue, &key, width, height, format,
             dimension, true, 1, None, None, 0
         );
-        match image_assets_mgr.insert(texkey.clone(), texture) {
+        match image_assets_mgr.insert(texkey.clone(), ImageTextureFrame::new(texture)) {
             Ok(data) => { testtex.tex = Some(data) },
             Err(_) => {},
         };
 
-        EKeyTexture::Image(KeyImageTextureView::new(texkey, TextureViewDesc::default() ))
+        EKeyTexture::ImageFrame(KeyImageTextureViewFrame::new(texkey, TextureViewDesc::default() ))
     };
 
     actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
@@ -102,9 +102,9 @@ fn setup(
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
     actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
-        filter: true,
         sample: KeySampler::linear_repeat(),
         url: url,
+        ..Default::default()
     }));
     // actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
     //     slotname: Atom::from(BlockOpacityTexture::KEY_TEX),
@@ -193,7 +193,7 @@ fn setup(
 
 #[derive(Resource)]
 pub struct ResDemoTex {
-    tex: Option<Handle<ResImageTexture>>,
+    tex: Option<Handle<ImageTextureFrame>>,
     counter: u32,
 }
 
@@ -201,7 +201,7 @@ pub fn sys_sub_texture(
     mut tex: ResMut<ResDemoTex>,
     queue: Res<PiRenderQueue>,
     mut cmds: ResMut<TextureCombineCmds>,
-    assets: Res<ShareAssetMgr<ResImageTexture>>,
+    assets: Res<ShareAssetMgr<ImageTextureFrame>>,
 ) {
     tex.counter += 1;
     let (path, xoffset, yoffset, width, height) = if tex.counter == 60 {
@@ -220,12 +220,12 @@ pub fn sys_sub_texture(
         ("assets/fight_res/03.s3tc.ktx", 0, 256, 128, 128),
         ("assets/fight_res/04.s3tc.ktx", 256, 256, 512, 512)
     ];
-    let info = [
-        ("assets/fight_res/01.png", 0, 0, 256, 256),
-        ("assets/fight_res/02.png", 256, 0, 128, 64),
-        ("assets/fight_res/03.png", 0, 256, 128, 128),
-        ("assets/fight_res/04.png", 256, 256, 512, 512)
-    ];
+    // let info = [
+    //     ("assets/fight_res/01.png", 0, 0, 256, 256),
+    //     ("assets/fight_res/02.png", 256, 0, 128, 64),
+    //     ("assets/fight_res/03.png", 0, 256, 128, 128),
+    //     ("assets/fight_res/04.png", 256, 256, 512, 512)
+    // ];
 
 
     let path = Atom::from(path);
@@ -233,15 +233,15 @@ pub fn sys_sub_texture(
     if tex.tex.is_some() {
         let requestid = 0;
         let dimension = wgpu::TextureViewDimension::D2;
-        let format = wgpu::TextureFormat::Rgba8Unorm;
+        let format = wgpu::TextureFormat::Bc3RgbaUnorm;
         let key = Atom::from("TESTTEX");
-        let texkey = KeyImageTexture { url: key.clone(), srgb: false, file: false, compressed: false, depth_or_array_layers: 0, 
-            useage: wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::TEXTURE_BINDING
+        let texkey = KeyImageTextureFrame { url: key.clone(), file: false, compressed: true, 
+            cancombine: false
         };
         let mut atlas = XHashMap::default();
         let mut idx = 0;
         for (path, x, y, w, h) in info {
-            atlas.insert(Atom::from(path), (requestid, idx, false, x, y, w, h));
+            atlas.insert(Atom::from(path), (requestid, idx, true, x, y, w, h));
             idx += 1;
         }
         cmds.request(requestid, texkey, atlas, &assets);

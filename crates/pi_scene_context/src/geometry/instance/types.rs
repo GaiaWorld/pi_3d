@@ -10,12 +10,13 @@ fn _strip(val: &ECustomVertexType) -> usize {
         ECustomVertexType::Uint     => 1 * 4,
         ECustomVertexType::Int      => 1 * 4,
         ECustomVertexType::IVec4    => 4 * 4,
+        ECustomVertexType::UVec4    => 4 * 4,
         ECustomVertexType::U16x2    => 2 * 2,
         ECustomVertexType::U16x4    => 2 * 4,
         ECustomVertexType::U8x4     => 1 * 4,
         ECustomVertexType::Unorm16x2 => 2 * 2,
         ECustomVertexType::Unorm16x4 => 2 * 4,
-        ECustomVertexType::Unorm8x4 => 1 * 4,
+        ECustomVertexType::Unorm8x4  => 1 * 4,
     }
 }
 fn animatorable_type(val: &ECustomVertexType) -> Option<EAnimatorableType> {
@@ -33,6 +34,7 @@ fn animatorable_type(val: &ECustomVertexType) -> Option<EAnimatorableType> {
         ECustomVertexType::Unorm16x2 => None,
         ECustomVertexType::Unorm16x4 => None,
         ECustomVertexType::Unorm8x4  => None,
+        ECustomVertexType::UVec4 => None,
     }
 }
 
@@ -76,11 +78,13 @@ pub struct ModelInstanceAttributes {
     bytes: Vec<u8>,
     attributes: Vec<(Atom, InstanceAttributeOffset)>,
     worldmatrix: bool,
+    matarray: bool,
 }
 impl ModelInstanceAttributes {
     pub fn new(
         insances: &Vec<CustomVertexAttribute>,
         worldmatrix: bool,
+        matarray: bool,
     ) -> Self {
 
         let tmp: [f32;4] = [0., 0., 0., 0.];
@@ -94,6 +98,11 @@ impl ModelInstanceAttributes {
             // bytemuck::cast_slice(Matrix::identity().as_slice()).iter().for_each(|byte| { bytes.push(*byte) });
             offset += 64;
         }
+        // matidx
+        if matarray && (worldmatrix || insances.len() > 0)  {
+            unsafe_vec_append_slice(&mut bytes, bytemuck::cast_slice(&[0u32, 0u32, 0u32, 0u32]));
+            offset += 16;
+        }
 
         insances.iter().for_each(|attr| {
             // let entity = command.spawn_empty_id();
@@ -102,6 +111,10 @@ impl ModelInstanceAttributes {
             match attr.vtype() {
                 ECustomVertexType::Vec4     => {
                     unsafe_vec_append_slice(&mut bytes, bytemuck::cast_slice(&tmp[0..4]));
+                    offset += 16;
+                },
+                ECustomVertexType::UVec4     => {
+                    unsafe_vec_append_slice(&mut bytes, bytemuck::cast_slice(&[0u32, 0u32, 0u32, 0u32]));
                     offset += 16;
                 },
                 ECustomVertexType::Vec3     => {
@@ -158,7 +171,7 @@ impl ModelInstanceAttributes {
         attributes.sort_by(|a, b| a.0.cmp(&b.0) );
 
         Self {
-            bytes, attributes, worldmatrix
+            bytes, attributes, worldmatrix, matarray
         }
     }
     pub fn worldmatrix(&self) -> bool {
@@ -179,6 +192,23 @@ impl ModelInstanceAttributes {
             });
         }
     }
+    pub fn update_matidx(&mut self, passidx: usize, data: u16) {
+        if self.matarray == false || self.bytes.len() == 0 { return }
+        let mut idx = if self.worldmatrix { 64 } else { 0 };
+        idx += passidx * 2;
+        bytemuck::cast_slice(&[data]).iter().for_each(|v| {
+            self.bytes[idx] = *v;
+            idx += 1;
+        });
+    }
+    pub fn update_matidxs(&mut self, data: &[u16]) {
+        if self.matarray == false || self.bytes.len() == 0 { return }
+        let mut idx = if self.worldmatrix { 64 } else { 0 };
+        bytemuck::cast_slice(data).iter().for_each(|v| {
+            self.bytes[idx] = *v;
+            idx += 1;
+        });
+    }
     pub fn offset(&self, key: &Atom) -> Option<&InstanceAttributeOffset> {
         match self.attributes.binary_search_by(|v| v.0.cmp(key) ) {
             Ok(idx) => Some(&self.attributes.get(idx).unwrap().1),
@@ -198,7 +228,7 @@ impl ModelInstanceAttributes {
             attributes.push((key.clone(), InstanceAttributeOffset::new(offset.vtype, offset.offset, None)));
         });
 
-        Self { bytes, attributes, worldmatrix: self.worldmatrix }
+        Self { bytes, attributes, worldmatrix: self.worldmatrix, matarray: self.matarray }
     }
     pub fn animator(
         &mut self,

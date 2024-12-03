@@ -42,12 +42,13 @@ impl Plugin for PluginTest {
         mut anime_contexts: TypeAnimeContexts,
         mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
         demooption: Res<base::DemoOption>,
+        engineopt: Res<EngineCustomPlugins>,
     ) {
         let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
             (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
         } else { return; };
 
-        ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(PlanarShadow::KEY), PlanarShadow::meta());
+        ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(PlanarShadow::KEY), PlanarShadow::meta(&engineopt));
 
         let tes_size = 6;
         fps.frame_ms = 100;

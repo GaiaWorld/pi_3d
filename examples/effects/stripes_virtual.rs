@@ -22,12 +22,13 @@ fn setup(
     nodematblocks: Res<NodeMaterialBlocks>,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
     demooption: Res<base::DemoOption>,
+    engineopt: Res<EngineCustomPlugins>,
 ) {
     let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
         (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
     } else { return; };
 
-    ActionMaterial::regist_material_meta(&matmetas,  KeyShaderMeta::from(StripesVirtualShader::KEY), StripesVirtualShader::create(&nodematblocks));
+    ActionMaterial::regist_material_meta(&matmetas,  KeyShaderMeta::from(StripesVirtualShader::KEY), StripesVirtualShader::create(&nodematblocks, &engineopt));
 
     let tes_size = 5;
     fps.frame_ms = 4;

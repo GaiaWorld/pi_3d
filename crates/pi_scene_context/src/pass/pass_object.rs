@@ -12,6 +12,7 @@ pub struct DrawTmpRef<'w> {
     pub bindgroups: &'w BindGroups3D,
     pub indicerange: &'w IndiceRenderRange,
     pub vertexrange: &'w VertexRenderRange,
+    // 用于记录 Mesh 的实例的排序后实例数据
     pub instancessortinfo: &'w InstancedMeshTransparentSortCollection,
     pub inscombinerange: Range<u32>,
     pub pass: u8,
@@ -215,7 +216,7 @@ impl PassDraw {
     pub fn val(&self) -> bool { self.0 }
 }
 
-pub fn _set2_modify(
+pub fn _set3_modify(
     _key_meta: &Atom,
     meta: &Handle<ShaderEffectMeta>,
     effect_texture_samplers: &EffectTextureSamplers,
@@ -225,7 +226,7 @@ pub fn _set2_modify(
 ) -> Option<Arc<BindGroupTextureSamplers>> {
     let mut result = None;
 
-    let key = KeyBindGroupTextureSamplers::new(effect_texture_samplers.clone(), meta.clone());
+    let key = KeyBindGroupTextureSamplers::new(effect_texture_samplers.clone());
 
     if let Some(key) = key {
         let key_bind_group = key.key_bind_group();

@@ -1,12 +1,11 @@
 use std::sync::Arc;
 
 use derive_deref::Deref;
-use pi_render::renderer::{
-    texture::BindDataTexture2D, sampler::BindDataSampler, shader::TShaderBindCode,
-    bind::{TKeyBind, KeyBindTexture2D, KeyBindLayoutTexture2D, KeyBindSampler, KeyBindLayoutSampler},
-    shader_stage::EShaderStage
-};
-use crate::shader::{sampler_bind_code, texture_bind_code, ShaderVarUniform};
+use pi_bevy_asset::ShareAssetMgr;
+use pi_render::{renderer::{
+    bind::{KeyBindLayoutSampler, KeyBindLayoutTexture2D, KeyBindSampler, KeyBindTexture2D, TKeyBind}, sampler::{BindDataSampler, KeySampler, SamplerRes}, shader::TShaderBindCode, shader_stage::EShaderStage, texture::BindDataTexture2D
+}, rhi::device::RenderDevice};
+use crate::{prelude::{BindDefines, TBindDefine}, shader::{sampler_bind_code, texture_bind_code, ShaderVarUniform}};
 
 #[derive(Clone, Deref, Hash, PartialEq, Eq)]
 pub struct ShaderBindBRDFTexture(pub BindDataTexture2D);
@@ -31,20 +30,23 @@ impl TKeyBind for ShaderBindBRDFTexture {
         )
     }
 }
-
-#[derive(Clone, Hash, PartialEq, Eq)]
-pub struct BindUseBRDFTexture {
-    pub(crate) bind: u32,
-    pub(crate) data: Arc<ShaderBindBRDFTexture>,
-}
-impl BindUseBRDFTexture {
-    pub fn new(bind: u32, data: Arc<ShaderBindBRDFTexture>) -> Self {
-        Self { bind, data }
+impl TBindDefine for ShaderBindBRDFTexture {
+    fn bind_include(&self) -> u32 {
+        BindDefines::ENVIRONMENT_BRDF_TEXTURE
     }
 }
 
 #[derive(Clone, Deref, Hash, PartialEq, Eq)]
 pub struct ShaderBindBRDFSampler(pub BindDataSampler);
+impl ShaderBindBRDFSampler {
+    pub fn new(desc: KeySampler, device: &RenderDevice, asset: &ShareAssetMgr<SamplerRes>) -> Option<Self> {
+        if let Some(data) = BindDataSampler::create(desc, device, asset) {
+            Some(Self(data))
+        } else {
+            None
+        }
+    }
+}
 impl TShaderBindCode for ShaderBindBRDFSampler {
     fn vs_define_code(&self, _set: u32, _bind: u32) -> String {
         String::from("")
@@ -68,13 +70,8 @@ impl TKeyBind for ShaderBindBRDFSampler {
         )
     }
 }
-#[derive(Clone, Hash, PartialEq, Eq)]
-pub struct BindUseBRDFSampler {
-    pub(crate) bind: u32,
-    pub(crate) data: Arc<ShaderBindBRDFSampler>,
-}
-impl BindUseBRDFSampler {
-    pub fn new(bind: u32, data: Arc<ShaderBindBRDFSampler>) -> Self {
-        Self { bind, data }
+impl TBindDefine for ShaderBindBRDFSampler {
+    fn bind_include(&self) -> u32 {
+        BindDefines::ENVIRONMENT_BRDF_TEXTURE
     }
 }

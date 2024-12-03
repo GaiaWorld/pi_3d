@@ -75,6 +75,28 @@ pub fn sys_calc_render_matrix(
     // log::debug!("SysRenderMatrixUpdate: {:?}", time1 - time);
 }
 
+pub fn sys_instance_matidxs(
+    changes: ComponentChanged<ModelMatIdxs>,
+    mut instances: Query<&mut ModelInstanceAttributes>,
+    mut meshes: Query<(&mut InstanceSourceRefs, &ModelMatIdxs)>,
+) {
+    // let time = pi_time::Instant::now();
+
+    changes.iter().for_each(|entity| {
+        if let Ok((mut flag, matidxs)) = meshes.get_mut(*entity) {
+            flag.dirty = true;
+            flag.iter().for_each(|entity| {
+                if let Ok(mut instanceattributes) = instances.get_mut(*entity) {
+                    instanceattributes.update_matidxs(&matidxs.0);
+                }
+            });
+        }
+    });
+    
+    // let time1 = pi_time::Instant::now();
+    // log::debug!("SysInstanceRenderMatrixUpdate: {:?}", time1 - time);
+}
+
 pub fn sys_render_matrix_dirty(
     changes: ComponentChanged<RenderWorldMatrix>,
     mut instances: Query<(&InstanceMesh, &RenderWorldMatrix, &mut ModelInstanceAttributes)>,

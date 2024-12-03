@@ -23,13 +23,14 @@ fn setup(
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
     demooption: Res<base::DemoOption>,
     limit: Res<DeviceLimits3D>,
+    engineopt: Res<EngineCustomPlugins>,
 ) {
     log::warn!("Limit {:?}", limit.min_uniform_buffer_offset_alignment);
     let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
         (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
     } else { return; };
 
-    ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(TwoOpacityMixShader::KEY), TwoOpacityMixShader::create(&nodematblocks));
+    ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(TwoOpacityMixShader::KEY), TwoOpacityMixShader::create(&nodematblocks, &engineopt));
 
     let tes_size = 5;
     fps.frame_ms = 4;
@@ -49,27 +50,27 @@ fn setup(
     actions.material.create.push(OpsMaterialCreate::ops(idmat, TwoOpacityMixShader::KEY));
     actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
-        filter: true,
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/fractal.png"),
+        ..Default::default()
     }));
     actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockOpacityTexture::KEY_TEX),
-        filter: true,
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/eff_ui_ll_085.png"),
+        ..Default::default()
     }));
     actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockOpacity2Texture::KEY_TEX),
-        filter: true,
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/eff_uv_lf_002.png"),
+        ..Default::default()
     }));
     actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMixTexture::KEY_TEX),
-        filter: true,
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/icon_city.png"),
+        ..Default::default()
     }));
     actions.material.val.push(OpsUniformVal::vec4(
             idmat, 

@@ -1,7 +1,7 @@
 
 use crate::prelude::*;
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct ModelBlend {
     pub enable: bool,
     pub src_color: BlendFactor,

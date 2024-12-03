@@ -1,4 +1,4 @@
-use std::{hash::Hash, sync::Arc};
+use std::hash::Hash;
 
 use pi_render::{
     renderer::{
@@ -21,29 +21,31 @@ pub struct KeyShaderSetScene {
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub struct KeyBindGroupScene {
-    pub bind_viewer: Option<Arc<ShaderBindViewer>>,
-    pub bind_base_effect: Option<Arc<ShaderBindSceneAboutEffect>>,
+    pub bind_viewer: Option<ShaderBindViewer>,
+    pub bind_passindex: ShaderBindPassIndex,
+    pub bind_base_effect: Option<ShaderBindSceneAboutEffect>,
     // pub bind_brdf: Option<(BindUseBRDFTexture, BindUseBRDFSampler)>,
-    pub lighting: Option<Arc<ShaderBindSceneLightInfos>>,
-    pub shadowmap: Option<(Arc<ShaderBindShadowData>, Arc<ShaderBindShadowTexture>, Arc<ShaderBindShadowSampler>)>,
-    pub bind_brdf: Option<(Arc<ShaderBindBRDFTexture>, Arc<ShaderBindBRDFSampler>)>,
-    pub camera_opaque: Option<(Arc<ShaderBindMainCameraOpaqueTexture>, Arc<ShaderBindMainCameraOpaqueSampler>)>,
-    pub camera_depth: Option<(Arc<ShaderBindMainCameraDepthTexture>, Arc<ShaderBindMainCameraDepthSampler>)>,
-    pub env: Option<(Arc<BindEnvIrradiance>, Arc<ShaderBindEnvTexture>, Arc<ShaderBindEnvSampler>)>,
+    pub lighting: Option<ShaderBindSceneLightInfos>,
+    pub shadowmap: Option<(ShaderBindShadowData, ShaderBindShadowTexture, ShaderBindShadowSampler)>,
+    pub bind_brdf: Option<(ShaderBindBRDFTexture, ShaderBindBRDFSampler)>,
+    pub camera_opaque: Option<(ShaderBindMainCameraOpaqueTexture, ShaderBindMainCameraOpaqueSampler)>,
+    pub camera_depth: Option<(ShaderBindMainCameraDepthTexture, ShaderBindMainCameraDepthSampler)>,
+    pub env: Option<(BindEnvIrradiance, ShaderBindEnvTexture, ShaderBindEnvSampler)>,
     pub key_set: KeyShaderSetScene,
     bind_count: u32,
     key_bindgroup: KeyBindGroup,
 }
 impl KeyBindGroupScene {
     pub fn new(
-        bind_viewer: Option<Arc<ShaderBindViewer>>,
-        bind_base_effect: Option<Arc<ShaderBindSceneAboutEffect>>,
-        lighting: Option<Arc<ShaderBindSceneLightInfos>>,
-        shadowmap: Option<(Arc<ShaderBindShadowData>, Arc<ShaderBindShadowTexture>, Arc<ShaderBindShadowSampler>)>,
-        bind_brdf: Option<(Arc<ShaderBindBRDFTexture>, Arc<ShaderBindBRDFSampler>)>,
-        camera_opaque: Option<(Arc<ShaderBindMainCameraOpaqueTexture>, Arc<ShaderBindMainCameraOpaqueSampler>)>,
-        camera_depth: Option<(Arc<ShaderBindMainCameraDepthTexture>, Arc<ShaderBindMainCameraDepthSampler>)>,
-        env: Option<(Arc<BindEnvIrradiance>, Arc<ShaderBindEnvTexture>, Arc<ShaderBindEnvSampler>)>,
+        bind_viewer: Option<ShaderBindViewer>,
+        bind_passindex: ShaderBindPassIndex,
+        bind_base_effect: Option<ShaderBindSceneAboutEffect>,
+        lighting: Option<ShaderBindSceneLightInfos>,
+        shadowmap: Option<(ShaderBindShadowData, ShaderBindShadowTexture, ShaderBindShadowSampler)>,
+        bind_brdf: Option<(ShaderBindBRDFTexture, ShaderBindBRDFSampler)>,
+        camera_opaque: Option<(ShaderBindMainCameraOpaqueTexture, ShaderBindMainCameraOpaqueSampler)>,
+        camera_depth: Option<(ShaderBindMainCameraDepthTexture, ShaderBindMainCameraDepthSampler)>,
+        env: Option<(BindEnvIrradiance, ShaderBindEnvTexture, ShaderBindEnvSampler)>,
     ) -> Self {
         let mut lighting_enable: bool = false;
         let mut shadow_enable: bool = false;
@@ -52,12 +54,23 @@ impl KeyBindGroupScene {
         let mut key_binds = Vec::with_capacity(4);
 
         let mut binding = 0;
-    
+
         if let Some(bind) = &bind_viewer {
             if let Some(key) = bind.key_bind() {
                 key_binds.push(key);
                 binding += 1;
             }
+        }
+
+        // if let Some(bind) = &bind_passindex {
+        //     if let Some(key) = bind.key_bind() {
+        //         key_binds.push(key);
+        //         binding += 1;
+        //     }
+        // }
+        if let Some(key) = bind_passindex.key_bind() {
+            key_binds.push(key);
+            binding += 1;
         }
 
         if let Some(bind) = &bind_base_effect {
@@ -113,6 +126,7 @@ impl KeyBindGroupScene {
 
         let result = Self {
             lighting,
+            bind_passindex,
             shadowmap,
             bind_brdf,
             camera_opaque,
@@ -145,6 +159,11 @@ impl TShaderSetBlock for KeyBindGroupScene {
             bind += 1;
         }
 
+        {
+            result += self.bind_passindex.vs_define_code(set, bind).as_str();
+            bind += 1;
+        }
+
         if let Some(item) = &self.bind_base_effect {
             result += item.vs_define_code(set, bind).as_str();
             bind += 1;
@@ -163,6 +182,11 @@ impl TShaderSetBlock for KeyBindGroupScene {
 
         if let Some(item) = &self.bind_viewer {
             result += item.fs_define_code(set, bind).as_str();
+            bind += 1;
+        }
+
+        {
+            result += self.bind_passindex.fs_define_code(set, bind).as_str();
             bind += 1;
         }
 

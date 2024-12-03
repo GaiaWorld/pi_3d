@@ -6,12 +6,11 @@ pub struct ShaderPBR;
 impl ShaderPBR {
     pub const KEY: &'static str = "ShaderPBR";
 
-    pub fn meta(nodeblocks: &mut NodeMaterialBlocks) -> ShaderEffectMeta {
+    pub fn meta(nodeblocks: &mut NodeMaterialBlocks, engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
 
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.values.stage = wgpu::ShaderStages::VERTEX_FRAGMENT;
-        nodemat.values.float_list.push(UniformPropertyFloat(Atom::from("uMetallic"), 0.2, true));
-        nodemat.values.float_list.push(UniformPropertyFloat(Atom::from("uRoughness"), 0.8, true));
+        nodemat.values.vec2_list.push(UniformPropertyVec2(Atom::from("uMetallicRoughness"), [0.2, 0.8], true));
         nodemat.material_instance_code = String::from("");
         // nodemat.check_instance = EVerticeExtendCode(EVerticeExtendCode::INSTANCE_CUSTOM_VEC4_A);
         nodemat.fs_define = String::from("
@@ -73,14 +72,14 @@ impl ShaderPBR {
     vec4 baseColor              = v_color;
     float alpha                 = baseColor.a;
 
-    vec4 mainTextureColor       = mainTexture(v_uv, applyUVOffsetSpeed(uMainUVOS));
-    baseColor.rgb               *= mainTextureColor.rgb * mainStrength();
+    vec4 mainTextureColor       = mainTexture(v_uv, applyUVOffsetSpeed(matParam.uMainUVOS), matParam);
+    baseColor.rgb               *= mainTextureColor.rgb * mainStrength(matParam);
     alpha                       *= mainTextureColor.a;
 
     InputParam inputParam; 
     inputParam.albedo                   = baseColor.rgb;
-    inputParam.metallic                 = uMetallic;
-    inputParam.roughness                = uRoughness;
+    inputParam.metallic                 = matParam.uMetallicRoughness.x;
+    inputParam.roughness                = matParam.uMetallicRoughness.y;
     inputParam.emission                 = vec3(0., 0., 0.);
     inputParam.emissionStrength         = 0.0;
     inputParam.bumpTexture              = vec3(0., 0., 1.);
@@ -208,7 +207,7 @@ impl ShaderPBR {
         nodemat.include(&pi_atom::Atom::from(BlockMainTextureUVOffsetSpeed::KEY), nodeblocks);
         nodemat.include(&pi_atom::Atom::from(pi_pbr::prelude::PrincipledBRDF::KEY), nodeblocks);
 
-        nodemat.meta()
+        nodemat.meta(engineopt)
     }
 }
 
@@ -216,7 +215,7 @@ pub fn setup(
     asset_mgr: Res<ShareAssetMgr<ShaderEffectMeta>>,
     mut nodematblocks: ResMut<NodeMaterialBlocks>,
 ) {
-    ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(ShaderPBR::KEY), ShaderPBR::meta(&mut nodematblocks));
+    
     // log::warn!("PluginPBRMaterial Regist!!!");
 }
 

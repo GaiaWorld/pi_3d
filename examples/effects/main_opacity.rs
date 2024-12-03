@@ -22,12 +22,13 @@ fn setup(
     mut fps: ResMut<SingleFrameTimeCommand>,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
     demooption: Res<base::DemoOption>,
+    engineopt: Res<EngineCustomPlugins>,
 ) {
     let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
         (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
     } else { return; };
 
-    ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(MainOpacityShader::KEY), MainOpacityShader::meta());
+    ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(MainOpacityShader::KEY), MainOpacityShader::meta(&engineopt));
 
     let tes_size = 5;
     fps.frame_ms = 4;
@@ -45,18 +46,18 @@ fn setup(
     let idmat = commands.spawn_empty_id();
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
     actions.material.create.push(OpsMaterialCreate::ops(idmat, MainOpacityShader::KEY));
-    actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
-        slotname: Atom::from(BlockMainTexture::KEY_TEX),
-        filter: true,
-        sample: KeySampler::linear_repeat(),
-        url: EKeyTexture::from("assets/images/fractal.png"),
-    }));
-    actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
-        slotname: Atom::from(BlockOpacityTexture::KEY_TEX),
-        filter: true,
-        sample: KeySampler::linear_repeat(),
-        url: EKeyTexture::from("assets/images/icon_city.png"),
-    }));
+    // actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
+    //     slotname: Atom::from(BlockMainTexture::KEY_TEX),
+    //     sample: KeySampler::linear_repeat(),
+    //     url: EKeyTexture::from("assets/images/fractal.png"),
+    //     ..Default::default()
+    // }));
+    // actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
+    //     slotname: Atom::from(BlockOpacityTexture::KEY_TEX),
+    //     sample: KeySampler::linear_repeat(),
+    //     url: EKeyTexture::from("assets/images/icon_city.png"),
+    //     ..Default::default()
+    // }));
     actions.material.val.push(OpsUniformVal::vec4(
             idmat, 
             Atom::from(BlockEmissiveTexture::KEY_INFO), 

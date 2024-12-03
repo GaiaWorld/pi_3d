@@ -1,6 +1,6 @@
 [package]
 name = "pi_scene_shell"
-version = "1.0.3"
+version = "1.0.5"
 authors = ["baip0002 <2494156981@qq.com>"]
 edition = "2021"
 description = "Framework."
@@ -39,6 +39,8 @@ parry3d             = "0.13"
 lazy_static         = "1.4"
 pi_spatial          = "0.5"
 matrixmultiply      = "0.3"
+
+guillotiere         = { version = "0.6" }
 
 ktx                 = "0.3"
 approx              = "0.5"

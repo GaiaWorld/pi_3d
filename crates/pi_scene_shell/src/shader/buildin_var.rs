@@ -1,6 +1,7 @@
 
 pub struct ShaderVarUniform;
 impl ShaderVarUniform {
+    pub const IDX_PASS                  : &'static str = "PI_IDX_PASS"          ;
     pub const VIEW_MATRIX               : &'static str = "PI_MATRIX_V"          ;
     pub const VIEW_ROTATION_MATRIX_INV  : &'static str = "PI_MATRIX_V_R_INV"    ;
     pub const PROJECT_MATRIX            : &'static str = "PI_MATRIX_P"          ;
@@ -72,7 +73,9 @@ impl ShaderVarUniform {
     pub const _VELOCITY                 : &'static str = "U_PI_ObjectVelocity"  ;
     pub const _SKIN_BONE_OFFSET0        : &'static str = "U_PI_SkinBoneOffset0" ;
     pub const _SKIN_BONE_OFFSET1        : &'static str = "U_PI_SkinBoneOffset1" ;
-    
+    pub const _MATIDX                   : &'static str = "U_PI_MatIdxs"         ;
+    pub const MATIDX                    : &'static str = "PI_MatIdxs"           ;
+
     pub const BONE_MATRICES             : &'static str = "boneMatrices"         ;
     pub const BONE_TEX_SIZE             : &'static str = "bondTexSize"          ;
     pub const BONE_TEX                  : &'static str = "_boneTex"             ;
@@ -151,6 +154,8 @@ impl ShaderVarVertices {
     pub const MATRICES_WEIGHTS3         : &'static str = "A_JOINT_WEG3"        ;
     pub const MATRICES_INDICES_EXTRA3   : &'static str = "A_JOINT_INC_EX3"     ;
     pub const MATRICES_WEIGHTS_EXTRA3   : &'static str = "A_JOINT_WEG_EX3"     ;
+    pub const INS_MAT_IDX               : &'static str = "A_INS_MATIDX"        ;
+    pub const INS_MODEL_MAT_SKIN        : &'static str = "A_INS_MODEL_MAT_SKIN";
 
     pub const INS_VELOCITY              : &'static str = "A_INS_Velocity"      ;
     pub const INS_SKIN_BONE_OFFSET0     : &'static str = "A_INS_SkinBoneOffset0";

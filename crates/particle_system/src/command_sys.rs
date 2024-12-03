@@ -63,10 +63,11 @@ pub fn sys_create_cpu_partilce_system(
     commonbindmodel: Res<CommonBindModel>,
     mut meshprimitivestate: ResMut<ActionListRenderState>,
     mut cmdps: Alter<(), (), ParticleBundle, ()>,
-    mut altermodel: Alter<(), (), (BundleModel, BindModel, PassIDs, ModelStatic), ()>,
+    mut altermodel: Alter<(), (), (BundleModel, BindModel, BindModelMatIdx, ModelMatIdxs, PassIDs, ModelStatic), ()>,
     
     mut passinsert: Insert<(BundleEntity, PassObjInitBundle, PassTag)>,
     mut altergeo: Alter<(), (), BundleGeometry, ()>,
+    engineopt: Res<EngineCustomPlugins>,
 ) {
     cmds.drain().for_each(|OpsCPUParticleSystem(id_scene, entity, trailmesh, trailgeo, calculator, attributes, update_buffer_interval_frame)| {
         let mut _entitycmd = if let Some(cmd) = commands.get_entity(entity) {
@@ -128,7 +129,7 @@ pub fn sys_create_cpu_partilce_system(
                     let id_geo = trailgeo;
                     ActionMesh::init(
                         id_mesh, &mut commands, id_scene, &mut allocator, &empty, MeshInstanceState::default(), &lightlimit.0, &commonbindmodel,
-                        &mut altermodel, &mut passinsert
+                        &mut altermodel, &mut passinsert, &engineopt
                     );
                     meshprimitivestate.push(OpsRenderState::primitive_state(id_mesh, PassTag::PASS_TAG_01, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));
                     meshprimitivestate.push(OpsRenderState::primitive_state(id_mesh, PassTag::PASS_TAG_02, EPrimitiveState::Topology(PrimitiveTopology::TriangleStrip)));

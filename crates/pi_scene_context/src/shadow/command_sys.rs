@@ -46,51 +46,50 @@ pub fn sys_create_shadow_generator(
             };
             
             // log::error!("Shadow 01");
-            if let Some(bindviewer) = BindViewer::new(&mut dynallocator) {
-                matcreatecmds.push(OpsMaterialCreate::ops(mat, ShaderShadowGenerator::KEY));
-                matusecmds.push(OpsMaterialUse::ops(entity, mat, passtag));
-                
-                // log::error!("Shadow 02");
-                if directlights.contains(light) {
-                    linkedshadow.0 = Some(entity);
-                    let bundle = (
-                        ActionShadow::as_shadow_generator(idscene.0, enabled.0),
-                        (
-                            LinkedMaterialID(empty.id()),
-                            RendererID(entity),
-                            ShadowLayerMask(layermask.clone()),
-                            queueshadow.0.add(entity),
-                            ShadowCastPassTag(passtag),
-                            viewerdistance.clone(),
-                            bindviewer,
-                        ),
-                        ShadowLinkedLightID(light),
-                        DirectionalShadowDirection::default(),
-                        DirectionalShadowProjection::default(),
-                    );
-                    shadowcommands.insert(bundle);
-                    // log::error!("Shadow Ok {:?}", (entity, light));
-                    // alterdirect.alter(entity, bundle);
-                } else if spotlights.contains(light) {
-                    linkedshadow.0 = Some(entity);
-                    let bundle = (
-                        ActionShadow::as_shadow_generator(idscene.0, enabled.0),
-                        (
-                            LinkedMaterialID(empty.id()),
-                            RendererID(entity),
-                            ShadowLayerMask(layermask.clone()),
-                            queueshadow.0.add(entity),
-                            ShadowCastPassTag(passtag),
-                            viewerdistance.clone(),
-                            bindviewer,
-                        ),
-                        ShadowLinkedLightID(light),
-                        DirectionalShadowDirection::default(),
-                        SpotShadowProjection::default(),
-                    );
-                    shadowcommands.insert(bundle);
-                    // alterspot.alter(entity, bundle);
-                }
+            let bindviewer = BindViewer::new(&mut dynallocator);
+            matcreatecmds.push(OpsMaterialCreate::ops(mat, ShaderShadowGenerator::KEY));
+            matusecmds.push(OpsMaterialUse::ops(entity, mat, passtag));
+            
+            // log::error!("Shadow 02");
+            if directlights.contains(light) {
+                linkedshadow.0 = Some(entity);
+                let bundle = (
+                    ActionShadow::as_shadow_generator(idscene.0, enabled.0),
+                    (
+                        LinkedMaterialID(empty.id()),
+                        RendererID(entity),
+                        ShadowLayerMask(layermask.clone()),
+                        queueshadow.0.add(entity),
+                        ShadowCastPassTag(passtag),
+                        viewerdistance.clone(),
+                        bindviewer,
+                    ),
+                    ShadowLinkedLightID(light),
+                    DirectionalShadowDirection::default(),
+                    DirectionalShadowProjection::default(),
+                );
+                shadowcommands.insert(bundle);
+                // log::error!("Shadow Ok {:?}", (entity, light));
+                // alterdirect.alter(entity, bundle);
+            } else if spotlights.contains(light) {
+                linkedshadow.0 = Some(entity);
+                let bundle = (
+                    ActionShadow::as_shadow_generator(idscene.0, enabled.0),
+                    (
+                        LinkedMaterialID(empty.id()),
+                        RendererID(entity),
+                        ShadowLayerMask(layermask.clone()),
+                        queueshadow.0.add(entity),
+                        ShadowCastPassTag(passtag),
+                        viewerdistance.clone(),
+                        bindviewer,
+                    ),
+                    ShadowLinkedLightID(light),
+                    DirectionalShadowDirection::default(),
+                    SpotShadowProjection::default(),
+                );
+                shadowcommands.insert(bundle);
+                // alterspot.alter(entity, bundle);
             }
         }
     });

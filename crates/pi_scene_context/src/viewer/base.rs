@@ -168,14 +168,10 @@ impl ViewerDistanceCompute {
 }
 
 #[derive(Clone, Component, Default)]
-pub struct BindViewer(pub Option<Arc<ShaderBindViewer>>);
+pub struct BindViewer(pub Option<ShaderBindViewer>);
 impl BindViewer {
-    pub fn new(allocator: &mut BindBufferAllocator) -> Option<Self> {
-        if let Some(data) = ShaderBindViewer::new(allocator) {
-            Some(Self ( Some(Arc::new(data)) ))
-        } else {
-            None
-        }
+    pub fn new(allocator: &mut BindBufferAllocator) -> Self {
+        Self (ShaderBindViewer::new(allocator))
     }
 }
 

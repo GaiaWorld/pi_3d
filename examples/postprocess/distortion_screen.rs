@@ -46,6 +46,7 @@ impl Plugin for PluginTest {
         mut matmetas: ResMut<ShareAssetMgr<ShaderEffectMeta>>,
         demooption: Res<base::DemoOption>,
         mut events: ResMut<DemoWindowEvent>,
+        engineopt: Res<EngineCustomPlugins>,
     ) {
         let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
             (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
@@ -53,7 +54,7 @@ impl Plugin for PluginTest {
 
         events.viewer = Some(camera01);
 
-        let tes_size = 2;
+        let tes_size = 10;
         fps.frame_ms = 5;
 
         let limit = assets.1.limits();
@@ -127,9 +128,9 @@ impl Plugin for PluginTest {
         // actions.material.create.push(OpsMaterialCreate::ops(idmat, StandardShader::KEY, EPassTag::Opaque));
         actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
             slotname: Atom::from(BlockMainTexture::KEY_TEX),
-            filter: true,
             sample: KeySampler::linear_repeat(),
             url: EKeyTexture::from("./assets/images/fractal.png"),
+            ..Default::default()
         }));
         idmat
     };
@@ -152,13 +153,13 @@ impl Plugin for PluginTest {
     let state: MeshInstanceState = MeshInstanceState {
         instance_matrix: true,
         instances: vec![
-            CustomVertexAttribute::new(Atom::from("InsV2"), Atom::from("uMetallic = InsV2.x; uRoughness = InsV2.y;"), ECustomVertexType::Vec2, Some(Atom::from("uMetallic")))
+            CustomVertexAttribute::new(Atom::from("InsV2"), Atom::from(""), ECustomVertexType::Vec2, Some(Atom::from("uMetallicRoughness")))
         ],
         use_single_instancebuffer: false,
     };
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
     
-    ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(unlit_material::PlanarShadow::KEY), unlit_material::PlanarShadow::meta());
+    ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(unlit_material::PlanarShadow::KEY), unlit_material::PlanarShadow::meta(&engineopt));
     let planarmat =  {
         let idmat = commands.spawn_empty_id();
         actions.material.create.push(OpsMaterialCreate::ops(idmat, unlit_material::PlanarShadow::KEY));
@@ -230,7 +231,7 @@ impl Plugin for PluginTest {
         {
             let distortiommat = commands.spawn_empty_id();
             actions.material.create.push(OpsMaterialCreate::ops(distortiommat, distortion_material::ShaderDistortion::KEY));
-            actions.material.valb.push(OpsUniformValB::texture(distortiommat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockMainTexture::KEY_TEX), url: EKeyTexture::image("./assets/images/eff_wm_trail_fml_001_89_clamp.png"), sample: KeySampler::linear_repeat(), ..Default::default() }));
+            actions.material.valb.push(OpsUniformValB::texture(distortiommat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockMainTexture::KEY_TEX), url: EKeyTexture::from("assets/images/eff_wm_trail_fml_001_89_clamp.png"), sample: KeySampler::linear_repeat(), ..Default::default() }));
             // actions.material.val.push(OpsUniformVal::vec2(distortiommat, Atom::from(BlockMainTextureUVOffsetSpeed::KEY_PARAM), 100., 100.));
             actions.material.valb.push(OpsUniformValB::texture_from_target(distortiommat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockEmissiveTexture::KEY_TEX), ..Default::default() }, opaquetarget.unwrap(), Atom::from(BlockEmissiveTexture::KEY_TILLOFF)));
             // actions.material.val.push(OpsUniformVal::vec3(distortiommat, Atom::from(BlockMainTexture::KEY_COLOR), 1., 0.5, 0.5));
@@ -308,8 +309,8 @@ impl Plugin for PluginTest {
                 actions.mesh.render_state.push(OpsRenderState::depth_state(trail, DemoScene::PASS_TRANSPARENT, EDepthState::Compare(CompareFunction::Always)));
             }
             
-            // let mut param = AnimationGroupParam::default(); param.fps = 60; param.speed = 2.;param.loop_mode = ELoopMode::PositivePly(None);
-            // actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, param, 0., pi_animation::base::EFillMode::NONE));
+            let mut param = AnimationGroupParam::default(); param.fps = 60; param.speed = 2.;param.loop_mode = ELoopMode::PositivePly(None);
+            actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, param, 0., pi_animation::base::EFillMode::NONE));
         }
 }
 

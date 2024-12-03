@@ -2,6 +2,8 @@
 use bevy_a11y::AccessibilityPlugin;
 #[cfg(feature = "use_bevy")]
 use bevy_input::*;
+use distortion_material::ShaderDistortion;
+use pbr_material::ShaderPBR;
 #[allow(dead_code)]
 #[allow(unused_imports)]
 
@@ -16,7 +18,9 @@ use pi_particle_system::{PluginParticleSystem, prelude::{ActionSetParticleSystem
 use pi_scene_context::{prelude::*, shadow::PluginShadowGenerator, scene::StageScene};
 use pi_mesh_builder::{cube::*, quad::{PluginQuadBuilder, QuadBuilder}, ball::PluginBallBuilder};
 use pi_standard_material::PluginStandardMaterial;
+use predepth::ShaderPreDepth;
 use unlit_material::*;
+use water::ShaderWater;
 use wgpu::Backends;
 use pi_winit::{event::WindowEvent, event_loop::EventLoop, window::Window};
 
@@ -26,6 +30,14 @@ use pi_hal::{init_load_cb, runtime::MULTI_MEDIA_RUNTIME, on_load};
 
 #[path = "./copy.rs"]
 mod copy;
+#[path = "./distortion_material.rs"]
+mod distortion_material;
+#[path = "./pbr_material.rs"]
+mod pbr_material;
+#[path = "./water.rs"]
+mod water;
+#[path = "./predepth.rs"]
+mod predepth;
 
 pub struct PluginLocalLoad;
 impl Plugin for PluginLocalLoad {
@@ -264,7 +276,20 @@ pub fn setup_demoinit(
     mut animegroupres: ResourceAnimationGroup,
     mut demooption: ResMut<DemoOption>,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
+    mut errors: ResMut<ErrorRecord>,
+    engineopt: Res<EngineCustomPlugins>,
+    asset_mgr: Res<ShareAssetMgr<ShaderEffectMeta>>,
+    mut nodematblocks: ResMut<NodeMaterialBlocks>,
 ) {
+    
+    ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(ShaderDistortion::KEY), ShaderDistortion::meta(&mut nodematblocks, &engineopt));
+    ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(copy::ShaderImageCopy::KEY), copy::ShaderImageCopy::res(&engineopt));
+    ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(unlit_material::PlanarShadow::KEY), unlit_material::PlanarShadow::meta(&engineopt));
+    ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(ShaderPBR::KEY), ShaderPBR::meta(&mut nodematblocks, &engineopt));
+    ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(ShaderWater::KEY), ShaderWater::meta(&mut nodematblocks, &engineopt));
+    ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(ShaderPreDepth::KEY), ShaderPreDepth::meta(&mut nodematblocks, &engineopt));
+
+    errors.1 = true;
     let demopass = DemoScene::new(&mut commands, &mut actions, &mut animegroupres, 
         &mut assets.0, &assets.1, &assets.2, &assets.3,
         demooption.camera_size, demooption.camera_fov, demooption.camera_position, demooption.orthographic_camera

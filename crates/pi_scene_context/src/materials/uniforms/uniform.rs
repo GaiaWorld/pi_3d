@@ -91,18 +91,17 @@ pub struct BindEffectValues {
     // offsets: XHashMap<Atom, UniformOffset>,
     bytes: Vec<u8>,
     offsets: Vec<(Atom, UniformOffset)>,
-    bind: Arc<ShaderBindEffectValue>,
+    pub bind: Arc<RefBindGroupMaterial>,
 }
 impl BindEffectValues {
     pub fn new(
         device: &PiRenderDevice,
         key_meta: KeyShaderMeta,
         meta: Handle<ShaderEffectMeta>,
-        allocator: &mut BindBufferAllocator,
+        matdata: Option<Arc<RefBindGroupMaterial>>,
     ) -> Option<Self> {
         
-        if let Some(bind) = ShaderBindEffectValue::new(device, key_meta, meta.clone(), allocator) {
-
+        if let Some(bind) = matdata {
             let mut bytes: Vec<u8> = vec![];
             let mut offsets: Vec<(Atom, UniformOffset)> = vec![];
             // let mut offsets: XHashMap<Atom, UniformOffset> = XHashMap::default();
@@ -130,14 +129,13 @@ impl BindEffectValues {
             meta.uniforms.uint_list.iter().for_each(|item| {
                 Self::_new(item.0.clone(), EUniformValueType::Uint, bytemuck::cast_slice(&[item.1]), &mut bytes, &mut offsets);
             });
-    
-            bind.data().write_data(0, &bytes);
+            
+            bind.update_data(0, &bytes);
             offsets.sort_by(|a, b| a.0.cmp(&b.0) );
 
             // log::error!("MEAT: {:?}", (key_meta, bind.total_size, bytes.len(), bind.data().0.size()));
-    
             Some(
-                BindEffectValues { bytes, offsets, bind: Arc::new(bind), }
+                BindEffectValues { bytes, offsets, bind, }
             )
         } else {
             None
@@ -208,19 +206,26 @@ impl BindEffectValues {
         }
     }
     pub fn update(&mut self, mut offset: usize, value: &[u8]) {
+        let updateoffset = offset;
         value.iter().for_each(|v| { self.bytes[offset] = *v; offset += 1; });
+        self.bind.update_data(updateoffset, value);
     }
-    pub fn bind(&self) -> Arc<ShaderBindEffectValue> {
-        self.bind.clone()
+    pub fn update_texture(&self, texidx: usize, tilloff: &[f32;4], wrap_u: EAddressMode, wrap_v: EAddressMode, wrap_w: EAddressMode, coord: u32) {
+        if let Some(bind) = self.bind.texture_info.get(texidx) {
+            bind.update(self.bind.matidx() as usize, bytemuck::cast_slice(tilloff), wrap_u.to_u8() as u32, wrap_v.to_u8() as u32, wrap_w.to_u8() as u32, coord);
+        }
+    }
+    pub fn write_data(&self, offset: usize, value: &[u8]) {
+        self.bind.update_data(offset, value);
+    }
+    pub fn uniforms(&self) -> &Vec<(Atom, UniformOffset)> {
+        &self.offsets
     }
     pub fn offset(&self, key: &Atom) -> Option<&UniformOffset> {
         match self.offsets.binary_search_by(|v| v.0.cmp(key) ) {
             Ok(idx) => Some(&self.offsets.get(idx).unwrap().1),
             Err(_) => None,
         }
-    }
-    pub fn uniforms(&self) -> &Vec<(Atom, UniformOffset)> {
-        &self.offsets
     }
     pub fn log(&self) {
         // log::error!("{:?}", &self.offsets);

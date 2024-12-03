@@ -6,7 +6,7 @@ use pi_render::renderer::{
     bind::{TKeyBind, KeyBindTexture2D, KeyBindLayoutTexture2D, KeyBindSampler, KeyBindLayoutSampler},
     shader_stage::EShaderStage
 };
-use crate::shader::{sampler_bind_code, texture_bind_code, ShaderVarUniform};
+use crate::{prelude::{BindDefines, TBindDefine}, shader::{sampler_bind_code, texture_bind_code, ShaderVarUniform}};
 
 
 #[derive(Clone, Deref, Hash, PartialEq, Eq)]
@@ -32,15 +32,9 @@ impl TKeyBind for ShaderBindMainCameraOpaqueTexture {
         )
     }
 }
-
-#[derive(Clone, Hash, PartialEq, Eq)]
-pub struct BindUseMainCameraOpaqueTexture {
-    pub(crate) bind: u32,
-    pub(crate) data: Arc<ShaderBindMainCameraOpaqueTexture>,
-}
-impl BindUseMainCameraOpaqueTexture {
-    pub fn new(bind: u32, data: Arc<ShaderBindMainCameraOpaqueTexture>) -> Self {
-        Self { bind, data }
+impl TBindDefine for ShaderBindMainCameraOpaqueTexture {
+    fn bind_include(&self) -> u32 {
+        BindDefines::SCREEN_OPAQUE_TARGET
     }
 }
 
@@ -67,15 +61,9 @@ impl TKeyBind for ShaderBindMainCameraOpaqueSampler {
         )
     }
 }
-
-#[derive(Clone, Hash, PartialEq, Eq)]
-pub struct BindUseMainCameraOpaqueSampler {
-    pub(crate) bind: u32,
-    pub(crate) data: Arc<ShaderBindMainCameraOpaqueSampler>,
-}
-impl BindUseMainCameraOpaqueSampler {
-    pub fn new(bind: u32, data: Arc<ShaderBindMainCameraOpaqueSampler>) -> Self {
-        Self { bind, data }
+impl TBindDefine for ShaderBindMainCameraOpaqueSampler {
+    fn bind_include(&self) -> u32 {
+        BindDefines::SCREEN_OPAQUE_TARGET
     }
 }
 
@@ -104,17 +92,12 @@ impl TKeyBind for ShaderBindMainCameraDepthTexture {
         )
     }
 }
-
-#[derive(Clone, Hash, PartialEq, Eq)]
-pub struct BindUseMainCameraDepthTexture {
-    pub(crate) bind: u32,
-    pub(crate) data: Arc<ShaderBindMainCameraDepthTexture>,
-}
-impl BindUseMainCameraDepthTexture {
-    pub fn new(bind: u32, data: Arc<ShaderBindMainCameraDepthTexture>) -> Self {
-        Self { bind, data }
+impl TBindDefine for ShaderBindMainCameraDepthTexture {
+    fn bind_include(&self) -> u32 {
+        BindDefines::SCREEN_DEPTH_TARGET
     }
 }
+
 
 #[derive(Clone, Deref, Hash, PartialEq, Eq)]
 pub struct ShaderBindMainCameraDepthSampler(pub BindDataSampler);
@@ -138,14 +121,8 @@ impl TKeyBind for ShaderBindMainCameraDepthSampler {
         )
     }
 }
-
-#[derive(Clone, Hash, PartialEq, Eq)]
-pub struct BindUseMainCameraDepthSampler {
-    pub(crate) bind: u32,
-    pub(crate) data: Arc<ShaderBindMainCameraDepthSampler>,
-}
-impl BindUseMainCameraDepthSampler {
-    pub fn new(bind: u32, data: Arc<ShaderBindMainCameraDepthSampler>) -> Self {
-        Self { bind, data }
+impl TBindDefine for ShaderBindMainCameraDepthSampler {
+    fn bind_include(&self) -> u32 {
+        BindDefines::SCREEN_DEPTH_TARGET
     }
 }

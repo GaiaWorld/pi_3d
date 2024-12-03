@@ -50,3 +50,28 @@ pub trait ITexture {
     fn format(&self) -> TextureFormat;
     fn key(&self) -> KeyTextureViewUsage;
 }
+
+#[derive(Clone, Hash, Component)]
+pub struct RuntimeTextureKeyList (pub [crate::Arc<UniformTextureWithSamplerParam>; TEXTURE_SLOT_COUNT]);
+impl Default for RuntimeTextureKeyList {
+    fn default() -> Self {
+        Self([
+            Arc::new(UniformTextureWithSamplerParam::default()),
+            Arc::new(UniformTextureWithSamplerParam::default()),
+            Arc::new(UniformTextureWithSamplerParam::default()),
+            Arc::new(UniformTextureWithSamplerParam::default()),
+            Arc::new(UniformTextureWithSamplerParam::default()),
+            Arc::new(UniformTextureWithSamplerParam::default()),
+            Arc::new(UniformTextureWithSamplerParam::default()),
+            Arc::new(UniformTextureWithSamplerParam::default()),
+        ])
+    }
+}
+impl RuntimeTextureKeyList {
+    pub fn query(&self, idx: usize) -> &crate::Arc<UniformTextureWithSamplerParam> {
+        self.0.get(idx).unwrap()
+    }
+    pub fn modify(&mut self, idx: usize, val: crate::Arc<UniformTextureWithSamplerParam>) {
+        self.0[idx] = val;
+    }
+}

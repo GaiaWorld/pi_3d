@@ -16,6 +16,8 @@ mod uniform_value;
 mod shader;
 mod shader_effect_meta;
 mod buildin_var;
+mod attributes;
+mod vertex_buffer_desc;
 
 pub use buildin_var::*;
 pub use block_code::*;
@@ -29,6 +31,8 @@ pub use uniform_value::*;
 pub use shader::*;
 pub use shader_effect_meta::*;
 pub use render_alignment_code::*;
+pub use attributes::*;
+pub use vertex_buffer_desc::*;
 
 pub type UniformPropertyName = Atom;
 

@@ -6,15 +6,12 @@ use pi_render::renderer::{
     bind::{TKeyBind, KeyBindTexture2D, KeyBindLayoutTexture2D, KeyBindSampler, KeyBindLayoutSampler, KeyBindLayoutBuffer, KeyBindBuffer},
     shader_stage::EShaderStage, bind_buffer::{BindBufferAllocator, BindBufferRange}
 };
-use crate::shader::{sampler_bind_code, texture_bind_code, ShaderSetBind, ShaderVarUniform};
+use crate::{prelude::{BindDefines, TBindDefine}, shader::{sampler_bind_code, texture_bind_code, ShaderSetBind, ShaderVarUniform}};
 
-#[derive(Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct ShaderBindShadowData{
     pub(crate) data: BindBufferRange,
-    pub direct_count: u32,
-    pub point_count: u32,
-    pub spot_count: u32,
-    pub shadow_count: u32,
+    pub shadow_count: u16,
     pub(crate) shadow_data_offset: u32,
     pub(crate) max_type_count: u32,
     pub(crate) totalsize: u32,
@@ -39,21 +36,21 @@ impl ShaderBindShadowData {
 
     pub fn new(
         allocator: &mut BindBufferAllocator,
-        direct_count: u32,
-        point_count: u32,
-        spot_count: u32,
-        hemi_count: u32,
-        shadow_count: u32,
+        direct_count: u16,
+        point_count: u16,
+        spot_count: u16,
+        hemi_count: u16,
+        shadow_count: u16,
     ) -> Option<Self> {
-        let max_type_count = direct_count.max(point_count).max(spot_count).max(hemi_count);
-        let shadow_data_offset = max_type_count * 4 * 4;
-        let size = shadow_data_offset + shadow_count * Self::SIZE_SHADOW_DATA;
+        let max_type_count = direct_count.max(point_count).max(spot_count).max(hemi_count) as u32;
+        let shadow_data_offset = max_type_count * 4 * 4 as u32;
+        let size = shadow_data_offset + shadow_count as u32 * Self::SIZE_SHADOW_DATA;
         if let Some(data) = allocator.allocate( size as wgpu::DynamicOffset ) {
             let mut temp = Vec::with_capacity(max_type_count as usize * 4);
             for _ in 0..max_type_count {
                 temp.push(u32::MAX); temp.push(u32::MAX); temp.push(u32::MAX); temp.push(u32::MAX);
             }
-            let mut tempf32 = Vec::with_capacity((shadow_count * Self::SIZE_SHADOW_DATA / 4) as usize);
+            let mut tempf32 = Vec::with_capacity((shadow_count as u32 * Self::SIZE_SHADOW_DATA / 4) as usize);
             let matrix: [f32;16] = [1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1.];
             let bias_and_scale: [f32;4] = [0.001, 0.001, 1., 0.];
             let depth_scale: [f32;4] = [1., 1., 0., 0.];
@@ -66,7 +63,7 @@ impl ShaderBindShadowData {
             }
             data.0.write_data( 0, bytemuck::cast_slice(&temp));
             data.0.write_data( shadow_data_offset as usize, bytemuck::cast_slice(&tempf32));
-            Some(Self { data, direct_count, point_count, spot_count, shadow_data_offset, shadow_count, max_type_count, totalsize: size })
+            Some(Self { data, shadow_data_offset, shadow_count: shadow_count as u16, max_type_count, totalsize: size })
         } else {
             None
         }
@@ -90,10 +87,10 @@ impl TShaderBindCode for ShaderBindShadowData {
         result += "{";
         result += crate::prelude::S_BREAK;
         result += ShaderSetBind::code_uniform_array(crate::prelude::S_UVEC4, ShaderVarUniform::SHADOWMAP_LIGHT_INDEXS, self.max_type_count).as_str();
-        result += ShaderSetBind::code_uniform_array(crate::prelude::S_MAT4, ShaderVarUniform::SHADOWMAP_MATRIX, self.shadow_count).as_str();
-        result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::SHADOWMAP_BIAS_ANS_SCALE, self.shadow_count).as_str();
-        result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::SHADOWMAP_DEPTH_VALUES, self.shadow_count).as_str();
-        result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::SHADOWMAP_TILLOFF, self.shadow_count).as_str();
+        result += ShaderSetBind::code_uniform_array(crate::prelude::S_MAT4, ShaderVarUniform::SHADOWMAP_MATRIX, self.shadow_count as u32).as_str();
+        result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::SHADOWMAP_BIAS_ANS_SCALE, self.shadow_count as u32).as_str();
+        result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::SHADOWMAP_DEPTH_VALUES, self.shadow_count as u32).as_str();
+        result += ShaderSetBind::code_uniform_array(crate::prelude::S_VEC4, ShaderVarUniform::SHADOWMAP_TILLOFF, self.shadow_count as u32).as_str();
         result += "};";
         result += crate::prelude::S_BREAK;
         result += "const uint MAX_SHADOW = "; result += self.shadow_count.to_string().as_str(); result += ";";
@@ -116,15 +113,9 @@ impl TKeyBind for ShaderBindShadowData {
         )
     }
 }
-
-#[derive(Clone, Hash, PartialEq, Eq)]
-pub struct BindUseShadowData {
-    pub(crate) bind: u32,
-    pub(crate) data: Arc<ShaderBindShadowData>,
-}
-impl BindUseShadowData {
-    pub fn new(bind: u32, data: Arc<ShaderBindShadowData>) -> Self {
-        Self { bind, data }
+impl TBindDefine for ShaderBindShadowData {
+    fn bind_include(&self) -> u32 {
+        BindDefines::SHADOWMAP
     }
 }
 
@@ -152,17 +143,12 @@ impl TKeyBind for ShaderBindShadowTexture {
         )
     }
 }
-
-#[derive(Clone, Hash, PartialEq, Eq)]
-pub struct BindUseShadowTexture {
-    pub(crate) bind: u32,
-    pub(crate) data: Arc<ShaderBindShadowTexture>,
-}
-impl BindUseShadowTexture {
-    pub fn new(bind: u32, data: Arc<ShaderBindShadowTexture>) -> Self {
-        Self { bind, data }
+impl TBindDefine for ShaderBindShadowTexture {
+    fn bind_include(&self) -> u32 {
+        BindDefines::SHADOWMAP
     }
 }
+
 
 #[derive(Clone, Deref, Hash, PartialEq, Eq)]
 pub struct ShaderBindShadowSampler(pub BindDataSampler);
@@ -187,15 +173,9 @@ impl TKeyBind for ShaderBindShadowSampler {
         )
     }
 }
-
-
-#[derive(Clone, Hash, PartialEq, Eq)]
-pub struct BindUseShadowSampler {
-    pub(crate) bind: u32,
-    pub(crate) data: Arc<ShaderBindShadowSampler>,
-}
-impl BindUseShadowSampler {
-    pub fn new(bind: u32, data: Arc<ShaderBindShadowSampler>) -> Self {
-        Self { bind, data }
+impl TBindDefine for ShaderBindShadowSampler {
+    fn bind_include(&self) -> u32 {
+        BindDefines::SHADOWMAP
     }
 }
+

@@ -100,24 +100,38 @@ impl ModelStatic {
 /// 用于记录 Mesh 的模型相关Uniform数据
 /// 包含 Mesh 的渲染矩阵, 骨骼绑定, 关联灯光等等信息
 #[derive(Component, Default, Clone)]
-pub struct BindModel(pub Option<Arc<ShaderBindModelAboutMatrix>>);
+pub struct BindModel(pub Option<ShaderBindModelAboutMatrix>);
 impl BindModel {
     pub fn new(
         allocator: &mut BindBufferAllocator,
-    ) -> Option<Self> {
+    ) -> Self {
+        Self(ShaderBindModelAboutMatrix::new(allocator))
+    }
+}
 
-        if let Some(bind) = ShaderBindModelAboutMatrix::new(allocator) {
-            Some(Self(Some(Arc::new(bind))))
-        } else {
-            None
-        }
+/// 用于记录 Mesh 的模型 材质数据Index
+#[derive(Component, Default, Clone)]
+pub struct BindModelMatIdx(pub Option<ShaderBindModelMatIdx>);
+impl BindModelMatIdx {
+    pub fn new(
+        allocator: &mut BindBufferAllocator,
+    ) -> Self {
+        Self(ShaderBindModelMatIdx::new(allocator))
+    }
+}
+
+#[derive(Component, Clone)]
+pub struct ModelMatIdxs(pub [u16; PassTag::PASS_COUNT]);
+impl Default for ModelMatIdxs {
+    fn default() -> Self {
+        Self([0, 0, 0, 0, 0, 0, 0, 0])
     }
 }
 
 /// 通用的一个BindModel,可用于多个粒子系统共用,增加合批机会
 /// 实例化渲染中 BindModel 上的矩形数据并不会使用
 #[derive(Resource)]
-pub struct CommonBindModel(pub BindModel);
+pub struct CommonBindModel(pub BindModel, pub BindModelMatIdx);
 
 /// 用于记录 Mesh 的可渲染顶点范围(当使用 Indices 时)
 #[derive(Component, Clone)]
@@ -276,16 +290,12 @@ pub struct ModelForceLightings {
 /// 用于记录 Mesh 关联灯光的 Uniform 数据
 #[derive(Component, Default)]
 pub struct ModelLightingIndexs {
-    pub bind: Option<Arc<BindModelLightIndexs>>,
+    pub bind: Option<BindModelLightIndexs>,
     pub count: u32,
 }
 impl ModelLightingIndexs {
     pub fn new(allocator: &mut BindBufferAllocator, lightlimit: &LightLimitInfo) -> Self {
-        let data = if let Some(data) = BindModelLightIndexs::new(allocator, lightlimit.max_direct_light_count, lightlimit.max_point_light_count, lightlimit.max_spot_light_count, lightlimit.max_hemi_light_count) {
-            Some(Arc::new(data))
-        } else {
-            None
-        };
+        let data = BindModelLightIndexs::new(allocator, lightlimit.max_direct_light_count, lightlimit.max_point_light_count, lightlimit.max_spot_light_count, lightlimit.max_hemi_light_count);
         Self { bind: data, count: 0 }
     }
 }

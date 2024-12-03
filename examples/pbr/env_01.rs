@@ -123,9 +123,9 @@ impl Plugin for PluginTest {
         // actions.material.create.push(OpsMaterialCreate::ops(idmat, StandardShader::KEY, EPassTag::Opaque));
         actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
             slotname: Atom::from(BlockMainTexture::KEY_TEX),
-            filter: true,
             sample: KeySampler::linear_repeat(),
             url: EKeyTexture::from("./assets/images/fractal.png"),
+            ..Default::default()
         }));
         idmat
     };

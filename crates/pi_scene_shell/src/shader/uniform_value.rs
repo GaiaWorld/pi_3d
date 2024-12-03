@@ -2,6 +2,8 @@ use std::hash::Hash;
 
 use pi_atom::Atom;
 
+use crate::run_stage::EngineCustomPlugins;
+
 use super::{TUnifromShaderProperty, UniformPropertyName, TBindDescToShaderCode};
 
 
@@ -445,19 +447,16 @@ impl MaterialValueBindDesc {
 
         result
     }
-    fn _code(&self, set: u32, index: u32) -> String {
+    fn _code(&self, set: u32, index: u32, arrlen: u32, engineopt: &EngineCustomPlugins) -> String {
         let mut result = String::from("");
+        let mut definecode = String::from("");
 
         if self.size() == 0 {
 
         } else {
             let mut total_num = 0;
     
-            result += "layout(set = ";
-            result += set.to_string().as_str();
-            result += ", binding = ";
-            result += index.to_string().as_str();
-            result += ") uniform MatParam {"; result += crate::prelude::S_BREAK;
+            result += "struct MatParam {"; result += crate::prelude::S_BREAK;
     
             self.mat4_list.iter().for_each(|name| {
                 result += crate::prelude::S_MAT4; result += crate::prelude::S_SPACE;
@@ -476,7 +475,6 @@ impl MaterialValueBindDesc {
             self.vec4_list.iter().for_each(|name| {
                 result += crate::prelude::S_VEC4; result += crate::prelude::S_SPACE;
                 result += &name.0;
-                if name.2 { result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; }
                 result += ";"; result += crate::prelude::S_BREAK;
             });
             total_num += self.vec4_list.len();
@@ -484,7 +482,6 @@ impl MaterialValueBindDesc {
             self.vec3_list.iter().for_each(|name| {
                 result += crate::prelude::S_VEC4; result += crate::prelude::S_SPACE;
                 result += &name.0;
-                if name.2 { result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; }
                 result += ";"; result += crate::prelude::S_BREAK;
             });
             total_num += self.vec3_list.len();
@@ -492,7 +489,6 @@ impl MaterialValueBindDesc {
             self.vec2_list.iter().for_each(|name| {
                 result += crate::prelude::S_VEC2; result += crate::prelude::S_SPACE;
                 result += &name.0;
-                if name.2 { result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; }
                 result += ";"; result += crate::prelude::S_BREAK;
             });
             total_num += self.vec2_list.len();
@@ -504,7 +500,6 @@ impl MaterialValueBindDesc {
             self.float_list.iter().for_each(|name| {
                 result += crate::prelude::S_FLOAT; result += crate::prelude::S_SPACE;
                 result += &name.0;
-                if name.2 { result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; }
                 result += ";"; result += crate::prelude::S_BREAK;
             });
             total_num += self.float_list.len();
@@ -512,7 +507,6 @@ impl MaterialValueBindDesc {
             self.uint_list.iter().for_each(|name| {
                 result += crate::prelude::S_UINT; result += crate::prelude::S_SPACE;
                 result += &name.0;
-                if name.2 { result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; }
                 result += ";"; result += crate::prelude::S_BREAK;
             });
             // total_num += self.uint_list.len();
@@ -524,55 +518,75 @@ impl MaterialValueBindDesc {
                     result += ";"; result += crate::prelude::S_BREAK;
                 }
             }
-    
+
             result += "};"; result += crate::prelude::S_BREAK;
+
+            result += "layout(set = ";
+            result += set.to_string().as_str();
+            result += ", binding = ";
+            result += index.to_string().as_str();
+            result += ") uniform MatParam ";
+            result += "Mat";
+            if engineopt.disenable_material_array == false {
+                result += "[";
+                result += arrlen.to_string().as_str();
+                result += "]";
+            }
+            result += ";"; 
+            result += crate::prelude::S_BREAK;
         }
 
-        result
+        definecode + &result
     }
     pub fn vs_running_code(&self) -> String {
         let mut result = String::from("");
-        self.vec4_list.iter().for_each(|name| {
-            if name.2 { 
-                result += &name.0; result += crate::prelude::S_EQUAL; result += &name.0; result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; result += ";"; result += crate::prelude::S_BREAK;
-            }
-        });
-        self.vec3_list.iter().for_each(|name| {
-            if name.2 { 
-                result += &name.0; result += crate::prelude::S_EQUAL; result += &name.0; result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; result += ".xyz;"; result += crate::prelude::S_BREAK;
-            }
-        });
-        self.vec2_list.iter().for_each(|name| {
-            if name.2 { 
-                result += &name.0; result += crate::prelude::S_EQUAL; result += &name.0; result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; result += ";"; result += crate::prelude::S_BREAK;
-            }
-        });
-        self.float_list.iter().for_each(|name| {
-            if name.2 { 
-                result += &name.0; result += crate::prelude::S_EQUAL; result += &name.0; result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; result += ";"; result += crate::prelude::S_BREAK;
-            }
-        });
-        self.uint_list.iter().for_each(|name| {
-            if name.2 { 
-                result += &name.0; result += crate::prelude::S_EQUAL; result += &name.0; result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; result += ";"; result += crate::prelude::S_BREAK;
-            }
-        });
+
+        // self.vec4_list.iter().for_each(|name| {
+        //     if name.2 { 
+        //         result += &name.0; result += crate::prelude::S_EQUAL;
+        //         result += &name.0; result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; result += ";"; result += crate::prelude::S_BREAK;
+        //     }
+        // });
+        // self.vec3_list.iter().for_each(|name| {
+        //     if name.2 { 
+        //         result += &name.0; result += crate::prelude::S_EQUAL; 
+        //         result += &name.0; result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; result += ".xyz;"; result += crate::prelude::S_BREAK;
+        //     }
+        // });
+        // self.vec2_list.iter().for_each(|name| {
+        //     if name.2 { 
+        //         result += &name.0; result += crate::prelude::S_EQUAL; 
+        //         result += &name.0; result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; result += ";"; result += crate::prelude::S_BREAK;
+        //     }
+        // });
+        // self.float_list.iter().for_each(|name| {
+        //     if name.2 { 
+        //         result += &name.0; result += crate::prelude::S_EQUAL; 
+        //         result += &name.0; result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; result += ";"; result += crate::prelude::S_BREAK;
+        //     }
+        // });
+        // self.uint_list.iter().for_each(|name| {
+        //     if name.2 { 
+        //         result += &name.0; result += crate::prelude::S_EQUAL; 
+        //         result += &name.0; result += Self::PRE_KEY_FOR_INSTANCE_UNIFORM; result += ";"; result += crate::prelude::S_BREAK;
+        //     }
+        // });
 
         result
     }
 }
-impl TBindDescToShaderCode for MaterialValueBindDesc {
-    fn vs_code(&self, set: u32, bind: u32) -> String {
+impl MaterialValueBindDesc {
+    pub fn vs_code(&self, set: u32, bind: u32, arrlen: u32, engineopt: &EngineCustomPlugins) -> String {
         if self.stage & wgpu::ShaderStages::VERTEX == wgpu::ShaderStages::VERTEX {
-            self._code(set, bind)
+            self._code(set, bind, arrlen, engineopt)
         } else {
             String::from("")
         }
     }
 
-    fn fs_code(&self, set: u32, bind: u32) -> String {
+    pub fn fs_code(&self, set: u32, bind: u32, arrlen: u32, engineopt: &EngineCustomPlugins) -> String {
         if self.stage & wgpu::ShaderStages::FRAGMENT == wgpu::ShaderStages::FRAGMENT {
-            self._code(set, bind)
+            self._code(set, bind, arrlen, engineopt)
         } else {
             String::from("")
         }

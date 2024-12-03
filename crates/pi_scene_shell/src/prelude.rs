@@ -26,16 +26,15 @@ pub use pi_bevy_render_plugin::{
 };
 pub use pi_null::Null;
 pub use pi_map::smallvecmap::SmallVecMap;
+use pi_render::renderer::attributes::KeyAttributesLayouts;
 use pi_scene_math::{Quaternion, SQuaternion, Vector4};
 pub use pi_scene_math::{Vector3, Matrix, Rotation3, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolRotation, TToolVector3}, Number, Isometry3};
 pub use pi_render::{
     asset::*,
     renderer::{
-        attributes::*,
         bind_group::*,
         bind_buffer::*,
         vertex_buffer::*,
-        vertex_buffer_desc::*,
         vertex_buffer_loader::*,
         vertices::*,
         instance::*,
@@ -72,7 +71,7 @@ pub use pi_share::{Share, ThreadSync, ShareRefCell};
 use simba::simd::{SimdBool, SimdComplexField, SimdPartialOrd, SimdRealField};
 use wgpu::RenderPass;
 
-pub use crate::run_stage::{ERunStageChap, runif_3d};
+pub use crate::run_stage::{ERunStageChap, runif_3d, EngineCustomPlugins};
 pub use crate::object::ObjectID;
 pub use crate::engine_shell::*;
 pub use crate::assets::texture::*;
@@ -198,12 +197,52 @@ impl From<EVerticesBufferUsage> for AssetResBufferIndices {
     }
 }
 
+pub trait FromVertexBufferDescs {
+    fn from_descs(value: &Vec<VertexBufferDesc>) -> Self;
+}
+
+impl FromVertexBufferDescs for VertexBufferLayouts {
+    fn from_descs(value: &Vec<VertexBufferDesc>) -> Self {
+        let mut layouts = vec![];
+        let mut datasize = 0;
+
+        // 按 EVertexDataKind 排序确定 shader_location
+        let mut shader_location = 0;
+        let mut attrcount = 0;
+        let mut desccount = 0;
+        value.iter().for_each(|buffer_desc| {
+            let mut attrs = vec![];
+            let mut offset = 0;
+            buffer_desc.attributes().iter().for_each(|attribute| {
+                let format = attribute.format();
+                let stride = format.use_bytes();
+                attrs.push(wgpu::VertexAttribute {
+                    format,
+                    offset,
+                    shader_location,
+                });
+                offset += stride;
+                shader_location += 1;
+                attrcount += 1;
+
+                datasize += size_of::<wgpu::VertexAttribute>();
+            });
+
+            desccount += 1;
+            layouts.push((attrs, buffer_desc.step_mode(), offset as u32));
+            datasize += 8;
+        });
+
+        Self { size: datasize, desccount, attrcount, layout_list: KeyAttributesLayouts(layouts),  }
+    }
+}
+
 #[derive(Component)]
 pub struct VertexBufferLayoutsComp(pub VertexBufferLayouts, pub KeyShaderFromAttributes);
 impl Default for VertexBufferLayoutsComp {
     fn default() -> Self {
         Self(
-            VertexBufferLayouts::from(&vec![]),
+            VertexBufferLayouts::from_descs(&vec![]),
             KeyShaderFromAttributes::new(&vec![])
         )
     }

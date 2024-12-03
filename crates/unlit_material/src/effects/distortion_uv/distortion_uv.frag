@@ -1,5 +1,5 @@
     vec4 baseColor = v_color;
-    float alpha = opacity();
+    float alpha = opacity(matParam);
 
 	float glossiness 			= 0.;
 	vec3 specularColor 		    = vec3(0., 0., 0.);
@@ -12,15 +12,15 @@
 	vec3 diffuseBase 					= vec3(0., 0., 0.);
 	vec3 specularBase 					= vec3(0., 0., 0.);
 
-    vec2 maskUVOffset       = applyUVOffsetSpeed(uMaskUVOS);
-    vec2 maskValue          = (maskTexture(v_uv, maskUVOffset * (1.0 - uFlowMode)).rg * 2.0 - 1.0) + maskUVOffset * uFlowMode;
+    vec2 maskUVOffset       = applyUVOffsetSpeed(matParam.uMaskUVOS);
+    vec2 maskValue          = (maskTexture(v_uv, maskUVOffset * (1.0 - matParam.uFlowMode), matParam).rg * 2.0 - 1.0) + maskUVOffset * matParam.uFlowMode;
 
-    vec4 mainTextureColor   = mainTexture(v_uv, applyUVOffsetSpeed(uMainUVOS) + maskValue * uStrength);
-    baseColor.rgb           *= mainTextureColor.rgb * mainStrength() * mainColor();
+    vec4 mainTextureColor   = mainTexture(v_uv, applyUVOffsetSpeed(matParam.uMainUVOS) + maskValue * matParam.uStrength, matParam);
+    baseColor.rgb           *= mainTextureColor.rgb * mainStrength(matParam) * mainColor(matParam);
     alpha                   *= mainTextureColor.a;
     
-    vec4 opacityData        = opacityTexture(v_uv, applyUVOffsetSpeed(uOpacityUVOS));
-    alpha                   *= opacityChannel(opacityData);
+    vec4 opacityData        = opacityTexture(v_uv, applyUVOffsetSpeed(matParam.uOpacityUVOS), matParam);
+    alpha                   *= opacityChannel(opacityData, matParam);
 
     vec4 finalColor = vec4(baseColor.rgb, alpha);
     finalColor.rgb *= finalColor.a;

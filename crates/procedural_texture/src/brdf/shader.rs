@@ -10,7 +10,7 @@ pub struct BRDFShader {
 impl BRDFShader {
     pub const KEY: &'static str     = "BrdfShader";
 
-    pub fn meta() -> ShaderEffectMeta {
+    pub fn meta(engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
         ShaderEffectMeta::new(
             MaterialValueBindDesc {
                 stage: wgpu::ShaderStages::VERTEX_FRAGMENT,
@@ -48,7 +48,8 @@ impl BRDFShader {
                 define: Atom::from(include_str!("./brdf_define.frag")),
                 running: Atom::from(include_str!("./brdf.frag"))
             },
-            ShaderDefinesSet::default()
+            ShaderDefinesSet::default(),
+            engineopt
         )
     }
 }

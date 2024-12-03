@@ -10,7 +10,7 @@ pub struct CloudShader {
 impl CloudShader {
     pub const KEY: &'static str     = "CloudShader";
 
-    pub fn meta() -> ShaderEffectMeta {
+    pub fn meta(engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
         ShaderEffectMeta::new(
             MaterialValueBindDesc {
                 stage: wgpu::ShaderStages::VERTEX_FRAGMENT,
@@ -46,7 +46,8 @@ impl CloudShader {
                 define: Atom::from(include_str!("./cloud_define.frag")),
                 running: Atom::from(include_str!("./cloud.frag"))
             },
-            ShaderDefinesSet::default()
+            ShaderDefinesSet::default(),
+            engineopt
         )
     }
 }

@@ -23,12 +23,13 @@ fn setup(
     nodematblocks: Res<NodeMaterialBlocks>,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
     demooption: Res<base::DemoOption>,
+    engineopt: Res<EngineCustomPlugins>,
 ) {
     let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
         (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
     } else { return; };
 
-    ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(DistortionUVShader::KEY), DistortionUVShader::create(&nodematblocks));
+    ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(DistortionUVShader::KEY), DistortionUVShader::create(&nodematblocks, &engineopt));
 
     let tes_size = 5;
     fps.frame_ms = 4;
@@ -48,21 +49,21 @@ fn setup(
     actions.material.create.push(OpsMaterialCreate::ops(idmat, DistortionUVShader::KEY));
     actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
-        filter: true,
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/fractal.png"),
+        ..Default::default()
     }));
     actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockOpacityTexture::KEY_TEX),
-        filter: true,
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/eff_ui_ll_085.png"),
+        ..Default::default()
     }));
     actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMaskTexture::KEY_TEX),
-        filter: true,
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/eff_uv_lf_002.png"),
+        ..Default::default()
     }));
     actions.material.val.push(OpsUniformVal::vec2(idmat, Atom::from(BlockMaskTextureUVOffsetSpeed::KEY_PARAM), 1., 1.));
 

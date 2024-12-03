@@ -1,5 +1,6 @@
 use std::{mem::size_of, sync::Arc};
 
+use ktx::KtxInfo;
 use pi_async_rt::prelude::AsyncRuntime;
 use pi_hal::runtime::RENDER_RUNTIME;
 use crossbeam::queue::SegQueue;
@@ -8,9 +9,10 @@ use pi_atom::Atom;
 use pi_bevy_asset::ShareAssetMgr;
 use pi_bevy_render_plugin::PiRenderQueue;
 use pi_hash::{XHashMap, XHashSet};
-use pi_render::{asset::TAssetKeyU64, renderer::texture::{KeyImageTexture, ResImageTexture}};
+use pi_render::{asset::TAssetKeyU64, renderer::texture::{ImageTextureFrame, KeyImageTexture, KeyImageTextureFrame, ResImageTexture}};
 use pi_world::single_res::{SingleRes, SingleResMut};
 use pi_world_macros::Resource;
+use wgpu::Origin3d;
 
 
 pub type KeyTextureFrameAtlas   = u64;
@@ -25,7 +27,7 @@ pub enum ETextureFrameRenderMode {
 }
 
 #[derive(Clone)]
-pub struct TextureFrame {
+pub struct SpriteFrame {
     pub rotated: bool,
     pub trimmed: bool,
     pub source_size_w: u16,
@@ -39,7 +41,7 @@ pub struct TextureFrame {
     pub frame_w: u16,
     pub frame_h: u16,
 }
-impl TextureFrame {
+impl SpriteFrame {
     pub fn from_data(data: &[u16]) -> Self {
         Self {
             rotated: data[0] > 0,
@@ -62,7 +64,7 @@ impl TextureFrame {
 pub struct TextureFrameAtlas {
     pub _frames: XHashMap<u64, IdxTextureFrame>,
     pub _animations: XHashMap<u64, IdxTextureFrameAnim>,
-    pub frames: Vec<TextureFrame>,
+    pub frames: Vec<SpriteFrame>,
     pub animations: Vec<Vec<IdxTextureFrame>>,
     pub image: String,
     // pub sampler_mode: KeySampler,
@@ -88,7 +90,7 @@ impl pi_bevy_asset::TAssetCapacity for TextureFrameAtlas {
 }
 impl pi_assets::asset::Size for TextureFrameAtlas {
     fn size(&self) -> usize {
-        self.frames.len() * size_of::<TextureFrame>() + 116
+        self.frames.len() * size_of::<SpriteFrame>() + 116
     }
 }
 impl Asset for TextureFrameAtlas {
@@ -128,13 +130,13 @@ impl TextureFrameAtlas {
     pub fn get_animation_by_idx(&self, idx: IdxTextureFrameAnim) -> Option<&Vec<IdxTextureFrame>> {
         return self.animations.get(idx as usize);
     }
-    pub fn append_frame(&mut self, frame_name: String, frame: TextureFrame) -> IdxTextureFrame {
+    pub fn append_frame(&mut self, frame_name: String, frame: SpriteFrame) -> IdxTextureFrame {
         let frame_idx = self.frames.len();
         self._frames.insert(frame_name.asset_u64(), frame_idx as IdxTextureFrame);
         self.frames.push(frame);
         frame_idx as IdxTextureFrame
     }
-    pub fn get_frame(&self, frame_name: String) -> Option<&TextureFrame> {
+    pub fn get_frame(&self, frame_name: String) -> Option<&SpriteFrame> {
         match self._frames.get(&frame_name.asset_u64()) {
             Some(idx) => {
                 self.frames.get(*idx as usize)
@@ -142,7 +144,7 @@ impl TextureFrameAtlas {
             None => None,
         }
     }
-    pub fn get_frame_by_idx(&self, idx: IdxTextureFrame) -> Option<&TextureFrame> {
+    pub fn get_frame_by_idx(&self, idx: IdxTextureFrame) -> Option<&SpriteFrame> {
         self.frames.get(idx as usize)
     }
     pub fn get_frame_idx(&self, frame_name: String) -> Option<IdxTextureFrame> {
@@ -181,17 +183,46 @@ pub struct TextureCombineCmds {
     pub failed_quene: Arc<SegQueue<(Atom, Atom, u16, u32)>>,
     pub cmds: XHashMap<Atom, XHashMap<Atom, (u32, u16, bool, u32, u32, u32, u32)>>,
     pub records: XHashMap<Atom, XHashMap<Atom, (u32, u16, bool, u32, u32, u32, u32)>>,
-    pub textures: XHashMap<Atom, Handle<ResImageTexture>>,
-    pub check_loaded: XHashMap<u32, i32>,
+    pub textures: XHashMap<Atom, Handle<ImageTextureFrame>>,
+    pub check_loaded: XHashMap<u32, (i32, Option<Vec<u8>>)>,
     pub success: XHashSet<u32>,
     pub faileds: XHashSet<u32>,
 }
 impl TextureCombineCmds {
-    pub fn request(&mut self, requestid: u32, keytex: KeyImageTexture, atlas: XHashMap<Atom, (u32, u16, bool, u32, u32, u32, u32)>, assets: &ShareAssetMgr<ResImageTexture>) {
+    pub fn request(&mut self, requestid: u32, keytex: KeyImageTextureFrame, atlas: XHashMap<Atom, (u32, u16, bool, u32, u32, u32, u32)>, assets: &ShareAssetMgr<ImageTextureFrame>) {
 
         if let Some(texture) = assets.get(&keytex) {
             let key = keytex.url;
-            self.check_loaded.insert(requestid, atlas.len() as i32);
+            let format = texture.texture().format;
+            match format {
+                // wgpu::TextureFormat::Bc3RgbaUnorm => {
+                //     let (blockw, blockh) = format.block_dimensions();
+                //     let blocksize = format.block_copy_size(None).unwrap();
+                //     let tw = texture.width() / blockw;
+                //     let th = texture.height() / blockh;
+                //     let databytes = (tw * th * blocksize) as usize;
+                //     let mut data = Vec::with_capacity(databytes);
+                //     for _ in 0..databytes {
+                //         data.push(0);
+                //     }
+                //     self.check_loaded.insert(requestid, (atlas.len() as i32, Some(data)));
+                // },
+                // wgpu::TextureFormat::Astc { block, channel } => {
+                //     let (blockw, blockh) = format.block_dimensions();
+                //     let blocksize = format.block_copy_size(None).unwrap();
+                //     let tw = texture.width() / blockw;
+                //     let th = texture.height() / blockh;
+                //     let databytes = (tw * th * blocksize) as usize;
+                //     let mut data = Vec::with_capacity(databytes);
+                //     for _ in 0..databytes {
+                //         data.push(0);
+                //     }
+                //     self.check_loaded.insert(requestid, (atlas.len() as i32, Some(data)));
+                // },
+                _ => {
+                    self.check_loaded.insert(requestid, (atlas.len() as i32, None));
+                }
+            }
             self.cmds.insert(key.clone(), atlas);
             self.textures.insert(key, texture);
         } else {
@@ -234,9 +265,11 @@ pub fn sys_texture_combine(
                 if iscompress {
                     match pi_hal::file::load_from_url(&file).await {
                         Ok(res) => {
+                            // log::error!("Loaded File {:?}", &file);
                             loaded.push((key, file, res));
                         }
                         Err(_e) => {
+                            // log::error!("{:?}", _e);
                             failed.push((key, file, idx, requestid));
                         }
                     }
@@ -246,6 +279,7 @@ pub fn sys_texture_combine(
                             loaded2.push((key, file, res));
                         }
                         Err(_e) => {
+                            // log::error!("{:?}", _e);
                             failed.push((key, file, idx, requestid));
                         }
                     }
@@ -263,16 +297,75 @@ pub fn sys_texture_combine(
                 let dataoffset = 0;
                 let depth_or_array_layers = 1;
                 let aspect = None;
+                // log::warn!("Success: {:?}", (&key, &file));
+                let requestid = *requestid;
+                let xoffset = *xoffset;
+                let yoffset = *yoffset;
+                let width = *width;
+                let height = *height;
+                
                 if let Some(tex) = cmds.textures.get(&key) {
-                    let ktx = ktx::Ktx::new(data.as_slice());
-                    for data in ktx.textures() {
-                        tex.update(&queue, *xoffset, *yoffset, *width, *height, depth_or_array_layers, aspect, data, dataoffset);
-                    }
-                    let requestid = *requestid;
-                    if let Some(check) = cmds.check_loaded.get_mut(&requestid) {
-                        *check -= 1;
-                        if *check <= 0 {
-                            success.push(requestid);
+                    let tex = tex.clone();
+                    if let Some((check, totaldata)) = cmds.check_loaded.get_mut(&requestid) {
+                        if let Some(totaldata) = totaldata {
+                            let format = tex.texture().format;
+                            let (blockw, blockh) = format.block_dimensions();
+                            let blocksize = format.block_copy_size(None).unwrap() as usize;
+                            let tw = tex.width() / blockw;
+                            let th = tex.height() / blockh;
+                            let mut xx = xoffset / blockw;
+                            let mut yy = yoffset / blockh;
+                            let dw = width / blockw;
+                            let dh = height / blockh;
+
+                            let ktx = ktx::Ktx::new(data.as_slice());
+                            for data in ktx.textures() {
+                                for dy in 0..dh {
+                                    // for dx in 0..dw {
+                                    //     let sx = dx + xx;
+                                    //     let sy = dy + yy;
+                                    //     let didx = (dy * dw + dx) as usize * blocksize;
+                                    //     let sidx = (sy * tw + sx) as usize * blocksize;
+                                    //     for idx in 0..blocksize {
+                                    //         totaldata[sidx + idx] = data[didx + idx];
+                                    //     }
+                                    // }
+                                    let sy = dy + yy;
+                                    let didx = (dy * dw) as usize * blocksize;
+                                    let sidx = (sy * tw + xx) as usize * blocksize;
+                                    let len = blocksize * dw as usize;
+                                    for idx in 0..len {
+                                        totaldata[sidx + idx] = data[didx + idx];
+                                    }
+                                }
+                            }
+                            *check -= 1;
+                            // log::error!("Load : {:?}", check );
+                            if *check <= 0 {
+                                success.push(requestid);
+                                let format = tex.texture().format;
+                                let (blockw, blockh) = format.block_dimensions();
+                                ImageTextureFrame::update_sub(&tex.texture().texture, &queue, Origin3d::default(),
+                                    (tex.width() as u32 + blockw - 1) / blockw * blockw, (tex.height() as u32 + blockh - 1) / blockh * blockh,
+                                    1, aspect, &totaldata, dataoffset
+                                );
+                            }
+                        } else {
+                            *check -= 1;
+                            // log::error!("Load : {:?}", (*check, xoffset, yoffset, width, height) );
+                            if *check <= 0 {
+                                success.push(requestid);
+                            }
+                            let ktx = ktx::Ktx::new(data.as_slice());
+                            for data in ktx.textures() {
+                                // tex.update_texture(&queue, xoffset, yoffset, width, height, depth_or_array_layers, aspect, data, dataoffset);
+                                let format = tex.texture().format;
+                                let (blockw, blockh) = format.block_dimensions();
+                                ImageTextureFrame::update_sub(&tex.texture().texture, &queue, Origin3d { x: xoffset, y: yoffset, z: 0 },
+                                    (width as u32 + blockw - 1) / blockw * blockw, (height as u32 + blockh - 1) / blockh * blockh,
+                                    1, aspect, &data, dataoffset
+                                );
+                            }
                         }
                     }
                 }
@@ -288,28 +381,26 @@ pub fn sys_texture_combine(
                 let aspect = None;
                 if let Some(tex) = cmds.textures.get(&key) {
                     match &data {
-                        pi_hal::image::DynamicImage::ImageLuma8(image_buffer) => {
-                            tex.update(&queue, *xoffset, *yoffset, *width, *height, depth_or_array_layers, aspect, &image_buffer.as_raw(), dataoffset);
-                        },
-                        pi_hal::image::DynamicImage::ImageLumaA8(image_buffer) => {
-                            tex.update(&queue, *xoffset, *yoffset, *width, *height, depth_or_array_layers, aspect, &image_buffer.as_raw(), dataoffset);
-                        },
                         pi_hal::image::DynamicImage::ImageRgb8(image_buffer) => {
-                            tex.update(&queue, *xoffset, *yoffset, *width, *height, depth_or_array_layers, aspect, &data.to_rgba8(), dataoffset);
+                            let (blockw, blockh) = wgpu::TextureFormat::Rgba8Unorm.block_dimensions();
+                            ImageTextureFrame::update_sub(&tex.texture().texture, &queue, Origin3d { x: *xoffset, y: *yoffset, z: 0 },
+                                (*width as u32 + blockw - 1) / blockw, (*height as u32 + blockh - 1) / blockh,
+                                1, aspect, &data.to_rgba8(), dataoffset
+                            );
+                            // tex.update(&queue, *xoffset, *yoffset, *width, *height, depth_or_array_layers, aspect, &data.to_rgba8(), dataoffset);
                         },
                         pi_hal::image::DynamicImage::ImageRgba8(image_buffer) => {
-                            tex.update(&queue, *xoffset, *yoffset, *width, *height, depth_or_array_layers, aspect, &image_buffer.as_raw(), dataoffset);
+                            let (blockw, blockh) = wgpu::TextureFormat::Rgba8Unorm.block_dimensions();
+                            ImageTextureFrame::update_sub(&tex.texture().texture, &queue, Origin3d { x: *xoffset, y: *yoffset, z: 0 },
+                                (*width as u32 + blockw - 1) / blockw, (*height as u32 + blockh - 1) / blockh,
+                                1, aspect, &image_buffer.as_raw(), dataoffset
+                            );
+                            // tex.update(&queue, *xoffset, *yoffset, *width, *height, depth_or_array_layers, aspect, &image_buffer.as_raw(), dataoffset);
                         },
-                        pi_hal::image::DynamicImage::ImageLuma16(image_buffer) => todo!(),
-                        pi_hal::image::DynamicImage::ImageLumaA16(image_buffer) => todo!(),
-                        pi_hal::image::DynamicImage::ImageRgb16(image_buffer) => todo!(),
-                        pi_hal::image::DynamicImage::ImageRgba16(image_buffer) => todo!(),
-                        pi_hal::image::DynamicImage::ImageRgb32F(image_buffer) => todo!(),
-                        pi_hal::image::DynamicImage::ImageRgba32F(image_buffer) => todo!(),
-                        _ => todo!(),
+                        _ => {},
                     }
                     let requestid = *requestid;
-                    if let Some(check) = cmds.check_loaded.get_mut(&requestid) {
+                    if let Some((check, _)) = cmds.check_loaded.get_mut(&requestid) {
                         *check -= 1;
                         if *check <= 0 {
                             success.push(requestid);
@@ -328,3 +419,5 @@ pub fn sys_texture_combine(
         cmds.check_loaded.remove(&requestid);
     }
 }
+
+

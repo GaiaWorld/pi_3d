@@ -22,13 +22,9 @@ pub fn sys_create_camera(
     cmds.drain().for_each(|OpsCameraCreation(scene, entity)| {
         if let Some(mut commands) = commands.get_entity(entity) {
 
-            if let Some(bindviewer) = BindViewer::new(&mut dynallocator) {
-                let bundle = (bindviewer, ActionCamera::init(scene));
-                commands.insert(bundle);
-                // alter.alter(entity, bundle);
-            } else {
-                errors.record(entity, ErrorRecord::ERROR_BIND_VIEWER_CREATE_FAIL);
-            }
+            let bindviewer = BindViewer::new(&mut dynallocator);
+            let bundle = (bindviewer, ActionCamera::init(scene));
+            commands.insert(bundle);
         }
     })
 }

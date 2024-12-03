@@ -46,8 +46,9 @@ pub mod texture;
 
 fn setup(
     asset_mgr: Res<ShareAssetMgr<ShaderEffectMeta>>,
+    engineopt: Res<EngineCustomPlugins>,
 ) {
-    ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(SkyboxShader::KEY), SkyboxShader::meta());
+    ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(SkyboxShader::KEY), SkyboxShader::meta(&engineopt));
 }
 
 

@@ -10,7 +10,7 @@ impl DistortionUVShader {
     pub const KEY_MODE: &'static str = "uFlowMode";
     pub const KEY_STRENGTH: &'static str = "uStrength";
 
-    pub fn create(infos: &NodeMaterialBlocks) -> ShaderEffectMeta {
+    pub fn create(infos: &NodeMaterialBlocks, engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.fs_define = String::from(S_BREAK) + "layout(location = 0) out vec4 gl_FragColor;" + S_BREAK;
 
@@ -53,6 +53,6 @@ impl DistortionUVShader {
         nodemat.include(&Atom::from(BlockMaskTexture::KEY), infos);
         nodemat.include(&Atom::from(BlockMaskTextureUVOffsetSpeed::KEY), infos);
         
-        nodemat.meta()
+        nodemat.meta(engineopt)
     }
 }

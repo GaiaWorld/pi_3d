@@ -133,6 +133,8 @@ impl crate::Plugin for PluginMesh {
         .add_systems(Update, sys_act_instance_attribute
             // .run_if(runif_acts2::<OpsMeshForceLighting, OpsInstanceAttr>)          
             .after(sys_act_target_animation_attribute)  .in_set(StageModel::AbstructMeshCommand))
+        .add_systems(Update, sys_instance_matidxs
+            .in_set(StageModel::InstanceEffectMesh))    
         .add_systems(Update, sys_enable_about_instance               .in_set(StageModel::InstanceEffectMesh))
         .add_systems(Update, sys_calc_render_matrix_pre.after(sys_world_matrix_calc).in_set(StageTransform::TransformCalcMatrix))
         .add_systems(Update, sys_calc_render_matrix

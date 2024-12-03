@@ -19,14 +19,10 @@ impl Default for SceneAnimationEnable {
 pub struct SceneLightingInfosDirty;
 
 #[derive(Clone, Component, Default)]
-pub struct SceneLightingInfos(pub Option<Arc<ShaderBindSceneLightInfos>>);
+pub struct SceneLightingInfos(pub Option<ShaderBindSceneLightInfos>);
 impl SceneLightingInfos {
-    pub fn new(allocator: &mut BindBufferAllocator, lightlimit: LightLimitInfo) -> Option<Self> {
-        if let Some(data) = ShaderBindSceneLightInfos::new(allocator, lightlimit.max_direct_light_count, lightlimit.max_point_light_count, lightlimit.max_spot_light_count, lightlimit.max_hemi_light_count) {
-            Some(Self ( Some(Arc::new(data)) ))
-        } else {
-            None
-        }
+    pub fn new(allocator: &mut BindBufferAllocator, lightlimit: LightLimitInfo) -> Self {
+        Self ( ShaderBindSceneLightInfos::new(allocator, lightlimit.max_direct_light_count, lightlimit.max_point_light_count, lightlimit.max_spot_light_count, lightlimit.max_hemi_light_count) )
     }
 }
 
@@ -99,21 +95,18 @@ pub struct SceneShadowInfosDirty;
 pub struct SceneShadowRenderTarget(pub Option<KeyRenderTarget>);
 
 #[derive(Clone, Component, Default)]
-pub struct SceneShadowInfos(pub Option<Arc<ShaderBindShadowData>>, pub Option<ShareTargetView>, pub Option<BindDataTexture2D>, pub Option<BindDataSampler>);
+pub struct SceneShadowInfos(pub Option<ShaderBindShadowData>, pub Option<ShareTargetView>, pub Option<BindDataTexture2D>, pub Option<BindDataSampler>);
 impl SceneShadowInfos {
-    pub fn new(allocator: &mut BindBufferAllocator, lightlimit: LightLimitInfo, shadowlimit: ShadowLimitInfo) -> Option<Self> {
-        if let Some(data) = ShaderBindShadowData::new(allocator, lightlimit.max_direct_light_count, lightlimit.max_point_light_count, lightlimit.max_spot_light_count, lightlimit.max_hemi_light_count, shadowlimit.max_count) {
-            Some(Self ( Some(Arc::new(data)), None, None, None ))
-        } else {
-            None
-        }
+    pub fn new(allocator: &mut BindBufferAllocator, lightlimit: LightLimitInfo, shadowlimit: ShadowLimitInfo) -> Self {
+        let data = ShaderBindShadowData::new(allocator, lightlimit.max_direct_light_count, lightlimit.max_point_light_count, lightlimit.max_spot_light_count, lightlimit.max_hemi_light_count, shadowlimit.max_count);
+        Self(data, None, None, None)
     }
-    pub fn binds(&self, target: &CustomRenderTarget) -> (Arc<ShaderBindShadowData>, Arc<ShaderBindShadowTexture>, Arc<ShaderBindShadowSampler>) {
-            let tex = ETextureViewUsage::SRT(target.rt.clone());
-            (
-                self.0.as_ref().unwrap().clone(),
-                Arc::new(ShaderBindShadowTexture(BindDataTexture2D(tex))),
-                Arc::new(ShaderBindShadowSampler(target.sampler.clone()))
-            )
+    pub fn binds(&self, target: &CustomRenderTarget) -> (ShaderBindShadowData, ShaderBindShadowTexture, ShaderBindShadowSampler) {
+        let tex = ETextureViewUsage::SRT(target.rt.clone());
+        (
+            self.0.as_ref().unwrap().clone(),
+            ShaderBindShadowTexture(BindDataTexture2D(tex)),
+            ShaderBindShadowSampler(target.sampler.clone())
+        )
     }
 }

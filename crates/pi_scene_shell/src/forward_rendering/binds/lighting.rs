@@ -6,19 +6,19 @@ use pi_render::renderer::{
     shader_stage::EShaderStage,
     shader::TShaderBindCode
 };
-use crate::shader::{ShaderSetBind, ShaderVarUniform};
+use crate::{prelude::{BindDefines, TBindDefine}, shader::{ShaderSetBind, ShaderVarUniform}};
 
 
 ////////////////////////////////// Lighting LightIndex
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub struct BindModelLightIndexs {
     pub(crate) data: BindBufferRange,
-    pub direct_count: u32,
-    pub point_count: u32,
-    pub spot_count: u32,
-    pub hemi_count: u32,
+    pub direct_count: u16,
+    pub point_count: u16,
+    pub spot_count: u16,
+    pub hemi_count: u16,
     pub(crate) meta_offset: u32,
-    pub(crate) max_type_count: u32,
+    pub(crate) max_type_count: u16,
     pub(crate) totalsize: u32,
 }
 impl BindModelLightIndexs {
@@ -80,15 +80,15 @@ impl BindModelLightIndexs {
 
     pub fn new(
         allocator: &mut BindBufferAllocator,
-        direct_count: u32,
-        point_count: u32,
-        spot_count: u32,
-        hemi_count: u32,
+        direct_count: u16,
+        point_count: u16,
+        spot_count: u16,
+        hemi_count: u16,
     ) -> Option<Self> {
         let meta_offset = 0;
 
         let max_type_count = direct_count.max(point_count).max(spot_count).max(hemi_count);
-        let size = 4 * 4 + max_type_count * 4 * 4;
+        let size = 4 * 4 + max_type_count as u32 * 4 * 4;
 
         // log::warn!("IndexSize: {:?}", size);
         if let Some(data) = allocator.allocate( size as wgpu::DynamicOffset ) {
@@ -124,7 +124,7 @@ impl TShaderBindCode for BindModelLightIndexs {
         // result += ShaderSetBind::code_uniform_array(crate::prelude::S_UINT, ShaderVarUniform::MODEL_LIGHTS_COUNT, 4).as_str();
         result += ShaderSetBind::code_uniform(crate::prelude::S_UVEC4, ShaderVarUniform::MODEL_LIGHTS_COUNT).as_str();
         if 0 < self.max_type_count {
-        result += ShaderSetBind::code_uniform_array(crate::prelude::S_UVEC4, ShaderVarUniform::MODEL_LIGHTS_INDEXS, self.max_type_count).as_str();
+        result += ShaderSetBind::code_uniform_array(crate::prelude::S_UVEC4, ShaderVarUniform::MODEL_LIGHTS_INDEXS, self.max_type_count as u32).as_str();
         }
         // if 0 < self.direct_count {
         // result += ShaderSetBind::code_uniform_array(crate::prelude::S_UINT, ShaderVarUniform::DIRECT_LIGHT_INDEXS, self.direct_count).as_str();
@@ -157,14 +157,9 @@ impl TKeyBind for BindModelLightIndexs {
         )
     }
 }
-
-#[derive(Clone, Hash, PartialEq, Eq)]
-pub struct BindUseModelLightIndexs {
-    pub(crate) bind: u32,
-    pub(crate) data: Arc<BindModelLightIndexs>,
-}
-impl BindUseModelLightIndexs {
-    pub fn new(bind: u32, data: Arc<BindModelLightIndexs>) -> Self {
-        Self { bind, data }
+impl TBindDefine for BindModelLightIndexs {
+    fn bind_include(&self) -> u32 {
+        BindDefines::LIGHTING
     }
 }
+

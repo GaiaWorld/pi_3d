@@ -1,3 +1,7 @@
+pub trait TBindDefine {
+    fn bind_include(&self) -> u32;
+}
+
 pub struct BindDefines;
 impl BindDefines {
     pub const SCENE_EFFECT: u32             = 1 << 0;
@@ -11,6 +15,10 @@ impl BindDefines {
     pub const EFFECT_VALUE_BIND: u32        = 1 << 8;
     pub const VIEWER: u32                   = 1 << 9;
     pub const MODEL_BIND: u32               = 1 << 10;
+    pub const PASS_INDEX: u32               = 1 << 11;
+    pub const MAT_INDEX : u32               = 1 << 12;
+    pub const SKIN : u32                    = 1 << 13;
+    pub const EFFECT_TEXTURE_ATLAS : u32    = 1 << 14;
 
     // pub const SCREEN_DEPTH_TARGET: u32      = 0b0000_0000_0000_0000_0000_0010_0000_0000;
     pub fn need_viewer(val: u32) -> bool {
@@ -45,6 +53,9 @@ impl BindDefines {
     }
     pub fn need_effect_textures(val: u32) -> bool {
         val & Self::EFFECT_TEXTURE_BIND == Self::EFFECT_TEXTURE_BIND
+    }
+    pub fn need_pass_index(val: u32) -> bool {
+        val & Self::SCENE_EFFECT == Self::SCENE_EFFECT
     }
     
     pub fn need_bind_group_set0(val: u32) -> bool {

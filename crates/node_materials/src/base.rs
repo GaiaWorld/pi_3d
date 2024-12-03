@@ -1,4 +1,4 @@
-use pi_scene_shell::prelude::*;
+use pi_scene_shell::{prelude::*, run_stage::EngineCustomPlugins};
 
 pub type TShaderLanguageDefine = u8;
 pub struct ShaderLanguageDefine;
@@ -266,7 +266,7 @@ impl NodeMaterialBuilder {
             self.shader_language_defines    = self.shader_language_defines | T::SHADER_LANGUAGE_DEFINES;
         }
     }
-    pub fn meta(mut self) -> ShaderEffectMeta {
+    pub fn meta(mut self, engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
         // log::warn!("{:?}", self.shader_language_defines);
 
         let predefines = ShaderLanguageDefine::apply(self.shader_language_defines);
@@ -284,6 +284,7 @@ impl NodeMaterialBuilder {
             BlockCodeAtom { define: Atom::from(self.vs_define), running: Atom::from(self.vs) }, 
             BlockCodeAtom { define: Atom::from(self.fs_define), running: Atom::from(self.fs) }, 
             self.defines,
+            &engineopt,
         );
 
         result.binddefines = result.binddefines | self.binddefines;

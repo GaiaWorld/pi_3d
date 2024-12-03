@@ -55,8 +55,8 @@ impl Plugin for PluginTest {
 
         actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 * 2. )));
 
-        actions.scene.options.push(OpsSceneOption::brdf(scene, Atom::from("./assets/images/fractal.png"), false));
-        actions.scene.options.push(OpsSceneOption::envtexture(scene, Some(Atom::from("./assets/images/01.env")), false));
+        actions.scene.options.push(OpsSceneOption::brdf(scene, Atom::from("assets/images/fractal.png"), false));
+        actions.scene.options.push(OpsSceneOption::envtexture(scene, Some(Atom::from("assets/images/01.env")), false));
         
         let cameraroot = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cameraroot, scene)); actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, cameraroot));
         actions.transform.create.push(OpsTransformNode::ops(scene, cameraroot));
@@ -118,9 +118,9 @@ impl Plugin for PluginTest {
         // actions.material.create.push(OpsMaterialCreate::ops(idmat, StandardShader::KEY, EPassTag::Opaque));
         actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
             slotname: Atom::from(BlockMainTexture::KEY_TEX),
-            filter: true,
             sample: KeySampler::linear_repeat(),
             url: EKeyTexture::from("./assets/images/fractal.png"),
+            ..Default::default()
         }));
         idmat
     };
@@ -150,7 +150,7 @@ impl Plugin for PluginTest {
     let state: MeshInstanceState = MeshInstanceState {
         instance_matrix: true,
         instances: vec![
-            CustomVertexAttribute::new(Atom::from("InsV2"), Atom::from("uMetallic = InsV2.x; uRoughness = InsV2.y;"), ECustomVertexType::Vec2, Some(Atom::from("uMetallic")))
+            CustomVertexAttribute::new(Atom::from("InsV2"), Atom::from(""), ECustomVertexType::Vec2, Some(Atom::from("uMetallicRoughness")))
         ],
         use_single_instancebuffer: false,
     };

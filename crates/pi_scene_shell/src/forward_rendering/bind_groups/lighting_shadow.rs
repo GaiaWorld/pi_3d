@@ -19,12 +19,12 @@ pub struct KeyShaderSetExtend {
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub struct KeyBindGroupSetExtend {
-    pub lighting: Option<Arc<ShaderBindSceneLightInfos>>,
-    pub shadowmap: Option<(Arc<ShaderBindShadowData>, Arc<ShaderBindShadowTexture>, Arc<ShaderBindShadowSampler>)>,
-    pub bind_brdf: Option<(Arc<ShaderBindBRDFTexture>, Arc<ShaderBindBRDFSampler>)>,
-    pub camera_opaque: Option<(Arc<ShaderBindMainCameraOpaqueTexture>, Arc<ShaderBindMainCameraOpaqueSampler>)>,
-    pub camera_depth: Option<(Arc<ShaderBindMainCameraDepthTexture>, Arc<ShaderBindMainCameraDepthSampler>)>,
-    pub env: Option<(Arc<BindEnvIrradiance>, Arc<ShaderBindEnvTexture>, Arc<ShaderBindEnvSampler>)>,
+    pub lighting: Option<ShaderBindSceneLightInfos>,
+    pub shadowmap: Option<(ShaderBindShadowData, ShaderBindShadowTexture, ShaderBindShadowSampler)>,
+    pub bind_brdf: Option<(ShaderBindBRDFTexture, ShaderBindBRDFSampler)>,
+    pub camera_opaque: Option<(ShaderBindMainCameraOpaqueTexture, ShaderBindMainCameraOpaqueSampler)>,
+    pub camera_depth: Option<(ShaderBindMainCameraDepthTexture, ShaderBindMainCameraDepthSampler)>,
+    pub env: Option<(BindEnvIrradiance, ShaderBindEnvTexture, ShaderBindEnvSampler)>,
     pub isactived: bool,
     bind_count: u32,
     pub key_bindgroup: KeyBindGroup,
@@ -32,12 +32,12 @@ pub struct KeyBindGroupSetExtend {
 }
 impl KeyBindGroupSetExtend {
     pub fn new(
-        lighting: Option<Arc<ShaderBindSceneLightInfos>>,
-        shadowmap: Option<(Arc<ShaderBindShadowData>, Arc<ShaderBindShadowTexture>, Arc<ShaderBindShadowSampler>)>,
-        bind_brdf: Option<(Arc<ShaderBindBRDFTexture>, Arc<ShaderBindBRDFSampler>)>,
-        camera_opaque: Option<(Arc<ShaderBindMainCameraOpaqueTexture>, Arc<ShaderBindMainCameraOpaqueSampler>)>,
-        camera_depth: Option<(Arc<ShaderBindMainCameraDepthTexture>, Arc<ShaderBindMainCameraDepthSampler>)>,
-        env: Option<(Arc<BindEnvIrradiance>, Arc<ShaderBindEnvTexture>, Arc<ShaderBindEnvSampler>)>,
+        lighting: Option<ShaderBindSceneLightInfos>,
+        shadowmap: Option<(ShaderBindShadowData, ShaderBindShadowTexture, ShaderBindShadowSampler)>,
+        bind_brdf: Option<(ShaderBindBRDFTexture, ShaderBindBRDFSampler)>,
+        camera_opaque: Option<(ShaderBindMainCameraOpaqueTexture, ShaderBindMainCameraOpaqueSampler)>,
+        camera_depth: Option<(ShaderBindMainCameraDepthTexture, ShaderBindMainCameraDepthSampler)>,
+        env: Option<(BindEnvIrradiance, ShaderBindEnvTexture, ShaderBindEnvSampler)>,
     ) -> Self {
         
         let mut lighting_enable: bool = false;

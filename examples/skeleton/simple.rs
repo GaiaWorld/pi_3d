@@ -138,9 +138,9 @@ fn setup(
     actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
     actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from("_MainTex"),
-        filter: true,
         sample: KeySampler::default(),
         url: EKeyTexture::from("assets/images/bubbles.png"),
+        ..Default::default()
     }));
 
     let skeleton = commands.spawn_empty_id();

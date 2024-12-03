@@ -1,12 +1,11 @@
 
 use pi_render::renderer::{
-    sampler::*,
-    bind::{KeyBindLayoutSampler, EKeyBind, KeyBindSampler}
+    bind::{EKeyBind, KeyBindLayoutSampler, KeyBindSampler}, sampler::*, shader_stage::EShaderStage
 };
 use crate::shader::*;
 
-pub fn sampler_key_bind(sampler: BindDataSampler, slotidx: usize, meta: &ShaderEffectMeta) -> Option<EKeyBind> {
-    if let Some(layout) = sampler_key_layout(slotidx, meta) { Some(EKeyBind::Sampler(KeyBindSampler { data: sampler, layout: layout })) } else { None }
+pub fn sampler_key_bind(sampler: BindDataSampler, visibility: EShaderStage, binding_type: wgpu::SamplerBindingType) -> EKeyBind {
+    EKeyBind::Sampler(KeyBindSampler { data: sampler, layout: KeyBindLayoutSampler { visibility, binding_type } })
 }
 pub fn sampler_key_layout(slotidx: usize, meta: &ShaderEffectMeta) -> Option<KeyBindLayoutSampler> {
     if let Some(desc) = meta.textures.get(slotidx) { Some(KeyBindLayoutSampler { visibility: desc.stage, binding_type: desc.sampler_type() }) } else { None }

@@ -19,7 +19,7 @@ use super::{
 };
 
 
-pub type BundleModelStatic = (GeometryID, ModelStatic, BindModel);
+pub type BundleModelStatic = (GeometryID, ModelStatic, BindModel, BindModelMatIdx, ModelMatIdxs);
 pub type BundleModel = (
     TransformNodeBundle,
     BundleMesh,
@@ -95,8 +95,9 @@ pub fn sys_create_mesh(
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
     lightlimit: Res<ModelLightLimit>,
     commonbindmodel: Res<CommonBindModel>,
-    mut altermodel: Alter<(), (), (BundleModel, BindModel, PassIDs, ModelStatic), ()>,
+    mut altermodel: Alter<(), (), (BundleModel, BindModel, BindModelMatIdx, ModelMatIdxs, PassIDs, ModelStatic), ()>,
     mut passinsert: Insert<(BundleEntity, PassObjInitBundle, PassTag)>,
+    engineopt: Res<EngineCustomPlugins>,
     // mut insert: Insert<PassObjBundle>,
 ) {
     // let time1 = pi_time::Instant::now();
@@ -106,7 +107,7 @@ pub fn sys_create_mesh(
         // if ActionMesh::init(&mut commands, entity, scene, &mut allocator, &empty, state, &lightlimit.0, &commonbindmodel) == false {
         if ActionMesh::init(
             entity, &mut commands, scene, &mut allocator, &empty, state, &lightlimit.0, &commonbindmodel,
-            &mut altermodel, &mut passinsert 
+            &mut altermodel, &mut passinsert, &engineopt
         ) == false {
             disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
         }
@@ -406,8 +407,9 @@ impl ActionMesh {
         mut state: MeshInstanceState,
         lightlimit: &LightLimitInfo,
         commonbindmodel: &CommonBindModel,
-        altermodel: &mut Alter<(), (), (BundleModel, BindModel, PassIDs, ModelStatic), ()>,
+        altermodel: &mut Alter<(), (), (BundleModel, BindModel, BindModelMatIdx, ModelMatIdxs, PassIDs, ModelStatic), ()>,
         passinsert: &mut Insert<(BundleEntity, PassObjInitBundle, PassTag)>,
+        engineopt: &EngineCustomPlugins,
     ) -> bool {
         // state.instance_matrix = true;
         // state.instances.push(
@@ -419,7 +421,7 @@ impl ActionMesh {
         // );
         // state.instances.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::ModelMaterialSkin));
         
-        let meshinstanceattributes = ModelInstanceAttributes::new(&state.instances, state.instance_matrix);
+        let meshinstanceattributes = ModelInstanceAttributes::new(&state.instances, state.instance_matrix, !engineopt.disenable_material_array);
 
         // let passids = PassIDs([entity, entity, entity, entity, entity, entity, entity, entity]);
         let id01 = passinsert.insert(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_01));
@@ -462,12 +464,9 @@ impl ActionMesh {
         );
 
         if instanceattr {
-            let _ = altermodel.alter(entity, (bundle, commonbindmodel.0.clone(), passids, ModelStatic(true)));
+            let _ = altermodel.alter(entity, (bundle, commonbindmodel.0.clone(), commonbindmodel.1.clone(), ModelMatIdxs::default(), passids, ModelStatic(true)));
         } else {
-            if let Some(bind) = BindModel::new(allocator) {
-                // entitycmd.insert((bundle, bind, passids));
-                let _ = altermodel.alter(entity, (bundle, bind, passids, ModelStatic(false)));
-            }
+            let _ = altermodel.alter(entity, (bundle, BindModel::new(allocator), BindModelMatIdx::new(allocator), ModelMatIdxs::default(), passids, ModelStatic(false)));
         }
 
         return true;

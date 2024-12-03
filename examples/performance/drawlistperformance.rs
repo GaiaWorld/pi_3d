@@ -47,13 +47,14 @@ impl Plugin for PluginTest {
         mut matmetas: ResMut<ShareAssetMgr<ShaderEffectMeta>>,
         demooption: Res<base::DemoOption>,
         mut events: ResMut<DemoWindowEvent>,
+        engineopt: Res<EngineCustomPlugins>,
     ) {
         let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
             (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
         } else { return; };
         
 
-    ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(MainOpacityShader::KEY), MainOpacityShader::meta());
+    ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(MainOpacityShader::KEY), MainOpacityShader::meta(&engineopt));
 
         events.viewer = Some(camera01);
 
@@ -131,9 +132,9 @@ impl Plugin for PluginTest {
         // actions.material.create.push(OpsMaterialCreate::ops(idmat, StandardShader::KEY, EPassTag::Opaque));
         actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
             slotname: Atom::from(BlockMainTexture::KEY_TEX),
-            filter: true,
             sample: KeySampler::linear_repeat(),
             url: EKeyTexture::from("./assets/images/fractal.png"),
+            ..Default::default()
         }));
         idmat
     };
@@ -162,7 +163,7 @@ impl Plugin for PluginTest {
     };
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
     
-    ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(unlit_material::PlanarShadow::KEY), unlit_material::PlanarShadow::meta());
+    ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(unlit_material::PlanarShadow::KEY), unlit_material::PlanarShadow::meta(&engineopt));
     let planarmat =  {
         let idmat = commands.spawn_empty_id();
         actions.material.create.push(OpsMaterialCreate::ops(idmat, unlit_material::PlanarShadow::KEY));

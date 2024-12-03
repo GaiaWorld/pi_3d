@@ -9,7 +9,7 @@ pub struct SkyboxShader {
 impl SkyboxShader {
     pub const KEY: &'static str     = "SkyboxShader";
 
-    pub fn meta() -> ShaderEffectMeta {
+    pub fn meta(engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
         ShaderEffectMeta::new(
             MaterialValueBindDesc {
                 stage: wgpu::ShaderStages::VERTEX_FRAGMENT,
@@ -41,7 +41,8 @@ impl SkyboxShader {
                 define: Atom::from(include_str!("./assets/skybox_define.frag")),
                 running: Atom::from(include_str!("./assets/skybox.frag"))
             },
-            ShaderDefinesSet::default()
+            ShaderDefinesSet::default(),
+            engineopt
         )
     }
 }

@@ -1,5 +1,5 @@
 use pi_atom::Atom;
-use pi_scene_shell::prelude::*;
+use pi_scene_shell::{prelude::*, run_stage::EngineCustomPlugins};
 use crate::materials::prelude::*;
 
 use super::base::*;
@@ -7,7 +7,7 @@ use super::base::*;
 pub struct ShaderShadowGenerator;
 impl ShaderShadowGenerator {
     pub const KEY: &'static str = "ShadowGenerator";
-    pub fn res() -> ShaderEffectMeta {
+    pub fn res(engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
         let mut result = ShaderEffectMeta::new(
             ShaderEffectValueUniformDesc {
                 stage: wgpu::ShaderStages::VERTEX_FRAGMENT,
@@ -28,44 +28,42 @@ impl ShaderShadowGenerator {
             },
             vec![],
             Varyings(
-                vec![]
+                vec![
+                    Varying { format: Atom::from("float"), name: Atom::from("vDepthMetricSM") }
+                ]
             ),
             String::from(""),
             // EVerticeExtendCode::default(),
             BlockCodeAtom { 
-                define: Atom::from("
-layout(location = 0) out float vDepthMetricSM;
-"
-                ), 
+                define: Atom::from(""), 
                 running: Atom::from("
-vec3 position = A_POSITION;
-vec3 normal = A_NORMAL;
-mat4 finalWorld = PI_ObjectToWorld;
-mat3 normWorldSM = mat3(finalWorld);
+    vec3 position = A_POSITION;
+    vec3 normal = A_NORMAL;
+    mat4 finalWorld = PI_ObjectToWorld;
+    mat3 normWorldSM = mat3(finalWorld);
 
-vec3 positionUpdated = position;
-vec4 worldPos = finalWorld*vec4(positionUpdated, 1.0);
+    vec3 positionUpdated = position;
+    vec4 worldPos = finalWorld*vec4(positionUpdated, 1.0);
 
-vec3 vNormalW = normalize(normWorldSM*normal);
-vec3 worldLightDirSM = normalize(
-    PI_MATRIX_P[3][3] * PI_MATRIX_P[2].xyz
-    +
-    (1.0 - PI_MATRIX_P[3][3]) * (PI_CAMERA_POSITION.xyz - worldPos.xyz)
-);
-float ndlSM = dot(vNormalW, worldLightDirSM);
-float sinNLSM = sqrt(1.0-ndlSM*ndlSM);
-float normalBiasSM = uShadowNormalBias*sinNLSM;
-worldPos.xyz -= vNormalW*normalBiasSM;
+    vec3 vNormalW = normalize(normWorldSM*normal);
+    vec3 worldLightDirSM = normalize(
+        PI_MATRIX_P[3][3] * PI_MATRIX_P[2].xyz
+        +
+        (1.0 - PI_MATRIX_P[3][3]) * (PI_CAMERA_POSITION.xyz - worldPos.xyz)
+    );
+    float ndlSM = dot(vNormalW, worldLightDirSM);
+    float sinNLSM = sqrt(1.0-ndlSM*ndlSM);
+    float normalBiasSM = matParam.uShadowNormalBias*sinNLSM;
+    worldPos.xyz -= vNormalW*normalBiasSM;
 
-gl_Position = PI_MATRIX_VP*worldPos;
-vDepthMetricSM = (gl_Position.z + uShadowMinZ) / uShadowMaxZ + uShadowDepthBias ;
+    gl_Position = PI_MATRIX_VP *worldPos;
+    vDepthMetricSM = (gl_Position.z + matParam.uShadowMinZ) / matParam.uShadowMaxZ + matParam.uShadowDepthBias ;
 "
                 )
             },
             BlockCodeAtom { 
                 define: Atom::from("
 layout(location = 0) out vec4 gl_FragColor;
-layout(location = 0) in float vDepthMetricSM;
 "), 
                 running: Atom::from("
 gl_FragColor = vec4(vDepthMetricSM, 0.0, 0.0, 0.0);
@@ -73,6 +71,7 @@ gl_FragColor = vec4(vDepthMetricSM, 0.0, 0.0, 0.0);
                 )
             },
             ShaderDefinesSet::default(),
+            engineopt
         );
 
         result.binddefines = result.binddefines | BindDefines::MODEL_BIND | BindDefines::EFFECT_VALUE_BIND | BindDefines::SCENE_EFFECT | BindDefines::VIEWER;

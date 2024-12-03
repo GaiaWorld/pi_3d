@@ -15,6 +15,8 @@ use pi_render::{
     rhi::device::RenderDevice
 };
 
+use crate::{prelude::BindDefines, run_stage::EngineCustomPlugins};
+
 use super::{
     block_code::{BlockCode, BlockCodeAtom, TToBlockCodeAtom},
     varying_code::{VaryingCode, Varyings},
@@ -62,7 +64,6 @@ pub type BindDefine = u32;
 pub struct ShaderEffectMeta {
     pub uniforms: Arc<MaterialValueBindDesc>,
     pub textures: Arc<EffectUniformTexture2DDescs>,
-    // pub samplers: Vec<UniformSamplerDesc>,
     pub varyings: Varyings,
     pub material_instance_code: String,
     /// 顶点代码片段
@@ -74,109 +75,102 @@ pub struct ShaderEffectMeta {
     pub binddefines: BindDefine,
 }
 
-impl From<(pi_render::rhi::shader::ShaderMeta, Vec<Atom>, Vec<Atom>)> for ShaderEffectMeta {
-    fn from(
-        value: (pi_render::rhi::shader::ShaderMeta, Vec<Atom>, Vec<Atom>),
-    ) -> Self {
-        let (value, vs_defines, fs_defines) = value;
-        
-        let mut uniforms: MaterialValueBindDesc = MaterialValueBindDesc::default();
-        let mut textures: Vec<UniformTexture2DDesc> = vec![];
-        // let mut samplers: Vec<Arc<UniformSamplerDesc>> = vec![];
+// impl From<(pi_render::rhi::shader::ShaderMeta, Vec<Atom>, Vec<Atom>)> for ShaderEffectMeta {
+//     fn from(
+//         value: (pi_render::rhi::shader::ShaderMeta, Vec<Atom>, Vec<Atom>),
+//     ) -> Self {
+//         let (value, vs_defines, fs_defines) = value;
 
-        let len = value.bindings.buffer_uniform_expands.len();
-        for index in 0..len {
-            let bindinfo = value.bindings.buffer_uniform_expands.get(index);
-            let layout = value.bindings.bind_group_entrys.get(index);
+//         let mut uniforms: MaterialValueBindDesc = MaterialValueBindDesc::default();
+//         let mut textures: Vec<UniformTexture2DDesc> = vec![];
 
-            if let (Some(layout), Some(bindinfo)) = (layout, bindinfo) {
-                let len = layout.len();
+//         let len = value.bindings.buffer_uniform_expands.len();
+//         for index in 0..len {
+//             let bindinfo = value.bindings.buffer_uniform_expands.get(index);
+//             let layout = value.bindings.bind_group_entrys.get(index);
 
-                for j in 0..len {
-                    let entry = layout.get(j);
-                    let info = bindinfo.get(j);
-                    if let (Some(entry), Some(info)) = (entry, info) {
-                        match entry.ty {
-                            wgpu::BindingType::Buffer { ty: _, has_dynamic_offset: _, min_binding_size: _ } => {
-                                info.list.iter().for_each(|uniform| {
-                                    if let Some(value) = &uniform.buffer_expand {
-                                        match value.ty.ty {
-                                            pi_render::rhi::shader::TypeKind::Float => {
-                                                match value.ty.size {
-                                                    pi_render::rhi::shader::TypeSize::Mat {columns: _, .. } => {
-                                                        // if rows == 4 {
-                                                        //     uniforms.mat4_list.push(UniformPropertyMat4(uniform.name.clone(), crate::vec_u8_to_f32_16(&value.default_value)));
-                                                        // } else if rows == 2 {
-                                                        //     uniforms.mat2_list.push(UniformPropertyMat2(uniform.name.clone(), crate::vec_u8_to_f32_4(&value.default_value)));
-                                                        // }
-                                                    },
-                                                    pi_render::rhi::shader::TypeSize::Vec(v) => {
-                                                        if v == 4 {
-                                                            uniforms.vec4_list.push(UniformPropertyVec4(uniform.name.clone(), crate::vec_u8_to_f32_4(&value.default_value), false));
-                                                        } else if v == 2 {
-                                                            uniforms.vec2_list.push(UniformPropertyVec2(uniform.name.clone(), crate::vec_u8_to_f32_2(&value.default_value), false));
-                                                        }
-                                                    },
-                                                    pi_render::rhi::shader::TypeSize::Scalar => {
-                                                        uniforms.float_list.push(UniformPropertyFloat(uniform.name.clone(), crate::vec_u8_to_f32(&value.default_value), false));
-                                                    },
-                                                }
-                                            },
-                                            pi_render::rhi::shader::TypeKind::Sint => {
-                                                // uniforms.int_list.push(UniformPropertyInt(uniform.name.clone(), crate::vec_u8_to_i32(&value.default_value)));
-                                            },
-                                            pi_render::rhi::shader::TypeKind::Uint => {
-                                                uniforms.uint_list.push(UniformPropertyUint(uniform.name.clone(), crate::vec_u8_to_u32(&value.default_value), false));
-                                            },
-                                        }
-                                    }
-                                });
-                            },
-                            wgpu::BindingType::Sampler(_) => {
-                                // let val = UniformSamplerDesc {
-                                //     slotname: info.list.get(0).unwrap().name.clone(),
-                                //     ty: val,
-                                //     stage: entry.visibility,
-                                // };
-                                // samplers.push(val);
-                            },
-                            wgpu::BindingType::Texture { sample_type, view_dimension, multisampled } => {
-                                match view_dimension {
-                                    wgpu::TextureViewDimension::D1 => todo!(),
-                                    wgpu::TextureViewDimension::D2 => {
-                                        let val = UniformTexture2DDesc::new(
-                                            info.list.get(0).unwrap().name.clone(),
-                                            sample_type,
-                                            wgpu::TextureViewDimension::D2,
-                                            multisampled,
-                                            EShaderStage::new(entry.visibility),
-                                            EDefaultTexture::White,
-                                        );
-                                        textures.push(val);
-                                    },
-                                    wgpu::TextureViewDimension::D2Array => todo!(),
-                                    wgpu::TextureViewDimension::Cube => todo!(),
-                                    wgpu::TextureViewDimension::CubeArray => todo!(),
-                                    wgpu::TextureViewDimension::D3 => todo!(),
-                                }
-                            },
-                            wgpu::BindingType::StorageTexture { access: _, format: _, view_dimension: _ } => {
+//             if let (Some(layout), Some(bindinfo)) = (layout, bindinfo) {
+//                 let len = layout.len();
+
+//                 for j in 0..len {
+//                     let entry = layout.get(j);
+//                     let info = bindinfo.get(j);
+//                     if let (Some(entry), Some(info)) = (entry, info) {
+//                         match entry.ty {
+//                             wgpu::BindingType::Buffer { ty: _, has_dynamic_offset: _, min_binding_size: _ } => {
+//                                 info.list.iter().for_each(|uniform| {
+//                                     if let Some(value) = &uniform.buffer_expand {
+//                                         match value.ty.ty {
+//                                             pi_render::rhi::shader::TypeKind::Float => {
+//                                                 match value.ty.size {
+//                                                     pi_render::rhi::shader::TypeSize::Mat {columns: _, .. } => {
+//                                                         // if rows == 4 {
+//                                                         //     uniforms.mat4_list.push(UniformPropertyMat4(uniform.name.clone(), crate::vec_u8_to_f32_16(&value.default_value)));
+//                                                         // } else if rows == 2 {
+//                                                         //     uniforms.mat2_list.push(UniformPropertyMat2(uniform.name.clone(), crate::vec_u8_to_f32_4(&value.default_value)));
+//                                                         // }
+//                                                     },
+//                                                     pi_render::rhi::shader::TypeSize::Vec(v) => {
+//                                                         if v == 4 {
+//                                                             uniforms.vec4_list.push(UniformPropertyVec4(uniform.name.clone(), crate::vec_u8_to_f32_4(&value.default_value), false));
+//                                                         } else if v == 2 {
+//                                                             uniforms.vec2_list.push(UniformPropertyVec2(uniform.name.clone(), crate::vec_u8_to_f32_2(&value.default_value), false));
+//                                                         }
+//                                                     },
+//                                                     pi_render::rhi::shader::TypeSize::Scalar => {
+//                                                         uniforms.float_list.push(UniformPropertyFloat(uniform.name.clone(), crate::vec_u8_to_f32(&value.default_value), false));
+//                                                     },
+//                                                 }
+//                                             },
+//                                             pi_render::rhi::shader::TypeKind::Sint => {
+//                                                 // uniforms.int_list.push(UniformPropertyInt(uniform.name.clone(), crate::vec_u8_to_i32(&value.default_value)));
+//                                             },
+//                                             pi_render::rhi::shader::TypeKind::Uint => {
+//                                                 uniforms.uint_list.push(UniformPropertyUint(uniform.name.clone(), crate::vec_u8_to_u32(&value.default_value), false));
+//                                             },
+//                                         }
+//                                     }
+//                                 });
+//                             },
+//                             wgpu::BindingType::Sampler(_) => {
+//                             },
+//                             wgpu::BindingType::Texture { sample_type, view_dimension, multisampled } => {
+//                                 match view_dimension {
+//                                     wgpu::TextureViewDimension::D1 => todo!(),
+//                                     wgpu::TextureViewDimension::D2 => {
+//                                         let val = UniformTexture2DDesc::new(
+//                                             info.list.get(0).unwrap().name.clone(),
+//                                             sample_type,
+//                                             wgpu::TextureViewDimension::D2,
+//                                             multisampled,
+//                                             EShaderStage::new(entry.visibility),
+//                                             EDefaultTexture::White,
+//                                         );
+//                                         textures.push(val);
+//                                     },
+//                                     wgpu::TextureViewDimension::D2Array => todo!(),
+//                                     wgpu::TextureViewDimension::Cube => todo!(),
+//                                     wgpu::TextureViewDimension::CubeArray => todo!(),
+//                                     wgpu::TextureViewDimension::D3 => todo!(),
+//                                 }
+//                             },
+//                             wgpu::BindingType::StorageTexture { access: _, format: _, view_dimension: _ } => {
                                 
-                            },
-                            wgpu::BindingType::AccelerationStructure => todo!(),
-                        }
-                    }
-                }
-            }
-        }
-        let defines = ShaderDefinesSet::from((&vs_defines, &fs_defines));
-        let vs = value.vs.to_block_code();
-        let fs = value.fs.to_block_code();
-        let varyings = Varyings::from(&value.varyings);
+//                             },
+//                             wgpu::BindingType::AccelerationStructure => todo!(),
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//         let defines = ShaderDefinesSet::from((&vs_defines, &fs_defines));
+//         let vs = value.vs.to_block_code();
+//         let fs = value.fs.to_block_code();
+//         let varyings = Varyings::from(&value.varyings);
 
-        Self::new(uniforms, textures, varyings, String::from(""), vs, fs, defines)
-    }
-}
+//         Self::new(uniforms, textures, varyings, String::from(""), vs, fs, defines)
+//     }
+// }
 impl Asset for ShaderEffectMeta {
     type Key = KeyShaderMeta;
     // const TYPE: &'static str = "KeyShaderMeta";
@@ -196,12 +190,12 @@ impl ShaderEffectMeta {
     pub fn new(
         mut uniforms: MaterialValueBindDesc,
         mut textures: Vec<UniformTexture2DDesc>,
-        // samplers: Vec<UniformSamplerDesc>,
         mut varyings: Varyings,
         material_instance_code: String,
         vs: BlockCodeAtom,
         fs: BlockCodeAtom,
         defines: ShaderDefinesSet,
+        engineopt: &EngineCustomPlugins,
     ) -> Self {
         let mut arc_textures = vec![];
         textures.drain(..).for_each(|item| {
@@ -216,11 +210,15 @@ impl ShaderEffectMeta {
         uniforms.sort();
 
         // varyings.0.push(Varying { format: Atom::from(EBuildinVertexAtribute::TextureIDs.kind()), name: Atom::from(ShaderVarVarying::TEXTURE_IDS) });
-        uniforms.vec4_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from(crate::static_string::S_VEC4), name: item.tag().clone() }) } });
-        uniforms.vec3_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from(crate::static_string::S_VEC3), name: item.tag().clone() }) } });
-        uniforms.vec2_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from(crate::static_string::S_VEC2), name: item.tag().clone() }) } });
-        uniforms.float_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from(crate::static_string::S_FLOAT), name: item.tag().clone() }) } });
-        uniforms.uint_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from(crate::static_string::S_UINT), name: item.tag().clone() }) } });
+        // uniforms.vec4_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from(crate::static_string::S_VEC4), name: item.tag().clone() }) } });
+        // uniforms.vec3_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from(crate::static_string::S_VEC3), name: item.tag().clone() }) } });
+        // uniforms.vec2_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from(crate::static_string::S_VEC2), name: item.tag().clone() }) } });
+        // uniforms.float_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from(crate::static_string::S_FLOAT), name: item.tag().clone() }) } });
+        // uniforms.uint_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from(crate::static_string::S_UINT), name: item.tag().clone() }) } });
+
+        if engineopt.disenable_material_array == false {
+            varyings.0.push(Varying { format: Atom::from(crate::static_string::S_UINT), name: Atom::from(crate::static_string::S_V_MAT_IDX) });
+        }
 
         let size = varyings.size() + vs.size() + fs.size();
 
@@ -252,6 +250,8 @@ impl ShaderEffectMeta {
         &self,
         name: &str,
         // vertex_layouts: &KeyShaderFromAttributes,
+        vs_extend_varying: &String,
+        vs_running_attribute_snippets: &[String],
         running_model_snippets: &[String],
         // instance: &EVerticeExtendCode,
         // render_alignment: &ERenderAlignment,
@@ -259,6 +259,7 @@ impl ShaderEffectMeta {
         defined_snippets: &[String],
         running_before_effect_snippets: &[String],
         running_after_effect_snippets: &[String],
+        engineopt: &EngineCustomPlugins,
     ) -> String {
         // Start
         let mut code = String::from("#version 450\r\n");
@@ -271,6 +272,7 @@ impl ShaderEffectMeta {
 
         // Shader 定义 Varying 代码
         code += &VaryingCode::vs_code(&self.varyings);
+        code += vs_extend_varying;
 
         // 功能块的定义代码 - 功能块的 Uniform 、常量 、 方法
         defined_snippets.iter().for_each(|val| {
@@ -283,13 +285,54 @@ impl ShaderEffectMeta {
         // Running Start
         code += "void main() {";    code += crate::prelude::S_BREAK;
 
+        if engineopt.disenable_material_array == false {
+            code += crate::prelude::S_UVEC4;
+            code += " ";
+            code += ShaderVarUniform::MATIDX;
+            code += " = ";
+            code += ShaderVarUniform::_MATIDX;
+            code += ";";
+            code += crate::prelude::S_BREAK;
+        }
+
         // 预制内容
         code += EVertexDataKind::Color4.kind();     code += crate::prelude::S_SPACE; code += ShaderVarVertices::COLOR4 ;    code += " = vec4(1., 1., 1., 1.);"; code += crate::prelude::S_BREAK;
         code += EVertexDataKind::Normal.kind();     code += crate::prelude::S_SPACE; code += ShaderVarVertices::NORMAL ;    code += " = vec3(0., 1., 0.);";     code += crate::prelude::S_BREAK;
         code += EVertexDataKind::UV.kind();         code += crate::prelude::S_SPACE; code += ShaderVarVertices::UV ;        code += " = vec2(0., 0.);";         code += crate::prelude::S_BREAK;
 
         code += self.material_instance_code.as_str();
+
+        // 实例化数据代码
+        vs_running_attribute_snippets.iter().for_each(|val| {
+            code += val;
+        });
+
         
+        if engineopt.disenable_material_array == false {
+            // 固定的 MatIdx 代码
+            code += crate::static_string::S_V_MAT_IDX;
+            code += " = ";
+            code += ShaderVarUniform::MATIDX;
+            code += "[";
+            code += ShaderVarUniform::IDX_PASS;
+            code += ".x] & ";
+            code += ShaderVarUniform::IDX_PASS;
+            code += ".y;";
+            code += crate::prelude::S_BREAK;
+
+            if BindDefines::need_effect_value(self.binddefines) {
+                code += "MatParam matParam = Mat[";
+                code += crate::static_string::S_V_MAT_IDX;
+                code += "];";
+                code += crate::prelude::S_BREAK;
+            }
+        } else {
+            if BindDefines::need_effect_value(self.binddefines) {
+                code += "MatParam matParam = Mat;";
+                code += crate::prelude::S_BREAK;
+            }
+        }
+
         // 功能块的 运行代码
         running_model_snippets.iter().for_each(|val| {
             code += val;
@@ -307,6 +350,7 @@ impl ShaderEffectMeta {
         running_after_effect_snippets.iter().for_each(|val| {
             code += val;
         });
+        
 
         code += "}"; code += crate::prelude::S_BREAK;
 
@@ -316,8 +360,10 @@ impl ShaderEffectMeta {
         &self,
         name: &str,
         defined_snippets: &[String],
+        fs_extend_varying: &String,
         running_before_effect_snippets: &[String],
         running_after_effect_snippets: &[String],
+        engineopt: &EngineCustomPlugins,
     ) -> String {
         // Start
         let mut code = String::from("#version 450"); code += crate::prelude::S_BREAK;
@@ -328,8 +374,27 @@ impl ShaderEffectMeta {
         // Shader Name
         code += "#define SHADER_NAME fragment:"; code += name; code += crate::prelude::S_BREAK;
 
+        code += "
+const float ATLAS_MODE_SCALE = 0.1;
+const float ATLAS_MODE_SCALE2 = 10.;
+const float ADDRESS_CLAMP = 0.0;
+const float ADDRESS_REPEAT = 1.0;
+const float ADDRESS_MIRROR_REPEAT = 2.0;
+const vec2 M_ONE = vec2(1.);
+const vec2 M_ZERO = vec2(0.);
+vec2 uvAtlas(vec2 uv, vec4 atlas, vec4 mode) {
+    // vec2 f = floor(uv);
+    // vec2 temp = max(M_ZERO, M_ONE - mode.xy) * min(M_ONE, max(M_ZERO, uv)) 
+    //           + min(M_ONE,          mode.xy) * abs(
+    //                 uv - f 
+    //           + max(M_ZERO, mode.xy - M_ONE) * (3. * f - 2. * (uv + floor(0.5 * uv)))
+    //         );
+    return uv * atlas.xy + atlas.zw;
+}
+";
         // Shader 定义 Varying 代码
         code += &VaryingCode::fs_code(&self.varyings);
+        code += fs_extend_varying;
 
         // 功能块的定义代码 - 功能块的 Uniform 、常量 、 方法
         defined_snippets.iter().for_each(|val| {
@@ -341,6 +406,22 @@ impl ShaderEffectMeta {
 
         // Running Start
         code += "void main() {"; code += crate::prelude::S_BREAK;
+
+
+        if engineopt.disenable_material_array == false {
+            if BindDefines::need_effect_value(self.binddefines) {
+                code += "MatParam matParam = Mat[";
+                code += crate::static_string::S_V_MAT_IDX;
+                code += "];";
+                code += crate::prelude::S_BREAK;
+            }
+        } else {
+            if BindDefines::need_effect_value(self.binddefines) {
+                code += "MatParam matParam = Mat;";
+                code += crate::prelude::S_BREAK;
+            }
+        }
+
 
         // 功能块的 运行代码
         running_before_effect_snippets.iter().for_each(|val| {
@@ -368,15 +449,19 @@ impl ShaderEffectMeta {
         // render_alignment: &ERenderAlignment,
         // skin: &ESkinCode,
         vs_defined_snippets: &[String],
+        vs_extend_varying: &String,
+        fs_extend_varying: &String,
+        vs_running_attribute_snippets: &[String],
         vs_running_model_snippets: &[String],
         vs_running_before_effect_snippets: &[String],
         vs_running_after_effect_snippets: &[String],
         fs_defined_snippets: &[String],
         fs_running_before_effect_snippets: &[String],
         fs_running_after_effect_snippets: &[String],
+        engineopt: &EngineCustomPlugins,
     ) -> Shader3D {
-        let vs = self.vs_blocks_2(key_meta.as_str(), vs_running_model_snippets, vs_defined_snippets, vs_running_before_effect_snippets, vs_running_after_effect_snippets);
-        let fs = self.fs_blocks_2(key_meta.as_str(), fs_defined_snippets, fs_running_before_effect_snippets, fs_running_after_effect_snippets);
+        let vs = self.vs_blocks_2(key_meta.as_str(), vs_extend_varying, vs_running_attribute_snippets, vs_running_model_snippets, vs_defined_snippets, vs_running_before_effect_snippets, vs_running_after_effect_snippets, engineopt);
+        let fs = self.fs_blocks_2(key_meta.as_str(), fs_defined_snippets, fs_extend_varying, fs_running_before_effect_snippets, fs_running_after_effect_snippets, engineopt);
 
         #[cfg(not(target_arch = "wasm32"))]
         {

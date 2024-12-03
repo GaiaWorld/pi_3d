@@ -8,6 +8,7 @@ use super::{
 };
 
 pub fn sys_material_textures_modify(
+    addeds: ComponentAdded<UniformTextureWithSamplerParamsDirty>,
     changes: ComponentChanged<UniformTextureWithSamplerParamsDirty>,
     mut materials: Query<
         (
@@ -20,16 +21,14 @@ pub fn sys_material_textures_modify(
     asset_samp: Res<ShareAssetMgr<SamplerRes>>,
 ) {
     // log::debug!("SysMaterialMetaChange: ");
-    changes.iter().for_each(|entity| {
+    addeds.iter().chain(changes.iter()) .for_each(|entity| {
         if let Ok((
             effect, mut texparams,
             mut slots,
             mut samplers
         )) = materials.get_mut(*entity) {
             let effect = effect.0.as_ref().unwrap().as_ref();
-            if effect.textures.len() == 0 {
-                //
-            } else {
+            if effect.textures.len() > 0 {
                 for index in 0..effect.textures.len() {
                     let item = effect.textures.get(index).unwrap();
                     let param = if let Some(param) = texparams.0.get(&item.slotname) {
@@ -38,11 +37,15 @@ pub fn sys_material_textures_modify(
                         texparams.0.insert(
                             item.slotname.clone(), 
                             std::sync::Arc::new(
-                                    UniformTextureWithSamplerParam {
+                                UniformTextureWithSamplerParam {
                                     slotname: item.slotname.clone(),
-                                    filter: true,
                                     sample: KeySampler::default(),
                                     url: EKeyTexture::Tex(Atom::from(DefaultTexture::path(item.initial, wgpu::TextureDimension::D2))),
+                                    wrapu: EAddressMode::ClampToEdge,
+                                    wrapv: EAddressMode::ClampToEdge,
+                                    wrapw: EAddressMode::ClampToEdge,
+                                    texture_sample: wgpu::TextureSampleType::Float { filterable: true },
+                                    sampler_bind_type: wgpu::SamplerBindingType::Filtering,
                                 }
                             )
                         );
@@ -56,6 +59,8 @@ pub fn sys_material_textures_modify(
                         }
                         if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
                             samplers.0[index] = Some(samp);
+                        } else {
+                            // log::error!("Sampler Fail: {:?}", (item.initial, &param.sample));
                         }
                     }
                 }
@@ -87,31 +92,31 @@ pub fn sys_material_uniform_apply(
                                     EAnimatorableType::Vec4 => {
                                         if let Ok((value, _)) = _vec4s.get(entity) {
                                             if value.is_changed() == false { return; }
-                                            bind.bind().data().write_data(offset.offset() as usize, bytemuck::cast_slice(value.0.as_slice()));
+                                            bind.write_data(offset.offset() as usize, bytemuck::cast_slice(value.0.as_slice()));
                                         }
                                     },
                                     EAnimatorableType::Vec3 => {
                                         if let Ok((value, _)) = _vec3s.get(entity) {
                                             if value.is_changed() == false { return; }
-                                            bind.bind().data().write_data(offset.offset() as usize, bytemuck::cast_slice(value.0.as_slice()));
+                                            bind.write_data(offset.offset() as usize, bytemuck::cast_slice(value.0.as_slice()));
                                         }
                                     },
                                     EAnimatorableType::Vec2 => {
                                         if let Ok((value, _)) = _vec2s.get(entity) {
                                             if value.is_changed() == false { return; }
-                                            bind.bind().data().write_data(offset.offset() as usize, bytemuck::cast_slice(value.0.as_slice()));
+                                            bind.write_data(offset.offset() as usize, bytemuck::cast_slice(value.0.as_slice()));
                                         }
                                     },
                                     EAnimatorableType::Float => {
                                         if let Ok((value, _)) = floats.get(entity) {
                                             if value.is_changed() == false { return; }
-                                            bind.bind().data().write_data(offset.offset() as usize, bytemuck::cast_slice(&[value.0]));
+                                            bind.write_data(offset.offset() as usize, bytemuck::cast_slice(&[value.0]));
                                         }
                                     },
                                     EAnimatorableType::Uint => {
                                         if let Ok((value, _)) = _uints.get(entity) {
                                             if value.is_changed() == false { return; }
-                                            bind.bind().data().write_data(offset.offset() as usize, bytemuck::cast_slice(&[value.0]));
+                                            bind.write_data(offset.offset() as usize, bytemuck::cast_slice(&[value.0]));
                                         }
                                     },
                                     EAnimatorableType::Int => {
@@ -151,10 +156,20 @@ pub fn sys_texture_ready(
             let mut texsamplerarr =  EffectTextureSamplers::default();
     
             for idx in 0..TEXTURE_SLOT_COUNT {
+                let key = &keys.0[idx];
                 if let (Some((v1, k1)), Some(v2)) = (&textures.data[idx], &samplers.0[idx]) {
-                    texsamplerarr.textures.push(v1.clone()); texsamplerarr.samplers.push(v2.clone());
-                    if idx + 1 == need && k1 == &keys.0[idx].url { *comp = EffectTextureSamplersComp( Some( texsamplerarr ) ); return; }
-                } else { comp.0 = None; return; }
+                    texsamplerarr.textures.push(EffectTextureSampler(v1.clone(), v2.clone(), EShaderStage::FRAGMENT, key.texture_sample, v1.view_dimension(), key.sampler_bind_type));
+                    
+                    // log::error!("{:?}", (&key.url, k1));
+                    if idx + 1 == need && k1 == &key.url {
+                        *comp = EffectTextureSamplersComp( Some( texsamplerarr ) );
+                        return;
+                    }
+                } else {
+                    comp.0 = None; 
+                    // log::error!("{:?}", (textures.data[idx].is_some(), samplers.0[idx].is_some()));
+                    return;
+                }
             }    
         }
     });

@@ -19,6 +19,7 @@ pub fn _set0_modify(
     asset_mgr_bindgroup_layout: &ShareAssetMgr<BindGroupLayout>,
     asset_mgr_bindgroup: &ShareAssetMgr<BindGroup>,
     targets: &CustomRenderTargets,
+    bind_passindex: ShaderBindPassIndex,
     errors: &mut ErrorRecord,
 ) -> Option<Arc<BindGroupScene>> {
     let mut result = None;
@@ -53,7 +54,9 @@ pub fn _set0_modify(
             }
         };
         
-        let bind_lighting = Some(scene_lighting.0.as_ref().unwrap().clone());
+        let bind_lighting = if BindDefines::need_lighting(meta.binddefines) {
+            Some(scene_lighting.0.as_ref().unwrap().clone())
+        } else { None };
         let bind_shadow = match (BindDefines::need_shadowmap(meta.binddefines), &shadowtarget.0, scene_shadow) {
             (true, Some(shadowtarget), Some(scene_shadow)) => {
                 if let Some(shadowtarget) = targets.get(shadowtarget.clone()) {
@@ -98,13 +101,15 @@ pub fn _set0_modify(
             (true, Some(v0), Some(v1), Some(v2)) => { Some((v0.clone(), v1.clone(), v2.clone())) },
             (false, _, _, _) => None,
             _ => {
+                // log::error!("Env: {:?}", (env_irradiance.0.is_some(), env_texture.0.is_some(), env_sampler.0.is_some()));
                 errors.record(idmodel, ErrorRecord::ERROR_PASS_BIND_ENV_NONE);
                 return result;
             },
         };
 
         let key = KeyBindGroupScene::new(
-            bind_viewer, bind_base_effect,
+            bind_viewer, bind_passindex,
+            bind_base_effect,
             bind_lighting,
             bind_shadow,
             brdf,

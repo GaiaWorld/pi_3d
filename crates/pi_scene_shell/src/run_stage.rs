@@ -175,7 +175,37 @@ pub struct EngineCustomPlugins {
     pub skeleton: bool,
     pub combinebuffersize: usize,
     pub active: bool,
+    // 禁用 UBO
+    pub disenable_ubo: bool,
+    // 禁用 材质数组
+    pub disenable_material_array: bool,
+    // 材质数组 最大长度
+    pub maxlen_material_array: u32,
+    // 一个批次实例化数目的最大值
+    pub max_instance_batch_count: u32,
+    // 纹理最大尺寸
+    pub max_texture_size: u32,
 }
+impl EngineCustomPlugins {
+    pub fn new(param: &[u32]) -> Self {
+        Self {
+            active:                     param[ 0] != 0,
+            particle_system:            param[ 1] != 0,
+            lighting:                   param[ 2] != 0,
+            shadowmapping:              param[ 3] != 0,
+            skeleton:                   param[ 4] != 0,
+            directshadowmapping:        param[ 5] != 0,
+            pointshadowmapping:         param[ 6] != 0,
+            spotshadowmapping:          param[ 7] != 0,
+            combinebuffersize:          param[ 8] as usize,
+            disenable_ubo:              param[ 9] != 0,
+            disenable_material_array:   param[10] != 0,
+            maxlen_material_array:      param[11],
+            max_instance_batch_count:   param[12],
+            max_texture_size:           param[13],
+        }
+    }
+} 
 impl Default for EngineCustomPlugins {
     fn default() -> Self {
         Self {
@@ -188,6 +218,11 @@ impl Default for EngineCustomPlugins {
             spotshadowmapping: true,
             combinebuffersize: 1 * 1024 * 1024,
             active: true,
+            disenable_ubo: false,
+            disenable_material_array: false,
+            maxlen_material_array: 512,
+            max_instance_batch_count: u32::MAX,
+            max_texture_size: 2048,
         }
     }
 }

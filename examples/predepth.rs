@@ -6,17 +6,18 @@ pub struct ShaderPreDepth;
 impl ShaderPreDepth {
     pub const KEY: &'static str = "ShaderPreDepth";
 
-    pub fn meta(nodeblocks: &mut NodeMaterialBlocks) -> ShaderEffectMeta {
+    pub fn meta(nodeblocks: &mut NodeMaterialBlocks, engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
 
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.values.stage = wgpu::ShaderStages::VERTEX_FRAGMENT;
         nodemat.binddefines = BindDefines::MODEL_BIND | BindDefines::VIEWER;
+        nodemat.varyings = Varyings(
+            vec![
+                Varying { format: Atom::from("vec4"), name: Atom::from("vWorldPos"), },
+            ]
+        );
         nodemat.fs_define = String::from("
     layout(location = 0) out vec4 gl_FragColor;
-    layout(location = 0) in vec4 vWorldPos;
-");
-nodemat.vs_define = String::from("
-layout(location = 0) out vec4 vWorldPos;
 ");
 
         nodemat.vs = String::from("
@@ -35,7 +36,7 @@ layout(location = 0) out vec4 vWorldPos;
     gl_FragColor = vWorldPos;
         ");
 
-        nodemat.meta()
+        nodemat.meta(engineopt)
     }
 }
 
@@ -43,7 +44,6 @@ pub fn setup(
     asset_mgr: Res<ShareAssetMgr<ShaderEffectMeta>>,
     mut nodematblocks: ResMut<NodeMaterialBlocks>,
 ) {
-    ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(ShaderPreDepth::KEY), ShaderPreDepth::meta(&mut nodematblocks));
     // log::warn!("PluginShaderPreDepth Regist!!!");
 }
 

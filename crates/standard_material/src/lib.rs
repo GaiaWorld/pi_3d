@@ -12,9 +12,10 @@ pub mod block_lighting;
 fn setup(
     asset_mgr: Res<ShareAssetMgr<ShaderEffectMeta>>,
     mut nodematblocks: ResMut<NodeMaterialBlocks>,
+    engineopt: Res<EngineCustomPlugins>,
 ) {
     nodematblocks.regist::<BlockStandardLighting>();
-    ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(StandardShader::KEY), StandardShader::meta());
+    ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(StandardShader::KEY), StandardShader::meta(&engineopt));
 }
 
 pub struct PluginStandardMaterial;

@@ -1,5 +1,5 @@
     vec4 baseColor = v_color;
-    float alpha = opacity();
+    float alpha = opacity(matParam);
 
 	float glossiness 			= 0.;
 	vec3 specularColor 		    = vec3(0., 0., 0.);
@@ -12,19 +12,19 @@
 	vec3 diffuseBase 					= vec3(0., 0., 0.);
 	vec3 specularBase 					= vec3(0., 0., 0.);
 
-    vec4 mainTextureColor   = mainTexture(v_uv, applyUVOffsetSpeed(uMainUVOS), uMainAtlas);
-    baseColor.rgb           *= mainTextureColor.rgb * mainStrength() * mainColor();
+    vec4 mainTextureColor   = mainTexture(v_uv, applyUVOffsetSpeed(matParam.uMainUVOS), matParam);
+    baseColor.rgb           *= mainTextureColor.rgb * mainStrength(matParam) * mainColor(matParam);
     alpha                   *= mainTextureColor.a;
 
-    vec4 opacityData        = opacityTexture(v_uv, applyUVOffsetSpeed(uOpacityUVOS), uOpacityAtlas);
-    float opacityValue      = opacityChannel(opacityData);
+    vec4 opacityData        = opacityTexture(v_uv, applyUVOffsetSpeed(matParam.uOpacityUVOS), matParam);
+    float opacityValue      = opacityChannel(opacityData, matParam);
 
-    if (cutoff(opacityValue - 0.001)) {
+    if (cutoff(opacityValue - 0.001, matParam)) {
         discard;
     }
 
-    vec3 emissiveColor = emissiveColor();
-    emissiveColor *= emissiveTexture(v_uv, applyUVOffsetSpeed(uEmissiveUVOS), uEmissionAtlas).rgb * emissiveStrength();
+    vec3 emissiveColor = emissiveColor(matParam);
+    emissiveColor *= emissiveTexture(v_uv, applyUVOffsetSpeed(matParam.uEmissiveUVOS), matParam).rgb * emissiveStrength(matParam);
 
 	vec3 finalSpecular 		= specularBase * specularColor;
     vec3 finalDiffuse       = (diffuseBase * diffuseColor + emissiveColor) * baseColor.rgb;
@@ -44,6 +44,6 @@
 	finalColor				= max(finalColor, 0.0);
 
     // Premulty
-    finalColor.rgb *= finalColor.a;
+    // finalColor.rgb *= finalColor.a;
 
     gl_FragColor = finalColor;

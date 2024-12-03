@@ -31,6 +31,7 @@ struct PluginMaterial;
 impl Plugin for PluginMaterial {
     fn build(&self, app: &mut App) {
         {
+            app.insert_resource(TextureCombineAtlas2DMgr::default());
             app.insert_resource(ImageTextureLoader::default());
             app.insert_resource(StateTextureLoader::default());
             app.insert_resource(ImageTextureViewLoader2::default());
@@ -88,11 +89,17 @@ impl Plugin for PluginMaterial {
             app.insert_resource(
                 ShareAssetMgr::<ResImageTexture>::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout)
             );
+            app.insert_resource(
+                ShareAssetMgr::<ImageTextureFrame>::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout)
+            );
         };
         if app.world.get_resource::<ShareAssetMgr<ImageTextureView>>().is_none() {
             let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<ImageTextureView>();
             app.insert_resource(
                 ShareAssetMgr::<ImageTextureView>::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout)
+            );
+            app.insert_resource(
+                ShareAssetMgr::<ImageTextureViewFrame>::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout)
             );
         };
 

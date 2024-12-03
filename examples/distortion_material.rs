@@ -6,7 +6,7 @@ pub struct ShaderDistortion;
 impl ShaderDistortion {
     pub const KEY: &'static str = "ShaderDistortion";
 
-    pub fn meta(nodeblocks: &mut NodeMaterialBlocks) -> ShaderEffectMeta {
+    pub fn meta(nodeblocks: &mut NodeMaterialBlocks, engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
 
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.values.stage = wgpu::ShaderStages::VERTEX_FRAGMENT;
@@ -38,15 +38,15 @@ layout(location = 0) out vec4 gl_FragColor;
         ");
         nodemat.fs = String::from("
     vec4 baseColor          = v_color;
-    float alpha             = opacity() * baseColor.a;
+    float alpha             = opacity(matParam) * baseColor.a;
 
-    baseColor.rgb           *= mainColor();
+    baseColor.rgb           *= mainColor(matParam);
     
-    vec4 mainTextureColor   = mainTexture(v_uv, applyUVOffsetSpeed(uMainUVOS));
+    vec4 mainTextureColor   = mainTexture(v_uv, applyUVOffsetSpeed(matParam.uMainUVOS), matParam);
 
     vec2 screenUV           = v_pos_SS.xy / v_pos_SS.w * 0.5 + 0.5;
-    vec4 emissiveTexture    = emissiveTexture(screenUV + (mainTextureColor.rg - 0.5) * 0.01 * mainStrength(), vec2(0., 0.));
-    baseColor.rgb           *= emissiveTexture.rgb * emissiveStrength();
+    vec4 emissiveTexture    = emissiveTexture(screenUV + (mainTextureColor.rg - 0.5) * 0.01 * mainStrength(matParam), vec2(0., 0.), matParam);
+    baseColor.rgb           *= emissiveTexture.rgb * emissiveStrength(matParam);
     alpha                   *= emissiveTexture.a;
 
     gl_FragColor = vec4(baseColor.rgb, alpha);
@@ -63,7 +63,7 @@ layout(location = 0) out vec4 gl_FragColor;
         nodemat.include(&pi_atom::Atom::from(BlockMainTextureUVOffsetSpeed::KEY), nodeblocks);
         nodemat.include(&pi_atom::Atom::from(BlockEmissiveTexture::KEY), nodeblocks);
 
-        nodemat.meta()
+        nodemat.meta(engineopt)
     }
 }
 
@@ -71,7 +71,6 @@ pub fn setup(
     asset_mgr: Res<ShareAssetMgr<ShaderEffectMeta>>,
     mut nodematblocks: ResMut<NodeMaterialBlocks>,
 ) {
-    ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(ShaderDistortion::KEY), ShaderDistortion::meta(&mut nodematblocks));
     // log::warn!("PluginPBRMaterial Regist!!!");
 }
 

@@ -9,7 +9,7 @@ mod base;
 fn setup(
     mut loader: ResMut<ImageTextureLoader>,
 ) {
-    loader.create_load(KeyImageTexture { url: Atom::from("assets/images/eff_ui_ll_0805.png"), file: true, srgb: true, ..Default::default() });
+    loader.create_load(KeyImageTextureFrame { url: Atom::from("assets/images/eff_ui_ll_0805.png"), ..Default::default() });
 }
 
 fn sys_load_check(

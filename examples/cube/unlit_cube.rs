@@ -42,9 +42,9 @@ fn setup(
     actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
     actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
-        filter: true,
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/Q69L5MmgSNC2xbBiAwZcDw.png"),
+        ..Default::default()
     }));
     
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));

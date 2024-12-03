@@ -1,12 +1,12 @@
 use pi_atom::Atom;
-use pi_scene_shell::prelude::*;
+use pi_scene_shell::{prelude::*, run_stage::EngineCustomPlugins};
 use pi_scene_context::materials::command_sys::ActionMaterial;
 use crate::{base::*, prelude::BlockMainTexture};
 
 pub struct DefaultShader;
 impl DefaultShader {
     pub const KEY: &'static str = "Default";
-    pub fn res() -> ShaderEffectMeta {
+    pub fn res(engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.values.uint_list.push(UniformPropertyUint(Atom::from("debug_normal"), 0, false));
         nodemat.fs_define = String::from("
@@ -30,12 +30,12 @@ v_color = A_COLOR4;
 ");
         nodemat.fs = String::from("
 vec4 baseColor = v_color;
-baseColor.rgb *= uMainInfo.rgb;
+baseColor.rgb *= matParam.uMainInfo.rgb;
 float alpha = 1.0;
 vec3 normal = normalize(v_normal);
 // baseColor.rgb *= max(0., dot(normal, normalize(-light)));
 // // float level = dot(v_normal, vec3(0., 0., -1.));
-if (debug_normal > 0) {
+if (matParam.debug_normal > 0) {
     baseColor.rgb = mix(baseColor.rgb, v_normal, 0.5);
 }
 // // baseColor.rgb = (v_pos + vec3(1., 1., 1.)) / 2.;
@@ -63,7 +63,7 @@ gl_FragColor = vec4(baseColor.rgb, alpha);
             ]
         );
 
-        nodemat.meta()
+        nodemat.meta(engineopt)
     }
 }
 
@@ -72,7 +72,7 @@ impl Plugin for PluginDefaultMaterial {
     fn build(&self, app: &mut App) {
         
         let asset_mgr = app.world.get_resource::<ShareAssetMgr<ShaderEffectMeta>>().unwrap().clone();
-        ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(DefaultShader::KEY), DefaultShader::res());
+        ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(DefaultShader::KEY), DefaultShader::res(&app.world.get_resource::<EngineCustomPlugins>().unwrap()));
 
     }
 }

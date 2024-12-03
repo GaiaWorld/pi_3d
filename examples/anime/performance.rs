@@ -48,9 +48,9 @@ fn setup(
     actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
     actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
-        filter: true,
         sample: KeySampler::default(),
         url: EKeyTexture::from("assets/images/bubbles.png"),
+        ..Default::default()
     }));
     actions.material.val.push(OpsUniformVal::vec4(
             idmat, 

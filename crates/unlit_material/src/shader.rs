@@ -10,7 +10,7 @@ pub struct UnlitShader {
 impl UnlitShader {
     pub const KEY: &'static str = "UnlitShader";
 
-    pub fn meta() -> ShaderEffectMeta {
+    pub fn meta(engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
 
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.fs_define = String::from(include_str!("./unlit_define.frag"));
@@ -44,7 +44,7 @@ impl UnlitShader {
         nodemat.apply::<BlockMainTexture>();
         nodemat.apply::<BlockMainTextureUVOffsetSpeed>();
 
-        nodemat.meta()
+        nodemat.meta(engineopt)
 
         // ShaderEffectMeta::new(
         //     MaterialValueBindDesc {

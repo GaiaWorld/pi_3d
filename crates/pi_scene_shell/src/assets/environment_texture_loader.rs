@@ -1,7 +1,7 @@
 
 use pi_assets::{asset::{Garbageer, Handle}, mgr::{Receiver, LoadResult}};
 use pi_futures::BoxFuture;
-use pi_render::renderer::texture::{ResImageTexture, ImageTexture2DDesc, ErrorImageTexture};
+use pi_render::{renderer::texture::{ErrorImageTexture, ImageTexture2DDesc, ImageTextureFrame, KeyImageTextureFrame, ResImageTexture}, rhi::{device::RenderDevice, RenderQueue}};
 use serde::Deserialize;
 
 use crate::prelude::{EError, ErrorRecord};
@@ -131,7 +131,7 @@ impl EnvironmentTextureTools {
         }
     }
 
-    pub fn async_load<'a, G: Garbageer<ResImageTexture>>(desc: ImageTexture2DDesc, result: LoadResult<'a, ResImageTexture, G>) -> BoxFuture<'a, Result<Handle<ResImageTexture>, ErrorImageTexture>> {
+    pub fn async_load<'a, G: Garbageer<ImageTextureFrame>>(desc: KeyImageTextureFrame, device: RenderDevice, queue: RenderQueue, result: LoadResult<'a, ImageTextureFrame, G>) -> BoxFuture<'a, Result<Handle<ImageTextureFrame>, ErrorImageTexture>> {
         Box::pin(async move { 
             match result {
                 LoadResult::Ok(r) => Ok(r),
@@ -140,8 +140,8 @@ impl EnvironmentTextureTools {
                     Err(_e) => { Err(ErrorImageTexture::LoadFail)},
                 },
                 LoadResult::Receiver(recv) => {
-                    match pi_hal::file::load_from_url( &desc.url.url ).await {
-                        Ok(data) => create_environment_texture_from_file(&data, desc, recv).await,
+                    match pi_hal::file::load_from_url( &desc.url ).await {
+                        Ok(data) => create_environment_texture_from_file(&data, desc, device, queue, recv).await,
                         Err(_e) => { Err(ErrorImageTexture::LoadFail) },
                     }
                 }
@@ -152,11 +152,12 @@ impl EnvironmentTextureTools {
 }
 
 
-pub async fn create_environment_texture_from_file<G: Garbageer<ResImageTexture>>(
+pub async fn create_environment_texture_from_file<G: Garbageer<ImageTextureFrame>>(
     data: &Vec<u8>,
-    desc: ImageTexture2DDesc,
-    recv: Receiver<ResImageTexture, G>
-) -> Result<Handle<ResImageTexture>, ErrorImageTexture> {
+    desc: KeyImageTextureFrame,
+    device: RenderDevice, queue: RenderQueue,
+    recv: Receiver<ImageTextureFrame, G>
+) -> Result<Handle<ImageTextureFrame>, ErrorImageTexture> {
     
     // log::error!("Analy ");
 
@@ -175,8 +176,8 @@ pub async fn create_environment_texture_from_file<G: Garbageer<ResImageTexture>>
                 height,
                 depth_or_array_layers: 6,
             };
-            let texture = (**desc.device).create_texture(&wgpu::TextureDescriptor {
-                label: Some(desc.url.url.as_str()),
+            let texture = (**device).create_texture(&wgpu::TextureDescriptor {
+                label: Some(desc.url.as_str()),
                 size: texture_extent,
                 mip_level_count: info.mipmaplevels,
                 sample_count: 1,
@@ -191,7 +192,7 @@ pub async fn create_environment_texture_from_file<G: Garbageer<ResImageTexture>>
             let mut twidth = width;
             for mip_level in 0..info.mipmaplevels {
                 // let mut buffer = Vec::with_capacity((width * width * 4) as usize);
-                match desc.url.file {
+                match desc.file {
                     true => {
                         // copytarget.mip_level = mip_level;
                         // for z in 0..6 {
@@ -220,7 +221,7 @@ pub async fn create_environment_texture_from_file<G: Garbageer<ResImageTexture>>
                         end += start;
                         let buffer = &data[start..end];
                         let texture_extent = wgpu::Extent3d { width: twidth, height: twidth, depth_or_array_layers: 6, };
-                        desc.queue.write_texture( copytarget, buffer, wgpu::ImageDataLayout { offset: 0, bytes_per_row: Some(twidth * pre_pixel_size), rows_per_image: Some(twidth) }, texture_extent );
+                        queue.write_texture( copytarget, buffer, wgpu::ImageDataLayout { offset: 0, bytes_per_row: Some(twidth * pre_pixel_size), rows_per_image: Some(twidth) }, texture_extent );
                     },
                 }
 
@@ -232,9 +233,9 @@ pub async fn create_environment_texture_from_file<G: Garbageer<ResImageTexture>>
             let haltex = pi_hal::texture::ImageTexture {
                 width, height, size: data.len() as usize, texture, format, view_dimension: dimension, is_opacity
             };
-            let mut texture = ResImageTexture::new(haltex);
+            let mut texture = ImageTextureFrame::new(haltex);
             texture.extend = info.infodata;
-            match recv.receive(desc.url, Ok(texture)).await {
+            match recv.receive(desc, Ok(texture)).await {
                 Ok(result) => Ok(result),
                 Err(_) => Err(ErrorImageTexture::CreateError),
             }

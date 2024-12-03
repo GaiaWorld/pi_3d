@@ -3,11 +3,11 @@ use std::sync::Arc;
 use derive_deref::Deref;
 use pi_assets::asset::Handle;
 use pi_render::renderer::{
-    texture::{BindDataTexture2D, ResImageTexture}, sampler::BindDataSampler, shader::TShaderBindCode,
+    texture::{BindDataTexture2D, ImageTextureFrame}, sampler::BindDataSampler, shader::TShaderBindCode,
     bind::{TKeyBind, KeyBindTexture2D, KeyBindLayoutTexture2D, KeyBindSampler, KeyBindLayoutSampler, KeyBindLayoutBuffer, KeyBindBuffer},
     shader_stage::EShaderStage, bind_buffer::{BindBufferRange, BindBufferAllocator}
 };
-use crate::shader::{texture_bind_code, ShaderSetBind, ShaderVarUniform};
+use crate::{prelude::{BindDefines, TBindDefine}, shader::{texture_bind_code, ShaderSetBind, ShaderVarUniform}};
 
 use crate::assets::environment_texture_loader::EnvironmentTextureTools;
 
@@ -19,7 +19,7 @@ impl BindEnvIrradiance {
     const KEY: &'static str = "IBL";
     pub fn new(
         allocator: &mut BindBufferAllocator,
-        texture: &Handle<ResImageTexture>,
+        texture: &Handle<ImageTextureFrame>,
     ) -> Option<Self> {
         let size = texture.extend.len();
         if size == EnvironmentTextureTools::IRRADIANCE_SIZE {
@@ -94,15 +94,9 @@ impl TKeyBind for BindEnvIrradiance {
         )
     }
 }
-
-#[derive(Clone, Hash, PartialEq, Eq)]
-pub struct BindUseEnvIrradiance {
-    pub(crate) bind: u32,
-    pub(crate) data: Arc<BindEnvIrradiance>,
-}
-impl BindUseEnvIrradiance {
-    pub fn new(bind: u32, data: Arc<BindEnvIrradiance>) -> Self {
-        Self { bind, data }
+impl TBindDefine for BindEnvIrradiance {
+    fn bind_include(&self) -> u32 {
+        BindDefines::ENVIRONMENT_LIGHTING
     }
 }
 
@@ -129,15 +123,9 @@ impl TKeyBind for ShaderBindEnvTexture {
         )
     }
 }
-
-#[derive(Clone, Hash, PartialEq, Eq)]
-pub struct BindUseEnvTexture {
-    pub(crate) bind: u32,
-    pub(crate) data: Arc<ShaderBindEnvTexture>,
-}
-impl BindUseEnvTexture {
-    pub fn new(bind: u32, data: Arc<ShaderBindEnvTexture>) -> Self {
-        Self { bind, data }
+impl TBindDefine for ShaderBindEnvTexture {
+    fn bind_include(&self) -> u32 {
+        BindDefines::ENVIRONMENT_LIGHTING
     }
 }
 
@@ -189,14 +177,8 @@ impl TKeyBind for ShaderBindEnvSampler {
         )
     }
 }
-
-#[derive(Clone, Hash, PartialEq, Eq)]
-pub struct BindUseEnvSampler {
-    pub(crate) bind: u32,
-    pub(crate) data: Arc<ShaderBindEnvSampler>,
-}
-impl BindUseEnvSampler {
-    pub fn new(bind: u32, data: Arc<ShaderBindEnvSampler>) -> Self {
-        Self { bind, data }
+impl TBindDefine for ShaderBindEnvSampler {
+    fn bind_include(&self) -> u32 {
+        BindDefines::ENVIRONMENT_LIGHTING
     }
 }

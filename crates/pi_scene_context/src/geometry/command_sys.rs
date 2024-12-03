@@ -27,6 +27,7 @@ pub fn sys_create_geometry(
     mut instanceallocator: ResMut<InstanceBufferAllocator>,
     mut _disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
+    engineopt: Res<EngineCustomPlugins>,
     // mut cmdgeo: Alter<(), (), BundleGeometry, ()>,
     // devicelimits: Res<DeviceLimits3D>,
 ) {
@@ -41,11 +42,15 @@ pub fn sys_create_geometry(
         } else { return; };
 
         let mut attrs = vec![];
+
         if instancestate.instance_matrix {
             attrs.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::InsWorldRow1, wgpu::VertexFormat::Float32x4));
             attrs.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::InsWorldRow2, wgpu::VertexFormat::Float32x4));
             attrs.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::InsWorldRow3, wgpu::VertexFormat::Float32x4));
             attrs.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::InsWorldRow4, wgpu::VertexFormat::Float32x4));
+        }
+        if engineopt.disenable_material_array == false && (instancestate.instance_matrix || instancestate.instances.len() > 0) {
+            attrs.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::MatIdxs, wgpu::VertexFormat::Uint32x4));
         }
         instancestate.instances.iter().for_each(|attr| {
             attrs.push(EVertexAttribute::Custom(attr.clone()));
@@ -152,7 +157,7 @@ impl ActionGeometry {
     ) -> GeometryInitBundle {
         (
             ActionEntity::init(),
-            VertexBufferLayoutsComp(VertexBufferLayouts::from(vertex_desc), KeyShaderFromAttributes::new(vertex_desc)),
+            VertexBufferLayoutsComp(VertexBufferLayouts::from_descs(vertex_desc), KeyShaderFromAttributes::new(vertex_desc)),
             MeshID(id_mesh),
             RenderGeometryComp::default(),
             IndicesBufferDescComp(indices_desc),

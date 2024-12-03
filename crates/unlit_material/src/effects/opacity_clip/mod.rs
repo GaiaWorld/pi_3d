@@ -7,7 +7,7 @@ pub struct OpacityClipShader;
 impl OpacityClipShader {
     pub const KEY: &'static str = "OpacityClipShader";
 
-    pub fn create(infos: &NodeMaterialBlocks) -> ShaderEffectMeta {
+    pub fn create(infos: &NodeMaterialBlocks, engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
 
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.fs_define = String::from("\r\nlayout(location = 0) out vec4 gl_FragColor; \r\n");
@@ -36,10 +36,6 @@ impl OpacityClipShader {
             ]
         );
 
-        nodemat.values.vec4_list.push(UniformPropertyVec4(Atom::from("uMainAtlas"), [11., 11., 0., 0.], true));
-        nodemat.values.vec4_list.push(UniformPropertyVec4(Atom::from("uOpacityAtlas"), [11., 11., 0., 0.], true));
-        nodemat.values.vec4_list.push(UniformPropertyVec4(Atom::from("uEmissionAtlas"), [11., 11., 0., 0.], true));
-
         nodemat.include(&Atom::from(BlockColorGray::KEY), infos);
         nodemat.include(&Atom::from(BlockTextureChannel::KEY), infos);
         nodemat.include(&Atom::from(BlockUVOffsetSpeed::KEY), infos);
@@ -53,6 +49,6 @@ impl OpacityClipShader {
         nodemat.include(&Atom::from(BlockEmissiveTexture::KEY), infos);
         nodemat.include(&Atom::from(BlockEmissiveTextureUVOffsetSpeed::KEY), infos);
 
-        nodemat.meta()
+        nodemat.meta(engineopt)
     }
 }

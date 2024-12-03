@@ -3,14 +3,15 @@ use crate::ecs::*;
 // use bevy_app::{Update, App, Plugin};
 // use bevy_ecs::{component::Component, entity::{self, Entity}, query::Changed, schedule::{IntoSystemConfigs, IntoSystemSetConfig, SystemSet}, system::{Query, Res, ResMut, Resource}};
 
-use std::{marker::PhantomData, ops::Deref};
+use std::{marker::PhantomData, ops::Deref, sync::Arc};
 use crossbeam::queue::SegQueue;
+use ktx::KtxInfo;
 use pi_assets::{
     asset::Handle,
-    mgr::{AssetMgr, LoadResult},
+    mgr::{AssetMgr, LoadResult, Receiver},
 };
 use pi_async_rt::prelude::AsyncRuntime;
-use pi_hal::{runtime::RENDER_RUNTIME, loader::AsyncLoader};
+use pi_hal::{image::DynamicImage, loader::AsyncLoader, runtime::RENDER_RUNTIME};
 use pi_bevy_asset::ShareAssetMgr;
 use pi_hash::XHashMap;
 use pi_render::rhi::asset::{ImageTextureDesc, TextureRes};
@@ -45,7 +46,7 @@ pub enum ETextureLoaderMode {
 
 pub struct QueueInfo {
     pub id: IDImageTextureLoad,
-    pub key: KeyImageTexture,
+    pub key: KeyImageTextureFrame,
     pub mode: ETextureLoaderMode,
 }
 
@@ -54,9 +55,12 @@ pub struct ImageTextureLoader {
     pub wait: Share<SegQueue<QueueInfo>>,
     pub success_load: Share<SegQueue<IDImageTextureLoad>>,
     pub fails: Share<SegQueue<IDImageTextureLoad>>,
-    pub fail_reason: XHashMap<KeyImageTexture, EErrorImageLoad>,
-    pub fail_imgtex: Share<SegQueue<(KeyImageTexture, EErrorImageLoad)>>,
-    pub success: XHashMap<IDImageTextureLoad, Handle<ResImageTexture>>,
+    pub loading: XHashSet<KeyImageTextureFrame>,
+    pub loading_image: Share<SegQueue<(KeyImageTextureFrame, DynamicImage, Receiver<ImageTextureFrame, GarbageEmpty>)>>,
+    pub loading_data: Share<SegQueue<(KeyImageTextureFrame, Arc<Vec<u8>>, Receiver<ImageTextureFrame, GarbageEmpty>)>>,
+    pub fail_reason: XHashMap<KeyImageTextureFrame, EErrorImageLoad>,
+    pub fail_imgtex: Share<SegQueue<(KeyImageTextureFrame, EErrorImageLoad)>>,
+    pub success: XHashMap<IDImageTextureLoad, Handle<ImageTextureFrame>>,
     pub failrecord: XHashMap<IDImageTextureLoad, EErrorImageLoad>,
     pub query_counter: IDImageTextureLoad,
 }
@@ -65,6 +69,9 @@ impl Default for ImageTextureLoader {
         Self {
             wait: Share::new(SegQueue::new()),
             success_load: Share::new(SegQueue::new()),
+            loading: XHashSet::default(),
+            loading_image: Share::new(SegQueue::new()),
+            loading_data: Share::new(SegQueue::new()),
             fails: Share::new(SegQueue::new()),
             fail_reason: XHashMap::default(),
             fail_imgtex: Share::new(SegQueue::new()),
@@ -84,13 +91,13 @@ impl ImageTextureLoader {
         + self.success.len() * 8
         + self.failrecord.len() * 1
     }
-    pub fn create_load(&mut self, key: KeyImageTexture) -> IDImageTextureLoad {
+    pub fn create_load(&mut self, key: KeyImageTextureFrame) -> IDImageTextureLoad {
         self.query_counter += 1;
         let id = self.query_counter;
         self.wait.push(QueueInfo { id, key, mode: ETextureLoaderMode::D2 });
         id
     }
-    pub fn create_load_env(&mut self, key: KeyImageTexture) -> IDImageTextureLoad {
+    pub fn create_load_env(&mut self, key: KeyImageTextureFrame) -> IDImageTextureLoad {
         self.query_counter += 1;
         let id = self.query_counter;
         self.wait.push(QueueInfo { id, key, mode: ETextureLoaderMode::Env });
@@ -101,7 +108,7 @@ impl ImageTextureLoader {
     /// 加载成功 返回资源引用
     /// 加载失败 返回 Err(true)
     /// 加载中 返回 Err(false)
-    pub fn query_imgtex(&self, key: &KeyImageTexture, asset: &AssetMgr<ResImageTexture>) -> Result<Handle<ResImageTexture>, bool> {
+    pub fn query_imgtex(&self, key: &KeyImageTextureFrame, asset: &AssetMgr<ImageTextureFrame>) -> Result<Handle<ImageTextureFrame>, bool> {
         if let Some(res) = asset.get(key) {
             Ok(res)
         } else {
@@ -115,17 +122,18 @@ impl ImageTextureLoader {
             None
         }
     }
-    pub fn query_success(&mut self, id: IDImageTextureLoad) -> Option<Handle<ResImageTexture>> {
+    pub fn query_success(&mut self, id: IDImageTextureLoad) -> Option<Handle<ImageTextureFrame>> {
         self.success.remove(&id)
     }
 }
 
 pub fn sys_image_texture_load_launch(
     mut loader: ResMut<ImageTextureLoader>,
-    image_assets_mgr: Res<ShareAssetMgr<ResImageTexture>>,
+    image_assets_mgr: Res<ShareAssetMgr<ImageTextureFrame>>,
     queue: Res<PiRenderQueue>,
     device: Res<PiRenderDevice>,
     mut state: ResMut<StateTextureLoader>,
+    mut combinemgr: ResMut<TextureCombineAtlas2DMgr>,
 ) {
     let mut again = vec![];
     let mut item = loader.wait.pop();
@@ -173,36 +181,77 @@ pub fn sys_image_texture_load_launch(
                                     again.push(info);
                                 }
                                 let (failquene, device, queue) = (loader.fail_imgtex.clone(), (device).clone(), (queue).clone());
+                                let (loading_img, loading_data) = (loader.loading_image.clone(), loader.loading_data.clone());
                                 let param = param.clone();
-                                RENDER_RUNTIME.spawn(async move {
-                                    
-                                    match imageresult {
-                                        LoadResult::Ok(r) => {},
-                                        LoadResult::Wait(f) => match f.await {
-                                            Ok(result) => {},
-                                            Err(_err) => failquene.push((param.clone(), EErrorImageLoad::CacheFail))
-                                        },
-                                        LoadResult::Receiver(recv) => {
-                                            let haldesc = pi_hal::texture::ImageTextureDesc {
-                                                url: param.url.clone(),
-                                                srgb: param.srgb,
-                                                useage: param.useage,
-                                            };
-                                            match pi_hal::image_texture_load::load_from_url(&haldesc, &device, &queue).await {
-                                                Ok(data) => {
-                                                    match recv.receive(param.clone(), Ok(ResImageTexture::new(data))).await {
+
+                                if param.cancombine {
+                                    if loader.loading.contains(&param) == false {
+                                        match imageresult {
+                                            LoadResult::Ok(r) => {},
+                                            LoadResult::Wait(f) => {
+                                                RENDER_RUNTIME.spawn(async move {
+                                                    match f.await {
                                                         Ok(result) => {},
-                                                        Err(_) => failquene.push((param.clone(), EErrorImageLoad::CacheFail))
+                                                        Err(_err) => failquene.push((param.clone(), EErrorImageLoad::CacheFail))
                                                     }
-                                                },
-                                                Err(_) => {
-                                                    failquene.push((param.clone(), EErrorImageLoad::LoadFail));
-                                                },
-                                            };
+                                                })
+                                                .unwrap();
+                                            },
+                                            LoadResult::Receiver(recv) => {
+                                                loader.loading.insert(param.clone());
+                                                RENDER_RUNTIME.spawn(async move {
+                                                    if param.compressed {
+                                                        match pi_hal::file::load_from_url(&param.url).await {
+                                                            Ok(data) => {
+                                                                loading_data.push((param, data, recv));
+                                                            },
+                                                            Err(_) => failquene.push((param.clone(), EErrorImageLoad::LoadFail)),
+                                                        }
+                                                    } else {
+                                                        match pi_hal::image::load_from_url(&param.url).await {
+                                                            Ok(img) => {
+                                                                loading_img.push((param, img, recv));
+                                                            },
+                                                            Err(_) => failquene.push((param.clone(), EErrorImageLoad::LoadFail)),
+                                                        }
+                                                    }
+                                                })
+                                                .unwrap();
+                                            }
                                         }
                                     }
-                                })
-                                .unwrap();
+                                } else {
+                                    RENDER_RUNTIME.spawn(async move {
+                                        
+                                        match imageresult {
+                                            LoadResult::Ok(r) => {},
+                                            LoadResult::Wait(f) => match f.await {
+                                                Ok(result) => {},
+                                                Err(_err) => failquene.push((param.clone(), EErrorImageLoad::CacheFail))
+                                            },
+                                            LoadResult::Receiver(recv) => {
+    
+                                                let haldesc = pi_hal::texture::ImageTextureDesc {
+                                                    url: param.url.clone(),
+                                                    srgb: false,
+                                                    useage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+                                                };
+                                                match pi_hal::image_texture_load::load_from_url(&haldesc, &device, &queue).await {
+                                                    Ok(data) => {
+                                                        match recv.receive(param.clone(), Ok(ImageTextureFrame::new(data))).await {
+                                                            Ok(result) => {},
+                                                            Err(_) => failquene.push((param.clone(), EErrorImageLoad::CacheFail))
+                                                        }
+                                                    },
+                                                    Err(_) => {
+                                                        failquene.push((param.clone(), EErrorImageLoad::LoadFail));
+                                                    },
+                                                };
+                                            }
+                                        }
+                                    })
+                                    .unwrap();
+                                }
                             },
                         },
                         ETextureLoaderMode::Env => 
@@ -215,14 +264,18 @@ pub fn sys_image_texture_load_launch(
                                 // loader.fails.push(id);
                                 // loader.failrecord.insert(id, EErrorImageLoad::LoadFail);
                                 // state.image_fail += 1;
+                                // log::error!("ETextureLoaderMode::Env Fail");
                             } else {
                                 let (failquene, device, queue) = (loader.fail_imgtex.clone(), (device).clone(), (queue).clone());
                                 let param = param.clone();
                                 RENDER_RUNTIME.spawn(async move {
-                                    let desc = ImageTexture2DDesc { url: param.clone(), device, queue, };
-                                    match EnvironmentTextureTools::async_load(desc, imageresult).await {
-                                        Ok(_) => {},
-                                        Err(_) => failquene.push((param.clone(), EErrorImageLoad::LoadFail)),
+                                    match EnvironmentTextureTools::async_load(param.clone(), device, queue, imageresult).await {
+                                        Ok(_) => {
+                                            // log::error!("ETextureLoaderMode::Env Success");
+                                        },
+                                        Err(_) => {
+                                            failquene.push((param.clone(), EErrorImageLoad::LoadFail))
+                                        },
                                     }
                                 })
                                 .unwrap();
@@ -240,7 +293,72 @@ pub fn sys_image_texture_load_launch(
 pub fn sys_image_texture_loaded(
     mut loader: ResMut<ImageTextureLoader>,
     mut state: ResMut<StateTextureLoader>,
+    mut combinemgr: ResMut<TextureCombineAtlas2DMgr>,
+    assets: Res<ShareAssetMgr<ImageTextureFrame>>,
+    device: Res<PiRenderDevice>,
+    queue: Res<PiRenderQueue>,
 ) {
+    while let Some((keyimage, data, receiver)) = loader.loading_image.pop() {
+        loader.loading.remove(&keyimage);
+        let failquene = loader.fail_imgtex.clone();
+        if let Some(texture) = combinemgr.combine_image(&keyimage, &data, &device, &queue) {
+            RENDER_RUNTIME.spawn(async move {
+                match receiver.receive(keyimage.clone(), Ok(texture)).await {
+                    Ok(_) => {},
+                    Err(_) => {
+                        failquene.push((keyimage, EErrorImageLoad::LoadFail));
+                    },
+                }
+            })
+            .unwrap();
+        } else if let Some(texture) = ImageTextureFrame::create_image(&device, &queue, &keyimage.url, wgpu::TextureViewDimension::D2, data) {
+            RENDER_RUNTIME.spawn(async move {
+                match receiver.receive(keyimage.clone(), Ok(ImageTextureFrame::new(texture))).await {
+                    Ok(_) => {},
+                    Err(_) => {
+                        failquene.push((keyimage, EErrorImageLoad::LoadFail));
+                    },
+                }
+            })
+            .unwrap();
+        } else {
+            failquene.push((keyimage, EErrorImageLoad::LoadFail));
+        }
+    }
+    while let Some((keyimage, data, receiver)) = loader.loading_data.pop() {
+        loader.loading.remove(&keyimage);
+        let failquene = loader.fail_imgtex.clone();
+        if let Some(texture) = combinemgr.combine_ktx(&keyimage, &data, &device, &queue) {
+            RENDER_RUNTIME.spawn(async move {
+                match receiver.receive(keyimage.clone(), Ok(texture)).await {
+                    Ok(_) => {},
+                    Err(_) => {
+                        failquene.push((keyimage, EErrorImageLoad::LoadFail));
+                    },
+                }
+            })
+            .unwrap();
+        } else {
+            let ktx = ktx::Ktx::new(data.as_slice());
+            if let Some(format) = compressed_texture_format(ktx.gl_internal_format()) {
+                if let Some(texture) = ImageTextureFrame::create_ktx(&device, &queue, &keyimage.url, wgpu::TextureViewDimension::D2, format, &ktx) {
+                    RENDER_RUNTIME.spawn(async move {
+                        match receiver.receive(keyimage.clone(), Ok(ImageTextureFrame::new(texture))).await {
+                            Ok(_) => {},
+                            Err(_) => {
+                                failquene.push((keyimage, EErrorImageLoad::LoadFail));
+                            },
+                        }
+                    })
+                    .unwrap();
+                } else {
+                    loader.fail_imgtex.push((keyimage, EErrorImageLoad::LoadFail));
+                }
+            } else {
+                loader.fail_imgtex.push((keyimage, EErrorImageLoad::LoadFail));
+            }
+        }
+    }
     let mut item = loader.fail_imgtex .pop();
     while let Some((param, error)) = item {
         item = loader.fail_imgtex.pop();
@@ -251,7 +369,7 @@ pub fn sys_image_texture_loaded(
 
 #[derive(Resource)]
 pub struct ImageTextureViewLoader<K> {
-    pub wait: Share<SegQueue<(ObjectID, KeyImageTextureView, IDImageTextureLoad, usize)>>,
+    pub wait: Share<SegQueue<(ObjectID, KeyImageTextureViewFrame, IDImageTextureLoad, usize)>>,
     pub success: Share<SegQueue<(ObjectID, EKeyTexture, ETextureViewUsage, usize)>>,
     pub fail: Share<SegQueue<(ObjectID, EKeyTexture, usize)>>,
     pub _p: PhantomData<K>
@@ -266,18 +384,22 @@ pub fn sys_image_texture_view_load_launch<K: std::ops::Deref<Target = EKeyTextur
     // mut commands: Commands,
     mut items: Query<(Entity, &K, &mut D), Changed<K>>,
     loader: Res<ImageTextureViewLoader<K>>,
-    imgtex_assets_mgr: Res<ShareAssetMgr<ImageTextureView>>,
+    imgtex_assets_mgr: Res<ShareAssetMgr<ImageTextureViewFrame>>,
     texres_assets_mgr: Res<ShareAssetMgr<TextureRes>>,
     mut image_loader: ResMut<ImageTextureLoader>,
     queue: Res<PiRenderQueue>,
     device: Res<PiRenderDevice>,
     mut state: ResMut<StateTextureLoader>,
     targets: Res<CustomRenderTargets>,
+    mut combinemgr: ResMut<TextureCombineAtlas2DMgr>,
 ) {
     items.iter_mut().for_each(|(entity, param, mut cmd)| {
         state.texview_count += 1;
         let param = param.deref();
-        match _sys_image_texture_view_load_launch2(entity, 0, param, &imgtex_assets_mgr, &texres_assets_mgr, &mut image_loader, &queue, &device, &mut state, &loader.wait, &loader.success, &loader.fail, &targets) {
+        match _sys_image_texture_view_load_launch2(
+            entity, 0, param, &imgtex_assets_mgr, &texres_assets_mgr, &mut image_loader,
+            &queue, &device, &mut state, &loader.wait, &loader.success, &loader.fail, &targets, &mut combinemgr
+        ) {
             Some(data) => { 
                 *cmd = D::from(data); 
             },
@@ -292,7 +414,7 @@ pub fn sys_image_texture_view_loaded_check<K: std::ops::Deref<Target = EKeyTextu
     // mut commands: Commands,
     loader: Res<ImageTextureViewLoader<K>>,
     // image_assets_mgr: Res<ShareAssetMgr<ImageTexture>>,
-    imgtex_assets_mgr: Res<ShareAssetMgr<ImageTextureView>>,
+    imgtex_assets_mgr: Res<ShareAssetMgr<ImageTextureViewFrame>>,
     texres_assets_mgr: Res<ShareAssetMgr<TextureRes>>,
     mut image_loader: ResMut<ImageTextureLoader>,
     mut state: ResMut<StateTextureLoader>,
@@ -330,10 +452,10 @@ pub fn sys_image_texture_view_loaded_check<K: std::ops::Deref<Target = EKeyTextu
 }
 
 fn _sys_image_texture_view_loaded_check(
-    wait: &Share<SegQueue<(ObjectID, KeyImageTextureView, IDImageTextureLoad, usize)>>,
+    wait: &Share<SegQueue<(ObjectID, KeyImageTextureViewFrame, IDImageTextureLoad, usize)>>,
     success: &Share<SegQueue<(ObjectID, EKeyTexture, ETextureViewUsage, usize)>>,
     fail: &Share<SegQueue<(ObjectID, EKeyTexture, usize)>>,
-    imgtex_assets_mgr: &ShareAssetMgr<ImageTextureView>,
+    imgtex_assets_mgr: &ShareAssetMgr<ImageTextureViewFrame>,
     image_loader: &mut ImageTextureLoader,
     state: &mut StateTextureLoader,
 ) {
@@ -349,13 +471,13 @@ fn _sys_image_texture_view_loaded_check(
             // log::warn!("Texture Image Success {:?}", (key.url()));
             let (success, fail) = (success.clone(), fail.clone());
             let viewkey = key.clone();
-            let texkey = EKeyTexture::Image(key);
+            let texkey = EKeyTexture::ImageFrame(key);
             RENDER_RUNTIME.spawn(async move {
                 // log::error!("Texture Load Task {:?}", (texkey));
-                match ImageTextureView::async_load(image, viewkey, result).await {
+                match ImageTextureViewFrame::async_load(image, viewkey, result).await {
                     Ok(res) => {
                         // log::warn!("Texture Load Success {:?}", (texkey));
-                        success.push((entity, texkey, ETextureViewUsage::Image(res), 0));
+                        success.push((entity, texkey, ETextureViewUsage::ImageFrame(res), 0));
                     }
                     Err(_e) => {
                         // log::error!("Texture Load Fail {:?}", (texkey));
@@ -365,7 +487,7 @@ fn _sys_image_texture_view_loaded_check(
             }).unwrap();
         } else if let Some(_fail) = image_loader.query_failed_reason(id) {
             // log::warn!("Texture Fail {:?}", (key.url(), fail));
-            fail.push((entity, EKeyTexture::Image(key), 0));
+            fail.push((entity, EKeyTexture::ImageFrame(key), 0));
             state.texview_fail += 1;
         } else {
             // log::warn!("Texture Load Again {:?}", (id, key.url()));
@@ -435,7 +557,7 @@ impl<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewU
 
 #[derive(Resource, Default)]
 pub struct ImageTextureViewLoader2 {
-    pub wait: Share<SegQueue<(ObjectID, KeyImageTextureView, IDImageTextureLoad, usize)>>,
+    pub wait: Share<SegQueue<(ObjectID, KeyImageTextureViewFrame, IDImageTextureLoad, usize)>>,
     pub success: Share<SegQueue<(ObjectID, EKeyTexture, ETextureViewUsage, usize)>>,
     pub fail: Share<SegQueue<(ObjectID, EKeyTexture, usize)>>,
 }
@@ -444,13 +566,14 @@ pub fn sys_image_texture_view_load_launch2(
     // mut commands: Commands,
     mut items: Query<(Entity, &TextureKeyList, &mut EffectBindTexture2DList), Changed<TextureKeyList>>,
     loader: Res<ImageTextureViewLoader2>,
-    imgtex_assets_mgr: Res<ShareAssetMgr<ImageTextureView>>,
+    imgtex_assets_mgr: Res<ShareAssetMgr<ImageTextureViewFrame>>,
     texres_assets_mgr: Res<ShareAssetMgr<TextureRes>>,
     mut image_loader: ResMut<ImageTextureLoader>,
     queue: Res<PiRenderQueue>,
     device: Res<PiRenderDevice>,
     mut state: ResMut<StateTextureLoader>,
     targets: Res<CustomRenderTargets>,
+    mut combinemgr: ResMut<TextureCombineAtlas2DMgr>,
 ) {
     items.iter_mut().for_each(|(entity, param, mut cmd)| {
         state.texview_count += 1;
@@ -458,7 +581,10 @@ pub fn sys_image_texture_view_load_launch2(
         // let param = param.deref();
         let mut idx = 0;
         param.0.iter().for_each(|key| {
-            match _sys_image_texture_view_load_launch2(entity, idx, &key.deref().url, &imgtex_assets_mgr, &texres_assets_mgr, &mut image_loader, &queue, &device, &mut state, &loader.wait, &loader.success, &loader.fail, &targets) {
+            match _sys_image_texture_view_load_launch2(
+                entity, idx, &key.deref().url, &imgtex_assets_mgr, &texres_assets_mgr, &mut image_loader,
+                &queue, &device, &mut state, &loader.wait, &loader.success, &loader.fail, &targets, &mut combinemgr
+            ) {
                 Some(data) => {
                     // log::error!("Loaded Texture: {:?}", (&key.deref().url, idx, data.key()));
                     cmd.loaded_textureviewusage(idx, data, key.deref().url.clone());
@@ -475,17 +601,19 @@ fn _sys_image_texture_view_load_launch2(
     entity: Entity,
     slot: usize,
     param: &EKeyTexture,
-    imgtex_assets_mgr: &ShareAssetMgr<ImageTextureView>,
+    imgtex_assets_mgr: &ShareAssetMgr<ImageTextureViewFrame>,
     texres_assets_mgr: &ShareAssetMgr<TextureRes>,
     image_loader: &mut ImageTextureLoader,
     queue: &RenderQueue,
     device: &RenderDevice,
     state: &mut StateTextureLoader,
-    wait: &Share<SegQueue<(ObjectID, KeyImageTextureView, IDImageTextureLoad, usize)>>,
+    wait: &Share<SegQueue<(ObjectID, KeyImageTextureViewFrame, IDImageTextureLoad, usize)>>,
     success: &Share<SegQueue<(ObjectID, EKeyTexture, ETextureViewUsage, usize)>>,
     fail: &Share<SegQueue<(ObjectID, EKeyTexture, usize)>>,
     targets: &CustomRenderTargets,
+    combinemgr: &mut TextureCombineAtlas2DMgr,
 ) -> Option<ETextureViewUsage> {
+    // log::error!("Load: {:?}", param);
     match param {
         EKeyTexture::Tex(url) => {
             let key_u64 = url.asset_u64();
@@ -521,24 +649,25 @@ fn _sys_image_texture_view_load_launch2(
             }
         },
         EKeyTexture::Image(key) => {
-            // log::warn!("Texture Load {:?}", (key.url()));
-            let key_u64 = key.asset_u64();
-            let result = imgtex_assets_mgr.get(&key_u64);
-            match result {
-                Some(view) => {
-                    // log::error!("Texture While Launch: {:?}", key_u64);
-                    // log::warn!("Texture Success 0 {:?}", (key.url()));
-                    // *cmd = D::from(ETextureViewUsage::Image(view));
-                    state.texview_success += 1;
-                    Some(ETextureViewUsage::Image(view))
-                },
-                _ => {
-                    // let imgkey = key.url();
-                    let id = image_loader.create_load(key.url().clone());
-                    wait.push((entity, key.clone(), id, slot));
-                    None
-                },
-            }
+            todo!()
+            // // log::warn!("Texture Load {:?}", (key.url()));
+            // let key_u64 = key.asset_u64();
+            // let result = imgtex_assets_mgr.get(&key_u64);
+            // match result {
+            //     Some(view) => {
+            //         // log::error!("Texture While Launch: {:?}", key_u64);
+            //         // log::warn!("Texture Success 0 {:?}", (key.url()));
+            //         // *cmd = D::from(ETextureViewUsage::Image(view));
+            //         state.texview_success += 1;
+            //         Some(ETextureViewUsage::Image(view))
+            //     },
+            //     _ => {
+            //         // let imgkey = key.url();
+            //         let id = image_loader.create_load(key.url().clone());
+            //         wait.push((entity, key.clone(), id, slot));
+            //         None
+            //     },
+            // }
         },
         EKeyTexture::SRT(_key) => {
             // TODO
@@ -550,6 +679,25 @@ fn _sys_image_texture_view_load_launch2(
                 None
             }
         },
+        EKeyTexture::ImageFrame(key) => {
+            let key_u64 = key.asset_u64();
+            let result = imgtex_assets_mgr.get(&key_u64);
+            match result {
+                Some(view) => {
+                    // log::error!("Texture While Launch: {:?}", key_u64);
+                    // log::warn!("Texture Success 0 {:?}", (key.url()));
+                    // *cmd = D::from(ETextureViewUsage::Image(view));
+                    state.texview_success += 1;
+                    Some(ETextureViewUsage::ImageFrame(view))
+                },
+                _ => {
+                    // let imgkey = key.url();
+                    let id = image_loader.create_load(key.url().clone());
+                    wait.push((entity, key.clone(), id, slot));
+                    None
+                },
+            }
+        },
     }
 }
 
@@ -559,14 +707,15 @@ pub fn sys_image_texture_view_loaded_check2(
     // mut commands: Commands,
     loader: Res<ImageTextureViewLoader2>,
     // image_assets_mgr: Res<ShareAssetMgr<ImageTexture>>,
-    imgtex_assets_mgr: Res<ShareAssetMgr<ImageTextureView>>,
+    imgtex_assets_mgr: Res<ShareAssetMgr<ImageTextureViewFrame>>,
     texres_assets_mgr: Res<ShareAssetMgr<TextureRes>>,
     mut image_loader: ResMut<ImageTextureLoader>,
     mut state: ResMut<StateTextureLoader>,
+    mut combinemgr: ResMut<TextureCombineAtlas2DMgr>,
 ) {
     _sys_image_texture_view_loaded_check2(
         &loader.wait, &loader.success, &loader.fail,
-        &imgtex_assets_mgr, &mut image_loader, &mut state
+        &imgtex_assets_mgr, &mut image_loader, &mut state, &mut combinemgr
     );
 
     let mut item = loader.success.pop();
@@ -597,12 +746,13 @@ pub fn sys_image_texture_view_loaded_check2(
 }
 
 fn _sys_image_texture_view_loaded_check2(
-    wait: &Share<SegQueue<(ObjectID, KeyImageTextureView, IDImageTextureLoad, usize)>>,
+    wait: &Share<SegQueue<(ObjectID, KeyImageTextureViewFrame, IDImageTextureLoad, usize)>>,
     success: &Share<SegQueue<(ObjectID, EKeyTexture, ETextureViewUsage, usize)>>,
     fail: &Share<SegQueue<(ObjectID, EKeyTexture, usize)>>,
-    imgtex_assets_mgr: &ShareAssetMgr<ImageTextureView>,
+    imgtex_assets_mgr: &ShareAssetMgr<ImageTextureViewFrame>,
     image_loader: &mut ImageTextureLoader,
     state: &mut StateTextureLoader,
+    combinemgr: &mut TextureCombineAtlas2DMgr,
 ) {
     let mut item = wait.pop();
     let mut waitagain = vec![];
@@ -616,13 +766,13 @@ fn _sys_image_texture_view_loaded_check2(
             // log::warn!("Texture Image Success {:?}", (key.url()));
             let (success, fail) = (success.clone(), fail.clone());
             let viewkey = key.clone();
-            let texkey = EKeyTexture::Image(key);
+            let texkey = EKeyTexture::ImageFrame(key);
             RENDER_RUNTIME.spawn(async move {
                 // log::error!("Texture Load Task {:?}", (texkey));
-                match ImageTextureView::async_load(image, viewkey, result).await {
+                match ImageTextureViewFrame::async_load(image, viewkey, result).await {
                     Ok(res) => {
                         // log::warn!("Texture Load Success {:?}", (texkey));
-                        success.push((entity, texkey, ETextureViewUsage::Image(res), slot));
+                        success.push((entity, texkey, ETextureViewUsage::ImageFrame(res), slot));
                     }
                     Err(_e) => {
                         // log::error!("Texture Load Fail {:?}", (texkey));
@@ -632,7 +782,7 @@ fn _sys_image_texture_view_loaded_check2(
             }).unwrap();
         } else if let Some(_fail) = image_loader.query_failed_reason(id) {
             // log::warn!("Texture Fail {:?}", (key.url(), fail));
-            fail.push((entity, EKeyTexture::Image(key), slot));
+            fail.push((entity, EKeyTexture::ImageFrame(key), slot));
             state.texview_fail += 1;
         } else {
             // log::warn!("Texture Load Again {:?}", (id, key.url()));

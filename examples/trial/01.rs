@@ -109,9 +109,9 @@ fn setup(
     actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
     actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
-        filter: true,
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/eff_daoguang_lf_004.png"),
+        ..Default::default()
     }));
 
     let source = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));

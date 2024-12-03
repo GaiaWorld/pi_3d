@@ -17,25 +17,32 @@ pub struct KeyShaderSetModel {
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub struct KeyBindGroupModel {
-    pub matrix: Option<Arc<ShaderBindModelAboutMatrix>>,
-    pub skin: Option<Arc<ShaderBindModelAboutSkinValue>>,
-    pub effect_value: Option<Arc<ShaderBindEffectValue>>,
-    pub lightingidxs: Option<Arc<BindModelLightIndexs>>,
+    pub matidx: ShaderBindModelMatIdx,
+    pub matrix: Option<ShaderBindModelAboutMatrix>,
+    pub skin: Option<ShaderBindModelAboutSkinValue>,
+    pub lightingidxs: Option<BindModelLightIndexs>,
     pub key: KeyShaderSetModel,
     bind_count: u32,
     key_bindgroup: KeyBindGroup,
 }
 impl KeyBindGroupModel {
     pub fn new(
-        matrix: Option<Arc<ShaderBindModelAboutMatrix>>,
-        skin: Option<Arc<ShaderBindModelAboutSkinValue>>,
-        effect_value: Option<Arc<ShaderBindEffectValue>>,
-        lightingidxs: Option<Arc<BindModelLightIndexs>>,
+        matidx: ShaderBindModelMatIdx,
+        matrix: Option<ShaderBindModelAboutMatrix>,
+        skin: Option<ShaderBindModelAboutSkinValue>,
+        lightingidxs: Option<BindModelLightIndexs>,
     ) -> Self {
         let mut key = KeyShaderSetModel::default();
         let mut key_binds = Vec::with_capacity(4);
 
         let mut binding = 0;
+
+        {
+            if let Some(key) = matidx.key_bind() {
+                key_binds.push(key);
+                binding += 1;
+            }
+        }
 
         if let Some(bind) = &matrix {
             if let Some(key) = bind.key_bind() {
@@ -52,13 +59,6 @@ impl KeyBindGroupModel {
             }
         }
 
-        if let Some(bind) = &effect_value {
-            if let Some(key) = bind.key_bind() {
-                key_binds.push(key);
-                binding += 1;
-            }
-        }
-
         if let Some(bind) = &lightingidxs {
             if let Some(key) = bind.key_bind() {
                 key_binds.push(key);
@@ -67,9 +67,9 @@ impl KeyBindGroupModel {
         }
 
         let result = Self {
+            matidx,
             matrix,
             skin,
-            effect_value,
             lightingidxs,
             key,
             bind_count: binding,
@@ -90,17 +90,18 @@ impl TShaderSetBlock for KeyBindGroupModel {
 
         let mut result = String::from("");
         let mut bind = 0;
+
+        {
+            result += self.matidx.vs_define_code(set, bind).as_str();
+            bind += 1;
+        }
+
         if let Some(item) = &self.matrix {
             result += item.vs_define_code(set, bind).as_str();
             bind += 1;
         }
 
         if let Some(item) = &self.skin {
-            result += item.vs_define_code(set, bind).as_str();
-            bind += 1;
-        }
-
-        if let Some(item) = &self.effect_value {
             result += item.vs_define_code(set, bind).as_str();
             bind += 1;
         }
@@ -117,15 +118,16 @@ impl TShaderSetBlock for KeyBindGroupModel {
         let mut result = String::from("");
         let mut bind = 0;
 
+        {
+            result += self.matidx.fs_define_code(set, bind).as_str();
+            bind += 1;
+        }
+
         if let Some(item) = &self.matrix {
             result += item.fs_define_code(set, bind).as_str();
             bind += 1;
         }
         if let Some(item) = &self.skin {
-            result += item.fs_define_code(set, bind).as_str();
-            bind += 1;
-        }
-        if let Some(item) = &self.effect_value {
             result += item.fs_define_code(set, bind).as_str();
             bind += 1;
         }
@@ -155,6 +157,7 @@ impl BindGroupModel {
     pub fn bind_group(&self) -> &BindGroupUsage { &self.bind_group }
     pub fn vs_running_model_snippet(&self, meta: &ShaderEffectMeta) -> String {
         let mut result = String::from("");
+
         if self.key.matrix.is_some() {
             result += "
     mat4 PI_ObjectToWorld = U_PI_ObjectToWorld;
@@ -163,9 +166,7 @@ impl BindGroupModel {
     uint PI_SkinBoneOffset1 = U_PI_SkinBoneOffset1;
 ";
         }
-        if self.key.effect_value.is_some() {
-            result += meta.uniforms.vs_running_code().as_str();
-        }
+        
         result
     }
 }

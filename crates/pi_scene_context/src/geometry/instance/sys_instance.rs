@@ -65,6 +65,7 @@ impl Ord for TmpInstanceSort {
         queue: Res<PiRenderQueue>,
         mut temp: ResMut<TmpCommonVec>,
         mut combinedata: ResMut<CombineDataCommon>,
+        engineopt: Res<EngineCustomPlugins>,
     ) {
         let mut minx = f32::MAX;
         let mut miny = f32::MAX;
@@ -143,7 +144,7 @@ impl Ord for TmpInstanceSort {
                             sorted_instances.iter().for_each(|instance| {
                                 let idinstance = instance.entity;
                                 if let Ok(instancedata) = instanceattributes.get(idinstance) {
-                                    if tmp_alphaindex != instance.index {
+                                    if tmp_alphaindex != instance.index || tmp_instance_end - tmp_instance_start > engineopt.max_instance_batch_count {
                                         instancessortinfos.ranges.push((tmp_alphaindex, Range { start: tmp_instance_start, end: tmp_instance_end }, ((minx + maxx) * 0.5, (miny + maxy) * 0.5, (minz + maxz) * 0.5)));
                                         tmp_alphaindex = instance.index;
                                         tmp_instance_start = tmp_instance_end;
@@ -209,6 +210,7 @@ impl Ord for TmpInstanceSort {
         dispoeds: Query<&DisposeReady>,
         geometrys: Query<&InstancedInfoComp>,
         mut temp: ResMut<TmpCommonVec>,
+        engineopt: Res<EngineCustomPlugins>,
     ) {
         // log::error!("Instance Update");
         let mut counter = 0;
@@ -292,7 +294,7 @@ impl Ord for TmpInstanceSort {
                             sorted_instances.iter().for_each(|instance| {
                                 let idinstance = instance.entity;
                                 if let Ok(instancedata) = instanceattributes.get(idinstance) {
-                                    if tmp_alphaindex != instance.index {
+                                    if tmp_alphaindex != instance.index || tmp_instance_end - tmp_instance_start > engineopt.max_instance_batch_count {
                                         instancessortinfos.ranges.push((tmp_alphaindex, Range { start: tmp_instance_start, end: tmp_instance_end }, ((minx + maxx) * 0.5, (miny + maxy) * 0.5, (minz + maxz) * 0.5)));
                                         tmp_alphaindex = instance.index;
                                         tmp_instance_start = tmp_instance_end;

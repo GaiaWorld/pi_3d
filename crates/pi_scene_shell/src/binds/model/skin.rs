@@ -10,7 +10,7 @@ use pi_render::{
     rhi::device::RenderDevice
 };
 
-use crate::shader::*;
+use crate::{prelude::{BindDefines, TBindDefine}, shader::*};
 
 
 /// 数据从 Skeleton 创建, 以 Arc 数据拷贝到 ModelBind
@@ -161,35 +161,8 @@ impl TShaderBindCode for ShaderBindModelAboutSkinValue {
     }
 
 }
-
-
-#[derive(Clone, Hash, PartialEq, Eq)]
-pub struct BindUseSkinValue {
-    pub(crate) bind: u32,
-    pub(crate) data: Arc<ShaderBindModelAboutSkinValue>,
-}
-impl BindUseSkinValue {
-    pub fn new(
-        bind: u32,
-        data: Arc<ShaderBindModelAboutSkinValue>
-    ) -> Self {
-        Self { bind, data }
+impl TBindDefine for ShaderBindModelAboutSkinValue {
+    fn bind_include(&self) -> u32 {
+        BindDefines::SKIN
     }
-    pub fn data(&self) -> &ShaderBindModelAboutSkinValue {
-        &self.data
-    }
-    // pub fn vs_running_code(&self, _: u32) -> String {
-    //     let mut result = String::from("");
-    //     match self.data.skin {
-    //         ESkinCode::None => {},
-    //         ESkinCode::UBO(_, _) => {
-    //             result += self.data.skin.running_code().as_str();
-    //         },
-    //         _ => {
-    //             result += self.data.skin.running_code().as_str();
-    //         },
-    //     }
-
-    //     result
-    // }
 }

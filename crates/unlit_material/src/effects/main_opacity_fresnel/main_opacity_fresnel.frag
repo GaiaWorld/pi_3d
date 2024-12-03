@@ -1,5 +1,5 @@
     vec4 baseColor = v_color;
-    float alpha = opacity();
+    float alpha = opacity(matParam);
 
 	float glossiness 			= 0.;
 	vec3 specularColor 		    = vec3(0., 0., 0.);
@@ -20,19 +20,19 @@
 	vec3 diffuseBase 					= vec3(0., 0., 0.);
 	vec3 specularBase 					= vec3(0., 0., 0.);
 
-    vec4 mainTextureColor   = mainTexture(v_uv, applyUVOffsetSpeed(uMainUVOS));
-    baseColor.rgb           *= mainTextureColor.rgb * mainStrength() * mainColor();
+    vec4 mainTextureColor   = mainTexture(v_uv, applyUVOffsetSpeed(matParam.uMainUVOS), matParam);
+    baseColor.rgb           *= mainTextureColor.rgb * mainStrength(matParam) * mainColor(matParam);
     alpha                   *= mainTextureColor.a;
 
-    vec4 opacityData        = opacityTexture(v_uv, applyUVOffsetSpeed(uOpacityUVOS));
-    alpha                   *= opacityChannel(opacityData);
+    vec4 opacityData        = opacityTexture(v_uv, applyUVOffsetSpeed(matParam.uOpacityUVOS), matParam);
+    alpha                   *= opacityChannel(opacityData, matParam);
 
-    vec3 emissiveColor = emissiveColor();
-    emissiveColor *= emissiveTexture(v_uv, applyUVOffsetSpeed(uEmissiveUVOS)).rgb * emissiveStrength();
+    vec3 emissiveColor = emissiveColor(matParam);
+    emissiveColor *= emissiveTexture(v_uv, applyUVOffsetSpeed(matParam.uEmissiveUVOS),matParam).rgb * emissiveStrength(matParam);
 
-    alpha 					+= opacityFresnel(absNdV);
+    alpha 					+= opacityFresnel(absNdV, matParam);
 
-    if (cutoff(alpha)) {
+    if (cutoff(alpha, matParam)) {
         discard;
     }
 

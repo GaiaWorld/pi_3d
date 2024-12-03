@@ -228,7 +228,7 @@ impl StateGeometryBuffer {
 pub struct StateUIShader;
 impl StateUIShader {
     pub const KEY: &'static str = "StateUIShader";
-    pub fn res() -> ShaderEffectMeta {
+    pub fn res(engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.values.uint_list.push(UniformPropertyUint(Atom::from("debug_normal"), 0, false));
 
@@ -249,7 +249,7 @@ impl StateUIShader {
             ]
         );
 
-        nodemat.meta()
+        nodemat.meta(engineopt)
     }
 }
 
@@ -357,7 +357,7 @@ pub fn sys_info_resource(
 ) {
     // log::warn!("Errors {:?}", errors.0.len());
     performance.debug = true;
-    log::warn!("DrawCall: {:?} WorldMatrix: {:?} DrawList {:?} Culling {:?} Uniform: {:?}", performance.drawcalls, performance.worldmatrix, performance.drawobjs, performance.culling, (performance.uniformupdate, performance.uniformbufferupdate));
+    // log::warn!("DrawCall: {:?} WorldMatrix: {:?} DrawList {:?} Culling {:?} Uniform: {:?}", performance.drawcalls, performance.worldmatrix, performance.drawobjs, performance.culling, (performance.uniformupdate, performance.uniformbufferupdate));
     // log::warn!(
     //     "Materials: {:?}, BindBuffer: {:?}, VertexBuffer: {:?}, VertexBufferSize: {:?}, Shaders: {:?}, Pipeline: {:?}, ImageTexture: {:?},",
     //     states.count_material, states.count_bindbuffer, states.count_geometrybuffer, states.size_geometrybuffer, states.count_shader, states.count_pipeline, states.count_imgtexture
@@ -367,6 +367,17 @@ pub fn sys_info_resource(
     //     psperformance.particles, performance.particlesystem, psperformance.sys_emitmatrix, psperformance.sys_direction, psperformance.sys_update_buffer, psperformance.sys_update_buffer_trail
     //     , psperformance.sys_emission, psperformance.sys_emitmatrix, psperformance.sys_over_life_time, psperformance.sys_prewarm
     // );
+}
+
+pub fn sys_info_error(
+    mut states: ResMut<ErrorRecord>,
+) {
+    if (states.0.len() > 0) {
+        log::error!("Errors: ");
+    }
+    states.0.drain(..).for_each(|err| {
+        log::error!("Error: {:?}", err);
+    });
 }
 
 pub struct PluginBundleDefault;
@@ -478,8 +489,8 @@ pub struct ResourceSets<'w> {
     pub node_material_blocks: ResMut<'w, NodeMaterialBlocks>,
     pub imgtex_loader: ResMut<'w, ImageTextureLoader>,
     pub imgtex_loader_state: ResMut<'w, StateTextureLoader>,
-    pub imgtex_asset: Res<'w, ShareAssetMgr<ResImageTexture>>,
-    pub imgtexview_asset: Res<'w, ShareAssetMgr<ImageTextureView>>,
+    pub imgtex_asset: Res<'w, ShareAssetMgr<ImageTextureFrame>>,
+    pub imgtexview_asset: Res<'w, ShareAssetMgr<ImageTextureViewFrame>>,
     pub gltf2_asset: Res<'w, ShareAssetMgr<GLTF>>,
     pub gltf2_loader: ResMut<'w, GLTFResLoader>,
     pub device: Res<'w, PiRenderDevice>,
@@ -502,4 +513,5 @@ pub struct ResourceSets<'w> {
     pub particlesys: ResourceParticleSystem<'w>,
     pub error_record: ResMut<'w, ErrorRecord>,
     pub textureatlas: ResMut<'w, TextureFrameAtlasManager>,
+    pub enginopt: Res<'w, EngineCustomPlugins>,
 }

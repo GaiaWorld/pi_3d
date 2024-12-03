@@ -1,5 +1,5 @@
 
-    mat4 finalWorld = PI_MATRIX_P * PI_MATRIX_V;
+    mat4 finalWorld = PI_MATRIX_VP;
 
     vec4 positionUpdate = vec4(A_POSITION * 2.0, 1.);
 

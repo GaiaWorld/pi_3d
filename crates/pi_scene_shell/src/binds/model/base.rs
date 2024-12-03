@@ -1,13 +1,12 @@
-use std::sync::Arc;
 
 use pi_render::renderer::{
         bind_buffer::{BindBufferAllocator, BindBufferRange},
-        shader::TShaderBindCode, buildin_var::ShaderVarUniform,
+        shader::TShaderBindCode,
         bind::{TKeyBind, KeyBindLayoutBuffer, KeyBindBuffer},
         shader_stage::EShaderStage
 };
 use pi_scene_math::Matrix;
-use crate::shader::ShaderSetBind;
+use crate::{prelude::{BindDefines, TBindDefine}, shader::{ShaderSetBind, ShaderVarUniform}};
 
 
 
@@ -41,6 +40,7 @@ impl ShaderBindModelAboutMatrix {
             let matrix = Matrix::identity();
             range.write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX as usize, bytemuck::cast_slice(matrix.as_slice()));
             range.write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX_INV as usize, bytemuck::cast_slice(matrix.as_slice()));
+            range.write_data(ShaderBindModelAboutMatrix::OFFSET_VELOCITY as usize, bytemuck::cast_slice(&[0f32, 0f32, 0f32, 0f32]));
             range.write_data(ShaderBindModelAboutMatrix::OFFSET_U32_A as usize, bytemuck::cast_slice(&[0u32, 0u32, 0u32, 0u32]));
             Some(
                 Self {
@@ -110,17 +110,65 @@ impl TShaderBindCode for ShaderBindModelAboutMatrix {
     }
 
 }
+impl TBindDefine for ShaderBindModelAboutMatrix {
+    fn bind_include(&self) -> u32 {
+        BindDefines::MODEL_BIND
+    }
+}
 
 #[derive(Clone, Hash, PartialEq, Eq)]
-pub struct BindUseModelMatrix {
-    pub(crate) bind: u32,
-    pub(crate) data: Arc<ShaderBindModelAboutMatrix>,
+pub struct ShaderBindModelMatIdx {
+    pub(crate) data: BindBufferRange,
 }
-impl BindUseModelMatrix {
-    pub fn new(
-        bind: u32,
-        data: Arc<ShaderBindModelAboutMatrix>
-    ) -> Self {
-        Self { bind, data }
+impl ShaderBindModelMatIdx {
+    pub const SIZE: wgpu::DynamicOffset = 4 * 4;
+    pub fn new(allocator: &mut BindBufferAllocator) -> Option<Self> {
+        if let Some(range) = allocator.allocate(Self::SIZE) {
+            range.write_data(0, bytemuck::cast_slice(&[0u32, 0u32, 0u32, 0u32]));
+            Some(
+                Self {
+                    data: range,
+                }
+            )
+        } else {
+            None
+        }
+    }
+    pub fn update_matidxs(&self, passindex: usize, data: u32) {
+        let offset = passindex * 2;
+        let data = data as u16;
+        self.data.write_data(offset, bytemuck::cast_slice(&[data]));
+    }
+    pub fn vs_define_code(&self, set: u32, binding: u32) -> String {
+        let mut result = String::from("");
+        result += ShaderSetBind::code_set_bind_head(set, binding).as_str();
+        result += " MatIdx {\r\n";
+        result += ShaderSetBind::code_uniform(crate::prelude::S_UVEC4, ShaderVarUniform::_MATIDX).as_str();
+        result += "};\r\n";
+        result
+    }
+
+    pub fn fs_define_code(&self, _: u32, _: u32) -> String {
+        String::from("")
+    }
+}
+impl TKeyBind for ShaderBindModelMatIdx {
+    fn key_bind(&self) -> Option<pi_render::renderer::bind::EKeyBind> {
+        Some(
+            pi_render::renderer::bind::EKeyBind::Buffer(
+                KeyBindBuffer {
+                    data: self.data.clone(),
+                    layout: KeyBindLayoutBuffer {
+                        visibility: EShaderStage::VERTEXFRAGMENT,
+                        min_binding_size: Self::SIZE as u32,
+                    }
+                }
+            )
+        )
+    }
+}
+impl TBindDefine for ShaderBindModelMatIdx {
+    fn bind_include(&self) -> u32 {
+        BindDefines::MAT_INDEX
     }
 }

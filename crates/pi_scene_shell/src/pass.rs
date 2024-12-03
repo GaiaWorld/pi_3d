@@ -13,6 +13,7 @@ impl Deref for PassTag {
     }
 }
 impl PassTag {
+    pub const PASS_COUNT: usize = 8;
     pub const PASS_01: u16 = 0b0000_0000_0000_0001;
     pub const PASS_02: u16 = 0b0000_0000_0000_0010;
     pub const PASS_03: u16 = 0b0000_0000_0000_0100;

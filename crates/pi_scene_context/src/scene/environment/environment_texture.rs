@@ -6,26 +6,22 @@ use pi_scene_shell::prelude::*;
 pub struct EnvTextureSlot(pub Option<Atom>, pub bool);
 
 #[derive(Clone, Deref, Hash, PartialEq, Eq, Component, Default)]
-pub struct EnvIrradiance(pub Option<Arc<BindEnvIrradiance>>);
+pub struct EnvIrradiance(pub Option<BindEnvIrradiance>);
 
 #[derive(Clone, Deref, Hash, PartialEq, Eq, Component, Default)]
-pub struct EnvTexture(pub Option<Arc<ShaderBindEnvTexture>>);
+pub struct EnvTexture(pub Option<ShaderBindEnvTexture>);
 impl From<ETextureViewUsage> for EnvTexture {
-    fn from(value: ETextureViewUsage) -> Self { Self( Some(Arc::new(ShaderBindEnvTexture(BindDataTexture2D(value)))) ) }
+    fn from(value: ETextureViewUsage) -> Self { Self( Some(ShaderBindEnvTexture(BindDataTexture2D(value))) ) }
 }
-impl From<Handle<ImageTextureView>> for EnvTexture {
-    fn from(value: Handle<ImageTextureView>) -> Self { Self( Some(Arc::new(ShaderBindEnvTexture(BindDataTexture2D(ETextureViewUsage::Image(value))))) ) }
+impl From<Handle<ImageTextureViewFrame>> for EnvTexture {
+    fn from(value: Handle<ImageTextureViewFrame>) -> Self { Self( Some(ShaderBindEnvTexture(BindDataTexture2D(ETextureViewUsage::ImageFrame(value)))) ) }
 }
 impl EnvTexture {
-    pub fn irradiance(&self, allocator: &mut BindBufferAllocator) -> Option<Arc<BindEnvIrradiance>> {
+    pub fn irradiance(&self, allocator: &mut BindBufferAllocator) -> Option<BindEnvIrradiance> {
         if let Some(tex) = &self.0 {
             match &tex.0.0 {
-                ETextureViewUsage::Image(texture) => {
-                    if let Some(result) = BindEnvIrradiance::new(allocator, texture.texture()) {
-                        Some(Arc::new(result))                        
-                    } else {
-                        None
-                    }
+                ETextureViewUsage::ImageFrame(texture) => {
+                    BindEnvIrradiance::new(allocator, texture.texture())
                 },
                 _ => None,
             }
@@ -36,12 +32,12 @@ impl EnvTexture {
 }
 
 #[derive(Component, Default)]
-pub struct EnvSampler(pub Option<Arc<ShaderBindEnvSampler>>);
+pub struct EnvSampler(pub Option<ShaderBindEnvSampler>);
 impl EnvSampler {
     pub fn new(device: &RenderDevice, asset: &Share<AssetMgr<SamplerRes>>) -> Self {
         let desc = SamplerDesc::linear_clamp();
         if let Some(sampler) = BindDataSampler::create(desc, device, asset) {
-            Self(Some(Arc::new(ShaderBindEnvSampler(sampler))))
+            Self(Some(ShaderBindEnvSampler(sampler)))
         } else {
             Self(None)
         }
@@ -64,8 +60,8 @@ pub fn sys_env_texture_load_launch(
             let url = if let Some(v) = &param.0 { v } else { return; };
     
             state.texview_count += 1;
-            let key = KeyImageTextureView::new(
-                KeyImageTexture { url: url.clone(), file: param.1, depth_or_array_layers: 6, ..Default::default() },
+            let key = KeyImageTextureViewFrame::new(
+                KeyImageTextureFrame { url: url.clone(), file: param.1, ..Default::default() },
                 TextureViewDesc { base_mip_level: 0, array_layer_count: Some(6), ..Default::default() },
             );
             // let ekey = EKeyTexture::Image(key.clone());
@@ -73,7 +69,6 @@ pub fn sys_env_texture_load_launch(
     
             match imgtex_assets_mgr.get(&key_u64) {
                 Some(view) => {
-                    // log::error!("env sys_env_texture_load_launch");
                     *item = EnvTexture::from(ETextureViewUsage::Image(view));
                     irradiance.0 = item.irradiance(&mut allocator);
                     state.texview_success += 1;
@@ -93,7 +88,7 @@ pub fn sys_env_texture_loaded_check(
     mut items: Query<(&EnvTextureSlot, &mut EnvTexture, &mut EnvIrradiance)>,
     // mut commands: Commands,
     loader: Res<ImageTextureViewLoader<EnvTextureSlot>>,
-    imgtex_assets_mgr: Res<ShareAssetMgr<ImageTextureView>>,
+    imgtex_assets_mgr: Res<ShareAssetMgr<ImageTextureViewFrame>>,
     mut image_loader: ResMut<ImageTextureLoader>,
     mut state: ResMut<StateTextureLoader>,
     mut allocator: ResMut<ResBindBufferAllocator>,
@@ -110,16 +105,16 @@ pub fn sys_env_texture_loaded_check(
         if let Some(image) = image_loader.query_success(id) {
             let result = AssetMgr::load(&imgtex_assets_mgr, &key_u64);
             let (success, fail) = (loader.success.clone(), loader.fail.clone());
-            let texkey = EKeyTexture::Image(key);
+            let texkey = EKeyTexture::ImageFrame(key);
             RENDER_RUNTIME.spawn(async move {
-                match ImageTextureView::async_load(image, viewkey, result).await {
-                    Ok(res) => { success.push((entity, texkey, ETextureViewUsage::Image(res), 0)); }
+                match ImageTextureViewFrame::async_load(image, viewkey, result).await {
+                    Ok(res) => { success.push((entity, texkey, ETextureViewUsage::ImageFrame(res), 0)); }
                     Err(_e) => { fail.push((entity, texkey, 0)); }
                 };
             })
             .unwrap();
         } else if let Some(_fail) = image_loader.query_failed_reason(id) {
-            loader.fail.push((entity, EKeyTexture::Image(key), 0));
+            loader.fail.push((entity, EKeyTexture::ImageFrame(key), 0));
             state.texview_fail += 1;
         } else {
             waitagain.push((entity, key, id, 0));
@@ -132,7 +127,6 @@ pub fn sys_env_texture_loaded_check(
     while let Some((entity, _key, view, _)) = item {
         item = loader.success.pop();
         if let Ok((_, mut item, mut irradiance)) = items.get_mut(entity) {
-            // log::error!("env sys_env_texture_loaded_check");
             *item = EnvTexture::from(view);
             irradiance.0 = item.irradiance(&mut allocator);
             state.texview_success += 1;

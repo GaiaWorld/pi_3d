@@ -30,12 +30,18 @@ fn setup(
     mut anime_contexts: TypeAnimeContexts,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
     demooption: Res<base::DemoOption>,
+    engineopt: Res<EngineCustomPlugins>,
+    mut combineatlas: ResMut<TextureCombineAtlas2DMgr>,
+    device: Res<PiRenderDevice>,
 ) {
     let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
         (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
     } else { return; };
 
-    ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(OpacityClipShader::KEY), OpacityClipShader::create(&nodematblocks));
+    let format = wgpu::TextureFormat::Rgba8Unorm;
+    combineatlas.append_desc(KeyAtlasDesc { format }, &device, 16, 2048, 4);
+
+    ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(OpacityClipShader::KEY), OpacityClipShader::create(&nodematblocks, &engineopt));
 
     let tes_size = 5;
     fps.frame_ms = 50;
@@ -65,15 +71,15 @@ fn setup(
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
     actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
-        filter: true,
         sample: KeySampler::linear_repeat(),
-        url: EKeyTexture::from("./assets/images/fractal.png"),
+        url: EKeyTexture::combine("./assets/images/fractal.png", false),
+        ..Default::default()
     }));
     actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockOpacityTexture::KEY_TEX),
-        filter: true,
         sample: KeySampler::linear_repeat(),
-        url: EKeyTexture::from("./assets/images/eff_ui_ll_085.png"),
+        url: EKeyTexture::combine("./assets/images/eff_ui_ll_085.png", false),
+        ..Default::default()
     }));
     actions.material.val.push(OpsUniformVal::float(
             idmat, 

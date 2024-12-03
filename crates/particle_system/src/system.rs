@@ -668,7 +668,7 @@ pub fn sys_update_buffer(
     mut particle_sys: Query<
         (Entity, &ParticleAttributes, &mut ParticleSystemRunningState, &ParticleSystemTime, &ParticleIDs, &ParticleLocal, &ParticleDirection, &ParticleEmitMatrix),
     >,
-    mut meshes: Query<(&GlobalEnable, &GeometryID, &ModelInstanceAttributes, &mut InstancedMeshTransparentSortCollection, &GlobalMatrix)>,
+    mut meshes: Query<(&GlobalEnable, &GeometryID, &ModelInstanceAttributes, &mut InstancedMeshTransparentSortCollection, &GlobalMatrix, &ModelMatIdxs)>,
     // mut meshrenderenables: Query<&mut RenderGeometryEable>,
     instanceinfos: Query<&InstancedInfoComp>,
     mut performance: ResMut<ParticleSystemPerformance>,
@@ -691,7 +691,7 @@ pub fn sys_update_buffer(
     let mut f_lc = false;
 
     let stripe = 16 + 4 + 4;
-    let mut temp: [f32; 24] = [0f32;16 + 4 + 4];
+    let mut temp: [u8; 112] = [0; 112];
     particle_sys.iter_mut().for_each(
         |(
             entity, _attributes, mut state, _time, ids, particlelocal, directions, emitmatrixs
@@ -700,7 +700,7 @@ pub fn sys_update_buffer(
             // log::warn!("sys_update_buffer A {:?}", particle_count);
 
             // if time.running_delta_ms <= 0 { return; }
-            if let Ok((enable, idgeo, _instanceattributes, mut instancesort, gmatrix)) = meshes.get_mut(entity) {
+            if let Ok((enable, idgeo, _instanceattributes, mut instancesort, gmatrix, matidxs)) = meshes.get_mut(entity) {
 
                 if state.isrunning == false || particle_count == 0 {
                     // if let Ok(mut rendergeometry) = meshrenderenables.get_mut(entity) {
@@ -827,9 +827,10 @@ pub fn sys_update_buffer(
                                 {
                                     // log::warn!("LOCAL: {:?}", ([uv.uscale, uv.vscale, uv.uoffset, uv.voffset], color));
                                     let m = matrix.as_slice();
-                                    temp.as_mut_slice()[0..16].copy_from_slice(m);
-                                    temp.as_mut_slice()[16..20].copy_from_slice(color.as_slice());
-                                    temp.as_mut_slice()[20..24].copy_from_slice(&uv.data);
+                                    temp.as_mut_slice()[0..64  ].copy_from_slice(bytemuck::cast_slice(m));
+                                    temp.as_mut_slice()[64..80 ].copy_from_slice(bytemuck::cast_slice(&matidxs.0));
+                                    temp.as_mut_slice()[80..96 ].copy_from_slice(bytemuck::cast_slice(color.as_slice()));
+                                    temp.as_mut_slice()[96..112].copy_from_slice(bytemuck::cast_slice(&uv.data));
                                     unsafe_vec_append_slice(&mut instancesort.data, bytemuck::cast_slice(temp.as_slice()));
 
                                     // bytemuck::cast_slice(matrix.as_slice()).iter().for_each(|v| { instancesort.data.push(*v); });

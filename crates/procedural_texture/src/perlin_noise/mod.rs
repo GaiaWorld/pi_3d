@@ -10,8 +10,9 @@ pub mod command;
 
 fn setup(
     asset_mgr: Res<ShareAssetMgr<ShaderEffectMeta>>,
+    engineopt: Res<EngineCustomPlugins>,
 ) {
-    ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(PerlinNoiseShader::KEY), PerlinNoiseShader::meta());
+    ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(PerlinNoiseShader::KEY), PerlinNoiseShader::meta(&engineopt));
 }
 
 pub struct PluginPerlinNoise;

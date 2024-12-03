@@ -16,7 +16,7 @@ impl StripesVirtualShader {
     pub const KEY_COLOR1: &'static str = "uColor1";
     
 
-    pub fn create(_infos: &NodeMaterialBlocks) -> ShaderEffectMeta {
+    pub fn create(_infos: &NodeMaterialBlocks, engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.fs_define = String::from(S_BREAK) + "layout(location = 0) out vec4 gl_FragColor;" + S_BREAK;
 
@@ -53,6 +53,6 @@ impl StripesVirtualShader {
         nodemat.values.vec4_list.push(UniformPropertyVec4(Atom::from(Self::KEY_COLOR0), [0.1, 0.5, 0.1, 0.5], true));
         nodemat.values.vec4_list.push(UniformPropertyVec4(Atom::from(Self::KEY_COLOR1), [0.1, 1.0, 0.1, 1.0], true));
         
-        nodemat.meta()
+        nodemat.meta(engineopt)
     }
 }

@@ -42,9 +42,9 @@ fn setup(
     actions.material.create.push(OpsMaterialCreate::ops(idmattrail, UnlitShader::KEY));
     actions.material.valb.push(OpsUniformValB::texture(idmattrail, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
-        filter: true,
         sample: KeySampler::linear_repeat(),
-        url: EKeyTexture::from("E:/Rust/PI/pi_3d/assets/images/4.png"),
+        url: EKeyTexture::from("assets/images/4.png"),
+        ..Default::default()
     }));
 
     let mut _random = pi_wy_rng::WyRng::default();

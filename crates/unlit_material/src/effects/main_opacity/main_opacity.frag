@@ -1,6 +1,6 @@
 
     vec4 baseColor = v_color;
-    float alpha = opacity();
+    float alpha = opacity(matParam);
 
     float glossiness 			= 0.;
     vec3 diffuseColor 		    = vec3(0., 0., 0.);
@@ -8,16 +8,16 @@
 
     // ----------------------------------------------------------
 
-    vec4 mainTextureColor   = mainTexture(v_uv, applyUVOffsetSpeed(uMainUVOS));
-    baseColor.rgb           *= mainTextureColor.rgb * mainStrength();
+    vec4 mainTextureColor   = mainTexture(v_uv, applyUVOffsetSpeed(matParam.uMainUVOS), matParam);
+    baseColor.rgb           *= mainTextureColor.rgb * mainStrength(matParam);
     alpha                   *= mainTextureColor.a;
 
-    diffuseColor            = mainColor();
+    diffuseColor            = mainColor(matParam);
 
-    vec4 opacityData        = opacityTexture(v_uv2, applyUVOffsetSpeed(uOpacityUVOS));
-    alpha                   *= opacityChannel(opacityData);
+    vec4 opacityData        = opacityTexture(v_uv2, applyUVOffsetSpeed(matParam.uOpacityUVOS), matParam);
+    alpha                   *= opacityChannel(opacityData, matParam);
 
-    if (cutoff(alpha)) {
+    if (cutoff(alpha, matParam)) {
         discard;
     }
 

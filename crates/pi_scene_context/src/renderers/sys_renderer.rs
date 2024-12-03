@@ -1,6 +1,6 @@
 use std::{ops::Range, sync::Arc};
 
-use pi_scene_shell::prelude::*;
+use pi_scene_shell::{prelude::*, run_stage::EngineCustomPlugins};
 use crate::{
     bindgroup::*, flags::*, geometry::{instance::instanced_buffer::*, prelude::*}, materials::prelude::*, meshes::prelude::*, object::{TmpSortDrawOpaqueVec, TmpSortDrawTransparentVec}, pass::*, scene::prelude::*, skeleton::prelude::*, transforms::prelude::*, viewer::prelude::*
 };
@@ -12,26 +12,35 @@ use super::{
         addeds: ComponentAdded<PassBindGroupsDirty>,
         changes: ComponentChanged<PassBindGroupsDirty>,
         mut passes: Query<
-            (ObjectID, &PassModelID, &PassMaterialID, &PassRendererID, &mut PassBindGroups, &mut PassFlagShader)
+            (ObjectID, &PassModelID, &PassMaterialID, &PassRendererID, &mut PassBindGroups, &mut PassFlagShader, &PassTag)
         >,
         renderers: Query<(&SceneID, &ViewerID)>,
-        materials: Query<( &AssetKeyShaderEffect, &AssetResShaderEffectMeta, &BindEffect, &MaterialRefs, &EffectTextureSamplersComp )>,
-        models: Query<( Option<&BindModel>, &BindSkinValue, &SkeletonID, &ModelLightingIndexs )>,
+        materials: Query<( &AssetKeyShaderEffect, &AssetResShaderEffectMeta, &BindEffect, &MaterialRefs, &EffectTextureSamplersComp, &TextureKeyList )>,
+        models: Query<( Option<&BindModel>, &BindModelMatIdx, &BindSkinValue, &SkeletonID, &ModelLightingIndexs )>,
         targets: Res<CustomRenderTargets>,
         viewers: Query<&BindViewer>,
         scenes: Query<(&BindSceneEffect, &SceneLightingInfos, &BRDFTexture, &BRDFSampler, &MainCameraOpaqueTarget, &MainCameraDepthTarget, &SceneShadowRenderTarget, Option<&SceneShadowInfos>, &EnvTexture, &EnvIrradiance, &EnvSampler)>,
         device: Res<PiRenderDevice>,
         asset_mgr_bindgroup_layout: Res<ShareAssetMgr<BindGroupLayout>>,
         asset_mgr_bindgroup: Res<ShareAssetMgr<BindGroup>>,
+        bindpassindexs: Res<BindPassIndexPool>,
         mut errors: ResMut<ErrorRecord>,
     ) {
         addeds.iter().chain(changes.iter()).for_each(|entity| {
-            if let Ok((_id_pass, idmodel, idmat, idrenderer, mut bindgroups, mut flag)) = passes.get_mut(*entity) {
+            if let Ok((_id_pass, idmodel, idmat, idrenderer, mut bindgroups, mut flag, passidx)) = passes.get_mut(*entity) {
                 let (idscene, idviewer) = if let Ok((idscene, idviewer)) = renderers.get(idrenderer.0) {
                     (idscene.0, idviewer.0)
                 } else {
+                    log::error!("Bindgroups viewer Fail");
                     return;
                 };
+                let bind_passindex = if let Some(bindpassindex) = bindpassindexs.get(passidx.index()) {
+                    bindpassindex
+                } else { 
+                    log::error!("Bindgroups bind_passindex Fail");
+                    return;
+                };
+
                 // log::error!("Bindgroups {:?}", (idrenderer.0));
                 let idmodel = idmodel.0;
                 let scenes = &scenes;
@@ -43,24 +52,27 @@ use super::{
                 let viewers = &viewers;
                 let models = &models;
     
-                if let Ok((effect_key, meta, bind, _list, textures)) = materials.get(idmat.0) {
+                if let Ok((effect_key, meta, bind, _list, textures, texkeys)) = materials.get(idmat.0) {
                     let (bindvalue, bindtextures, effect) = _pass_effect_ready(
-                        effect_key, textures, meta, bind
+                        effect_key, textures, texkeys, meta, bind
                     );
-                    
-                    // log::warn!("Bindgroups: _pass_effect_ready {:?}", (bindvalue.is_some(), bindtextures.is_some(), effect.is_some()));
     
                     if let Some((key_meta, meta)) = &effect {
-                        let need_set0 = BindDefines::need_bind_group_set0(meta.binddefines);
+                        let need_set0 = true;
                         let need_set1 = BindDefines::need_bind_group_set1(meta.binddefines);
-                        let need_set2 = meta.textures.len() > 0;
-                        let _need_set3 = BindDefines::need_bind_group_set3(meta.binddefines);
+                        let need_set2 = bind.0.is_some();
+                        let need_set3 = meta.textures.len() > 0;
+                        let matidx = if let Some(temp) = &bind.0 {
+                            temp.bind.matidx()
+                        } else { 0 };
 
-                        let set0 = if need_set0 { 
+                        let set0 = { 
                             let temp = _set0_modify(
                                 idmodel, idscene, idviewer, meta,
                                 viewers, scenes, device,
-                                asset_mgr_bindgroup_layout, asset_mgr_bindgroup, targets, errors
+                                asset_mgr_bindgroup_layout, asset_mgr_bindgroup, targets, 
+                                bind_passindex,
+                                errors
                             );
                             if temp.is_none() {
                                 if bindgroups.val().is_some() {
@@ -71,16 +83,13 @@ use super::{
                                 return;
                             }
                             temp
-                        } else { None };
-    
-                        let bind_effect_value = match bindvalue {
-                            Some(bindvalue) => Some(bindvalue.bind()),
-                            None => None,
                         };
+
                         let set1 = if need_set1 {
                             let temp = _set1_modify(
-                                idmodel, &bind_effect_value, key_meta, meta,
-                                models, device, asset_mgr_bindgroup_layout, asset_mgr_bindgroup
+                                idmodel, key_meta, meta,
+                                models, device, asset_mgr_bindgroup_layout, asset_mgr_bindgroup,
+                                passidx.index(), matidx
                             );
                             if temp.is_none() {
                                 if bindgroups.val().is_some() {
@@ -92,10 +101,20 @@ use super::{
                             }
                             temp
                         } else { None };
-    
+                        
                         let set2 = if need_set2 {
+                            let item = &bind.0.as_ref().unwrap().bind;
+                            let key_bind_group = item.key_bind_group();
+                            if let Some(bind_group) = create_bind_group(&key_bind_group, &device, &asset_mgr_bindgroup_layout, &asset_mgr_bindgroup) {
+                                Some(Arc::new(BindGroupMaterial::new(BindGroupUsage::new(key_bind_group, bind_group), item.clone())))
+                            } else {
+                                return;
+                            }
+                        } else { None };
+    
+                        let set3 = if need_set3 {
                             if let Some(effect_texture_samplers) = bindtextures {
-                                let temp = _set2_modify(
+                                let temp = _set3_modify(
                                     key_meta, meta, effect_texture_samplers,
                                     device, asset_mgr_bindgroup_layout, asset_mgr_bindgroup 
                                 );
@@ -104,7 +123,6 @@ use super::{
                                         *bindgroups = PassBindGroups::new(None);
                                         *flag = PassFlagShader;
                                     }
-                                    // log::error!("Bindgroups Fail set2 1");
                                     return;
                                 }
                                 temp
@@ -113,15 +131,11 @@ use super::{
                                     *bindgroups = PassBindGroups::new(None);
                                     *flag = PassFlagShader;
                                 }
-                                // log::error!("Bindgroups Fail set2");
                                 return;
                             }
                         } else { None };
 
-                        // log::error!("Create Bindgroups");
-                        // log::error!("Bindgroups Ok");
-                        let lightshadow = None;
-                        let data = BindGroups3D::create(set0, set1, set2, lightshadow);
+                        let data = BindGroups3D::create(set0, set1, set2, set3);
                         *bindgroups = PassBindGroups::new(Some(data));
                         *flag = PassFlagShader;
                     } else {
@@ -198,6 +212,7 @@ use super::{
         >,
         assets: Res<ShareAssetMgr<Shader3D>>,
         device: Res<PiRenderDevice>,
+        engineopt: Res<EngineCustomPlugins>,
     ) {
         // let time1 = pi_time::Instant::now();
         addeds.iter().chain(changes.iter()).for_each(|entity| {
@@ -218,7 +233,7 @@ use super::{
                                 if vb.0.attrcount as u32 <= limit.max_vertex_attributes && vb.0.desccount as u32 <= limit.max_vertex_buffers {
                                     let renderalignment = renderalignment.shader_tag(false);
                                     if let Ok(shader) = shader(
-                                        id_pass, meta, key_meta, vb, bindgroups, renderalignment, &assets, &device
+                                        id_pass, meta, key_meta, vb, bindgroups, renderalignment, &assets, &device, &engineopt
                                     ) {
                                         // log::error!("Shader Success");
                             
@@ -466,6 +481,7 @@ use super::{
         device: Res<PiRenderDevice>,
         queue: Res<PiRenderQueue>,
         mut combinebuffer: ResMut<CombineBuffer>,
+        engineopt: Res<EngineCustomPlugins>,
     ) {
         if performance.debug { performance.t_drawobjs = pi_time::Instant::now(); }
 
@@ -561,7 +577,7 @@ use super::{
                 opaque_list.drain(..).for_each(|drawinfo| {
                     // log::warn!("{:?}", tmp);
                     if let Some(tempdraw) = lastdraw.take() {
-                        if tempdraw.can_batch_instance_memory(&drawinfo, true) && combinebuffer.usedsize() + drawinfo.instancedatasize() < combinebuffer.maxcombinesize && combinebuffer.combinecommon(drawinfo.instancedatasize()) {
+                        if tempdraw.instancecount() + drawinfo.instancecount() < engineopt.max_instance_batch_count && tempdraw.can_batch_instance_memory(&drawinfo, true) && combinebuffer.usedsize() + drawinfo.instancedatasize() < combinebuffer.maxcombinesize && combinebuffer.combinecommon(drawinfo.instancedatasize()) {
                             _combine_instance(&mut combinebuffer, &mut lastinsdata, &drawinfo);
                             lastdraw = Some(tempdraw);
                         } else {
@@ -589,7 +605,7 @@ use super::{
                 }
                 transparent_list.drain(..).for_each(|drawinfo| {
                     if let Some(tempdraw) = lastdraw.take() {
-                        if tempdraw.can_batch_instance_memory(&drawinfo, true) && combinebuffer.usedsize() + drawinfo.instancedatasize() < combinebuffer.maxcombinesize && combinebuffer.combinecommon(drawinfo.instancedatasize()) {
+                        if tempdraw.instancecount() + drawinfo.instancecount() < engineopt.max_instance_batch_count && tempdraw.can_batch_instance_memory(&drawinfo, true) && combinebuffer.usedsize() + drawinfo.instancedatasize() < combinebuffer.maxcombinesize && combinebuffer.combinecommon(drawinfo.instancedatasize()) {
                             _combine_instance(&mut combinebuffer, &mut lastinsdata, &drawinfo);
                             lastdraw = Some(tempdraw);
                         } else {
@@ -638,17 +654,21 @@ fn shader(
     renderalignment: ERenderAlignmentForShader,
     assets: & ShareAssetMgr<Shader3D>,
     device: &RenderDevice,
+    engineopt: &EngineCustomPlugins,
 ) -> Result<Handle<Shader3D>, Shader3D> {
     let key_attributes = &vb.1;
 
-    let (set0, set1, set2, set3) = (&bindgroups.scene, &bindgroups.model, bindgroups.textures.as_ref(), bindgroups.lightingshadow.as_ref());
+    let (set0, set1, set2, set3) = (&bindgroups.scene, &bindgroups.model, bindgroups.matvalues.as_ref(), bindgroups.textures.as_ref());
     let mut setidx = 0;
     let mut vs_defined_snippets = vec![];
     let mut fs_defined_snippets = vec![];
+    let mut vs_extend_varying = String::from("");
+    let mut fs_extend_varying = String::from("");
     let mut vs_running_model_snippets = vec![];
+    let mut vs_running_attribute_snippets = vec![];
     let vs_running_after_effect_snippets = vec![];
-    let vs_running_before_effect_snippets = vec![];
-    let fs_running_before_effect_snippets = vec![];
+    let mut vs_running_before_effect_snippets = vec![];
+    let mut fs_running_before_effect_snippets = vec![];
     let fs_running_after_effect_snippets = vec![];
 
     // log::error!("Shader: {:?}", key_meta);
@@ -656,6 +676,8 @@ fn shader(
     // log::error!("{:?}", key_attributes.vs_define_code());
 
     vs_defined_snippets.push(key_attributes.vs_define_code());
+    vs_extend_varying += &key_attributes.vs_varying_code(meta.varyings.0.len() as u32, meta);
+    fs_extend_varying += &key_attributes.fs_varying_code(meta.varyings.0.len() as u32, meta);
 
     if let Some(set) = set0 {
         vs_defined_snippets.push(set.vs_define_code(setidx));
@@ -668,28 +690,27 @@ fn shader(
         vs_defined_snippets.push(set.vs_define_code(setidx));
         fs_defined_snippets.push(set.fs_define_code(setidx));
 
-        vs_running_model_snippets.push(set.vs_running_model_snippet(meta));
-
-        vs_running_model_snippets.push(key_attributes.vs_running_code(meta));
+        vs_running_attribute_snippets.push(set.vs_running_model_snippet(meta));
         vs_running_model_snippets.push(skin.running_code());
         vs_running_model_snippets.push(renderalignment.running_code());
 
         vs_defined_snippets.push(renderalignment.define_code());
 
         setidx += 1;
-    } else {
-        vs_running_model_snippets.push(key_attributes.vs_running_code(meta));
     }
+    vs_running_attribute_snippets.push(key_attributes.vs_running_code());
+    fs_running_before_effect_snippets.push(key_attributes.fs_running_code(meta));
 
     if let Some(set) = set2 {
-        vs_defined_snippets.push(set.vs_define_code(setidx));
-        fs_defined_snippets.push(set.fs_define_code(setidx));
+        vs_defined_snippets.push(set.vs_define_code(setidx, meta, engineopt));
+        fs_defined_snippets.push(set.fs_define_code(setidx, meta, engineopt));
         setidx += 1;
     }
     
     if let Some(set) = set3 {
-        vs_defined_snippets.push(set.vs_define_code(setidx));
-        fs_defined_snippets.push(set.fs_define_code(setidx));
+        vs_defined_snippets.push(set.vs_define_code(setidx, meta, engineopt));
+        fs_defined_snippets.push(set.fs_define_code(setidx, meta, engineopt));
+        setidx += 1;
     }
 
     let key_shader = KeyShader3D {
@@ -708,10 +729,14 @@ fn shader(
             &device,
             &key_meta,
             &vs_defined_snippets,
+            &vs_extend_varying,
+            &fs_extend_varying,
+            &vs_running_attribute_snippets,
             &vs_running_model_snippets,
             &vs_running_before_effect_snippets, &vs_running_after_effect_snippets,
             &fs_defined_snippets,
             &fs_running_before_effect_snippets, &fs_running_after_effect_snippets,
+            engineopt
         );
 
         assets.insert(key_shader, shader)
@@ -827,27 +852,26 @@ fn collect_draw<'w>(
                 }
             });
         } else {
-            let range = Range { start: 0, end: instancessortinfo.count as u32 };
-            let draw = DrawTmpRef {
-                rendergeo,
-                pipeline,
-                bindgroups,
-                indicerange,
-                vertexrange,
-                inscombinerange: range.clone(),
-                instancessortinfo,
-                pass,
-                distance,
-                queue: sort_param.clone(),
-            };
+            // let range = Range { start: 0, end: instancessortinfo.count as u32 };
+            // let draw = DrawTmpRef {
+            //     rendergeo,
+            //     pipeline,
+            //     bindgroups,
+            //     indicerange,
+            //     vertexrange,
+            //     inscombinerange: range.clone(),
+            //     instancessortinfo,
+            //     pass,
+            //     distance,
+            //     queue: sort_param.clone(),
+            // };
             // log::warn!("Range {:?}", range);
             
-            if is_transparent == false {
-                opaque_list.push(draw);
-            } else {
-                transparent_list.push(draw);
-
-            }
+            // if is_transparent == false {
+            //     opaque_list.push(draw);
+            // } else {
+            //     transparent_list.push(draw);
+            // }
         }
     } else {
         let draw = DrawTmpRef {

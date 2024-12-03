@@ -109,18 +109,18 @@ fn setup(
     actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
     actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
-        filter: true,
         sample: KeySampler::linear_clamp(),
         url: EKeyTexture::from("assets/images/eff_daoguang_lf_004.png"),
+        ..Default::default()
     }));
     
     let idmat2 = commands.spawn_empty_id();
     actions.material.create.push(OpsMaterialCreate::ops(idmat2, UnlitShader::KEY));
     actions.material.valb.push(OpsUniformValB::texture(idmat2, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
-        filter: true,
         sample: KeySampler::linear_clamp(),
         url: EKeyTexture::from("assets/images/icon_city.png"),
+        ..Default::default()
     }));
     
     let node = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node, scene));

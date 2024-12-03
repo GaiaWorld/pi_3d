@@ -7,7 +7,7 @@ pub struct EmissiveFresnelShader;
 impl EmissiveFresnelShader {
     pub const KEY: &'static str = "EmissiveFresnelShader";
 
-    pub fn meta() -> ShaderEffectMeta {
+    pub fn meta(engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
 
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.fs_define = String::from(S_BREAK) + "layout(location = 0) out vec4 gl_FragColor;" + S_BREAK;
@@ -44,6 +44,6 @@ impl EmissiveFresnelShader {
         nodemat.apply::<BlockEmissiveTextureUVOffsetSpeed>();
         nodemat.apply::<BlockEmissiveFresnel>();
 
-        nodemat.meta()
+        nodemat.meta(engineopt)
     }
 }

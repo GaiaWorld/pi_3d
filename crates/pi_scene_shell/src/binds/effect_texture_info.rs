@@ -1,0 +1,110 @@
+use pi_render::renderer::bind::{KeyBindBuffer, KeyBindLayoutBuffer, TKeyBind};
+
+use crate::{prelude::*, run_stage::EngineCustomPlugins};
+
+
+#[derive(Clone, Hash, PartialEq, Eq)]
+pub struct BindEffectTextureInfo {
+    pub data: BindBufferRange,
+    pub maxcount: Option<u32>,
+}
+// 每个 frame 数据为 4 个浮点数, uOffset vOffset, uScale, vScale
+impl BindEffectTextureInfo {
+    pub const SUFFIX_ADDRESS: &'static str = "_Address";
+    pub const SUFFIX_TILLOFF: &'static str = "_Atlas";
+    pub const TILLOFF_SIZE: usize = 4 * 4;
+    pub const ADDRESS_SIZE: usize = 4 * 4;
+    pub const ITEM_SIZE: usize = 4 * 4 * 2;
+    pub fn new(maxcount: Option<u32>, bindbuffer: &mut BindBufferAllocator, _engineopt: &EngineCustomPlugins) -> Option<Self> {
+        if let Some(maxcount) = maxcount {
+            if let Some(buffer) = bindbuffer.allocate(maxcount * Self::ITEM_SIZE as u32) {
+                let tilloff = [1f32, 1f32, 0f32, 0f32];
+                let val = bytemuck::cast_slice(&tilloff);
+                for i in 0..maxcount {
+                    buffer.0.write_data(i as usize * Self::TILLOFF_SIZE, val);
+                }
+                let address = [0u32, 0u32, 0u32, 0u32];
+                let val = bytemuck::cast_slice(&address);
+                for i in 0..maxcount {
+                    buffer.0.write_data(maxcount as usize * Self::TILLOFF_SIZE + i as usize * Self::ADDRESS_SIZE, val);
+                }
+                Some(
+                    Self {
+                        data: buffer,
+                        maxcount: Some(maxcount),
+                    }
+                )
+            } else {
+                None
+            }
+        } else {
+            if let Some(buffer) = bindbuffer.allocate(Self::ITEM_SIZE as u32) {
+                let mut data: Vec<u8> = Vec::with_capacity(Self::ITEM_SIZE);
+                buffer.0.write_data(0, bytemuck::cast_slice(&[1f32, 1f32, 0f32, 0f32]));
+                buffer.0.write_data(Self::TILLOFF_SIZE, bytemuck::cast_slice(&[0u32, 0u32, 0u32, 0u32]));
+                Some(
+                    Self {
+                        data: buffer,
+                        maxcount,
+                    }
+                )
+            } else {
+                None
+            }
+        }
+    }
+    pub fn update(&self, matidx: usize, tilloff: &[u8], wrap_u: u32, wrap_v: u32, wrap_w: u32, coord: u32) {
+        let address_offset = if let Some(maxcount) = self.maxcount {
+            self.data.write_data(matidx * Self::ITEM_SIZE, tilloff);
+            self.data.write_data(maxcount as usize * Self::TILLOFF_SIZE + matidx * Self::ADDRESS_SIZE, bytemuck::cast_slice(&[wrap_u, wrap_v, wrap_w, coord]));
+        } else {
+            self.data.write_data(0, tilloff);
+            self.data.write_data(Self::TILLOFF_SIZE, bytemuck::cast_slice(&[wrap_u, wrap_v, wrap_w, coord]));
+        };
+    }
+    fn define_code(&self, set: u32, bind: u32, slotname: &str) -> String {
+        let mut result = String::from("");
+        result += ShaderSetBind::code_set_bind_head(set, bind).as_str();
+        result += slotname;
+        result += "InfoArr {";
+        result += crate::prelude::S_BREAK;
+        if let Some(maxcount) = self.maxcount {
+            result += ShaderSetBind::code_uniform_array(&crate::prelude::S_VEC4, &(slotname.to_string() + Self::SUFFIX_TILLOFF), maxcount as u32).as_str();
+            result += ShaderSetBind::code_uniform_array(&crate::prelude::S_UVEC4, &(slotname.to_string() + Self::SUFFIX_ADDRESS), maxcount as u32).as_str();
+        } else {
+            result += ShaderSetBind::code_uniform(&crate::prelude::S_VEC4, &(slotname.to_string() + Self::SUFFIX_TILLOFF)).as_str();
+            result += ShaderSetBind::code_uniform(&crate::prelude::S_UVEC4, &(slotname.to_string() + Self::SUFFIX_ADDRESS)).as_str();
+        }
+        result += "};\n";
+        result
+    }
+}
+
+impl BindEffectTextureInfo {
+    pub fn vs_define_code(&self, set: u32, bind: u32, slotname: &str) -> String {
+        self.define_code(set, bind, slotname)
+    }
+    pub fn fs_define_code(&self, set: u32, bind: u32, slotname: &str) -> String {
+        self.define_code(set, bind, slotname)
+    }
+}
+impl TKeyBind for BindEffectTextureInfo {
+    fn key_bind(&self) -> Option<pi_render::renderer::bind::EKeyBind> {
+        Some(
+            pi_render::renderer::bind::EKeyBind::Buffer(
+                KeyBindBuffer {
+                    data: self.data.clone(),
+                    layout: KeyBindLayoutBuffer {
+                        visibility: EShaderStage::VERTEXFRAGMENT,
+                        min_binding_size: self.data.size() as u32,
+                    }
+                }
+            )
+        )
+    }
+}
+impl TBindDefine for BindEffectTextureInfo {
+    fn bind_include(&self) -> u32 {
+        BindDefines::EFFECT_TEXTURE_ATLAS
+    }
+}

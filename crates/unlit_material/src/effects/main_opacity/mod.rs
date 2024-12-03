@@ -7,7 +7,7 @@ pub struct MainOpacityShader;
 impl MainOpacityShader {
     pub const KEY: &'static str = "MainOpacityShader";
 
-    pub fn meta() -> ShaderEffectMeta {
+    pub fn meta(engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
 
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.fs_define = String::from(S_BREAK) + "layout(location = 0) out vec4 gl_FragColor;" + S_BREAK;
@@ -74,6 +74,6 @@ impl MainOpacityShader {
         nodemat.apply::<BlockOpacityTexture>();
         nodemat.apply::<BlockOpacityTextureUVOffsetSpeed>();
 
-        nodemat.meta()
+        nodemat.meta(engineopt)
     }
 }

@@ -22,7 +22,7 @@ pub struct Skeleton {
     pub bones: Vec<ObjectID>,
     pub mode: ESkinCode,
     pub meshes: Vec<ObjectID>,
-    pub bind: Option<Arc<ShaderBindModelAboutSkinValue>>,
+    pub bind: Option<ShaderBindModelAboutSkinValue>,
 }
 impl Skeleton {
     pub fn new(
@@ -39,7 +39,7 @@ impl Skeleton {
                 bones,
                 mode,
                 meshes: vec![],
-                bind: Some(Arc::new(bind)),
+                bind: Some(bind),
             })
         } else {
             None
@@ -48,7 +48,7 @@ impl Skeleton {
 }
 
 #[derive(Clone, Component, Default)]
-pub struct BindSkinValue(pub Option<Arc<ShaderBindModelAboutSkinValue>>);
+pub struct BindSkinValue(pub Option<ShaderBindModelAboutSkinValue>);
 
 #[derive(Component, Default)]
 pub struct BoneLinked(pub Option<Entity>);

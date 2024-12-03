@@ -9,7 +9,7 @@ pub struct WaterShader {
 impl WaterShader {
     pub const KEY: &'static str = "WaterShader";
 
-    pub fn meta() -> ShaderEffectMeta {
+    pub fn meta(engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
         ShaderEffectMeta::new(
             MaterialValueBindDesc {
                 stage: wgpu::ShaderStages::VERTEX_FRAGMENT,
@@ -45,7 +45,8 @@ impl WaterShader {
                 define: Atom::from(include_str!("./water_define.frag")),
                 running: Atom::from(include_str!("./water.frag")),
             },
-            ShaderDefinesSet::default()
+            ShaderDefinesSet::default(),
+            engineopt
         )
     }
 }

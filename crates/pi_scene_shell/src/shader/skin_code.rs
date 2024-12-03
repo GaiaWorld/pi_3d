@@ -3,7 +3,7 @@ use pi_atom::Atom;
 
 use pi_render::renderer::{buildin_data::EDefaultTexture, shader_stage::EShaderStage};
 
-use super::{uniform_texture::{UniformSamplerDesc, UniformTexture2DDesc}, ShaderVarUniform};
+use super::{uniform_texture::UniformTexture2DDesc, ShaderVarUniform};
 
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -140,13 +140,6 @@ impl ESkinCode {
             EShaderStage::VERTEX,
             EDefaultTexture::White,
         )
-    }
-    pub fn uniform_desc_sampler() -> UniformSamplerDesc {
-        UniformSamplerDesc {
-            slotname: Atom::from(ShaderVarUniform::BONE_TEX_SAMPLER),
-            ty: wgpu::SamplerBindingType::NonFiltering,
-            stage: EShaderStage::VERTEX,
-        }
     }
 }
 

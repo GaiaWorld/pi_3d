@@ -7,7 +7,7 @@ pub struct PlanarShadow;
 impl PlanarShadow {
     pub const KEY: &'static str = "PlanarShadow";
 
-    pub fn meta() -> ShaderEffectMeta {
+    pub fn meta(engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
 
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.fs_define = String::from(S_BREAK) + "layout(location = 0) out vec4 gl_FragColor;" + S_BREAK;
@@ -32,7 +32,7 @@ impl PlanarShadow {
         nodemat.values.vec4_list.push(UniformPropertyVec4(Atom::from("uPlanarDir"), [light.x, light.y, light.z, 0.], false));
         nodemat.values.vec4_list.push(UniformPropertyVec4(Atom::from("uShadowColor"), [0.2, 0.2, 0.2, 0.5], false));
 
-        nodemat.meta()
+        nodemat.meta(engineopt)
     }
     pub fn matrix(plane_normal: &Vector3, plane_d: Number, light: &Vector3) -> [Number; 16] {
         let mut nl = plane_normal.dot(light);
