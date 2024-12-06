@@ -101,13 +101,13 @@ pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;
 pub struct TestAnimeGroup(Option<(Entity, Entity, pi_time::Instant)>);
 
 fn sys_anime_goto(
-    mut actions: ResMut<ActionListAnimtionGroupGoto>,
+    mut actions: ResMut<ActionListAnimationGroupGoto>,
     item: Res<TestAnimeGroup>,
 ) {
     if let Some((scene, animegroup, starttime)) = &item.0 {
         let amount = (pi_time::Instant::now() - *starttime).as_secs_f32().fract();
         log::error!("{}", amount);
-        actions.push(AnimtionGroupGoto::ops(animegroup.clone(), amount));
+        actions.push(AnimationGroupGoto::ops(animegroup.clone(), amount));
     }
 }
 

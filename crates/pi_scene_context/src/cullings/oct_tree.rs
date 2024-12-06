@@ -5,16 +5,18 @@ use crate::{flags::GlobalEnable, prelude::RenderQueueSortParam};
 
 use super::{
     base::{BoundingKey, PiRay, PickResult, TBoundingInfoCalc, TFilter},
-    bounding::is_in_frustum,
+    bounding::is_in_frustum, bounding_sphere::intersects_sphere,
 };
+
+pub type TOctTreeBind = Number;
 
 pub struct BoundingOctTree {
     fast: XHashSet<Entity>,
-    tree: OctTree<BoundingKey, ()>,
+    tree: OctTree<BoundingKey, TOctTreeBind>,
     temp: XHashSet<Entity>,
 }
 impl BoundingOctTree {
-    pub fn new(tree: OctTree<BoundingKey, ()>) -> Self {
+    pub fn new(tree: OctTree<BoundingKey, TOctTreeBind>) -> Self {
         Self {
             fast: XHashSet::default(),
             tree,
@@ -28,7 +30,7 @@ impl TBoundingInfoCalc for BoundingOctTree {
         self.fast.insert(key);
         self.tree.remove(BoundingKey(key));
     }
-    fn add(&mut self, key: Entity, min: (Number, Number, Number), max: (Number, Number, Number)) {
+    fn add(&mut self, key: Entity, min: (Number, Number, Number), max: (Number, Number, Number), intersection_treshold: TOctTreeBind) {
         // println!("add: {:?}", (key, min, max));
         self.fast.remove(&key);
         self.tree.remove(BoundingKey(key));
@@ -54,7 +56,7 @@ impl TBoundingInfoCalc for BoundingOctTree {
                 Point3::new(min.0, min.1, min.2),
                 Point3::new(max.0, max.1, max.2),
             ),
-            (),
+            intersection_treshold,
         );
     }
 
@@ -120,7 +122,7 @@ impl TBoundingInfoCalc for BoundingOctTree {
             Point3::new(maxx, maxy, maxz),
         );
 
-        let mut args: (Ray, f32, &mut Option<PickResult>, &Query<'_, (&RenderQueueSortParam, &GlobalEnable)>) = (ray,f32::MAX, result, sortparams);
+        let mut args: (Ray, f32, &mut Option<PickResult>, &Query<'_, (&RenderQueueSortParam, &GlobalEnable)>) = (ray, f32::MAX, result, sortparams);
 
         self.tree.query(&aabb, intersects, &mut args, ray_test_func);
     }
@@ -153,7 +155,7 @@ pub fn ab_query_func<F: TFilter>(
     ),
     id: BoundingKey,
     aabb: &Aabb,
-    _bind: &(),
+    _bind: &TOctTreeBind,
 ) {
     if arg.3.filter(id.0) {
         if is_in_frustum(
@@ -171,10 +173,18 @@ pub fn ray_test_func(
     arg: &mut (Ray, f32, &mut Option<PickResult>, &Query<(&RenderQueueSortParam, &GlobalEnable)>),
     id: BoundingKey,
     aabb: &Aabb,
-    _bind: &(),
+    _bind: &Number,
 ) {
     if let Ok((sortparam, genble)) = arg.3.get(id.0) {
         if genble.0 == false {
+            return;
+        }
+
+        let centerx = (aabb.mins .x + aabb.maxs .x) * 0.5;
+        let centery = (aabb.mins .y + aabb.maxs .y) * 0.5;
+        let centerz = (aabb.mins .z + aabb.maxs .z) * 0.5;
+
+        if !intersects_sphere((centerx, centery, centerz), *_bind, 0., &(arg.0.origin.x, arg.0.origin.y, arg.0.origin.z), &(arg.0.dir.x, arg.0.dir.y, arg.0.dir.z)) {
             return;
         }
         if let Some(distance) = aabb.cast_ray(&Isometry3::identity(), &arg.0, f32::MAX, false) {

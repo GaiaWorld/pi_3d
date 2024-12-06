@@ -1,10 +1,10 @@
 
 use pi_scene_shell::prelude::*;
 use pi_scene_math::{Vector3, Number};
-pub struct OpsCollider(pub(crate) Entity, pub(crate) Vector3, pub(crate) Vector3);
+pub struct OpsCollider(pub(crate) Entity, pub(crate) Vector3, pub(crate) Vector3, pub(crate) Number);
 impl OpsCollider {
-    pub fn ops(entity: Entity, min: (Number, Number, Number), max: (Number, Number, Number)) -> Self {
-        Self(entity, Vector3::new(min.0, min.1, min.2), Vector3::new(max.0, max.1, max.2))
+    pub fn ops(entity: Entity, min: (Number, Number, Number), max: (Number, Number, Number), intersection_treshold: Number) -> Self {
+        Self(entity, Vector3::new(min.0, min.1, min.2), Vector3::new(max.0, max.1, max.2), intersection_treshold)
     }
 }
 pub type ActionListCollider = ActionList<OpsCollider>;

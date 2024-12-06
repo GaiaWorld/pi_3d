@@ -157,7 +157,7 @@ impl Plugin for PluginTest {
     let state: MeshInstanceState = MeshInstanceState {
         instance_matrix: true,
         instances: vec![
-            CustomVertexAttribute::new(Atom::from("InsV2"), Atom::from("uMetallic = InsV2.x; uRoughness = InsV2.y;"), ECustomVertexType::Vec2, Some(Atom::from("uMetallic")))
+            CustomVertexAttribute::new(Atom::from("InsV2"), Atom::from(""), ECustomVertexType::Vec2, Some(Atom::from("uMetallicRoughness")))
         ],
         use_single_instancebuffer: false,
     };
@@ -197,7 +197,7 @@ impl Plugin for PluginTest {
                     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Translation((i + 1) as f32 * 2. - (tes_size) as f32, 0.5, j as f32 * 2. - (tes_size) as f32)));
                     // actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(cube, 1.,  1., 1.));
                     actions.instance.attr.push(OpsInstanceAttr::ops(cube, EInstanceAttr::Vec2([(i as f32) / (tes_size as f32 - 1.), (j as f32) / (tes_size as f32 - 1.)]), Atom::from("InsV2")));
-                    actions.transform.collider.push(OpsCollider::ops(cube, (-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)));
+                    actions.transform.collider.push(OpsCollider::ops(cube, (-0.5, -0.5, -0.5), (0.5, 0.5, 0.5), 1. * (f32::sqrt(3.) / 3. - 1.)));
                     // actions.mesh.state.push(OpsMeshStateModify::ops(cube, EMeshStateModify::BoundingCullingMode(ECullingStrategy::None)));
                     actions.mesh.render_state.push(OpsRenderState::render_queue(cube, 0, j as i32));
                 }
@@ -237,7 +237,7 @@ impl Plugin for PluginTest {
         {
             let distortiommat = commands.spawn_empty_id();
             actions.material.create.push(OpsMaterialCreate::ops(distortiommat, distortion_material::ShaderDistortion::KEY));
-            actions.material.valb.push(OpsUniformValB::texture(distortiommat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockMainTexture::KEY_TEX), url: EKeyTexture::image("./assets/images/eff_wm_trail_fml_001_89_clamp.png"), sample: KeySampler::linear_repeat(), ..Default::default() }));
+            actions.material.valb.push(OpsUniformValB::texture(distortiommat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockMainTexture::KEY_TEX), url: EKeyTexture::from("./assets/images/eff_wm_trail_fml_001_89_clamp.png"), sample: KeySampler::linear_repeat(), ..Default::default() }));
             // actions.material.val.push(OpsUniformVal::vec2(distortiommat, Atom::from(BlockMainTextureUVOffsetSpeed::KEY_PARAM), 100., 100.));
             actions.material.valb.push(OpsUniformValB::texture_from_target(distortiommat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockEmissiveTexture::KEY_TEX), ..Default::default() }, opaquetarget.unwrap(), Atom::from(BlockEmissiveTexture::KEY_TILLOFF)));
             // actions.material.val.push(OpsUniformVal::vec3(distortiommat, Atom::from(BlockMainTexture::KEY_COLOR), 1., 0.5, 0.5));
@@ -316,7 +316,7 @@ impl Plugin for PluginTest {
             }
             
             let mut param = AnimationGroupParam::default(); param.fps = 60; param.speed = 2.;param.loop_mode = ELoopMode::PositivePly(None);
-            actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, param, 0., pi_animation::base::EFillMode::NONE));
+            // actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, param, 0., pi_animation::base::EFillMode::NONE));
         }
 }
 

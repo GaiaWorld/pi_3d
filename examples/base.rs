@@ -153,7 +153,7 @@ impl DemoScene {
 
         let scene = commands.spawn_empty_id();
         // animegroupres.scene_ctxs.init_scene(scene);
-        actions.scene.create.push(OpsSceneCreation::ops(scene, SceneBoundingPool::MODE_OCTREE, SceneColliderPool::MODE_OCTREE, [-9999, -9999, -9999, 9999, 9999, 9999, 0, 0, 0]));
+        actions.scene.create.push(OpsSceneCreation::ops(scene, SceneBoundingPool::MODE_LIST, SceneColliderPool::MODE_LIST, [-9999, -9999, -9999, 9999, 9999, 9999, 0, 0, 0]));
 
         let camera = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(camera, scene));
         actions.camera.create.push(OpsCameraCreation::ops(scene, camera));

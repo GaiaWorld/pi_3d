@@ -192,7 +192,7 @@ impl Plugin for PluginTest {
                     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Translation((i + 1) as f32 * 2. - (tes_size) as f32, 0.5, j as f32 * 2. - (tes_size) as f32)));
                     // actions.transform.localscl.push(OpsTransformNodeLocalScaling::ops(cube, 1.,  1., 1.));
                     actions.instance.attr.push(OpsInstanceAttr::ops(cube, EInstanceAttr::Vec2([(i as f32) / (tes_size as f32 - 1.), (j as f32) / (tes_size as f32 - 1.)]), Atom::from("InsV2")));
-                    actions.transform.collider.push(OpsCollider::ops(cube, (-0.5, -0.5, -0.5), (0.5, 0.5, 0.5)));
+                    actions.transform.collider.push(OpsCollider::ops(cube, (-0.5, -0.5, -0.5), (0.5, 0.5, 0.5), f32::sqrt(3.) / 3. - 1.));
                     actions.mesh.state.push(OpsMeshStateModify::ops(cube, EMeshStateModify::BoundingCullingMode(ECullingStrategy::None)));
                 }
             }

@@ -146,7 +146,7 @@ impl Plugin for PluginTest {
     let state: MeshInstanceState = MeshInstanceState {
         instance_matrix: true,
         instances: vec![
-            CustomVertexAttribute::new(Atom::from("InsV2"), Atom::from("uMetallic = InsV2.x; uRoughness = InsV2.y;"), ECustomVertexType::Vec2, Some(Atom::from("uMetallic")))
+            CustomVertexAttribute::new(Atom::from("InsV2"), Atom::from(""), ECustomVertexType::Vec2, Some(Atom::from("uMetallicRoughness")))
         ],
         use_single_instancebuffer: false,
     };

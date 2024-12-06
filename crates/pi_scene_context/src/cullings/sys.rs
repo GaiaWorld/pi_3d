@@ -33,6 +33,7 @@ pub fn sys_update_collider(
     rmatrix: Query<&RenderWorldMatrix>,
     items: Query<(&Collider, &SceneID, &DisposeReady)>,
 ) {
+    let mut temp = Vector3::zeros();
     changes.iter().for_each(|entity| {
         if let Ok((collider, idscene, dispose)) = items.get(*entity) {
             if let Ok(mut pool) = scenes.get_mut(idscene.0) {
@@ -40,9 +41,9 @@ pub fn sys_update_collider(
                     pool.remove(*entity);
                 } else {
                     if let Ok(worldmatrix) = rmatrix.get(*entity) {
-                        pool.set(*entity, collider, &worldmatrix.0);
+                        pool.set(*entity, collider, &worldmatrix.0, &mut temp);
                     } else if let Ok(worldmatrix) = gmatrix.get(*entity) {
-                        pool.set(*entity, collider, worldmatrix.matrix());
+                        pool.set(*entity, collider, worldmatrix.matrix(), &mut temp);
                     }
                 }
             }
@@ -55,9 +56,9 @@ pub fn sys_update_collider(
                     pool.remove(*entity);
                 } else {
                     if let Ok(worldmatrix) = rmatrix.get(*entity) {
-                        pool.set(*entity, collider, &worldmatrix.0);
+                        pool.set(*entity, collider, &worldmatrix.0, &mut temp);
                     } else if let Ok(worldmatrix) = gmatrix.get(*entity) {
-                        pool.set(*entity, collider, worldmatrix.matrix());
+                        pool.set(*entity, collider, worldmatrix.matrix(), &mut temp);
                     }
                 }
             }

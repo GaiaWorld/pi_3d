@@ -8,9 +8,9 @@ pub fn sys_act_collider(
     mut cmds: ResMut<ActionListCollider>,
     mut commands: Commands,
 ) {
-    cmds.drain().for_each(|OpsCollider(entity, min, max)| {
+    cmds.drain().for_each(|OpsCollider(entity, min, max, intersection_treshold)| {
         if let Some(mut cmd) = commands.get_entity(entity) {
-            cmd.insert(Collider { minimum: min, maximum: max })
+            cmd.insert(Collider { minimum: min, maximum: max, intersection_treshold })
         } else { return; };
     });
 }

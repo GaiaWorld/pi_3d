@@ -6,11 +6,11 @@ use pi_scene_math::{
 
 use crate::{flags::GlobalEnable, prelude::RenderQueueSortParam};
 
-use super::base::{PiRay, PickResult, TBoundingInfoCalc, TFilter};
+use super::{base::{PiRay, PickResult, TBoundingInfoCalc, TFilter}, bounding_sphere::intersects_sphere};
 
 #[derive(Default, Clone)]
 pub struct VecBoundingInfoCalc {
-    pool: XHashMap<Entity, ((Number, Number, Number), (Number, Number, Number))>,
+    pool: XHashMap<Entity, ((Number, Number, Number), (Number, Number, Number), Number)>,
     fast: XHashSet<Entity>,
     temp: XHashSet<Entity>,
 }
@@ -20,9 +20,9 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
         self.fast.insert(key);
         self.pool.remove(&key);
     }
-    fn add(&mut self, key: Entity, min: (Number, Number, Number), max: (Number, Number, Number)) {
+    fn add(&mut self, key: Entity, min: (Number, Number, Number), max: (Number, Number, Number), intersection_treshold: Number) {
         self.fast.remove(&key);
-        self.pool.insert(key, (min, max));
+        self.pool.insert(key, (min, max, intersection_treshold));
     }
 
     fn remove(&mut self, key: Entity) {
@@ -61,11 +61,11 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
     }
 
     fn ray_test(
-        &self, ray: &PiRay, result: &mut Option<PickResult>,
+        &self, piray: &PiRay, result: &mut Option<PickResult>,
         sortparams: &Query<(&RenderQueueSortParam, &GlobalEnable)>,
     ) {
-        let origin = Point3::new(ray.origin.0, ray.origin.1, ray.origin.2);
-        let ray = parry3d::query::Ray::new(origin, Vector3::new(ray.direction.0, ray.direction.1, ray.direction.2));
+        let origin = Point3::new(piray.origin.0, piray.origin.1, piray.origin.2);
+        let ray = parry3d::query::Ray::new(origin, Vector3::new(piray.direction.0, piray.direction.1, piray.direction.2));
         let mut dest = f32::MAX;
         // println!("========= ray: {:?}", ray);
         let mut aabb = Aabb::new(
@@ -91,8 +91,15 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
             aabb.maxs.y = item.1 .1;
             aabb.maxs.z = item.1 .2;
 
+            let centerx = (item.0 .0 + item.1 .0) * 0.5;
+            let centery = (item.0 .1 + item.1 .1) * 0.5;
+            let centerz = (item.0 .2 + item.1 .2) * 0.5;
+
             if isok && lastalphaindex != sortparam.index {
                 break;
+            }
+            if !intersects_sphere((centerx, centery, centerz), item.2, 0., &piray.origin, &piray.direction) {
+                continue;
             }
             lastalphaindex = sortparam.index;
             if let Some(d) = aabb.cast_local_ray(&ray, f32::MAX, false) {

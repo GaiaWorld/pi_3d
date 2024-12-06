@@ -1,4 +1,5 @@
-use pi_scene_math::{frustum::FrustumPlanes, Matrix, Vector3};
+
+use pi_scene_math::{frustum::FrustumPlanes, Matrix, Number, Vector3};
 
 pub struct BoundingSphere {
     radius: f32,
@@ -98,4 +99,26 @@ impl BoundingSphere {
 
         return true;
     }
+}
+
+pub fn intersects_sphere(center: (Number, Number, Number), radius: Number, intersection_treshold: Number, origin: &(Number, Number, Number), direction: &(Number, Number, Number)) -> bool {
+    let x = center.0 - origin.0;
+    let y = center.1 - origin.1;
+    let z = center.2 - origin.2;
+    let pyth = x * x + y * y + z * z;
+    let radius = radius + intersection_treshold;
+    let rr = radius * radius;
+
+    if pyth <= rr {
+        return true;
+    }
+
+    let dot = x * direction.0 + y * direction.1 + z * direction.2;
+    if dot < 0.0 {
+        return false;
+    }
+
+    let temp = pyth - dot * dot;
+
+    return temp <= rr;
 }

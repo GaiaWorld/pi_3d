@@ -3,16 +3,16 @@ use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::TToolVector3, V
 
 use crate::{flags::GlobalEnable, prelude::{MeshInstanceState, RenderQueueSortParam}, viewer::prelude::ViewerTransformMatrix};
 
-use super::{oct_tree::BoundingOctTree, bounding::VecBoundingInfoCalc};
+use super::{bounding::VecBoundingInfoCalc, oct_tree::BoundingOctTree};
 
 pub trait TBoundingInfoCalc {
     fn add_fast(&mut self, key: Entity);
-    fn add(&mut self, key: Entity, min: (Number, Number, Number), max: (Number, Number, Number));
+    fn add(&mut self, key: Entity, min: (Number, Number, Number), max: (Number, Number, Number), intersection_treshold: Number);
     fn remove(&mut self, key: Entity);
     fn culling<F: TFilter>(&mut self, vp: &Matrix, filter: F, result: &mut Vec<Entity>);
     fn ray_test(
         &self,
-        ray: &PiRay,
+        piray: &PiRay,
         result: &mut Option<PickResult>,
         sortparams: &Query<(&RenderQueueSortParam, &GlobalEnable)>,
     );
@@ -94,22 +94,26 @@ pub enum ECullingStrategy {
 pub struct Collider {
     pub minimum: Vector3,
     pub maximum: Vector3,
+    pub intersection_treshold: Number
 }
 impl Default for Collider {
     fn default() -> Self {
-        Self { minimum: Vector3::new(-0.5, -0.5, -0.5), maximum: Vector3::new(0.5, 0.5, 0.5) }
+        Self { minimum: Vector3::new(-0.5, -0.5, -0.5), maximum: Vector3::new(0.5, 0.5, 0.5), intersection_treshold: 0. }
     }
 }
 impl Collider {
-    pub fn minmax(&self, matrix: &Matrix) -> ((Number, Number, Number), (Number, Number, Number)) {
-        let mut temp = Vector3::zeros();
-        CoordinateSytem3::transform_coordinates(&self.minimum, matrix, &mut temp);
+    pub fn minmax(&self, matrix: &Matrix, temp: &mut Vector3) -> ((Number, Number, Number), (Number, Number, Number), Number) {
+        CoordinateSytem3::transform_normal_floats(1., 1., 1., matrix, temp);
+        let radius = self.minimum.metric_distance(&self.maximum).abs() * 0.5 * temp.x.max(temp.y).max(temp.z);
+
+        CoordinateSytem3::transform_coordinates(&self.minimum, matrix, temp);
         let min = (temp.x, temp.y, temp.z);
-        CoordinateSytem3::transform_coordinates(&self.maximum, matrix, &mut temp);
+        CoordinateSytem3::transform_coordinates(&self.maximum, matrix, temp);
         let max = (temp.x, temp.y, temp.z);
         (
             (Number::min(min.0, max.0), Number::min(min.1, max.1), Number::min(min.2, max.2)),
-            (Number::max(min.0, max.0), Number::max(min.1, max.1), Number::max(min.2, max.2))
+            (Number::max(min.0, max.0), Number::max(min.1, max.1), Number::max(min.2, max.2)),
+            radius * (1.0 + self.intersection_treshold)
         )
     }
 }
@@ -220,19 +224,19 @@ impl SceneColliderPool {
             SceneColliderPool::OctTree(items) => items.remove(entity),
         }
     }
-    pub fn set(&mut self, entity: Entity, info: &Collider, matrix: &Matrix) {
+    pub fn set(&mut self, entity: Entity, info: &Collider, matrix: &Matrix, temp: &mut Vector3) {
 
         match self {
             SceneColliderPool::List(items) => {
-                let (min, max) = info.minmax(matrix);
-                items.add(entity, min, max)
+                let (min, max, intersection_treshold) = info.minmax(matrix, temp);
+                items.add(entity, min, max, intersection_treshold)
             },
             SceneColliderPool::QuadTree() => {
                 
             },
             SceneColliderPool::OctTree(items) => {
-                let (min, max) = info.minmax(matrix);
-                items.add(entity, min, max)
+                let (min, max, intersection_treshold) = info.minmax(matrix, temp);
+                items.add(entity, min, max, intersection_treshold)
             },
         }
     }
@@ -328,12 +332,12 @@ impl SceneBoundingPool {
                     ECullingStrategy::Optimistic => {
                         // log::warn!("{:?}", (entity, &matrix.0));
                         let (min, max) = info.minmax(matrix);
-                        items.add(entity, min, max)
+                        items.add(entity, min, max, 0.)
                     },
                     ECullingStrategy::STANDARD => {
                         // log::warn!("00000");
                         let (min, max) = info.minmax(matrix);
-                        items.add(entity, min, max)
+                        items.add(entity, min, max, 0.)
                     },
                 }
             },
@@ -347,11 +351,11 @@ impl SceneBoundingPool {
                     },
                     ECullingStrategy::Optimistic => {
                         let (min, max) = info.minmax(matrix);
-                        items.add(entity, min, max)
+                        items.add(entity, min, max, 0.)
                     },
                     ECullingStrategy::STANDARD => {
                         let (min, max) = info.minmax(matrix);
-                        items.add(entity, min, max)
+                        items.add(entity, min, max, 0.)
                     },
                 }
             },
