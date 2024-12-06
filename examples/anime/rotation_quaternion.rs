@@ -47,6 +47,7 @@ fn setup(
     let indices = Some(CubeBuilder::indices_meta());
     let state = base::instance_attr(false, false, false);
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
+    actions.transform.localsrt.push(OpsTransformNodeLocal(source, ETransformSRT::Scaling(5., 5., 5.)));
 
     let idmat = defaultmat.0;
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));

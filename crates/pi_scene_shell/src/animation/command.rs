@@ -199,6 +199,7 @@ pub struct ActionSetAnimationGroup<'w> {
     pub action: ResMut<'w, ActionListAnimationGroupAction>,
     pub dispose: ResMut<'w, ActionListAnimeGroupDispose>,
     pub reset_while_start: ResMut<'w, ActionListAnimeGroupStartReset>,
+    pub goto: ResMut<'w, ActionListAnimationGroupGoto>,
 }
 
 #[derive(SystemParam)]

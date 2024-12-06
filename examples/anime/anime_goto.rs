@@ -12,7 +12,7 @@ use pi_scene_math::*;
 use pi_mesh_builder::cube::*;
 use unlit_material::*;
 
-use std::{ mem::replace, ops::DerefMut};
+use std::{ mem::replace, ops::DerefMut, time::Duration};
 
 #[path = "../base.rs"]
 mod base;
@@ -28,6 +28,7 @@ fn setup(
     mut anime_contexts: TypeAnimeContexts,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
     demooption: Res<base::DemoOption>,
+    mut testanime: ResMut<TestAnimeGroup>,
 ) {
     let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
         (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
@@ -89,12 +90,26 @@ fn setup(
     }
 
     let parma = AnimationGroupParam::default();
-    actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, parma, 0., pi_animation::base::EFillMode::NONE));
-    // engine.start_animation_group(source, &key_group, 1.0, ELoopMode::OppositePly(None), 0., 1., 60, AnimationAmountCalc::default());
+    // actions.anime.action.push(OpsAnimationGroupAction::Start(id_group.clone(), parma, 0., pi_animation::base::EFillMode::NONE));
+    testanime.0 = Some((scene, id_group, pi_time::Instant::now()));
 
 }
 
 pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;
+
+#[derive(Resource)]
+pub struct TestAnimeGroup(Option<(Entity, Entity, pi_time::Instant)>);
+
+fn sys_anime_goto(
+    mut actions: ResMut<ActionListAnimtionGroupGoto>,
+    item: Res<TestAnimeGroup>,
+) {
+    if let Some((scene, animegroup, starttime)) = &item.0 {
+        let amount = (pi_time::Instant::now() - *starttime).as_secs_f32().fract();
+        log::error!("{}", amount);
+        actions.push(AnimtionGroupGoto::ops(animegroup.clone(), amount));
+    }
+}
 
 pub struct PluginTest;
 impl Plugin for PluginTest {
@@ -122,9 +137,11 @@ pub fn main() {
         camera_position: (0., 0., -10.),
         ..Default::default()
     });
+    app.insert_resource(TestAnimeGroup(None));
     app.add_startup_system(Update, base::setup_demoinit);
 
     app.add_plugins(PluginTest);
+
     
         #[cfg(feature = "use_bevy")]
     app.add_systems(Startup, setup.after(base::setup_default_mat));
@@ -133,6 +150,7 @@ pub fn main() {
     
 
     app.add_systems(Update, sys_anime_event.in_set(ERunStageChap::Anime));
+    app.add_systems(Update, sys_anime_goto.in_set(ERunStageChap::AnimeAmount));
     
     // app.run()
     crate::base::run_loop(app, window, event_loop)

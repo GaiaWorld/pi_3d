@@ -15,6 +15,7 @@ pub struct PluginSceneAnimation;
 impl Plugin for PluginSceneAnimation {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListPropertyTargetAnimation::default());
+        app.insert_resource(ActionListAnimationGroupGoto::default());
 
         app
         .add_systems(Update, sys_scene_anime_ctx.in_set(EStageAnimation::Running))

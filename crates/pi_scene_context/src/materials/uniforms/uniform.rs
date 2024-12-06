@@ -230,4 +230,7 @@ impl BindEffectValues {
     pub fn log(&self) {
         // log::error!("{:?}", &self.offsets);
     }
+    pub fn data(&self) -> &[u8] {
+        &self.bytes
+    }
 }

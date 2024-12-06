@@ -10,22 +10,17 @@ use crate::{
 };
 
 pub fn sys_scene_anime_ctx(
-    mut scenes: Query<(Entity, &SceneTime, &SceneAnimationEnable)>,
+    mut scenes: Query<(Entity, &SceneTime, &SceneAnimationEnable, &mut SceneAnimationContext, &mut SceneAnimationGroupGoto)>,
     mut animeglobal: ResMut<GlobalAnimeAbout>,
-    mut scenectxs: Query<&mut SceneAnimationContext>,
     mut animeevents: ResMut<GlobalAnimeEvents>,
     mut performance: ResMut<Performance>,
 ) {
     if performance.debug { performance.t_animationgroup = pi_time::Instant::now(); }
 
     animeglobal.runtimeinfos.reset();
-    scenes.iter_mut().for_each(|(id_scene, scene_time, enable)| {
+    scenes.iter_mut().for_each(|(id_scene, scene_time, enable, mut ctx, mut animegoto)| {
 
         if enable.0 == false { return; }
-
-        let mut ctx = if let Ok(ctx) = scenectxs.get_mut(id_scene) {
-            ctx
-        } else { return; };
 
         // ctx.0.anime_curve_calc(scene_time.delta_ms, &mut runtimeinfos.runtimeinfos);
         {
@@ -40,8 +35,9 @@ pub fn sys_scene_anime_ctx(
 
                 if group_info.is_playing == true {
                     let group_mgr = &mut ctx.group_mgr;
-                    let group = group_mgr.get_mut(id_group).unwrap();
-                    group.anime(&mut animeglobal.runtimeinfos, delta_ms, group_info);
+                    if let Some(group) = group_mgr.get_mut(id_group) {
+                        group.anime(&mut animeglobal.runtimeinfos, delta_ms, group_info);
+                    }
                 }
 
                 if let Some((idobj, frameevents, listen)) = animeglobal.group_records.get(&id_group) {
@@ -67,8 +63,13 @@ pub fn sys_scene_anime_ctx(
                     }
                 };
             }
-        }
 
+            animegoto.drain().for_each(|(idgroup, amount)| {
+                if let (Some(group_info), Some(group)) = (ctx.group_infos.get_mut(idgroup.0), ctx.group_mgr.get(idgroup.0)) {
+                    group.goto_progress(amount, &mut animeglobal.runtimeinfos, group_info);
+                }
+            });
+        }
     });
 
     if performance.debug { performance.animationgroup = (pi_time::Instant::now() - performance.t_animationgroup).as_micros() as u32; }

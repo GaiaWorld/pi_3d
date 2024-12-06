@@ -1,4 +1,4 @@
-use crate::ecs::*;
+use crate::{ecs::*, prelude::ActionList};
 
 use std::hash::Hash;
 
@@ -79,7 +79,7 @@ impl TagGroupListen {
 pub type AnimeFrameEventData = u32;
 
 /// 记录动画组的 Key
-#[derive(Component, Default)]
+#[derive(Component, Default, Clone)]
 pub struct AnimationGroupKey(pub DefaultKey);
 
 /// 记录动画组的 所属场景
@@ -102,7 +102,9 @@ pub struct AnimatorableAttribute;
 /// 记录动画运行相关数据
 #[derive(Resource)]
 pub struct GlobalAnimeAbout {
+    // 动画数据类型的 ID 分配器 - 固定的，一种数据一次分配始终固定
     pub ty_alloc: KeyFrameDataTypeAllocator,
+    // 动画组执行后会向 runtimeinfos 装载运行数据, 之后会在各数据类型的动画插值中使用
     pub runtimeinfos: pi_animation::runtime_info::RuntimeInfoMap<Entity>,
     pub dispose_animationgroups: Vec<(Entity, AnimationGroupID)>,
     pub group_records: XHashMap<AnimationGroupID, (Entity, CurveFrameEvent<AnimeFrameEventData>, u8)>,
@@ -149,6 +151,17 @@ pub struct GlobalAnimeEvents(pub Vec<(Entity, Entity, u8, u32)>);
 /// 记录动画目标非动画修改的值,用于动画结束或启动时重置目标属性
 #[derive(Resource, Deref, DerefMut, Default)]
 pub struct AnimeTargetRecordValues<V: TAnimatableComp>(pub XHashMap<Entity, V>);
+
+pub struct AnimationGroupGoto(pub Entity, pub KeyFrameCurveValue);
+impl AnimationGroupGoto {
+    pub fn ops(animegroup: Entity, amount: KeyFrameCurveValue) -> Self {
+        Self(animegroup, amount)
+    }
+}
+pub type ActionListAnimationGroupGoto = ActionList<AnimationGroupGoto>;
+
+#[derive(Component, Deref, DerefMut, Default)]
+pub struct SceneAnimationGroupGoto(pub ActionList<(AnimationGroupKey, KeyFrameCurveValue)>);
 
 /// 记录场景中的动画组运行数据
 #[derive(Component)]

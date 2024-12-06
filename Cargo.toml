@@ -1,6 +1,6 @@
 [package]
 name = "pi_3d"
-version = "1.0.4"
+version = "1.0.5"
 authors = ["baip0002 <2494156981@qq.com>"]
 edition = "2021"
 description = "3D Framework for Scene."
@@ -113,6 +113,7 @@ pi_postprocess      = { version = "0.1", registry = "yn" }
 pi_gltf             = { path = "../pi_gltf", features = ["extras"] }
 env_logger          = "0.9"
 # pi_wgpu         = { version = "*", features = ["single_thread", "use_wgpu"] }
+pi_time             = "0.3"
 
 [profile.release]
 # debug = true
@@ -226,6 +227,11 @@ path = "examples/anime/01.rs"
 [[example]]
 name = "anime_rotation"
 path = "examples/anime/02.rs"
+
+[[example]]
+name = "anime_goto"
+path = "examples/anime/anime_goto.rs"
+
 [[example]]
 name = "anime_color"
 path = "examples/anime/color.rs"

@@ -82,6 +82,9 @@ pub fn sys_act_scene_ambient(
     targets: Res<CustomRenderTargets>,
     mut env_scenes: Query<&mut EnvTextureSlot>,
     mut shadow_scenes: Query<&mut SceneShadowRenderTarget>,
+    mut sceneanimegoto: Query<&mut SceneAnimationGroupGoto>,
+    mut cmds_animegoto: ResMut<ActionListAnimationGroupGoto>,
+    animegroup: Query<(&AnimationGroupKey, &AnimationGroupScene)>,
 ) {
     cmds_ambient.drain().for_each(|OpsSceneOption(entity, val)| {
         match val {
@@ -123,6 +126,14 @@ pub fn sys_act_scene_ambient(
             },
         }
     });
+
+    cmds_animegoto.drain().for_each(|cmd| {
+        if let Ok((group, scene)) = animegroup.get(cmd.0) {
+            if let Ok(mut cmds) = sceneanimegoto.get_mut(scene.0) {
+                cmds.push((group.clone(), cmd.1));
+            }
+        }
+    });
 }
 
 pub type BundleScene = (
@@ -135,6 +146,7 @@ pub type BundleScene = (
         SceneFog,
         AmbientColor,
         SceneAnimationEnable,
+        SceneAnimationGroupGoto,
     ),
     (
         SceneDirectLightsQueue,
@@ -187,6 +199,7 @@ impl ActionScene {
                 SceneFog { param: FogParam::None, r: 1., g: 1., b: 1. },
                 AmbientColor(0., 0., 0., 0.),
                 SceneAnimationEnable::default(),
+                SceneAnimationGroupGoto::default(),
             ),
             (
                 SceneDirectLightsQueue(SceneItemsQueue::new(lightlimit.max_direct_light_count as u32)),

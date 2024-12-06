@@ -5,7 +5,7 @@ use pi_gltf2_load::{GLTFResLoader, GLTF};
 use pi_node_materials::prelude::*;
 use pi_particle_system::prelude::{ParticleSystemPerformance, ActionSetParticleSystem, ResourceParticleSystem};
 use pi_scene_context::{
-    animation::PluginSceneAnimation, cameras::PluginCamera, cullings::PluginCulling, geometry::{instance::instanced_buffer::*, PluginGeometry}, layer_mask::PluginLayerMask, light::PluginLighting, materials::PluginGroupMaterial, meshes::PluginMesh, prelude::*, renderers::PluginRenderer, scene::PluginScene, shadow::PluginShadowGenerator, skeleton::PluginSkeleton, transforms::{transform_node_sys::{TmpTransformWorldCalc0, TmpTransformWorldCalc1}, PluginGroupTransformNode}, viewer::PluginViewerBase
+    animation::PluginSceneAnimation, cameras::PluginCamera, cullings::PluginCulling, geometry::{instance::{instanced_buffer::*, types::ModelInstanceAttributes}, PluginGeometry}, layer_mask::PluginLayerMask, light::PluginLighting, materials::PluginGroupMaterial, meshes::PluginMesh, prelude::*, renderers::PluginRenderer, scene::PluginScene, shadow::PluginShadowGenerator, skeleton::PluginSkeleton, transforms::{transform_node_sys::{TmpTransformWorldCalc0, TmpTransformWorldCalc1}, PluginGroupTransformNode}, viewer::PluginViewerBase
 };
 use pi_trail_renderer::{ActionSetTrailRenderer, ResTrailBuffer};
 
@@ -81,16 +81,35 @@ pub fn sys_state_resource(
     ),
     renderers: Query<&Renderer>,
     performance: Res<Performance>,
+    instancedatas: Query<&ModelInstanceAttributes>,
+    instancesource: Query<&InstancedMeshTransparentSortCollection>,
+    combinebuffer: Res<CombineBuffer>,
+    materials: Query<&BindEffect>,
 ) {
     // if performance.debug == false { return };
+    let mut instancedatalen = 0;
+    instancedatas.iter().for_each(|item| {
+        instancedatalen += item.bytes().len();
+    });
+    instancesource.iter().for_each(|item| {
+        instancedatalen += item.data.len();
+    });
+    instancedatalen += combinebuffer.data.size();
+
+    let mut materialdata = 0;
+    materials.iter().for_each(|item| {
+        if let Some(item) = &item.0 {
+            materialdata += item.data().len();
+        }
+    });
 
     stateglobal.count_gltf              = asset_gltf.len();
     stateglobal.count_bindbuffer        = bindbuffers.asset_mgr().len();
-    stateglobal.mem_bindbuffer          = bindbuffers.asset_mgr().size();
+    stateglobal.mem_bindbuffer          = bindbuffers.asset_mgr().size() + materialdata;
     stateglobal.count_bindgroup         = asset_mgr_bindgroup.0.len();
     stateglobal.count_pipeline          = pipelines.len();
     stateglobal.count_geometrybuffer    = vertexbuffers.total_buffer_count();
-    stateglobal.size_geometrybuffer     = vertexbuffers.total_buffer_size();
+    stateglobal.size_geometrybuffer     = vertexbuffers.total_buffer_size() + instancedatalen as u64;
     stateglobal.count_shader            = shaders.len();
     stateglobal.mem_shader              = shaders.size();
     stateglobal.count_imgtexture        = imagetextures.len();
