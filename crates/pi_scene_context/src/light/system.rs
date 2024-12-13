@@ -29,7 +29,9 @@ pub fn sys_light_update(
         Or<(Changed<LightParam>, Changed<LayerMask>, Changed<GlobalMatrix>, Changed<GlobalEnable>)>
     >,
     scenes: Query<&SceneLightingInfos>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_light_update"));
     items.iter().for_each(|(_, idscene, lidx, param, wm, layer, enabled, direction)| {
         if let Ok(info) = scenes.get(idscene.0) {
             let mut gdirection = Vector3::zeros();
@@ -62,10 +64,12 @@ pub fn sys_light_update(
 
 pub fn sys_dispose_about_light(
     items: Query<(Entity, &DisposeReady, &SceneID, &SceneItemIndex, &LightParam), Changed<DisposeReady>>,
-    mut disposecanlist: ResMut<ActionListDisposeCan>,
     mut scenes: Query<(&mut SceneDirectLightsQueue, &mut SceneOtherLightsQueue)>,
     _empty: Res<SingleEmptyEntity>,
+    mut disposecan: Query<&mut DisposeCan>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_dispose_about_light"));
     items.iter().for_each(|(entity, state, idscene, lightindex, _)| {
         if state.0 == false { return; }
 
@@ -76,6 +80,6 @@ pub fn sys_dispose_about_light(
             queuepoint.hemi.recycle(lightindex, &entity);
         }
 
-        disposecanlist.push(OpsDisposeCan::ops(entity));
+        if let Ok(mut dispose) = disposecan.get_mut(entity) { dispose.0 = true; }
     });
 }

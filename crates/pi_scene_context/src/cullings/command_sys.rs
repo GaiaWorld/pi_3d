@@ -1,4 +1,4 @@
-use pi_scene_shell::prelude::{Commands, Query, Res, ResMut, TEntityCommands};
+use pi_scene_shell::prelude::*;
 
 use crate::materials::prelude::{SingleIDBaseDefaultMaterial, ActionListMaterialUse, OpsMaterialUse};
 
@@ -7,7 +7,9 @@ use super::{base::*, command::*, ActionListCollider, OpsCollider};
 pub fn sys_act_collider(
     mut cmds: ResMut<ActionListCollider>,
     mut commands: Commands,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_act_collider"));
     cmds.drain().for_each(|OpsCollider(entity, min, max, intersection_treshold)| {
         if let Some(mut cmd) = commands.get_entity(entity) {
             cmd.insert(Collider { minimum: min, maximum: max, intersection_treshold })
@@ -22,7 +24,9 @@ pub fn sys_act_mesh_bounding(
     mut display_scenes: Query<&mut BoundingBoxDisplay>,
     mut display_matuse: ResMut<ActionListMaterialUse>,
     deafultmat: Res<SingleIDBaseDefaultMaterial>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_act_mesh_bounding"));
     cmds.drain().for_each(|OpsMeshBounding(entity, min, max)| {
         if let Ok((mut item, mut flag)) = items.get_mut(entity) {
             item.minimum.copy_from(&min);

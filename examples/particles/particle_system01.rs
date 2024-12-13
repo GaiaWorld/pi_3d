@@ -227,9 +227,9 @@ pub fn main() {
     app.add_startup_system(Update, base::setup_demoinit);
 
     app.add_plugins(PluginTest);
-    app.add_systems(Update, pi_3d::sys_info_node.in_set(StageScene::Create));
-    app.add_systems(Update, pi_3d::sys_info_draw.in_set(StageScene::Create));
-    app.add_systems(Update, pi_3d::sys_info_resource.in_set(StageScene::Create));
+    app.add_systems(Update, pi_3d::sys_info_node.in_set(StageScene::SceneCreate));
+    app.add_systems(Update, pi_3d::sys_info_draw.in_set(StageScene::SceneCreate));
+    app.add_systems(Update, pi_3d::sys_info_resource.in_set(StageScene::SceneCreate));
 
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
     

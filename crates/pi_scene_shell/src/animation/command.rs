@@ -1,4 +1,4 @@
-use crate::ecs::*;
+use crate::{ecs::*, prelude::MemSize};
 
 use derive_deref::Deref;
 use pi_animation::{loop_mode::ELoopMode, amount::AnimationAmountCalc, animation::AnimationInfo};
@@ -200,6 +200,15 @@ pub struct ActionSetAnimationGroup<'w> {
     pub dispose: ResMut<'w, ActionListAnimeGroupDispose>,
     pub reset_while_start: ResMut<'w, ActionListAnimeGroupStartReset>,
     pub goto: ResMut<'w, ActionListAnimationGroupGoto>,
+}
+impl<'w> MemSize for ActionSetAnimationGroup<'w> {
+    fn memsize(&self) -> usize {
+        self.create.memsize()
+        + self.action.memsize()
+        + self.dispose.memsize()
+        + self.reset_while_start.memsize()
+        + self.goto.memsize()
+    }
 }
 
 #[derive(SystemParam)]

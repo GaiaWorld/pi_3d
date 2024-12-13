@@ -10,7 +10,9 @@ pub fn sys_create_pass_object(
     models: Query<& PassIDs>,
     mut passes: Query<(&mut PassReset, &mut PassDrawDirty, &mut PassModelID, &mut PassMaterialID, &mut PassPipelineStateDirty, &mut PassBindGroupsDirty)>,
     // mut alter: Alter<(), (), PassObjBundle, ()>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_create_pass_object"));
     cmds.drain().for_each(|OpsPassObject(idmodel, idmaterial, pass)| {
         if let Ok(passid) = models.get(idmodel) {
             let id_pass = passid.0[pass.index()];
@@ -39,7 +41,9 @@ pub fn sys_act_pass_object(
     models: Query<&PassIDs>,
     mut items: Query<&mut RenderState>,
     mut itemsqueue: Query<&mut RenderQueueSortParam>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_act_pass_object"));
     cmds.drain().for_each(|cmd| {
         match cmd {
             OpsRenderState::RenderQueue(entity, val) => {

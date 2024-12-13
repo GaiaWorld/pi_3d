@@ -188,7 +188,7 @@ pub fn sys_shadow_bind_modify(
 pub fn sys_dispose_about_shadowcaster(
     items: Query<(Entity, &DisposeReady, &SceneID, &SceneItemIndex, &LinkedMaterialID), (Changed<DisposeReady>, With<ShadowCastPassTag>)>,
     mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
-    mut disposecanlist: ResMut<ActionListDisposeCan>,
+    mut disposecan: Query<&mut DisposeCan>,
     mut scenes: Query< &mut SceneShadowQueue >,
     _empty: Res<SingleEmptyEntity>,
 ) {
@@ -201,9 +201,8 @@ pub fn sys_dispose_about_shadowcaster(
 
         disposereadylist.push(OpsDisposeReadyForRef::ops(idmaterial.0));
 
-        disposecanlist.push(OpsDisposeCan::ops(entity));
+        if let Ok(mut dispose) = disposecan.get_mut(entity) { dispose.0 = true };
     });
-
 }
 
 pub fn sys_update_shadow_viewer_model_list_by_viewer<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(

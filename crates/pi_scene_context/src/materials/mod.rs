@@ -2,7 +2,7 @@
 use pi_scene_shell::prelude::*;
 
 
-use crate::{object::sys_dispose_ready, prelude::StageModel, shadow::prelude::*};
+use crate::{object::sys_dispose_ready, prelude::StageModel, scene::StageScene, shadow::prelude::*};
 
 use self::{
     command::*,
@@ -36,9 +36,9 @@ impl Plugin for PluginMaterial {
             app.insert_resource(StateTextureLoader::default());
             app.insert_resource(ImageTextureViewLoader2::default());
 
-            app.configure_set(Update, StageTextureLoad::TextureRequest.in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(ERunStageChap::New));
-            app.configure_set(Update, StageTextureLoad::TextureLoading.in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageTextureLoad::TextureRequest));
-            app.configure_set(Update, StageTextureLoad::TextureLoaded .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoading).before(ERunStageChap::Uniform));
+            app.configure_set(Update, StageTextureLoad::TextureRequest.in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(ERunStageChap::New));
+            app.configure_set(Update, StageTextureLoad::TextureLoading.in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageTextureLoad::TextureRequest));
+            app.configure_set(Update, StageTextureLoad::TextureLoaded .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare));
 
 #[cfg(feature = "use_bevy")]
             app.add_systems(
@@ -123,10 +123,11 @@ impl Plugin for PluginMaterial {
         app.insert_resource(ActionListUniformValB::default());
         app.insert_resource(StateMaterial::default());
 
-        app.configure_set(Update, StageMaterial::Create .in_set(ERunStageChap::D3).after(StageShadowGenerator::_Create).after(StageModel::_InitMesh));
-        app.configure_set(Update, StageMaterial::_Init  .in_set(ERunStageChap::D3).after(StageMaterial::Create));
-        app.configure_set(Update, StageMaterial::Command.in_set(ERunStageChap::D3).after(StageMaterial::_Init).before(StageTextureLoad::TextureRequest).before(EStageAnimation::Create).before(EStageAnimation::Running));
-        app.configure_set(Update, StageMaterial::Ready  .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageMaterial::Command).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageMaterial::MatCreate     .in_set(ERunStageChap::Create).after(StageShadowGenerator::_ShadowCreate).after(StageModel::_InitMesh));
+        app.configure_set(Update, StageMaterial::_MatCreate    .in_set(ERunStageChap::Create).after(StageMaterial::MatCreate).before(ERunStageChap::Dispose));
+        app.configure_set(Update, StageMaterial::MatCommand    .in_set(ERunStageChap::Modify).before(StageTextureLoad::TextureRequest).before(EStageAnimation::Create).before(EStageAnimation::Running));
+        app.configure_set(Update, StageMaterial::MatReady      .in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoaded));
+        app.configure_set(Update, StageMaterial::MatDispose     .in_set(ERunStageChap::Dispose).before(StageScene::SceneDispose));
 
 #[cfg(feature = "use_bevy")]
         app.add_systems(
@@ -134,17 +135,17 @@ impl Plugin for PluginMaterial {
             (
                 (
                     sys_create_material,
-                ).in_set(StageMaterial::Create),
-                apply_deferred.in_set(StageMaterial::_Init),
+                ).in_set(StageMaterial::MatCreate),
+                apply_deferred.in_set(StageMaterial::_MatCreate),
                 (
                     sys_act_material_use,
                     sys_act_material_value,
                     sys_material_textures_modify,
-                ).chain().in_set(StageMaterial::Command),
+                ).chain().in_set(StageMaterial::MatCommand),
                 (
                     sys_texture_ready,
-                ).chain().in_set(StageMaterial::Ready),
-                sys_material_uniform_apply.in_set(ERunStageChap::Uniform),
+                ).chain().in_set(StageMaterial::MatReady),
+                sys_material_uniform_apply.in_set(ERunStageChap::Collect),
                 sys_dispose_about_material.after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
             )
         );
@@ -153,21 +154,21 @@ impl Plugin for PluginMaterial {
         app
             .add_systems(Update, sys_create_material
                 // .run_if(runif_acts::<OpsMaterialCreate>)             
-                .in_set(StageMaterial::Create) )
+                .in_set(StageMaterial::MatCreate) )
             .add_systems(Update, sys_act_material_use
                 // .run_if(runif_acts::<OpsMaterialUse>)                               
-                .in_set(StageMaterial::Command) )
-            .add_systems(Update, sys_act_material_value                  .after(sys_act_material_use)   .in_set(StageMaterial::Command) )
+                .in_set(StageMaterial::MatCommand) )
+            .add_systems(Update, sys_act_material_value                  .after(sys_act_material_use)   .in_set(StageMaterial::MatCommand) )
             .add_systems(Update, sys_material_textures_modify
                 // .run_if(runif_comp::<UniformTextureWithSamplerParamsDirty>)
-                .after(sys_act_material_value)                .in_set(StageMaterial::Command) )
+                .after(sys_act_material_value)                .in_set(StageMaterial::MatCommand) )
             .add_systems(Update, sys_texture_ready
                 // .run_if(runif_comp::<EffectBindTexture2DList>)
-                .in_set(StageMaterial::Ready) )
+                .in_set(StageMaterial::MatReady) )
             .add_systems(Update, sys_material_uniform_apply
                 // .run_if(runif_comp::<TargetAnimatorableIsRunning>)
-                .in_set(ERunStageChap::Uniform) )
-            .add_systems(Update, sys_dispose_about_material          .after(sys_dispose_ready)   .in_set(ERunStageChap::Dispose) )
+                .in_set(ERunStageChap::Collect) )
+            .add_systems(Update, sys_dispose_about_material          .after(sys_dispose_ready)   .in_set(StageMaterial::MatDispose) )
             ;
 
     }

@@ -137,6 +137,7 @@ impl DemoScene {
         atlas_allocator: &PiSafeAtlasAllocator,
         camera_size: f32,
         camera_fov: f32,
+        camera_nearfar: (f32, f32),
         camera_position: (f32, f32, f32),
         orthographic_camera: bool
     ) -> Self {
@@ -163,7 +164,7 @@ impl DemoScene {
         actions.camera.param.push(OpsCameraModify::ops( camera, ECameraModify::OrthSize( camera_size )));
         actions.camera.param.push(OpsCameraModify::ops( camera, ECameraModify::Fov( camera_fov )));
         actions.camera.param.push(OpsCameraModify::ops( camera, ECameraModify::Aspect( 800. / 600. )) );
-        actions.camera.param.push(OpsCameraModify::ops( camera, ECameraModify::NearFar( 0.1,  100.)));
+        actions.camera.param.push(OpsCameraModify::ops( camera, ECameraModify::NearFar( camera_nearfar.0,  camera_nearfar.1)));
         actions.camera.target.push(OpsCameraTarget::ops(camera, 0., -1., 1.));
 
         let opaque_renderer = commands.spawn_empty_id(); actions.renderer.create.push(OpsRendererCreate::ops(opaque_renderer, String::from("TestCameraOpaque"), camera, DemoScene::PASS_OPAQUE, false));
@@ -237,7 +238,7 @@ impl Plugin for PluginSceneTimeFromPluginFrame {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            sys_scene_time_from_frame.after(pi_scene_shell::frame_time::sys_frame_time).in_set(StageScene::Create)
+            sys_scene_time_from_frame.after(pi_scene_shell::frame_time::sys_frame_time).in_set(StageScene::SceneCreate)
         );
     }
 }
@@ -249,6 +250,7 @@ pub struct DemoOption {
     pub orthographic_camera: bool,
     pub camera_fov: f32,
     pub camera_size: f32,
+    pub camera_nearfar: (f32, f32),
     pub camera_position: (f32, f32, f32),
     pub demo: Option<DemoScene>,
     pub copyrenderer: Option<Entity>,
@@ -262,6 +264,7 @@ impl Default for DemoOption {
             orthographic_camera: true,
             camera_fov: 0.7,
             camera_size: 1.0,
+            camera_nearfar: (1., 1001.),
             camera_position: (0., 10., -40.),
             demo: None,
             copyrenderer: None,
@@ -289,10 +292,10 @@ pub fn setup_demoinit(
     ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(ShaderWater::KEY), ShaderWater::meta(&mut nodematblocks, &engineopt));
     ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(ShaderPreDepth::KEY), ShaderPreDepth::meta(&mut nodematblocks, &engineopt));
 
-    errors.1 = true;
+    // errors.1 = true;
     let demopass = DemoScene::new(&mut commands, &mut actions, &mut animegroupres, 
         &mut assets.0, &assets.1, &assets.2, &assets.3,
-        demooption.camera_size, demooption.camera_fov, demooption.camera_position, demooption.orthographic_camera
+        demooption.camera_size, demooption.camera_fov, demooption.camera_nearfar, demooption.camera_position, demooption.orthographic_camera
     );
     let (scene, camera01) = (demopass.scene, demopass.camera);
 
@@ -638,6 +641,9 @@ pub fn run_loop<T>(mut app:  App, window: Arc<Window>, event_loop: EventLoop<T>)
                 window.request_redraw();
             },
             pi_winit::event::Event::RedrawRequested(_) => {
+    
+                #[cfg(feature = "dhat-heap")]
+                let _profiler = dhat::Profiler::new_heap();
                 app.update();
             },
             pi_winit::event::Event::RedrawEventsCleared => {},

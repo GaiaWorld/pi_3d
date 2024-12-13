@@ -398,8 +398,8 @@ pub fn main() {
     #[cfg(not(feature = "use_bevy"))]
     app.add_startup_system(Update, setup.after(base::setup_default_mat));
     
-    app.add_systems(Update, sys_anime_event.in_set(ERunStageChap::Anime));
-    app.add_systems(Update, sys_sub_texture.in_set(ERunStageChap::Anime));
+    app.add_systems(Update, sys_anime_event.in_set(ERunStageChap::Modify));
+    app.add_systems(Update, sys_sub_texture.in_set(ERunStageChap::Modify));
 
     app.world.insert_resource(ResDemoTex { tex: None, counter: 0 });
     

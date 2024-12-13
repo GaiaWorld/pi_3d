@@ -24,4 +24,8 @@ pub struct ActionSetScene<'w> {
     pub boundingboxdisplay: ResMut<'w, ActionListBoundingBoxDisplay>,
     pub collider: ResMut<'w, ActionListCollider>,
 }
-
+impl<'w> MemSize for ActionSetScene<'w> {
+    fn memsize(&self) -> usize {
+        self.create.memsize() + self.options.memsize() + self.boundingboxdisplay.memsize() + self.collider.memsize()
+    }
+}

@@ -6,12 +6,13 @@ use super::vertex_buffer_useinfo::TVertexBufferUseInfo;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
 pub enum StageGeometry {
-    Create,
+    GeoCreate,
     _GeoCreate,
     VertexBufferLoaded,
     _VertexBufferLoadedApply,
     GeometryLoaded,
-    Upload,
+    GeoUpload,
+    GeoDispose,
 }
 
 /// 用于标识 Mesh 的网格数据是否就绪

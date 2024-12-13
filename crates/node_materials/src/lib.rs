@@ -38,6 +38,15 @@ impl NodeMaterialBlocks {
         self.0.insert(Atom::from(T::KEY), T::info());
     }
 }
+impl MemSize for NodeMaterialBlocks {
+    fn memsize(&self) -> usize {
+        let mut result = 0;
+        self.0.iter().for_each(|(_, item)| {
+            result += item.memsize() + 8;
+        });
+        result
+    }
+}
 
 pub struct PluginNodeMaterial;
 impl Plugin for PluginNodeMaterial {

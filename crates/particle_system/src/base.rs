@@ -21,6 +21,7 @@ pub enum StageParticleSystem {
     ParticleSysCalc,
     ParticleSysMatrix,
     ParticleSysUpdate,
+    ParticleSysDispose,
 }
 
 pub type IdxParticle = usize;

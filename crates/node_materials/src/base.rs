@@ -98,6 +98,24 @@ pub struct NodeMaterialBlockInfo {
     /// 依赖的 语言转换块 - 一般不使用
     pub shader_language_defines: TShaderLanguageDefine,
 }
+impl MemSize for NodeMaterialBlockInfo {
+    fn memsize(&self) -> usize {
+        self.fs_define.capacity()
+        + self.vs_define.capacity()
+        + self.fs_surface.capacity()
+        + self.vs_surface.capacity()
+        + self.mat4.capacity() * (16 + 4) * 4
+        + self.vec4.capacity() * (2 + 4) * 4
+        + self.vec3.capacity() * (3 + 4) * 4
+        + self.vec2.capacity() * (2 + 4) * 4
+        + self.float.capacity() * 16
+        + self.uint.capacity() * 16
+        + self.textures.capacity() * 16
+        + self.varyings.capacity() * 16
+        + self.depends.capacity() * 16
+        + 16
+    }
+}
 
 pub struct NodeMaterialBuilder {
     pub blocks: XHashSet<Atom>,

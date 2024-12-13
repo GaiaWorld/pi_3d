@@ -9,7 +9,9 @@ pub fn sys_act_layer_mask(
     mut cmds: ResMut<ActionListLayerMask>,
     mut nodes: Query<&mut LayerMask>,
     mut meshes: Query<&mut FlagMeshNeedRecheckForView>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_act_layer_mask"));
     cmds.drain().for_each(|OpsLayerMask(entity, layermask)| {
         if let Ok(mut node) = nodes.get_mut(entity) {
             if *node != layermask {

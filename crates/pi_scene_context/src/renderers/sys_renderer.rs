@@ -25,7 +25,9 @@ use super::{
         asset_mgr_bindgroup: Res<ShareAssetMgr<BindGroup>>,
         bindpassindexs: Res<BindPassIndexPool>,
         mut errors: ResMut<ErrorRecord>,
+        // mut performance: ResMut<Performance>,
     ) {
+        // performance.systems.push(String::from("sys_pass_bind_groups"));
         addeds.iter().chain(changes.iter()).for_each(|entity| {
             if let Ok((_id_pass, idmodel, idmat, idrenderer, mut bindgroups, mut flag, passidx)) = passes.get_mut(*entity) {
                 let (idscene, idviewer) = if let Ok((idscene, idviewer)) = renderers.get(idrenderer.0) {
@@ -148,6 +150,8 @@ use super::{
                         *flag = PassFlagShader;
                     }
                 }
+            } else {
+                // log::error!("Bindgroups Fail Pass");
             }
         });
     }
@@ -483,6 +487,7 @@ use super::{
         mut combinebuffer: ResMut<CombineBuffer>,
         engineopt: Res<EngineCustomPlugins>,
     ) {
+        // performance.systems.push(String::from("sys_renderer_draws_modify"));
         if performance.debug { performance.t_drawobjs = pi_time::Instant::now(); }
 
         let mut opaque_list: Vec<DrawTmpRef> = Vec::with_capacity(4096);

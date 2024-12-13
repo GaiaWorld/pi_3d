@@ -19,11 +19,12 @@ pub use super::uniforms::{
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
 pub enum StageMaterial {
-    Create,
-    _Init,
-    Use,
-    Command,
-    Ready,
+    MatCreate,
+    _MatCreate,
+    MatUse,
+    MatCommand,
+    MatReady,
+    MatDispose,
 }
 
 #[derive(Resource, Default)]
@@ -53,6 +54,14 @@ pub struct ActionSetMaterial<'w> {
     pub val: ResMut<'w, ActionListUniformVal>,
     pub valb: ResMut<'w, ActionListUniformValB>,
 }
+impl<'w> MemSize for ActionSetMaterial<'w> {
+    fn memsize(&self) -> usize {
+        self.usemat.memsize()
+        + self.create.memsize()
+        + self.val.memsize()
+        + self.valb.memsize()
+    }
+}
 
 #[cfg(feature = "use_bevy")]
 pub type StateMaterialQuery = QueryState<(&'static AssetResShaderEffectMeta, &'static EffectTextureSamplersComp)>;
@@ -62,7 +71,9 @@ pub type StateMaterialQuery = QueryState<(&'static AssetResShaderEffectMeta, &'s
 pub fn sys_state_material(
     mut state: ResMut<StateMaterial>,
     materials: Query<(&AssetResShaderEffectMeta, &EffectTextureSamplersComp)>,
+    mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_state_material"));
     state.count = 0;
     state.count_ready = 0;
 

@@ -144,7 +144,9 @@ pub fn sys_texture_ready(
             , &mut EffectTextureSamplersComp
         )
     >,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_texture_ready"));
     changes.iter().for_each(|entity| {
         if let Ok((
             _entity, binddesc, keys
@@ -177,20 +179,21 @@ pub fn sys_texture_ready(
 
 pub fn sys_dispose_about_material(
     items: Query<(Entity, &DisposeReady, &MaterialRefs, &BindEffect), Changed<DisposeReady>>,
-    mut _disposereadylist: ResMut<ActionListDisposeReadyForRef>,
-    mut disposecanlist: ResMut<ActionListDisposeCan>,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
+    mut disposecan: Query<&mut DisposeCan>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_dispose_about_material"));
     items.iter().for_each(|(entity, state, refs, bind)| {
         if defaultmat.0 == entity || state.0 == false { return; }
 
         if refs.is_empty() {
-            disposecanlist.push(OpsDisposeCan::ops(entity));
+            if let Ok(mut dispose) = disposecan.get_mut(entity) { dispose.0 = true; }
             if let Some(bind) = &bind.0 {
                 bind.uniforms().iter().for_each(|v| {
                     if let Some(entity) = v.1.entity() {
                         // log::error!("AAAA {:?}", (entity));
-                        disposecanlist.push(OpsDisposeCan::ops(entity));
+                        if let Ok(mut dispose) = disposecan.get_mut(entity) { dispose.0 = true; }
                     }
                 });
             }

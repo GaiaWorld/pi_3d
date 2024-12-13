@@ -98,10 +98,10 @@ pub fn sys_create_mesh(
     mut altermodel: Alter<(), (), (BundleModel, BindModel, BindModelMatIdx, ModelMatIdxs, PassIDs, ModelStatic), ()>,
     mut passinsert: Insert<(BundleEntity, PassObjInitBundle, PassTag)>,
     engineopt: Res<EngineCustomPlugins>,
-    // mut insert: Insert<PassObjBundle>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_create_mesh"));
     // let time1 = pi_time::Instant::now();
-    let mut count = 0;
     cmds.drain().for_each(|OpsMeshCreation(scene, entity, state )| {
         // log::error!("Create Mesh");
         // if ActionMesh::init(&mut commands, entity, scene, &mut allocator, &empty, state, &lightlimit.0, &commonbindmodel) == false {
@@ -109,15 +109,10 @@ pub fn sys_create_mesh(
             entity, &mut commands, scene, &mut allocator, &empty, state, &lightlimit.0, &commonbindmodel,
             &mut altermodel, &mut passinsert, &engineopt
         ) == false {
-            disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
+            // disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
         }
-        count += 1;
         // instancecmds.push(OpsInstanceMeshCreation::ops(entity, entity));
     });
-
-    if count > 0 {
-        // log::error!("Creat Mesh Count {:?}, Time: {:?}", count, pi_time::Instant::now() - time1);
-    }
 }
 
 pub fn sys_create_instanced_mesh(
@@ -125,7 +120,10 @@ pub fn sys_create_instanced_mesh(
     // mut commands: Commands,
     mut meshes: Query<(&SceneID, &mut InstanceSourceRefs, &ModelInstanceAttributes, &mut FlagMeshNeedRecheckForView)>,
     mut alter: Alter<(), (), (ModelInstanceAttributes, TargetAnimatorableIsRunning, InstanceAttributeAnimated, (TransformNodeBundle, BundleInstance)), ()>,
+
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_create_instanced_mesh"));
     cmds.drain().for_each(|OpsInstanceMeshCreation(source, instance, count)| {
         if let Ok((id_scene, mut instancelist, instanceattrs, mut flagview)) = meshes.get_mut(source) {
 
@@ -138,15 +136,11 @@ pub fn sys_create_instanced_mesh(
                 ActionInstanceMesh::init(source, id_scene.0),
             );
             // commands.get_entity(instance).unwrap().insert(bundle);
-            alter.alter(instance, bundle);
+            let _ = alter.alter(instance, bundle);
 
             instancelist.insert(instance);
             *flagview = FlagMeshNeedRecheckForView;
             // 
-        } else {
-            // if count < 2 {
-            //     cmds.push(OpsInstanceMeshCreation(source, instance, count + 1))
-            // }
         }
     });
 }
@@ -245,7 +239,10 @@ pub fn sys_act_mesh_modify(
     mut flagrendermatrix: Query<&mut FlagRenderWorldMatrix>,
     mut records: ResMut<AnimeTargetRecordValues<IndiceRenderRange>>,
     skinoff_items: Query<&BindModel>,
+
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_act_mesh_modify"));
     cmds.drain().for_each(|OpsMeshStateModify(entity, cmd)| {
         match cmd {
             EMeshStateModify::Alignment(val) => if let Ok(mut item) = align_items.get_mut(entity) {
@@ -325,7 +322,10 @@ pub fn sys_act_instance_attribute(
     mut forcelight_cmds: ResMut<ActionListMeshForceLighting>,
     mut light_items: Query<&mut ModelForceLightings>,
     mut meshes: Query<&mut InstanceSourceRefs>,
+
+    mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_act_instance_attribute"));
 
     cmdsfloat.drain().for_each(|OpsInstanceAttr(instance, val, attr)| {
         if let Ok((inssource, mut attributes)) = instances.get_mut(instance) {
@@ -432,14 +432,7 @@ impl ActionMesh {
         let id06 = passinsert.insert(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_06));
         let id07 = passinsert.insert(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_07));
         let id08 = passinsert.insert(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_08));
-        // let id01 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_01)).id();
-        // let id02 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_02)).id();
-        // let id03 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_03)).id();
-        // let id04 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_04)).id();
-        // let id05 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_05)).id();
-        // let id06 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_06)).id();
-        // let id07 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_07)).id();
-        // let id08 = commands.spawn(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_08)).id();
+
         let passids = PassIDs([id01, id02, id03, id04, id05, id06, id07, id08]);
 
         // let mut entitycmd = commands.get_entity(entity).unwrap();
@@ -455,7 +448,8 @@ impl ActionMesh {
             ActionTransformNode::init(scene),
             ActionMesh::as_mesh(empty.id()),
             ActionMesh::as_instance_source(),
-            TargetAnimatorableIsRunning, InstanceAttributeAnimated::default(),
+            TargetAnimatorableIsRunning,
+            InstanceAttributeAnimated::default(),
             lightbundle,
             // MeshStates::default(),
             // DirtyMeshStates,

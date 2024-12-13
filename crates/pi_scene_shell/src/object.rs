@@ -96,10 +96,18 @@ pub fn sys_dispose_ready(
 }
 pub fn sys_dispose_can(
     mut cmds: ResMut<ActionListDisposeCan>,
+    readys: Query<(Entity, &DisposeReady), Changed<DisposeReady>>,
     mut items: Query<&mut DisposeCan>,
     empty: Res<SingleEmptyEntity>,
     mut commands: Commands,
 ) {
+    readys.iter().for_each(|(entity, dispose)| {
+        if dispose.0 {
+            if let Ok(mut item) = items.get_mut(entity) {
+                *item = DisposeCan(true);
+            }
+        }
+    });
     cmds.drain().for_each(|OpsDisposeCan(entity)| {
         if empty.id() == entity { return }
 
@@ -119,6 +127,7 @@ pub fn sys_dispose(
     items: Query<(Entity, &DisposeCan), Changed<DisposeCan>>,
     nodes: Query<&Up, (With<Layer>, With<Down>, With<Up>)>,
     mut tree: EntityTreeMut,
+    empty: Res<SingleEmptyEntity>
 ) {
    
     let mut removes = vec![];
@@ -137,7 +146,9 @@ pub fn sys_dispose(
     removes.drain(..).for_each(|entity| {
         if let Some(mut commands) = commands.get_entity(entity) {
             // log::warn!("despawn====={:?}", commands.id());
-            commands.despawn();
+            if empty.id() != entity {
+                commands.despawn();
+            }
         }
     });
 }
@@ -151,14 +162,19 @@ impl OpsSceneDispose {
 pub type ActionListSceneDispose = ActionList<OpsSceneDispose>;
 pub fn sys_act_scene_dispose(
     mut cmds: ResMut<ActionListSceneDispose>,
-    mut items: Query<&mut DisposeReady>,
+    items: Query<(Entity, &SceneID)>,
+    mut disposeready: Query<&mut DisposeReady>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_act_scene_dispose"));
     cmds.drain().for_each(|OpsSceneDispose(idscene)| {
-        if let Ok(mut item) = items.get_mut(idscene) {
-            *item = DisposeReady(true);
-        // } else {
-        //     cmds.push(OpsSceneDispose(idscene))
-        }
+        items.iter().for_each(|(entity, sceneid)| {
+            if sceneid.0 == entity {
+                if let Ok(mut dispose) = disposeready.get_mut(entity) { dispose.0 = true };
+            }
+        });
+
+        if let Ok(mut dispose) = disposeready.get_mut(idscene) { dispose.0 = true };
     });
 }
 
@@ -189,8 +205,8 @@ impl Plugin for PluginDispose {
         // .run_if(runif_acts::<OpsSceneDispose>)                         
         .in_set(ERunStageChap::Dispose))
     .add_systems(Update, sys_dispose_ready    .after(sys_act_scene_dispose)       .in_set(ERunStageChap::Dispose))
-    .add_systems(Update, sys_dispose_can      .after(sys_dispose_ready)           .in_set(ERunStageChap::Dispose))
-    .add_systems(Update, sys_dispose          .after(sys_dispose_can)             .in_set(ERunStageChap::Dispose))
+    .add_systems(Update, sys_dispose_can      .after(sys_dispose_ready)           .in_set(ERunStageChap::_Dispose))
+    .add_systems(Update, sys_dispose          .after(sys_dispose_can)             .in_set(ERunStageChap::_Dispose))
     ;
 }
     }

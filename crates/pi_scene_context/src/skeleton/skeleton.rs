@@ -6,8 +6,9 @@ use pi_scene_shell::prelude::*;
 pub enum StageSkeleton {
     SkinCreate,
     _SkinCreate,
-    Command,
-    Calc,
+    SkinCommand,
+    SkinCalc,
+    SkinDispose,
 }
 
 #[derive(Component, Default)]

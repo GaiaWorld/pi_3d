@@ -23,12 +23,13 @@ pub fn runif_particlesystem(
 
 pub fn sys_particle_active(
     mut items: Query<(Entity, &GlobalEnable, &SceneID, &ParticleSystemActive, &mut ParticleSystemRunningState, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission, &MeshInstanceState), Or<(Changed<GlobalEnable>, Changed<ParticleSystemActive>)>>,
-    performance: Res<ParticleSystemPerformance>,
+    psperformance: Res<ParticleSystemPerformance>,
     calculators: Query<&ParticleCalculatorBase>,
     scenes: Query<&SceneTime>,
-    mut globalperformance: ResMut<Performance>,
     mut cmds: ResMut<ActionListCPUParticleSystemState>,
+    mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_particle_active"));
     // let time0 = pi_time::Instant::now();
     items.iter_mut().for_each(|(entity, enable, idscene, active, mut state, mut ids, mut time, mut emission, instancestate)| {
         if enable.0 == true && active.0 == true {
@@ -42,7 +43,7 @@ pub fn sys_particle_active(
                     }
 
                     let timescale = time.time_scale;
-                    *time = ParticleSystemTime::new(performance.frame_time_ms); time.time_scale = timescale;
+                    *time = ParticleSystemTime::new(psperformance.frame_time_ms); time.time_scale = timescale;
                     *emission = ParticleSystemEmission::new();
                     ids.reset();
 
@@ -57,7 +58,7 @@ pub fn sys_particle_active(
         }
     });
 
-    globalperformance.particlesystem = performance.total();
+    performance.particlesystem = psperformance.total();
 }
 
 
@@ -75,9 +76,11 @@ pub fn sys_prewarm(
         &ParticleCalculatorBase, &ParticleCalculatorStartModifiers, &ParticleCalculatorOverLifetime
     )>,
     calculators_trail:  Query<&ParticleCalculatorTrail>,
-    mut performance: ResMut<ParticleSystemPerformance>,
+    mut psperformance: ResMut<ParticleSystemPerformance>,
+    mut performance: ResMut<Performance>,
 ) {
-    if performance.debug { performance.time = pi_time::Instant::now(); }
+    // performance.systems.push(String::from("sys_prewarm"));
+    if psperformance.debug { psperformance.time = pi_time::Instant::now(); }
 
     let mut tempvec3 = Vector3::zeros();
     let mut orbit_center: Vector3 = Vector3::zeros();
@@ -163,22 +166,24 @@ pub fn sys_prewarm(
         }
     });
     
-    if performance.debug { performance.sys_prewarm = (pi_time::Instant::now() - performance.time).as_micros() as u32; }
+    if psperformance.debug { psperformance.sys_prewarm = (pi_time::Instant::now() - psperformance.time).as_micros() as u32; }
 }
 
 /// 系统的启动
 pub fn sys_ids(
     mut particle_sys: Query<(&mut ParticleIDs, &ParticleStart, &ParticleSystemTime, &ParticleDieWaitTime), Changed<ParticleSystemModifyState>>,
-    mut performance: ResMut<ParticleSystemPerformance>,
+    mut psperformance: ResMut<ParticleSystemPerformance>,
+    mut performance: ResMut<Performance>,
 ) {
-    if performance.debug { performance.time = pi_time::Instant::now(); }
+    // performance.systems.push(String::from("sys_ids"));
+    if psperformance.debug { psperformance.time = pi_time::Instant::now(); }
 
     particle_sys.iter_mut().for_each(|(mut ids, ages, time, diewaittimes)| {
         if time.running_delta_ms <= 0 { return; }
         fn_ids(&mut ids, &ages.ages, time, diewaittimes);
     });
 
-    if performance.debug { performance.sys_ids = (pi_time::Instant::now() - performance.time).as_micros() as u32; }
+    if psperformance.debug { psperformance.sys_ids = (pi_time::Instant::now() - psperformance.time).as_micros() as u32; }
 }
 pub fn fn_ids(
     ids: &mut ParticleIDs, ages: &ParticleAgeLifetime, _time: &ParticleSystemTime, diewaittimes: &ParticleDieWaitTime
@@ -208,9 +213,11 @@ pub fn sys_emission(
     scenes: Query<&SceneTime>,
     calculators: Query<(&ParticleCalculatorBase, &ParticleCalculatorStartModifiers)>,
     mut particle_sys: Query<(&SceneID, &DisposeReady, &ParticleSystemRunningState, &mut ParticleRandom, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission, &mut ParticleBaseRandom, &mut ParticleSystemModifyState)>,
-    mut performance: ResMut<ParticleSystemPerformance>,
+    mut psperformance: ResMut<ParticleSystemPerformance>,
+    mut performance: ResMut<Performance>,
 ) {
-    if performance.debug { performance.time = pi_time::Instant::now(); }
+    // performance.systems.push(String::from("sys_emission"));
+    if psperformance.debug { psperformance.time = pi_time::Instant::now(); }
 
     particle_sys.iter_mut().for_each(|(idscene, disposestate, state, mut random, mut ids, mut particlesystime, mut emissiondata, mut randoms, mut modifystate)| {
         if let (Ok(scenetime), Ok((base, calcemission))) = (scenes.get(idscene.0), calculators.get(ids.calculator.as_ref().unwrap().0)) {
@@ -238,7 +245,7 @@ pub fn sys_emission(
         }
     });
 
-    if performance.debug { performance.sys_emission = (pi_time::Instant::now() - performance.time).as_micros() as u32; }
+    if psperformance.debug { psperformance.sys_emission = (pi_time::Instant::now() - psperformance.time).as_micros() as u32; }
 }
 fn fn_emission(
     base: &ParticleCalculatorBase, calcemission: &ParticleCalculatorEmission,
@@ -264,9 +271,11 @@ fn fn_emission(
 
 pub fn sys_emitmatrix(
     mut particle_sys: Query<(&LocalScaling, &GlobalMatrix, &ParticleIDs, &ParticleSystemTime, &mut ParticleEmitMatrix, &mut AbsoluteTransform), Changed<ParticleSystemModifyState>>,
-    mut performance: ResMut<ParticleSystemPerformance>,
+    mut psperformance: ResMut<ParticleSystemPerformance>,
+    mut performance: ResMut<Performance>,
 ) {
-    if performance.debug { performance.time = pi_time::Instant::now(); }
+    // performance.systems.push(String::from("sys_emitmatrix"));
+    if psperformance.debug { psperformance.time = pi_time::Instant::now(); }
 
     let global_position = Vector3::zeros();
     particle_sys.iter_mut().for_each(|(local_scaling, transform, ids, time, mut emitmatrixdata, mut absolute)| {
@@ -278,7 +287,7 @@ pub fn sys_emitmatrix(
             &global_position
         );
     });
-    if performance.debug { performance.sys_emitmatrix = (pi_time::Instant::now() - performance.time).as_micros() as u32; }
+    if psperformance.debug { psperformance.sys_emitmatrix = (pi_time::Instant::now() - psperformance.time).as_micros() as u32; }
 }
 fn fn_emitmatrix(
     local_scaling: &LocalScaling, transform: &GlobalMatrix, ids: &ParticleIDs,
@@ -937,12 +946,12 @@ pub fn sys_update_buffer_trail(
 pub fn sys_dispose_about_particle_system(
     particles: Query<(Entity, &DisposeReady, &ParticleTrailMesh), Changed<DisposeReady>>,
     mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
-    mut disposecanlist: ResMut<ActionListDisposeCan>,
+    mut disposecan: Query<&mut DisposeCan>,
 ) {
     particles.iter().for_each(|(entity, state, trailmesh)| {
         if state.0 == false { return; }
 
         disposereadylist.push(OpsDisposeReadyForRef::ops(trailmesh.mesh));
-        disposecanlist.push(OpsDisposeCan::ops(entity));
+        if let Ok(mut dispose) = disposecan.get_mut(entity) { dispose.0 = true; }
     });
 }

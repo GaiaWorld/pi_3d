@@ -286,15 +286,15 @@ use super::{skeleton::*, bone::*};
 
     pub fn sys_dispose_about_skeleton(
         items: Query<(Entity, &DisposeReady, &SkeletonRefs, &Skeleton), Or<(Changed<DisposeReady>, Changed<SkeletonRefs>)>>,
-        mut disposecanlist: ResMut<ActionListDisposeCan>,
+        mut disposecan: Query<&mut DisposeCan>,
     ) {
         items.iter().for_each(|(entity, state, refs, skeleton)| {
             if state.0 == false || refs.len() > 0 { return };
 
             skeleton.bones.iter().for_each(|entity| {
-                disposecanlist.push(OpsDisposeCan::ops(*entity));
+                if let Ok(mut dispose) = disposecan.get_mut(*entity) { dispose.0 = true; }
             });
 
-            disposecanlist.push(OpsDisposeCan::ops(entity));
+            if let Ok(mut dispose) = disposecan.get_mut(entity) { dispose.0 = true; }
         });
     }

@@ -17,6 +17,7 @@ pub enum StageModel {
     RenderMatrix,
     InstanceEffectGeometry,
     LightingCollect,
+    MeshDispose,
 }
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]
@@ -132,6 +133,11 @@ impl Default for ModelMatIdxs {
 /// 实例化渲染中 BindModel 上的矩形数据并不会使用
 #[derive(Resource)]
 pub struct CommonBindModel(pub BindModel, pub BindModelMatIdx);
+impl MemSize for CommonBindModel {
+    fn memsize(&self) -> usize {
+        1024
+    }
+}
 
 /// 用于记录 Mesh 的可渲染顶点范围(当使用 Indices 时)
 #[derive(Component, Clone)]

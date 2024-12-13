@@ -17,8 +17,9 @@ pub fn sys_create_camera(
     mut commands: Commands,
     mut dynallocator: ResMut<ResBindBufferAllocator>,
     mut errors: ResMut<ErrorRecord>,
-    // mut alter: Alter<(), (), (BindViewer, CameraBundle), ()>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_create_camera"));
     cmds.drain().for_each(|OpsCameraCreation(scene, entity)| {
         if let Some(mut commands) = commands.get_entity(entity) {
 
@@ -41,7 +42,9 @@ pub fn sys_act_camera_mode(
     mut target_cmds: ResMut<ActionListCameraTarget>,
     mut recordfovs: ResMut<AnimeTargetRecordValues<CameraFov>>,
     mut recordorths: ResMut<AnimeTargetRecordValues<CameraOrthSize>>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_act_camera_mode"));
     cmds.drain().for_each(|OpsCameraModify(entity, mode)| {
         match mode {
             ECameraModify::FreeMode(val) => if let Ok((mut camera, mut distance)) = cameras.get_mut(entity) {
@@ -135,7 +138,10 @@ impl ActionCamera {
 
     pub fn sys_update_target_camera_modify(
         mut cameras: Query<(&CameraUp, &CameraTarget, &mut TargetCameraParam), Or<(Changed<CameraUp>, Changed<CameraTarget>)>>,
+
+        // mut performance: ResMut<Performance>,
     ) {
+        // performance.systems.push(String::from("sys_update_target_camera_modify"));
         cameras.iter_mut().for_each(|(up, target, mut param)| {
             *param = TargetCameraParam::create(up.0.clone(), target.0.clone());
         });

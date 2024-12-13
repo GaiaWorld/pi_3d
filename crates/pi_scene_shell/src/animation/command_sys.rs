@@ -3,10 +3,8 @@ use crate::ecs::*;
 use std::ops::Deref;
 
 use crate::object::ActionEntity;
-use crate::object::ActionListDisposeCan;
 use crate::object::DisposeCan;
 use crate::object::DisposeReady;
-use crate::object::OpsDisposeCan;
 use crate::prelude::{Performance, ErrorRecord};
 
 use super::base::*;
@@ -246,7 +244,7 @@ pub fn sys_act_dispose_animation_group(
     mut cmdsdispose: ResMut<ActionListAnimeGroupDispose>,
     items: Query<(&AnimationGroupKey, &AnimationGroupScene)>,
     mut scenes: Query<&mut SceneAnimationContext>,
-    mut disposecan: ResMut<ActionListDisposeCan>,
+    mut disposecan: Query<&mut DisposeCan>,
     mut globals: ResMut<GlobalAnimeAbout>,
 ) {
     cmdsdispose.drain().for_each(|OpsAnimationGroupDispose(entity)| {
@@ -257,7 +255,7 @@ pub fn sys_act_dispose_animation_group(
             globals.remove(&groupkey.0);
         }
 
-        disposecan.push(OpsDisposeCan::ops(entity));
+        if let Ok(mut dispose) = disposecan.get_mut(entity) { dispose.0 = true; }
     });
 }
 
@@ -289,8 +287,8 @@ pub fn sys_calc_type_anime<D: TAnimatableComp>(
     mut resetitems: Query<&mut D>,
     mut records: ResMut<AnimeTargetRecordValues<D>>,
 
-    dispose: ComponentChanged<DisposeCan>,
-    disposeitems: Query<&DisposeCan>,
+    // dispose: ComponentChanged<DisposeCan>,
+    disposeitems: Query<(Entity, &DisposeCan), Changed<DisposeCan>>,
 
     type_ctx: Res<TypeAnimeContext<D>>,
     runinfos: Res<GlobalAnimeAbout>,
@@ -318,11 +316,17 @@ pub fn sys_calc_type_anime<D: TAnimatableComp>(
             }
         }
     });
-    dispose.iter().for_each(|entity| {
-        if let Ok(isdispose) = disposeitems.get(*entity) {
-            if isdispose.0 {
-                records.remove(&entity);
-            }
+    // dispose.iter().for_each(|entity| {
+    //     if let Ok(isdispose) = disposeitems.get(*entity) {
+    //         if isdispose.0 {
+    //             records.remove(&entity);
+    //         }
+    //     }
+    // });
+    // dispose.mark_read();
+    disposeitems.iter().for_each(|(entity, isdispose)| {
+        if isdispose.0 {
+            records.remove(&entity);
         }
     });
 
@@ -364,6 +368,18 @@ pub fn sys_calc_type_anime<D: TAnimatableComp>(
     }
 
     if performance.debug { performance.animation += (pi_time::Instant::now() - time.unwrap()).as_micros() as u32; }
+}
+
+/// 动画记录移除
+pub fn sys_remove_anime_target_record<D: TAnimatableComp>(
+    items: Query<(Entity, &DisposeCan), (With<D>, Changed<DisposeCan>)>,
+    mut records: ResMut<AnimeTargetRecordValues<D>>,
+) {
+    items.iter().for_each(|(entity, dispose)| {
+        if dispose.0 {
+            records.0.remove(&entity);
+        }
+    });
 }
 
 pub(crate) fn sys_apply_removed_data<D: TAnimatableComp>(

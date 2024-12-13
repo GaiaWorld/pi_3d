@@ -24,7 +24,7 @@ pub enum StageLighting {
     _LightCreate,
     LightingCommand,
     LightingUniform,
-    // LightingCalcMatrix,
+    LightDispose,
     // LightingCulling,
 }
 

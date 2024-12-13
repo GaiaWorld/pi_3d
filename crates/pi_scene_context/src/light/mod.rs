@@ -29,10 +29,11 @@ impl Plugin for PluginLighting {
         app.insert_resource(ActionListLightParam::default());
         app.insert_resource(StateLight::default());
         
-        app.configure_set(Update, StageLighting::LightCreate     .in_set(ERunStageChap::D3).after(StageScene::_Create));
-        app.configure_set(Update, StageLighting::_LightCreate    .in_set(ERunStageChap::D3).after(StageLighting::LightCreate).before(StageLayerMask::Command).before(StageEnable::Command).before(StageTransform::TransformCommand));
-        app.configure_set(Update, StageLighting::LightingCommand .in_set(ERunStageChap::D3).after(StageLighting::_LightCreate));
-        app.configure_set(Update, StageLighting::LightingUniform .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageLighting::LightingCommand).after(EStageAnimation::Running).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Uniform));
+        app.configure_set(Update, StageLighting::LightCreate     .in_set(ERunStageChap::Create).after(StageScene::_SceneCreate));
+        app.configure_set(Update, StageLighting::_LightCreate    .in_set(ERunStageChap::Create).after(StageLighting::LightCreate).before(StageLayerMask::Command).before(StageEnable::Command).before(StageTransform::TransformCommand).before(ERunStageChap::Dispose));
+        app.configure_set(Update, StageLighting::LightingCommand .in_set(ERunStageChap::Modify));
+        app.configure_set(Update, StageLighting::LightingUniform .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare));
+        app.configure_set(Update, StageLighting::LightDispose   .in_set(ERunStageChap::Dispose).before(StageScene::SceneDispose));
 
         if app.world.get_resource::<SceneLightLimit>().is_none() {
             app.insert_resource(SceneLightLimit(LightLimitInfo { max_direct_light_count: 8, max_point_light_count: 128, max_spot_light_count: 128, max_hemi_light_count: 8 }));
@@ -65,7 +66,7 @@ impl Plugin for PluginLighting {
             .add_systems(Update, sys_create_light.in_set(StageLighting::LightCreate))
             .add_systems(Update, sys_act_light_param            .in_set(StageLighting::LightingCommand))
             .add_systems(Update, sys_light_update               .in_set(StageLighting::LightingUniform))
-            .add_systems(Update, sys_dispose_about_light.after(sys_dispose_ready).in_set(ERunStageChap::Dispose))
+            .add_systems(Update, sys_dispose_about_light.after(sys_dispose_ready).in_set(StageLighting::LightDispose))
             ;
         }
 

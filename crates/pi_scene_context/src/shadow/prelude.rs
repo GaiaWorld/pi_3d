@@ -11,3 +11,8 @@ pub struct ActionSetShadow<'w> {
     pub param: ResMut<'w, ActionListShadowGeneratorParam>,
     pub create: ResMut<'w, ActionListShadowGenerator>,
 }
+impl<'w> MemSize for ActionSetShadow<'w> {
+    fn memsize(&self) -> usize {
+        self.param.memsize() + self.create.memsize()
+    }
+}

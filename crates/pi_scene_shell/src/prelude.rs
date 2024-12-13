@@ -120,6 +120,11 @@ pub enum GlobalColorSpace {
 /////////////////////////////////////// Bind Buffer
 #[derive(Resource, DerefMut, Deref)]
 pub struct ResBindBufferAllocator(pub BindBufferAllocator);
+impl MemSize for ResBindBufferAllocator {
+    fn memsize(&self) -> usize {
+        self.0.size()
+    }
+}
 
 ////////////////////////////////////// Vertex Buffer
 #[derive(Resource)]
@@ -133,6 +138,11 @@ pub struct VBLoaderSlot<T: Clone + core::hash::Hash + PartialEq + Eq, D: From<EV
 
 #[derive(Resource, DerefMut, Deref)]
 pub struct VertexBufferDataMap3D(pub SingleVertexBufferDataMap);
+impl MemSize for VertexBufferDataMap3D {
+    fn memsize(&self) -> usize {
+        self.0.size()
+    }
+}
 
 #[derive(Clone)]
 pub struct IndicesBufferDesc {
@@ -261,6 +271,10 @@ pub trait TAction {
     fn again<T: Clone>(entity: Entity, val: T, count: u16) -> Self;
 }
 
+pub trait MemSize {
+    fn memsize(&self) -> usize;
+}
+
 ////////////////////////////////////// Commands
 #[derive(Resource)]
 pub struct ActionList<T: Send + Sync + 'static>(Vec<T>);
@@ -310,6 +324,11 @@ impl<T: Send + Sync> ActionList<T> {
         return self.0.len();
     }
 }
+impl<T: Send + Sync> MemSize for ActionList<T> {
+    fn memsize(&self) -> usize {
+        return self.0.capacity();
+    }
+}
 
 #[derive(Resource)]
 pub struct SingleEmptyEntity(Entity);
@@ -347,6 +366,8 @@ pub struct Performance {
     pub uniformbufferupdate: u32,
     pub uniformupdate: u32,
     pub drawcalls: u32,
+    
+    pub systems: Vec<String>,
 }
 impl Default for Performance {
     fn default() -> Self {
@@ -373,6 +394,7 @@ impl Default for Performance {
             uniformbufferupdate: 0,
             uniformupdate: 0,
             drawcalls: 0,
+            systems: vec![],
         }
     }
 }

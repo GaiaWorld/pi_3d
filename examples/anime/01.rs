@@ -31,7 +31,7 @@ fn setup(
         (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
     } else { return; };
 
-    let tes_size = 10;
+    let tes_size: i32 = 10;
     fps.frame_ms = 16;
 
     actions.camera.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));

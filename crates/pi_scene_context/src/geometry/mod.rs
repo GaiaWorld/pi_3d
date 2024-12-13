@@ -11,7 +11,7 @@ use crate::{object::sys_dispose_ready, prelude::*};
 
 use self::{
     sys_vertex_buffer_use::*,
-    load::sys_vertex_buffer_loaded,
+    load::*,
     command::*,
     command_sys::*,
     base::*, instance::instanced_buffer::InstanceBufferAllocator,
@@ -70,12 +70,12 @@ impl Plugin for PluginGeometry {
         app.configure_sets(
             Update, 
             (
-                StageGeometry::Create.after(StageModel::_InitMesh),
-                StageGeometry::_GeoCreate.after(StageGeometry::Create),
+                StageGeometry::GeoCreate.after(StageModel::_InitMesh),
+                StageGeometry::_GeoCreate.after(StageGeometry::GeoCreate),
                 StageGeometry::VertexBufferLoaded.in_set(FrameDataPrepare).after(StageGeometry::_GeoCreate),
                 StageGeometry::_VertexBufferLoadedApply.in_set(FrameDataPrepare).after(StageGeometry::VertexBufferLoaded),
-                StageGeometry::GeometryLoaded.in_set(FrameDataPrepare).after(StageGeometry::_VertexBufferLoadedApply).before(ERunStageChap::Uniform),
-                StageGeometry::Upload.in_set(FrameDataPrepare).after(StageGeometry::GeometryLoaded).after(StageRenderer::DrawList),
+                StageGeometry::GeometryLoaded.in_set(FrameDataPrepare).after(StageGeometry::_VertexBufferLoadedApply).before(ERunStageChap::Collect),
+                StageGeometry::GeoUpload.in_set(FrameDataPrepare).after(StageGeometry::GeometryLoaded).after(StageRenderer::DrawList),
             )
         );
 
@@ -85,13 +85,13 @@ impl Plugin for PluginGeometry {
             (
                 apply_deferred.in_set(StageGeometry::_GeoCreate),
                 apply_deferred.in_set(StageGeometry::_VertexBufferLoadedApply),
-                sys_create_geometry.in_set(StageGeometry::Create),
+                sys_create_geometry.in_set(StageGeometry::GeoCreate),
                 sys_vertex_buffer_loaded.in_set(StageGeometry::VertexBufferLoaded),
                 (
                     sys_vertex_buffer_slots_loaded,
                     sys_geometry_enable
                 ).chain().in_set(StageGeometry::GeometryLoaded),
-                sys_instanced_buffer_upload.in_set(StageGeometry::Upload),
+                sys_instanced_buffer_upload.in_set(StageGeometry::GeoUpload),
                 (
                     sys_dispose_about_geometry  // .run_if(should_run)
                     .after(sys_dispose_ready)
@@ -101,19 +101,20 @@ impl Plugin for PluginGeometry {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StageGeometry::Create                    .in_set(ERunStageChap::D3).after(StageModel::_InitMesh))
-        .configure_set(Update, StageGeometry::_GeoCreate                .in_set(ERunStageChap::D3).after(StageGeometry::Create))
-        .configure_set(Update, StageGeometry::VertexBufferLoaded        .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageGeometry::_GeoCreate))
-        .configure_set(Update, StageGeometry::_VertexBufferLoadedApply  .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageGeometry::VertexBufferLoaded))
-        .configure_set(Update, StageGeometry::GeometryLoaded            .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageGeometry::_VertexBufferLoadedApply).before(ERunStageChap::Uniform))
-        .configure_set(Update, StageGeometry::Upload                    .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageGeometry::GeometryLoaded).after(StageRenderer::DrawList))
+        .configure_set(Update, StageGeometry::GeoCreate                 .in_set(ERunStageChap::Create).after(StageModel::_InitMesh))
+        .configure_set(Update, StageGeometry::_GeoCreate                .in_set(ERunStageChap::Create).after(StageGeometry::GeoCreate).before(ERunStageChap::Dispose))
+        .configure_set(Update, StageGeometry::VertexBufferLoaded        .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageGeometry::_GeoCreate))
+        .configure_set(Update, StageGeometry::_VertexBufferLoadedApply  .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageGeometry::VertexBufferLoaded))
+        .configure_set(Update, StageGeometry::GeometryLoaded            .in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageGeometry::_VertexBufferLoadedApply))
+        .configure_set(Update, StageGeometry::GeoUpload                 .in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageGeometry::GeometryLoaded))
+        .configure_set(Update, StageGeometry::GeoDispose                .in_set(ERunStageChap::Dispose).before(StageModel::MeshDispose))
         ;
 
 #[cfg(not(feature = "use_bevy"))]
         app
         .add_systems(Update, sys_create_geometry
             // .run_if(runif_acts::<OpsGeomeryCreate>)     
-            .in_set(StageGeometry::Create))
+            .in_set(StageGeometry::GeoCreate))
         .add_systems(Update, sys_vertex_buffer_loaded    .in_set(StageGeometry::VertexBufferLoaded))
         .add_systems(Update, sys_vertex_buffer_slots_loaded
             // .run_if(runif_comp::<FlagGeometryDirty>)      
@@ -121,19 +122,12 @@ impl Plugin for PluginGeometry {
         .add_systems(Update, sys_geometry_enable
             // .run_if(runif_comp::<RenderGeometryComp>)
             .after(sys_vertex_buffer_slots_loaded).in_set(StageGeometry::GeometryLoaded))
-        .add_systems(Update, sys_instanced_buffer_upload     .in_set(StageGeometry::Upload))
-        .add_systems(Update, sys_dispose_about_geometry      .after(sys_dispose_ready).in_set(ERunStageChap::Dispose))
+        .add_systems(Update, sys_instanced_buffer_upload     .in_set(StageGeometry::GeoUpload))
+        .add_systems(Update, sys_dispose_about_geometry      .after(sys_dispose_ready).in_set(StageGeometry::GeoDispose))
         ;
     }
 }
 
 pub fn sys_dispose_about_geometry(
-    items: Query<(Entity, &DisposeReady, &GeometryDesc), Changed<DisposeReady>>,
-    mut disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
-    items.iter().for_each(|(entity, state, _)| {
-        if state.0 == false { return; }
-
-        disposecanlist.push(OpsDisposeCan::ops(entity));
-    });
 }

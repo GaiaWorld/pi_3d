@@ -1,5 +1,5 @@
 
-use crate::ecs::*;
+use crate::{ecs::*, prelude::MemSize};
 
 use pi_bevy_render_plugin::GraphError;
 
@@ -7,6 +7,11 @@ pub type EError = u32;
 
 #[derive(Resource)]
 pub struct ErrorRecord(pub Vec<u32>, pub bool);
+impl MemSize for ErrorRecord {
+    fn memsize(&self) -> usize {
+        self.0.capacity() * 4 + 8 + 24
+    }
+}
 impl ErrorRecord {
     pub fn record(&mut self, entity: Entity, error: EError) {
         if self.1 { 

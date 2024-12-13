@@ -38,19 +38,20 @@ impl Plugin for PluginTransformNode {
 #[cfg(feature = "use_bevy")]
         app.configure_sets(Update, 
             (
-                StageTransform::TransformCreate.after(StageScene::_Create),
+                StageTransform::TransformCreate.after(StageScene::_SceneCreate),
                 StageTransform::_TransformCreate.after(StageTransform::TransformCreate).before(StageEnable::Command),
                 StageTransform::TransformCommand.after(StageTransform::_TransformCreate).before(EStageAnimation::Create),
-                StageTransform::TransformCalcMatrix.after(StageTransform::TransformCommand).after(EStageAnimation::Running).before(ERunStageChap::Uniform),
+                StageTransform::TransformCalcMatrix.after(StageTransform::TransformCommand).after(EStageAnimation::Running).before(ERunStageChap::Collect),
             )
         );
 
 #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StageTransform::TransformCreate      .in_set(ERunStageChap::D3).after(StageScene::_Create))
-        .configure_set(Update, StageTransform::_TransformCreate     .in_set(ERunStageChap::D3).after(StageTransform::TransformCreate).before(StageEnable::Command))
-        .configure_set(Update, StageTransform::TransformCommand     .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageTransform::_TransformCreate).before(EStageAnimation::Create))
-        .configure_set(Update, StageTransform::TransformCalcMatrix  .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageTransform::TransformCommand).after(EStageAnimation::Running).before(ERunStageChap::Uniform))
+        .configure_set(Update, StageTransform::TransformCreate      .in_set(ERunStageChap::Create).after(StageScene::_SceneCreate))
+        .configure_set(Update, StageTransform::_TransformCreate     .in_set(ERunStageChap::Create).after(StageTransform::TransformCreate).before(StageEnable::Command))
+        .configure_set(Update, StageTransform::TransformCommand     .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageTransform::_TransformCreate).before(EStageAnimation::Create))
+        .configure_set(Update, StageTransform::TransformCalcMatrix  .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageTransform::TransformCommand).after(EStageAnimation::Running).before(ERunStageChap::Collect))
+        .configure_set(Update, StageTransform::TransformDispose     .in_set(ERunStageChap::Dispose).before(StageScene::SceneDispose))
         ;
 
 #[cfg(feature = "use_bevy")]
@@ -93,7 +94,7 @@ impl Plugin for PluginTransformNode {
         .add_systems(Update, sys_world_matrix_calc
             // .run_if(runif_changes::<TransformNodeDirty>)              
             .after(sys_transform_dirty).in_set(StageTransform::TransformCalcMatrix))
-        .add_systems(Update, sys_dispose_about_transform_node    .in_set(StageTransform::TransformCreate))
+        .add_systems(Update, sys_dispose_about_transform_node    .in_set(StageTransform::TransformDispose))
         ;
 }
 

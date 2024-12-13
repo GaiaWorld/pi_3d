@@ -18,9 +18,23 @@ pub struct ActionSetParticleSystem<'w> {
     pub state: ResMut<'w, ActionListCPUParticleSystemState>,
     pub trailmaterial: ResMut<'w, ActionListCPUParticleSystemTrailMaterial>,
 }
+impl<'w> MemSize for ActionSetParticleSystem<'w> {
+    fn memsize(&self) -> usize {
+        self.calculator.memsize()
+        + self.create.memsize()
+        + self.state.memsize()
+        + self.trailmaterial.memsize()
+    }
+}
 
 #[derive(SystemParam)]
 pub struct ResourceParticleSystem<'w> {
     pub calcultors: Res<'w, ShareAssetMgr<ParticleSystemCalculatorID>>,
     pub calculator_queue: Res<'w, ResParticleCalculatorUninstallQueue>,
+}
+impl<'w> MemSize for ResourceParticleSystem<'w> {
+    fn memsize(&self) -> usize {
+        self.calcultors.size()
+        + self.calculator_queue.0.len() * 8 + 256
+    }
 }

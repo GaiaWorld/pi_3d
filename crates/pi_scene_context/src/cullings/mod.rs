@@ -3,7 +3,7 @@
 use pi_scene_shell::prelude::*;
 use pi_scene_math::Vector3;
 
-use crate::{prelude::StageModel, viewer::prelude::sys_abstructmesh_culling_flag_reset, scene::StageScene, materials::prelude::StageMaterial};
+use crate::{materials::prelude::StageMaterial, prelude::{sys_tick_viewer_culling, StageModel}, scene::StageScene, viewer::prelude::sys_abstructmesh_culling_flag_reset};
 
 use self::{bounding_box::BoundingBox, bounding_sphere::BoundingSphere, sys::*, command::*, command_sys::*};
 
@@ -47,7 +47,7 @@ impl Plugin for PluginCulling {
 #[cfg(feature = "use_bevy")]
         app.configure_sets(Update, 
             (
-                StageCulling::Command       .after(StageScene::_Create).before(StageMaterial::Command),
+                StageCulling::Command       .after(StageScene::_SceneCreate).before(StageMaterial::MatCommand),
                 StageCulling::CalcBounding  .after(StageModel::RenderMatrix),
             )
         );
@@ -69,8 +69,8 @@ impl Plugin for PluginCulling {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StageCulling::Command        .in_set(ERunStageChap::D3).in_set(ERunStageChap::D3).after(StageScene::_Create).before(StageMaterial::Command))
-        .configure_set(Update, StageCulling::CalcBounding   .in_set(ERunStageChap::D3).in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageModel::RenderMatrix))
+        .configure_set(Update, StageCulling::Command        .in_set(ERunStageChap::Modify).after(StageModel::InstanceCreate))
+        .configure_set(Update, StageCulling::CalcBounding   .in_set(ERunStageChap::Culling).in_set(FrameDataPrepare).after(StageCulling::Command))
         ;
 
 #[cfg(not(feature = "use_bevy"))]

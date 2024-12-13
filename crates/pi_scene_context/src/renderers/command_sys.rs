@@ -19,7 +19,9 @@ pub fn sys_create_renderer(
     mut viewers: Query<(&SceneID, &mut ViewerRenderersInfo, &mut DirtyViewerRenderersInfo)>,
     mut error: ResMut<ErrorRecord>,
     mut alter: Alter<(), (), (GraphId, SceneID, RendererBundle), ()>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_create_renderer"));
     cmds.drain().for_each(|OpsRendererCreate(entity, name, id_viewer, passtag, transparent)| {
         if let Ok((sceneid, mut viewerrenderinfo, mut viewerflag)) = viewers.get_mut(id_viewer) {
             let render_node = RenderNode::new(entity);
@@ -57,7 +59,9 @@ pub fn sys_act_renderer_modify(
     mut graphic: ResMut<PiRenderGraph>,
     mut error: ResMut<ErrorRecord>,
     mut cmdmodifys: ResMut<ActionListRendererModify>,
+    mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_act_renderer_modify"));
     cmds.drain().for_each(|cmd| {
         match cmd {
             OpsRendererTarget::Custom(entity, keytarget) => {
@@ -179,7 +183,9 @@ pub fn sys_act_renderer_connect(
     mut render_graphic: ResMut<PiRenderGraph>,
     renderers: Query<&GraphId>,
     mut error: ResMut<ErrorRecord>,
+    mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_act_renderer_connect"));
     cmds.drain().for_each(|OpsRendererConnect(before, after, isdisconnect)| {
         if let (Ok(nbefore), Ok(nafter)) = (renderers.get(before), renderers.get(after)) {
             if isdisconnect {
@@ -199,18 +205,15 @@ pub fn sys_act_renderer_connect(
 }
 pub fn sys_dispose_renderer(
     mut render_graphic: ResMut<PiRenderGraph>,
-    renderers: Query<(Entity, &GraphId, &RendererParam, &DisposeCan, &ViewerID), Changed<DisposeCan>>,
-    mut viewers: Query<&mut ViewerRenderersInfo>,
+    renderers: Query<(Entity, &GraphId, &DisposeCan), Changed<DisposeCan>>,
     mut error: ResMut<ErrorRecord>,
+    mut performance: ResMut<Performance>,
 ) {
-    renderers.iter().for_each(|(entity, nodeid, _, flag, idviewer)| {
+    // performance.systems.push(String::from("sys_dispose_renderer"));
+    renderers.iter().for_each(|(entity, nodeid, flag)| {
         if flag.0 == false { return; }
-        
         if let Err(err) = render_graphic.remove_node(nodeid.0) {
             error.graphic(entity, err);
-        }
-        if let Ok(mut renderinfos) = viewers.get_mut(idviewer.0) {
-            renderinfos.remove(entity);
         }
     });
 }

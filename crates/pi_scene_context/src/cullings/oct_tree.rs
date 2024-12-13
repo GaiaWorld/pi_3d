@@ -138,7 +138,7 @@ impl TBoundingInfoCalc for BoundingOctTree {
         result
     }
     fn size(&self) -> usize {
-        self.fast.len() + self.tree.len()
+        self.fast.capacity() + self.tree.ab_map.capacity()
     }
     fn reset_temp(&mut self) {
         self.temp.clear();

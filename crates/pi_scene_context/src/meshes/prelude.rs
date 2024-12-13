@@ -32,11 +32,29 @@ pub struct ActionSetMesh<'w> {
     pub forcelighting: ResMut<'w, ActionListMeshForceLighting>,
     // pub boneoffset: ResMut<'w, ActionListBoneOffset>,
 }
+impl<'w> MemSize for ActionSetMesh<'w> {
+    fn memsize(&self) -> usize {
+        self.create.memsize()
+        + self.state.memsize()
+        + self.pose.memsize()
+        + self.render_state.memsize()
+        + self.value_state.memsize()
+        + self.bounding.memsize()
+        + self.layermask.memsize()
+        + self.forcelighting.memsize()
+    }
+}
 
 #[derive(SystemParam)]
 pub struct ActionSetInstanceMesh<'w> {
     pub create: ResMut<'w, ActionListInstanceMeshCreate>,
     pub attr: ResMut<'w, ActionListInstanceAttr>,
+}
+impl<'w> MemSize for ActionSetInstanceMesh<'w> {
+    fn memsize(&self) -> usize {
+        self.create.memsize()
+        + self.attr.memsize()
+    }
 }
 
 // #[derive(SystemParam)]

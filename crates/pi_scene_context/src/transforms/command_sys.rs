@@ -47,7 +47,7 @@ pub fn sys_act_local(
     // mut parents: Query<&mut NodeChilds>,
     // mut childrens: Query<(&SceneID, &mut NodeParent)>,
     treenodes: Query<&DisposeReady, (With<Layer>, With<Down>, With<Up>)>,
-    mut flags: Query<&mut TransformNodeDirty>,
+    mut flags: Query<&mut TransformNodeParent>,
     mut tree: EntityTreeMut,
 
     mut cmds: ResMut<ActionListTransformNodeLocal>,
@@ -60,7 +60,7 @@ pub fn sys_act_local(
 ) {
     treecmds.drain().for_each(|OpsTransformNodeParent(entity, val)| {
         if let Ok(mut flag) = flags.get_mut(entity) {
-            *flag = TransformNodeDirty(true);
+            *flag = TransformNodeParent;
         }
         if let (Some(_down), Some(up)) = (tree.get_down(val), tree.get_up(entity)) {
             // log::warn!("transform_parent Child {:?} Parent {:?}", entity, val);
@@ -79,6 +79,7 @@ pub fn sys_act_local(
         }
     });
 
+    // log::error!("cmds {:?}", cmds.capacity());
     cmds.drain().for_each(|OpsTransformNodeLocal(entity, val)| {
         match val {
             ETransformSRT::Euler(x, y, z) => {
@@ -106,7 +107,7 @@ pub fn sys_act_local(
     });
 }
 
-pub type BundleTreeNode = (Down, Up, Layer, Enable, GlobalEnable);
+pub type BundleTreeNode = (Down, Up, Layer, Enable, GlobalEnable, TransformNodeParent);
 pub type BundleTransform = (
     TransformNodeDirty, LocalPosition, LocalScaling, LocalRotationQuaternion, LocalEulerAngles,
     LocalRotation, FlagLocalMatrix, LocalMatrix, GlobalMatrix, AbsoluteTransform, FlagAnimationStartResetComp,
@@ -153,6 +154,7 @@ impl ActionTransformNode {
             Layer::default(),
             Enable::default(),
             GlobalEnable(false),
+            TransformNodeParent,
         )
     }
 

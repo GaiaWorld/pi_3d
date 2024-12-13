@@ -28,9 +28,9 @@ pub fn sys_create_geometry(
     mut _disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
     engineopt: Res<EngineCustomPlugins>,
-    // mut cmdgeo: Alter<(), (), BundleGeometry, ()>,
-    // devicelimits: Res<DeviceLimits3D>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_create_geometry"));
     cmds.drain().for_each(|OpsGeomeryCreate(id_mesh, entity, mut vertex_desc, indices_desc)| {
         
         let instancestate = if let Ok((mut mesh, insstate)) = meshes.get_mut(id_mesh) {

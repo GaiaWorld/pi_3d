@@ -41,23 +41,13 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
             // } else if self.temp.contains(entity) {
             //     // 
             } else if let Some(item) = self.pool.get(entity) {
-                if filter.query(*entity) && is_in_frustum(item.0, item.1, &frustum_planes) {
+                let queryed = filter.query(*entity);
+                if queryed && is_in_frustum(item.0, item.1, &frustum_planes) {
                     result.push(*entity);
                     // self.temp.insert(*entity);
-                }
+                } 
             }
         });
-
-        // // log::warn!("{:?}, {:?}", frustum_planes.top, frustum_planes.bottom);
-        // self.pool.iter().for_each(|(entity, item)| {
-        //     if filter.filter(*entity) && is_in_frustum(item.0, item.1, &frustum_planes) {
-        //         result.push(*entity);
-        //     }
-        // });
-
-        // self.fast.iter().for_each(|item| {
-        //     result.push(*item);
-        // });
     }
 
     fn ray_test(
@@ -127,7 +117,7 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
         result
     }
     fn size(&self) -> usize {
-        self.fast.len() + self.pool.len()
+        self.fast.capacity() + self.pool.capacity()
     }
     fn reset_temp(&mut self) {
         self.temp.clear();

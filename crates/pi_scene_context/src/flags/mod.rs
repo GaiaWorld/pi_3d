@@ -82,7 +82,9 @@ pub fn sys_act_node_enable(
     mut cmds: ResMut<ActionListNodeEnable>,
     mut items: Query<&mut Enable>,
     mut records: ResMut<AnimeTargetRecordValues<Enable>>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_act_node_enable"));
     cmds.drain().for_each(|OpsNodeEnable(entity, val)| {
         if let Ok(mut node) = items.get_mut(entity) {
             records.insert(entity, val.clone());
@@ -104,7 +106,7 @@ pub struct PluginFlags;
 impl Plugin for PluginFlags {
     fn build(&self, app: &mut App) {
         app.insert_resource(ActionListNodeEnable::default());
-        app.configure_set(Update, StageEnable::Command .in_set(ERunStageChap::D3) .after(StageScene::Create));
+        app.configure_set(Update, StageEnable::Command .in_set(ERunStageChap::Modify) .after(StageScene::SceneCreate));
         app.add_systems(Update, 
             sys_act_node_enable
             // .run_if(runif_acts::<OpsNodeEnable>)

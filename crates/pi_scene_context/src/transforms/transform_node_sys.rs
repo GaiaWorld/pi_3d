@@ -78,28 +78,30 @@ pub struct TmpCalcWorldMatrix {
 
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct TmpTransformWorldCalc0(Vec<TmpCalcWorldMatrix>);
-impl TmpTransformWorldCalc0 {
-    pub fn size(&self) -> usize {
+impl MemSize for TmpTransformWorldCalc0 {
+    fn memsize(&self) -> usize {
         self.0.capacity() * 76
     }
 }
 
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct TmpTransformWorldCalc1(Vec<TmpCalcWorldMatrix>);
-impl TmpTransformWorldCalc1 {
-    pub fn size(&self) -> usize {
+impl MemSize for TmpTransformWorldCalc1 {
+    fn memsize(&self) -> usize {
         self.0.capacity() * 76
     }
 }
 
 pub fn sys_transform_dirty(
-    changes0: ComponentChanged<Layer>,
+    changes0: ComponentChanged<TransformNodeParent>,
     changes1: ComponentChanged<Enable>,
     changes2: ComponentChanged<LocalMatrix>,
 
     mut layers: Query<(Entity, &mut TransformNodeDirty)>,
     tree: EntityTree,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_transform_dirty"));
 
     let changes = changes0.iter().chain(changes1.iter()).chain(changes2.iter());
 
@@ -150,6 +152,7 @@ fn iter_dirty(
         mut temp1: ResMut<TmpTransformWorldCalc1>,
         mut performance: ResMut<Performance>,
     ) {
+        // performance.systems.push(String::from("sys_world_matrix_calc"));
         if performance.debug { performance.t_worldmatrix = pi_time::Instant::now(); }
 
         let mut level = 1;
@@ -352,16 +355,15 @@ fn calc_world_root_bytree(
 }
 
 pub fn sys_dispose_about_transform_node(
-    changes: ComponentChanged<DisposeReady>,
-    items: Query<(Entity, &DisposeReady, &TransformNode)>,
-    mut _disposereadylist: ResMut<ActionListDisposeReadyForRef>,
-    mut disposecanlist: ResMut<ActionListDisposeCan>,
+    // changes: ComponentChanged<DisposeReady>,
+    // items: Query<(Entity, &DisposeReady, &TransformNode)>,
+    // mut _disposereadylist: ResMut<ActionListDisposeReadyForRef>,
+    // mut disposecan: Query<&mut DisposeCan>,
 ) {
-    changes.iter().for_each(|entity| {
-        if let Ok((entity, state, _)) = items.get(*entity) {
-            if state.0 == false { return }
-    
-            disposecanlist.push(OpsDisposeCan::ops(entity));
-        }
-    });
+    // changes.iter().for_each(|entity| {
+    //     if let Ok((entity, state, _)) = items.get(*entity) {
+    //         if state.0 == false { return }
+    //         if let Ok(mut dispose) = disposecan.get_mut(*entity) { dispose.0 = true; }
+    //     }
+    // });
 }

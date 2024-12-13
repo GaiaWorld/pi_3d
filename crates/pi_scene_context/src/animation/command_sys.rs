@@ -10,7 +10,9 @@ pub fn sys_act_add_property_target_animation(
     anime_assets: TypeAnimeAssetMgrs,
     mut anime_contexts: TypeAnimeContexts,
     mut targetanimations: ResMut<ActionListAnimationGroupAction>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_act_add_property_target_animation"));
     cmds.drain().for_each(|OpsPropertyTargetAnimation(target, group, vtype, key)| {
         match vtype {
             EPropertyAnimationValueType::LocalPosition => {

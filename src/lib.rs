@@ -77,7 +77,9 @@ pub fn sys_state_resource(
         Res<CombineBuffer>,
         Res<CombineDataCommon>,
         Res<TmpTransformWorldCalc0>,
-        Res<TmpTransformWorldCalc1>
+        Res<TmpTransformWorldCalc1>,
+        Res<ImageTextureLoader>,
+        Res<ImageTextureViewLoader2>,
     ),
     renderers: Query<&Renderer>,
     performance: Res<Performance>,
@@ -88,9 +90,9 @@ pub fn sys_state_resource(
 ) {
     // if performance.debug == false { return };
     let mut instancedatalen = 0;
-    instancedatas.iter().for_each(|item| {
-        instancedatalen += item.bytes().len();
-    });
+    // instancedatas.iter().for_each(|item| {
+    //     instancedatalen += item.bytes().len();
+    // });
     instancesource.iter().for_each(|item| {
         instancedatalen += item.data.len();
     });
@@ -105,7 +107,7 @@ pub fn sys_state_resource(
 
     stateglobal.count_gltf              = asset_gltf.len();
     stateglobal.count_bindbuffer        = bindbuffers.asset_mgr().len();
-    stateglobal.mem_bindbuffer          = bindbuffers.asset_mgr().size() + materialdata;
+    stateglobal.mem_bindbuffer          = bindbuffers.memsize() + materialdata;
     stateglobal.count_bindgroup         = asset_mgr_bindgroup.0.len();
     stateglobal.count_pipeline          = pipelines.len();
     stateglobal.count_geometrybuffer    = vertexbuffers.total_buffer_count();
@@ -113,12 +115,12 @@ pub fn sys_state_resource(
     stateglobal.count_shader            = shaders.len();
     stateglobal.mem_shader              = shaders.size();
     stateglobal.count_imgtexture        = imagetextures.len();
-    stateglobal.mem_imgtexture          = imagetextures.size();
+    stateglobal.mem_imgtexture          = imagetextures.size() + res.4.size();
     stateglobal.count_shadermeta        = shadermetas.len();
     stateglobal.mem_shadermeta          = shadermetas.size();
     stateglobal.capcity_inscommon       = res.0.size() as u32;
     stateglobal.capcity_combindata      = res.1.size() as u32;
-    stateglobal.capcity_transformcalc   = res.2.size() as u32 + res.3.size() as u32;
+    stateglobal.capcity_transformcalc   = res.2.memsize() as u32 + res.3.memsize() as u32;
 
     let mut count;
 
@@ -307,7 +309,7 @@ pub fn sys_info_draw(
     meshes: Query<&RenderGeometryEable>,
     viewers: Query<(&ModelList, &ForceIncludeModelList, &ModelListAfterCulling)>,
     statecamera: Res<StateCamera>,
-    command: Query<(Entity, &DisposeReady, &DisposeCan)>,
+    command: Query<Entity>,
 ) {
     let mut entitycount = 0;
     command.iter().for_each(|_v| { entitycount += 1; });
@@ -359,28 +361,49 @@ pub fn sys_info_draw(
         viewer_includes.push(models.0.len() + forcemodels.0.len());
     });
 
-    // log::warn!(
-    //     "Entity: {}, ReadyGeo: {:?}-{:?}, Cullings: {:?}-{:?}-{:?}, Set0: {:?}, Set1: {:?}, Eff: {:?}, Tex: {:?}, BindGroups: {:?}, Shader: {:?}, Pipeline: {:?}, Draw: {:?}",
-    //     entitycount,
-    //     count_ready_geo, count_ready_geo_mesh,
-    //     viewer_includes, viewer_cullings, statecamera.culling_time,
-    //     count_set0, count_set1, count_effect, count_textures, count_bindgroups, count_shader, count_pipeline, count_draw
-    // );
+    log::warn!(
+        "Entity: {}, ReadyGeo: {:?}-{:?}, Cullings: {:?}-{:?}-{:?}, Set0: {:?}, Set1: {:?}, Eff: {:?}, Tex: {:?}, BindGroups: {:?}, Shader: {:?}, Pipeline: {:?}, Draw: {:?}",
+        entitycount,
+        count_ready_geo, count_ready_geo_mesh,
+        viewer_includes, viewer_cullings, statecamera.culling_time,
+        count_set0, count_set1, count_effect, count_textures, count_bindgroups, count_shader, count_pipeline, count_draw
+    );
 }
 
 pub fn sys_info_resource(
+    mut actions: ActionSets,
+    resource: ResourceSets,
     states: Res<StateResource>,
     psperformance: Res<ParticleSystemPerformance>,
     mut performance: ResMut<Performance>,
     errors: Res<ErrorRecord>,
+    cmd: Commands,
+    command: Query<Entity>,
+    actinstance: Res<ActionListInstanceMeshCreate>,
 ) {
+    let mut entitycount = 0;
+    command.iter().for_each(|_v| { entitycount += 1; });
     // log::warn!("Errors {:?}", errors.0.len());
+    if performance.systems.len() > 0 {
+        let mut str = String::from("");
+        performance.systems.iter().for_each(|sys| {
+            str += sys; str += "\n";
+        });
+        
+        let temp = String::from("temp/");
+        let root_dir = std::env::current_dir().unwrap();
+        let file_name = temp.clone() + "systems.md";
+        let _ = std::fs::write(root_dir.join(file_name), str);
+    }
+    // performance.systems.clear();
     performance.debug = true;
+    
+    let _ = actions.disposeref.drain();
     // log::warn!("DrawCall: {:?} WorldMatrix: {:?} DrawList {:?} Culling {:?} Uniform: {:?}", performance.drawcalls, performance.worldmatrix, performance.drawobjs, performance.culling, (performance.uniformupdate, performance.uniformbufferupdate));
-    // log::warn!(
-    //     "Materials: {:?}, BindBuffer: {:?}, VertexBuffer: {:?}, VertexBufferSize: {:?}, Shaders: {:?}, Pipeline: {:?}, ImageTexture: {:?},",
-    //     states.count_material, states.count_bindbuffer, states.count_geometrybuffer, states.size_geometrybuffer, states.count_shader, states.count_pipeline, states.count_imgtexture
-    // );
+    log::warn!(
+        "WorldMem: {:?}, Materials: {:?}, BindBuffer: {:?}, VertexBufferSize: {:?}, Shaders: {:?}, Pipeline: {:?}, ImageTexture: {:?},",
+        (entitycount, cmd.world().mem_size(), actions.memsize(), resource.memsize()), actinstance.memsize(), states.mem_bindbuffer, states.size_geometrybuffer, states.mem_shader, states.count_pipeline, states.mem_imgtexture
+    );
     // log::warn!(
     //     "PSCount: {:?}, PSPerformance: {:?}, sys_emitmatrix: {:?}, sys_direction: {:?}, sys_update_buffer: {:?}, sys_update_buffer_trail: {:?}, sys_emission: {:?}, sys_emitter: {:?}, sys_force_over_life_time: {:?}, sys_prewarm: {:?}",
     //     psperformance.particles, performance.particlesystem, psperformance.sys_emitmatrix, psperformance.sys_direction, psperformance.sys_update_buffer, psperformance.sys_update_buffer_trail
@@ -478,6 +501,28 @@ impl PluginBundleDefault {
 }
 
 #[derive(SystemParam)]
+pub struct ActionSetAnimation<'w> {
+    pub anime_instance: ResMut<'w, ActionListTargetAnimationAttribute>,
+    pub anime_sint: ResMut<'w, ActionListAnimatorableSint>,
+    pub anime_float: ResMut<'w, ActionListAnimatorableFloat>,
+    pub anime_uint: ResMut<'w, ActionListAnimatorableUint>,
+    pub anime_vec2: ResMut<'w, ActionListAnimatorableVec2>,
+    pub anime_vec3: ResMut<'w, ActionListAnimatorableVec3>,
+    pub anime_vec4: ResMut<'w, ActionListAnimatorableVec4>,
+}
+impl<'w> MemSize for ActionSetAnimation<'w> {
+    fn memsize(&self) -> usize {
+        self.anime_instance.memsize()
+        + self.anime_sint.memsize()
+        + self.anime_float.memsize()
+        + self.anime_uint.memsize()
+        + self.anime_vec2.memsize()
+        + self.anime_vec3.memsize()
+        + self.anime_vec4.memsize()
+    }
+}
+
+#[derive(SystemParam)]
 pub struct ActionSets<'w> {
     pub scene: ActionSetScene<'w>,
     pub scene_dispose: ResMut<'w, ActionListSceneDispose>,
@@ -493,13 +538,39 @@ pub struct ActionSets<'w> {
     pub geometry: ActionSetGeometry<'w>,
     pub material: ActionSetMaterial<'w>,
     pub anime: ActionSetAnimationGroup<'w>,
-    pub anime_instance: ResMut<'w, ActionListTargetAnimationAttribute>,
+    pub animation: ActionSetAnimation<'w>,
     pub renderer: ActionSetRenderer<'w>,
     pub trail: ActionSetTrailRenderer<'w>,
     pub parsys: ActionSetParticleSystem<'w>,
     pub property_targetanimation: ResMut<'w, ActionListPropertyTargetAnimation>,
     pub spritecreate: ResMut<'w, ActionListSpriteCreate>,
     pub spritemodify: ResMut<'w, ActionListSpriteModify>,
+    pub disposeref: ResMut<'w, ActionListDisposeReadyForRef>,
+}
+impl<'w> MemSize for ActionSets<'w> {
+    fn memsize(&self) -> usize {
+        self.scene.memsize()
+        + self.scene_dispose.memsize()
+        + self.obj_dispose.memsize()
+        + self.camera.memsize()
+        + self.light.memsize()
+        + self.shadow.memsize()
+        + self.transform.memsize()
+        + self.mesh.memsize()
+        + self.skin.memsize()
+        + self.instance.memsize()
+        + self.geometry.memsize()
+        + self.material.memsize()
+        + self.anime.memsize()
+        + self.animation.memsize()
+        + self.renderer.memsize()
+        + self.trail.memsize()
+        + self.parsys.memsize()
+        + self.property_targetanimation.memsize()
+        + self.spritecreate.memsize()
+        + self.spritemodify.memsize()
+        + self.disposeref.memsize()
+    }
 }
 
 #[derive(SystemParam)]
@@ -533,4 +604,43 @@ pub struct ResourceSets<'w> {
     pub error_record: ResMut<'w, ErrorRecord>,
     pub textureatlas: ResMut<'w, TextureFrameAtlasManager>,
     pub enginopt: Res<'w, EngineCustomPlugins>,
+    pub combinebuffer: Res<'w, CombineBuffer>,
+    pub commondata: Res<'w, CombineDataCommon>,
+    pub matrix0: Res<'w, TmpTransformWorldCalc0>,
+    pub matrix1: Res<'w, TmpTransformWorldCalc1>,
+    pub texloader2: Res<'w, ImageTextureViewLoader2>,
+}
+impl<'w> MemSize for ResourceSets<'w> {
+    fn memsize(&self) -> usize {
+        8
+        + self.node_material_blocks.memsize()
+        + self.imgtex_loader.memsize()
+        + self.imgtex_loader_state.memsize()
+        + self.imgtex_asset.size()
+        + self.imgtexview_asset.size()
+        + self.gltf2_asset.size()
+        + self.anime_assets.memsize()
+        + self.anime_contexts.memsize()
+        + self.render_targets.memsize()
+        + self.asset_samp.size()
+        + self.asset_atlas.0.size()
+        + self.scene_lighting_limit.memsize()
+        + self.model_lighting_limit.memsize()
+        + self.scene_shadow_limit.memsize()
+        + self.vb_mgr.size()
+        + self.vb_wait.size()
+        + self.shader_metas.size()
+        + self.anime_global.memsize()
+        + self.anime_events.memsize()
+        + self.trailbuffer.memsize()
+        + self.particlesys.memsize()
+        + self.error_record.memsize()
+        + self.textureatlas.size()
+        + self.enginopt.memsize()
+        + self.combinebuffer.memsize()
+        + self.commondata.memsize()
+        + self.matrix0.memsize()
+        + self.matrix1.memsize()
+        + self.texloader2.memsize()
+    }
 }

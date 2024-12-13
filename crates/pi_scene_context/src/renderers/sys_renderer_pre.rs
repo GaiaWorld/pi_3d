@@ -22,7 +22,9 @@ pub fn sys_sets_modify_by_viewer(
     renderers: Query<(&RendererParam, &PassTag)>,
     modelspass: Query<&PassIDs>,
     mut passes: Query<(&DisposeReady, &mut PassRendererID)>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_sets_modify_by_viewer"));
     // let time1 = pi_time::Instant::now();
 
     viewers.iter().for_each(|(_idviewer, _id_scene, modellist, forcemodels, viewrenderinfos)| {
@@ -87,7 +89,9 @@ pub fn sys_passrendererid_pass_reset(
     addeds: ComponentAdded<PassReset>,
     changes: ComponentChanged<PassReset>,
     mut passes: Query<(&mut PassRendererID, &PassModelID, &PassTag)>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_passrendererid_pass_reset"));
     let changes = addeds.iter().chain(changes.iter());
     changes.for_each(|entity| {
         if let Ok((mut passrenderer, idmodel, passpasstag)) = passes.get_mut(*entity) {
@@ -127,7 +131,9 @@ pub fn sys_sets_modify_by_scene_extend(
     scenes: Query<(Entity, &MainCameraOpaqueTarget), Or<(Changed<BRDFTexture>, Changed<MainCameraOpaqueTarget>, Changed<MainCameraDepthTarget>, Changed<EnvTexture>, Changed<SceneShadowRenderTarget>)>>,
     mut passes: Query<&mut PassBindGroupsDirty>,
     models: Query<(&SceneID, &PassIDs)>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_sets_modify_by_scene_extend"));
     // let time1 = pi_time::Instant::now();
 
     // log::error!("Scene : {:?}", temp);
@@ -167,7 +173,9 @@ pub fn sys_sets_modify_by_model(
         )>,
     >,
     mut passes: Query<&mut PassBindGroupsDirty>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_sets_modify_by_model"));
     // let time1 = pi_time::Instant::now();
 
     models.iter().for_each(|(_entity, passids)| {
@@ -184,7 +192,9 @@ pub fn sys_bind_buffer_apply(
     mut allocator: ResMut<ResBindBufferAllocator>,
     device: Res<PiRenderDevice>,
     queue: Res<PiRenderQueue>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_bind_buffer_apply"));
     // let time1 = pi_time::Instant::now();
 
     allocator.write_buffer(&device, &queue);
@@ -196,7 +206,9 @@ pub fn sys_vertice_buffer_apply(
     mut vb_allocator: ResMut<VertexBufferAllocator3D>,
     device: Res<PiRenderDevice>,
     queue: Res<PiRenderQueue>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_vertice_buffer_apply"));
     // let time1 = pi_time::Instant::now();
 
     vb_allocator.update_buffer(&device, &queue);

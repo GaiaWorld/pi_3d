@@ -15,6 +15,7 @@ pub fn sys_scene_anime_ctx(
     mut animeevents: ResMut<GlobalAnimeEvents>,
     mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_scene_anime_ctx"));
     if performance.debug { performance.t_animationgroup = pi_time::Instant::now(); }
 
     animeglobal.runtimeinfos.reset();

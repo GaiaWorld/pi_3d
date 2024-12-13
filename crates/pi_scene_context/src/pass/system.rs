@@ -13,7 +13,9 @@ pub fn sys_modify_pass_effect_by_material(
     changes4: ComponentChanged<EffectTextureSamplersComp>,
     materials: Query<&MaterialRefs>,
     mut passes: Query<&mut PassBindGroupsDirty>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_modify_pass_effect_by_material"));
     passaddeds.iter().chain(passchanges.iter()).for_each(|entity| {
         if let Ok(mut dirty) = passes.get_mut(*entity) {
             *dirty = PassBindGroupsDirty;

@@ -1,4 +1,4 @@
-use crate::ecs::*;
+use crate::{ecs::*, prelude::MemSize};
 
 use pi_bevy_asset::ShareAssetMgr;
 use pi_bevy_render_plugin::{constant::texture_sampler::{ColorFormat, DepthStencilFormat}, PiSafeAtlasAllocator};
@@ -193,5 +193,11 @@ impl CustomRenderTargets {
     }
     pub fn delete(&mut self, key: KeyRenderTarget) {
         self.0.remove(key);
+    }
+}
+impl MemSize for CustomRenderTargets {
+    fn memsize(&self) -> usize {
+        self.0.capacity() * 32
+        + self.1.capacity() * 48
     }
 }

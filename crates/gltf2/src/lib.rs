@@ -23,12 +23,12 @@ impl Plugin for PluginGLTF2Res {
 			Update,
             (
                 sys_gltf_analy
-            ).chain().in_set(StageScene::Create)
+            ).chain().in_set(StageScene::SceneCreate)
         );
 
 #[cfg(not(feature = "use_bevy"))]
         app
-        .add_systems(Update, sys_gltf_analy.in_set(StageScene::Create))
+        .add_systems(Update, sys_gltf_analy.in_set(StageScene::SceneCreate))
         ;
 
     }

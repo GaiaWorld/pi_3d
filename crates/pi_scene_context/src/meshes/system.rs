@@ -30,9 +30,9 @@ pub fn sys_calc_render_matrix_pre(
 }
 
 pub fn sys_calc_render_matrix(
-    changes: ComponentChanged<FlagRenderWorldMatrix>,
     mut meshes: Query<
-        (&AbstructMesh, &LocalScaling, &GlobalMatrix, &ScalingMode, &ModelVelocity, &mut AbsoluteTransform)
+        (Entity, &AbstructMesh, &LocalScaling, &GlobalMatrix, &ScalingMode, &ModelVelocity, &mut AbsoluteTransform),
+        Changed<FlagRenderWorldMatrix>
     >,
     instances: Query<&InstanceMesh>,
     renderalignments: Query<&RenderAlignment>,
@@ -44,35 +44,32 @@ pub fn sys_calc_render_matrix(
     let mut tempmatrix = Matrix::identity();
     let mut tempmatrix2 = Matrix::identity();
     let mut tempmatrix3 = Matrix::identity();
-    changes.iter().for_each(|entity| {
-        if let Ok((
-            _,
-            localscaling, transform, scalingmode, velocity, mut abstransform
-        )) = meshes.get_mut(*entity) {
-            let renderalignment = if let Ok(instance) = instances.get(*entity) {
-                renderalignments.get(instance.0)
-            } else {
-                renderalignments.get(*entity)
-            };
-            if let Ok(renderalignment) = renderalignment {
-                if let Ok(mut wm) = matrixs.get_mut(*entity) {
-        
-                    // log::warn!("calc_render_matrix:");
-                    // render_wm.0.clone_from(&worldmatrix.0);
-                    // render_wminv.0.clone_from(&worldmatrix_inv.0);
+    meshes.iter_mut().for_each(|(
+        entity, _,
+        localscaling, transform, scalingmode, velocity, mut abstransform
+    )| {
+        let renderalignment = if let Ok(instance) = instances.get(entity) {
+            renderalignments.get(instance.0)
+        } else {
+            renderalignments.get(entity)
+        };
+        if let Ok(renderalignment) = renderalignment {
+            if let Ok(mut wm) = matrixs.get_mut(entity) {
     
-                    _calc_render_matrix(
-                        velocity, localscaling, scalingmode, renderalignment, transform,
-                        &mut abstransform, &mut wm, pose.get(*entity),
-                        &mut rotation, &mut tempmatrix, &mut tempmatrix2, &mut tempmatrix3
-                    );
-                }
+                // log::warn!("calc_render_matrix:");
+                // render_wm.0.clone_from(&worldmatrix.0);
+                // render_wminv.0.clone_from(&worldmatrix_inv.0);
+
+                _calc_render_matrix(
+                    velocity, localscaling, scalingmode, renderalignment, transform,
+                    &mut abstransform, &mut wm, pose.get(entity),
+                    &mut rotation, &mut tempmatrix, &mut tempmatrix2, &mut tempmatrix3
+                );
             }
         }
     });
-    
     // let time1 = pi_time::Instant::now();
-    // log::debug!("SysRenderMatrixUpdate: {:?}", time1 - time);
+    // log::error!("sys_calc_render_matrix");
 }
 
 pub fn sys_instance_matidxs(
@@ -302,99 +299,96 @@ pub fn sys_animator_update_instance_attribute(
 pub fn sys_dispose_about_mesh(
     items: Query<
         (
-            Entity, &DisposeReady,
-            &PassIDs,
+            Entity, &DisposeReady, &PassIDs, &SceneID, 
             &GeometryID, &InstanceSourceRefs, &Mesh, &SkeletonID, &ModelInstanceAttributes
         ),
-        Or<(Changed<DisposeReady>, Changed<InstanceSourceRefs>)>,
+        Changed<DisposeReady>,
     >,
     mut viewers: Query<(&mut ModelList, &mut ForceIncludeModelList)>,
-    mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
-    mut disposecanlist: ResMut<ActionListDisposeCan>,
-    // mut geometries: Query<&mut GeometryRefs>,
+    mut scenes: Query<(&mut SceneColliderPool, &mut SceneBoundingPool)>,
     mut skeletons: Query<(&mut SkeletonRefs, &Skeleton)>,
+    mut materials: Query<&mut MaterialRefs>,
+    passes: Query<&PassMaterialID>,
+    empty: Res<SingleEmptyEntity>,
+    mut disposecan: Query<&mut DisposeCan>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_dispose_about_mesh"));
+
     items.iter().for_each(|(
-        entity, state, passids,
+        entity, state, passids, sceneid,
         idgeo, instancerefs, _, idskin, animators
     )| {
         if state.0 == false { return; }
-
-        disposecanlist.push(OpsDisposeCan::ops(entity));
+        if let Ok(mut dispose) = disposecan.get_mut(entity) {
+            dispose.0 = true;
+        }
         animators.attributes().iter().for_each(|v| {
             if let Some(entity) = v.1.entity() {
-                disposecanlist.push(OpsDisposeCan::ops(entity));
+                if let Ok(mut dispose) = disposecan.get_mut(entity) { dispose.0 = true; }
             }
         });
-
-        instancerefs.iter().for_each(|instance| {
-            disposereadylist.push(OpsDisposeReadyForRef::ops(*instance));
+        passids.0.iter().for_each(|entity| {
+            if let Ok(mut dispose) = disposecan.get_mut(*entity) { dispose.0 = true; }
+            if let Ok(matid) = passes.get(*entity) {
+                if let Ok(mut refs) = materials.get_mut(matid.0) {
+                    refs.remove(&entity);
+                }
+            }
         });
-
-        passids.0.iter().for_each(|id| {
-            disposereadylist.push(OpsDisposeReadyForRef::ops(*id));
+        instancerefs.iter().for_each(|entity| {
+            if let Ok(mut dispose) = disposecan.get_mut(*entity) { dispose.0 = true; }
         });
 
         // // Mesh - Geometry 一对一 直接销毁
         // if let Ok(mut georefs) = geometries.get_mut(idgeo.0) {
         //     georefs.remove(&entity);
         // }
-        // log::warn!("Geometry: {:?}", idgeo.0);
-        disposecanlist.push(OpsDisposeCan::ops(idgeo.0));
+        if let Ok(mut dispose) = disposecan.get_mut(idgeo.0) { dispose.0 = true; }
 
         if let Some(idskin) = idskin.0 {
             if let Ok((mut refs, _skin)) = skeletons.get_mut(idskin) {
                 refs.remove(&entity);
             }
-            disposereadylist.push(OpsDisposeReadyForRef::ops(idskin));
         }
         viewers.iter_mut().for_each(|(mut list0, mut list1)| {
             list0.0.remove(&entity);
             list1.0.remove(&entity);
         });
-    });
-}
-
-pub fn sys_dispose_about_pass(
-    changes: ComponentChanged<DisposeReady>,
-    items: Query<(Entity, &DisposeReady, &PassMaterialID, &PassModelID)>,
-    mut materials: Query<&mut MaterialRefs>,
-    mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
-    mut disposecanlist: ResMut<ActionListDisposeCan>,
-    empty: Res<SingleEmptyEntity>,
-) {
-    changes.iter().for_each(|entity| {
-        if let Ok((entity, state, matid, _)) = items.get(*entity) {
-            if state.0 == false { return; }
-    
-            disposecanlist.push(OpsDisposeCan::ops(entity));
-    
-            if let Ok(mut refs) = materials.get_mut(matid.0) {
-                refs.remove(&entity);
-            }
-            if empty.id() != matid.0 {
-                disposereadylist.push(OpsDisposeReadyForRef::ops(matid.0));
-            }
+        
+        if let Ok((mut pool1, mut pool2)) = scenes.get_mut(sceneid.0) {
+            pool1.remove(entity);
+            pool2.remove(entity);
         }
     });
 }
 
+pub fn sys_dispose_about_pass(
+) {
+}
+
 pub fn sys_dispose_about_instance(
     changes: ComponentChanged<DisposeReady>,
-    items: Query<(Entity, &DisposeReady, &InstanceMesh, &ModelInstanceAttributes)>,
+    items: Query<(Entity, &SceneID, &DisposeReady, &InstanceMesh, &ModelInstanceAttributes)>,
     mut viewers: Query<(&mut ModelList, &mut ForceIncludeModelList)>,
+    mut scenes: Query<(&mut SceneColliderPool, &mut SceneBoundingPool)>,
     mut instancesources: Query<(&mut InstanceSourceRefs, &mut FlagMeshNeedRecheckForView)>,
-    mut _disposereadylist: ResMut<ActionListDisposeReadyForRef>,
-    mut disposecanlist: ResMut<ActionListDisposeCan>,
+    mut disposecan: Query<&mut DisposeCan>,
+    mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_dispose_about_instance"));
     changes.iter().for_each(|entity| {
-        if let Ok((entity, state, sourceid, animators)) = items.get(*entity) {
+        if let Ok((entity, sceneid, state, sourceid, animators)) = items.get(*entity) {
             if state.0 == false { return; }
 
-            disposecanlist.push(OpsDisposeCan::ops(entity));
+            if let Ok(mut dispose) = disposecan.get_mut(entity) {
+                dispose.0 = true;
+            }
             animators.attributes().iter().for_each(|v| {
                 if let Some(entity) = v.1.entity() {
-                    disposecanlist.push(OpsDisposeCan::ops(entity));
+                    if let Ok(mut dispose) = disposecan.get_mut(entity) {
+                        dispose.0 = true;
+                    }
                 }
             });
 
@@ -409,9 +403,10 @@ pub fn sys_dispose_about_instance(
                 list1.0.remove(&entity);
             });
 
-            // if empty.id() != sourceid.0 {
-            //     disposereadylist.push(OpsDisposeReady::ops(sourceid.0));
-            // }
+            if let Ok((mut pool1, mut pool2)) = scenes.get_mut(sceneid.0) {
+                pool1.remove(entity);
+                pool2.remove(entity);
+            }
         }
     });
 }

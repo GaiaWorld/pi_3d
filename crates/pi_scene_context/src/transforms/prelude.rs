@@ -14,8 +14,8 @@ pub enum StageTransform {
     TransformCreate,
     _TransformCreate,
     TransformCommand,
-    // TransformCommandApply,
     TransformCalcMatrix,
+    TransformDispose,
 }
 
 #[derive(SystemParam)]
@@ -26,6 +26,16 @@ pub struct ActionSetTransform<'w> {
     pub tree: ResMut<'w, ActionListTransformNodeParent>,
     pub enable: ResMut<'w, ActionListNodeEnable>,
     pub collider: ResMut<'w, ActionListCollider>,
+}
+impl<'w> MemSize for ActionSetTransform<'w> {
+    fn memsize(&self) -> usize {
+        self.create.memsize()
+        + self.localrotq.memsize()
+        + self.localsrt.memsize()
+        + self.tree.memsize()
+        + self.enable.memsize()
+        + self.collider.memsize()
+    }
 }
 
 #[derive(Resource, Default)]

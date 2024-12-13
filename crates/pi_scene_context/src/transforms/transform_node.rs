@@ -9,6 +9,10 @@ pub struct TransformNode;
 #[derive(Clone, Copy, Component, Default)]
 pub struct TransformNodeDirty(pub bool);
 
+/// 标识实体 TransformNode 节点父节点是否更新
+#[derive(Clone, Copy, Component, Default)]
+pub struct TransformNodeParent;
+
 /// 记录 TransformNode 的局部坐标
 #[derive(Clone, Component)]
 pub struct LocalPosition(pub Vector3);

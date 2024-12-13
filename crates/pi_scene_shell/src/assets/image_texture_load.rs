@@ -64,6 +64,21 @@ pub struct ImageTextureLoader {
     pub failrecord: XHashMap<IDImageTextureLoad, EErrorImageLoad>,
     pub query_counter: IDImageTextureLoad,
 }
+impl MemSize for ImageTextureLoader {
+    fn memsize(&self) -> usize {
+        self.wait.len() * 32 + 256
+        + self.success_load.len() * 8 + 256
+        + self.fails.len() * 8 + 256
+        + self.loading.capacity() * 8
+        + self.loading_image.len() * 32 + 256
+        + self.loading_data.len() * 32 + 256
+        + self.fail_reason.capacity() * 16
+        + self.fail_imgtex.len() * 16 + 256
+        + self.success.capacity() * 16
+        + self.failrecord.len() * 16
+        + 16
+    }
+}
 impl Default for ImageTextureLoader {
     fn default() -> Self {
         Self {
@@ -516,6 +531,11 @@ pub struct StateTextureLoader {
     pub texview_fail: u32,
     pub texview_waiting: u32,
 }
+impl MemSize for StateTextureLoader {
+    fn memsize(&self) -> usize {
+        8 * 4
+    }
+}
 
 pub struct PluginImageTextureViewLoad<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewUsage> + Component>(PhantomData<(K, D)>);
 impl<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewUsage> + Component> Plugin for PluginImageTextureViewLoad<K, D> {
@@ -524,9 +544,9 @@ impl<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewU
             app.insert_resource(ImageTextureLoader::default());
             app.insert_resource(StateTextureLoader::default());
 
-            app.configure_set(Update, StageTextureLoad::TextureRequest  .in_set(ERunStageChap::D3));
-            app.configure_set(Update, StageTextureLoad::TextureLoading  .in_set(ERunStageChap::D3).after(StageTextureLoad::TextureRequest));
-            app.configure_set(Update, StageTextureLoad::TextureLoaded   .in_set(ERunStageChap::D3).after(StageTextureLoad::TextureLoading).before(ERunStageChap::Uniform));
+            app.configure_set(Update, StageTextureLoad::TextureRequest  .in_set(ERunStageChap::Modify));
+            app.configure_set(Update, StageTextureLoad::TextureLoading  .in_set(ERunStageChap::Modify).after(StageTextureLoad::TextureRequest));
+            app.configure_set(Update, StageTextureLoad::TextureLoaded   .in_set(ERunStageChap::Modify).after(StageTextureLoad::TextureLoading));
 
 #[cfg(feature="use_pi_ecs")]
 {
@@ -560,6 +580,13 @@ pub struct ImageTextureViewLoader2 {
     pub wait: Share<SegQueue<(ObjectID, KeyImageTextureViewFrame, IDImageTextureLoad, usize)>>,
     pub success: Share<SegQueue<(ObjectID, EKeyTexture, ETextureViewUsage, usize)>>,
     pub fail: Share<SegQueue<(ObjectID, EKeyTexture, usize)>>,
+}
+impl MemSize for ImageTextureViewLoader2 {
+    fn memsize(&self) -> usize {
+        self.wait.len() * 64 + 256
+        + self.success.len() * 64 + 256
+        + self.fail.len() * 64 + 256
+    }
 }
 
 pub fn sys_image_texture_view_load_launch2(

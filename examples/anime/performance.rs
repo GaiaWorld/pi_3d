@@ -33,7 +33,7 @@ fn setup(
         (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
     } else { return; };
 
-    let tes_size = 10;
+    let tes_size = 30;
     fps.frame_ms = 4;
 
     actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
@@ -132,7 +132,7 @@ pub fn main() {
     app.add_startup_system(Update, setup.after(base::setup_default_mat));
     
 
-    app.add_systems(Update, sys_anime_event.in_set(ERunStageChap::Anime));
+    app.add_systems(Update, sys_anime_event.in_set(ERunStageChap::Modify));
     
     // app.run()
     crate::base::run_loop(app, window, event_loop)

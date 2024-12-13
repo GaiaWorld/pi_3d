@@ -6,7 +6,7 @@ mod command_sys;
 mod command;
 mod system;
 
-use pi_scene_context::prelude::*;
+use pi_scene_context::{prelude::*, scene::StageScene};
 
 pub use base::*;
 pub use command::*;
@@ -15,6 +15,16 @@ pub use system::*;
 
 #[derive(Resource, Deref, DerefMut)]
 pub struct ResTrailBuffer(pub Option<TrailBuffer>);
+impl MemSize for ResTrailBuffer {
+    fn memsize(&self) -> usize {
+        if let Some(item) = &self.0 {
+            item.vertices.capacity() * 4
+            + 64
+        } else {
+            64
+        }
+    }
+}
 
 #[derive(Resource)]
 pub struct ArgTrailBufferSize(pub usize);
@@ -24,6 +34,12 @@ pub struct ActionSetTrailRenderer<'w> {
     pub create: ResMut<'w, ActionListTrail>,
     pub age: ResMut<'w, ActionListTrailAge>,
 }
+impl<'w> MemSize for ActionSetTrailRenderer<'w> {
+    fn memsize(&self) -> usize {
+        self.create.memsize()
+        + self.age.memsize()
+    }
+}
 
 #[derive(Debug, SystemSet, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum StageTrail {
@@ -31,6 +47,7 @@ pub enum StageTrail {
     _TrailCreate,
     TrailCommand,
     TrailUpdate,
+    TrailDispose,
 }
 
 #[derive(Resource, Default)]
@@ -85,10 +102,11 @@ impl Plugin for PluginTrail {
         
 #[cfg(not(target_feature = "use_bevy"))]
     app
-        .configure_set( Update, StageTrail::TrailCreate .in_set(ERunStageChap::D3).after(StageSkeleton::_SkinCreate))
-        .configure_set( Update, StageTrail::_TrailCreate.in_set(ERunStageChap::D3).after(StageTrail::TrailCreate).before(StageTransform::TransformCommand).before(StageEnable::Command))
-        .configure_set( Update, StageTrail::TrailCommand.in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageTrail::_TrailCreate))
-        .configure_set( Update, StageTrail::TrailUpdate .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageTrail::TrailCommand).after(StageGeometry::GeometryLoaded))
+        .configure_set( Update, StageTrail::TrailCreate .in_set(ERunStageChap::Create).after(StageSkeleton::_SkinCreate))
+        .configure_set( Update, StageTrail::_TrailCreate.in_set(ERunStageChap::Create).after(StageTrail::TrailCreate).before(StageTransform::TransformCommand).before(StageEnable::Command))
+        .configure_set( Update, StageTrail::TrailCommand.in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageTrail::_TrailCreate))
+        .configure_set( Update, StageTrail::TrailUpdate .in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageTrail::TrailCommand).after(StageGeometry::GeometryLoaded))
+        .configure_set( Update, StageTrail::TrailDispose.in_set(ERunStageChap::Dispose).before(StageTransform::TransformDispose))
         ;
 
 #[cfg(not(target_feature = "use_bevy"))]
@@ -96,8 +114,8 @@ impl Plugin for PluginTrail {
         .add_systems(Update, sys_create_trail_mesh       .in_set(StageTrail::TrailCreate))
         .add_systems(Update, sys_act_trail_age           .in_set(StageTrail::TrailCommand))
         .add_systems(Update, sys_trail_update            .in_set(StageTrail::TrailUpdate))
-        .add_systems(Update, sys_dispose_about_trail_linked      .after(sys_dispose_ready)               .in_set(ERunStageChap::StateCheck))
-        .add_systems(Update, sys_dispose_about_trail             .after(sys_dispose_about_trail_linked)  .in_set(ERunStageChap::StateCheck))
+        .add_systems(Update, sys_dispose_about_trail_linked      .after(sys_dispose_ready)      .before(sys_dispose_can)         .in_set(StageTrail::TrailDispose))
+        .add_systems(Update, sys_dispose_about_trail             .after(sys_dispose_about_trail_linked).before(sys_dispose_can)  .in_set(StageTrail::TrailDispose))
         ;
     }
 }

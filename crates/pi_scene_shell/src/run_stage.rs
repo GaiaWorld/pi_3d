@@ -2,7 +2,7 @@ use crate::ecs::*;
 
 use pi_bevy_render_plugin::{PiRenderDevice, PiRenderSystemSet};
 
-use crate::prelude::{DeviceLimits3D, EngineInstant, ErrorRecord, ActionList};
+use crate::prelude::{ActionList, DeviceLimits3D, EngineInstant, ErrorRecord, MemSize};
 use crate::prelude::FrameDataPrepare;
 
 pub type KeySystem = &'static str;
@@ -40,13 +40,13 @@ pub enum ERunStageChap {
     D3,
     New,
     // 场景中的 节点, Mesh, Light, Camera [一级实体]
-    Initial,
-    _InitialApply,
-    AnimeAmount,
-    Anime,
-    Uniform,
+    Create,
+    Modify,
     Dispose,
-    _DisposeApply,
+    _Dispose,
+    Culling,
+    Culled,
+    Collect,
     StateCheck,
 }
 
@@ -55,14 +55,14 @@ impl Plugin for PluginRunstage {
     fn build(&self, app: &mut App) {
         app.configure_set(Update, ERunStageChap::D3.run_if(runif_3d));
         app.configure_set(Update, ERunStageChap::New            .in_set(ERunStageChap::D3));
-        app.configure_set(Update, ERunStageChap::Initial        .in_set(ERunStageChap::D3).after(ERunStageChap::New));
-        app.configure_set(Update, ERunStageChap::_InitialApply  .in_set(ERunStageChap::D3).after(ERunStageChap::Initial));
-        app.configure_set(Update, ERunStageChap::AnimeAmount    .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(ERunStageChap::_InitialApply));
-        app.configure_set(Update, ERunStageChap::Anime          .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(ERunStageChap::AnimeAmount));
-        app.configure_set(Update, ERunStageChap::Uniform        .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(ERunStageChap::Anime));
-        app.configure_set(Update, ERunStageChap::Dispose        .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(ERunStageChap::Uniform));
-        app.configure_set(Update, ERunStageChap::_DisposeApply  .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(ERunStageChap::Dispose));
-        app.configure_set(Update, ERunStageChap::StateCheck     .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(ERunStageChap::_DisposeApply).before(PiRenderSystemSet));
+        app.configure_set(Update, ERunStageChap::Create         .in_set(ERunStageChap::D3).after(ERunStageChap::New));
+        app.configure_set(Update, ERunStageChap::Modify         .in_set(ERunStageChap::D3).after(ERunStageChap::Create));
+        app.configure_set(Update, ERunStageChap::Dispose        .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(ERunStageChap::Modify));
+        app.configure_set(Update, ERunStageChap::_Dispose        .in_set(ERunStageChap::D3).after(ERunStageChap::Dispose));
+        app.configure_set(Update, ERunStageChap::Culling        .in_set(ERunStageChap::D3).after(ERunStageChap::_Dispose));
+        app.configure_set(Update, ERunStageChap::Culled         .in_set(ERunStageChap::D3).after(ERunStageChap::Culling));
+        app.configure_set(Update, ERunStageChap::Collect        .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(ERunStageChap::Culled));
+        app.configure_set(Update, ERunStageChap::StateCheck     .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(ERunStageChap::Collect).before(PiRenderSystemSet));
 
         app.insert_resource(ErrorRecord(vec![], false));
 
@@ -78,7 +78,7 @@ impl Plugin for PluginRunstage {
 
 #[cfg(feature = "use_bevy")]
 {
-    app.add_systems(Update, apply_deferred.in_set(ERunStageChap::_InitialApply));
+    app.add_systems(Update, apply_deferred.in_set(ERunStageChap::Modify));
     app.add_systems(Update, apply_deferred.in_set(ERunStageChap::_DisposeApply));
 }
 
@@ -185,6 +185,11 @@ pub struct EngineCustomPlugins {
     pub max_instance_batch_count: u32,
     // 纹理最大尺寸
     pub max_texture_size: u32,
+}
+impl MemSize for EngineCustomPlugins {
+    fn memsize(&self) -> usize {
+        16 * 4
+    }
 }
 impl EngineCustomPlugins {
     pub fn new(param: &[u32]) -> Self {

@@ -21,5 +21,13 @@ pub struct ActionSetRenderer<'w> {
     pub modify: ResMut<'w, ActionListRendererModify>,
     pub target: ResMut<'w, ActionListRendererTarget>,
 }
+impl<'w> MemSize for ActionSetRenderer<'w> {
+    fn memsize(&self) -> usize {
+        self.create.memsize()
+        + self.connect.memsize()
+        + self.modify.memsize()
+        + self.target.memsize()
+    }
+}
 
 // pub type StateTransformQuery = QueryState<(&'static SceneID, &'static Enable, &'static GlobalEnable)>;

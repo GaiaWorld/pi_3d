@@ -29,17 +29,18 @@ impl Plugin for PluginSkeleton {
             (
                 StageSkeleton::SkinCreate.after(StageModel::_InitMesh),
                 StageSkeleton::_SkinCreate.after(StageSkeleton::SkinCreate).before(StageTransform::TransformCommand),
-                StageSkeleton::Command.in_set(FrameDataPrepare).after(StageSkeleton::_SkinCreate).before(ERunStageChap::Uniform),
-                StageSkeleton::Calc.in_set(FrameDataPrepare).after(StageSkeleton::Command).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Uniform),
+                StageSkeleton::SkinCommand.in_set(FrameDataPrepare).after(StageSkeleton::_SkinCreate).before(ERunStageChap::Collect),
+                StageSkeleton::SkinCalc.in_set(FrameDataPrepare).after(StageSkeleton::SkinCommand).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Collect),
             )
         );
 
         #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StageSkeleton::SkinCreate    .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageModel::_InitMesh))
-        .configure_set(Update, StageSkeleton::_SkinCreate   .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageSkeleton::SkinCreate).before(StageTransform::TransformCommand))
-        .configure_set(Update, StageSkeleton::Command       .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageSkeleton::_SkinCreate).before(ERunStageChap::Uniform))
-        .configure_set(Update, StageSkeleton::Calc          .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageSkeleton::Command).after(StageTransform::TransformCalcMatrix).before(ERunStageChap::Uniform))
+        .configure_set(Update, StageSkeleton::SkinCreate    .in_set(ERunStageChap::Create).after(StageModel::_InitMesh))
+        .configure_set(Update, StageSkeleton::_SkinCreate   .in_set(ERunStageChap::Create).after(StageSkeleton::SkinCreate).before(StageTransform::TransformCommand))
+        .configure_set(Update, StageSkeleton::SkinCommand   .in_set(ERunStageChap::Modify).after(StageSkeleton::_SkinCreate))
+        .configure_set(Update, StageSkeleton::SkinCalc      .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageSkeleton::SkinCommand).after(StageTransform::TransformCalcMatrix))
+        .configure_set(Update, StageSkeleton::SkinDispose   .in_set(ERunStageChap::Dispose).before(StageTransform::TransformDispose))
         ;
 
         let enginepugins = app.world.get_resource::<EngineCustomPlugins>().unwrap();
@@ -57,11 +58,11 @@ impl Plugin for PluginSkeleton {
                         sys_act_skin_use,
                         // sys_act_bone_pose,
                         sys_bones_absolute
-                    ).chain().in_set(StageSkeleton::Command),
+                    ).chain().in_set(StageSkeleton::SkinCommand),
                     (
                         sys_skin_dirty_by_bone,
                         sys_skin_buffer_update,
-                    ).chain().in_set(StageSkeleton::Calc),
+                    ).chain().in_set(StageSkeleton::SkinCalc),
                     sys_dispose_about_skeleton.after(sys_dispose_ready).in_set(ERunStageChap::Dispose)
                 )
             );
@@ -71,14 +72,14 @@ impl Plugin for PluginSkeleton {
             app
             .add_systems(Update, sys_create_bone.after(sys_create_mesh).in_set(StageSkeleton::SkinCreate))
             .add_systems(Update, sys_create_skin.after(sys_create_bone).in_set(StageSkeleton::SkinCreate))
-            .add_systems(Update, sys_act_skin_use.in_set(StageSkeleton::Command))
+            .add_systems(Update, sys_act_skin_use.in_set(StageSkeleton::SkinCommand))
             // .add_systems(Update, sys_act_bone_pose.after(sys_act_skin_use).in_set(StageSkeleton::Command))
-            .add_systems(Update, sys_bones_absolute.after(sys_act_skin_use).in_set(StageSkeleton::Command))
-            .add_systems(Update, sys_bones_local_dirty.in_set(StageSkeleton::Calc))
-            .add_systems(Update, sys_bones_worldmatrix.after(sys_bones_local_dirty).in_set(StageSkeleton::Calc))
-            .add_systems(Update, sys_skin_dirty_by_bone.after(sys_bones_worldmatrix).in_set(StageSkeleton::Calc))
-            .add_systems(Update, sys_skin_buffer_update.after(sys_skin_dirty_by_bone).in_set(StageSkeleton::Calc))
-            .add_systems(Update, sys_dispose_about_skeleton.after(sys_dispose_ready).in_set(ERunStageChap::Dispose))
+            .add_systems(Update, sys_bones_absolute.after(sys_act_skin_use).in_set(StageSkeleton::SkinCommand))
+            .add_systems(Update, sys_bones_local_dirty.in_set(StageSkeleton::SkinCalc))
+            .add_systems(Update, sys_bones_worldmatrix.after(sys_bones_local_dirty).in_set(StageSkeleton::SkinCalc))
+            .add_systems(Update, sys_skin_dirty_by_bone.after(sys_bones_worldmatrix).in_set(StageSkeleton::SkinCalc))
+            .add_systems(Update, sys_skin_buffer_update.after(sys_skin_dirty_by_bone).in_set(StageSkeleton::SkinCalc))
+            .add_systems(Update, sys_dispose_about_skeleton.after(sys_dispose_ready).in_set(StageSkeleton::SkinDispose))
             ;
         }
     }

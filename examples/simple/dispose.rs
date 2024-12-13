@@ -1,11 +1,12 @@
 #![feature(box_into_inner)]
 
-use std::sync::Arc;
+use std::{result, sync::Arc};
 
 use base::DemoScene;
+use crossbeam::queue::SegQueue;
 use pi_node_materials::prelude::*;
 use pi_scene_shell::{prelude::*, frame_time::SingleFrameTimeCommand};
-use pi_scene_context::{prelude::*, scene::StageScene};
+use pi_scene_context::{geometry::instance::{instanced_buffer::CombineBuffer, types::ModelInstanceAttributes}, prelude::*, scene::StageScene};
 use pi_mesh_builder::cube::*;
 use pi_wy_rng::WyRng;
 use rand::Rng;
@@ -15,8 +16,11 @@ mod base;
 #[path = "../copy.rs"]
 mod copy;
 
+
+const TEST_SIZE: usize = 1000;
+
 #[derive(Resource)]
-pub struct ListTestData(Vec<(Entity, Entity)>, Option<Entity>, WyRng);
+pub struct ListTestData(SegQueue<(Entity, Entity, Vec<Entity>)>, Option<Entity>, WyRng, usize);
 
 // pub struct SysTest;
 // impl TSystemStageInfo for SysTest {}
@@ -28,39 +32,83 @@ pub struct ListTestData(Vec<(Entity, Entity)>, Option<Entity>, WyRng);
         mut testdata: ResMut<ListTestData>,
         mut actions: pi_3d::ActionSets,
         defaultmat: Res<SingleIDBaseDefaultMaterial>,
+        scenes: Query<&SceneBoundingPool>,
+        materials: Query<&MaterialRefs>,
+        viewers: Query<(&ModelList, &ModelListAfterCulling)>,
+        instancedatas: Query<&ModelInstanceAttributes>,
+        instancesource: Query<&InstancedMeshTransparentSortCollection>,
+        combinebuffer: Res<CombineBuffer>,
+        meshes: Query<&InstanceSourceRefs>,
+        tempvecs: Res<TmpCommonVec>,
     ) {
-        if let Some((entity, idmat)) = testdata.0.pop() {
-            actions.obj_dispose.push(OpsDisposeReady::ops(entity));
-            actions.obj_dispose.push(OpsDisposeReady::ops(idmat));
-        }
-        
-        // if testdata.0.len() % 2 != 0 {
-        //     if let Some(entity) = testdata.0.pop() {
-        //         disposereadylist.push(OpsDisposeReady::ops(entity));
-        //         // actions.transform.enable.push(OpsNodeEnable::ops(entity, false));
-        //     }
-        //     return;
-        // }
+        let _ = actions.disposeref.drain();
+        let mut instancedatalen = 0;
+        instancedatas.iter().for_each(|item| {
+            instancedatalen += item.bytes().len();
+        });
+        instancesource.iter().for_each(|item| {
+            instancedatalen += item.data.len();
+        });
+        instancedatalen += combinebuffer.data.size();
 
+        // return;
+        let mut result = vec![instancedatalen];
+        // scenes.iter().for_each(|item| {
+        //     result.push(item.size() * 40);
+        // });
+        // materials.iter().for_each(|item| {
+        //     result.push(item.capacity() * 8);
+        // });
+        meshes.iter().for_each(|item| {
+            result.push(item.capacity() * 8);
+        });
+        // viewers.iter().for_each(|item| {
+        //     result.push(item.0.0.capacity() * 8);
+        //     result.push(item.1.0.capacity() * 8);
+        // });
+        // log::error!("{:?}", (result, testdata.0.len(), tempvecs.instancesort.capacity() * 64));
         if let Some(scene) = testdata.1.clone() {
-            let random = &mut testdata.2;
-            // log::warn!("Random: {:?}", random.gen_range(-5.0f32..5.0f32));
-            let cube: Entity = commands.spawn_empty_id();
-            actions.mesh.create.push(OpsMeshCreation::ops(scene, cube, MeshInstanceState::default()));
-            actions.transform.tree.push(OpsTransformNodeParent::ops(cube, scene));
-            actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Translation(random.gen_range(-5.0f32..5.0f32) as f32 * 0.5, random.gen_range(-5.0f32..5.0f32) * 0.5, random.gen_range(-5.0f32..5.0f32) * 0.5)));
+            if let Some((source, idmat, mut instances)) = testdata.0.pop() {
+                actions.obj_dispose.push(OpsDisposeReady::ops(source));
+                actions.obj_dispose.push(OpsDisposeReady::ops(idmat));
 
-            let id_geo = commands.spawn_empty_id();
-            let attrs = CubeBuilder::attrs_meta();
-            // attrs.push(VertexBufferDesc::instance_world_matrix());
-            actions.geometry.create.push(OpsGeomeryCreate::ops(cube, id_geo, attrs, Some(CubeBuilder::indices_meta())));
+                instances.drain(..).for_each(|item: Entity| {
+                    actions.obj_dispose.push(OpsDisposeReady::ops(item));
+                });
+
+                let mut temp = vec![];
+                let source = commands.spawn_empty_id();
+                actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
+                actions.mesh.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { instance_matrix: true, ..Default::default() }));
+                let id_geo = commands.spawn_empty_id();
+                let attrs = CubeBuilder::attrs_meta();
+                actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
+                let idmat = commands.spawn_empty_id();
+                actions.material.create.push(OpsMaterialCreate::ops(idmat, DefaultShader::KEY));
+                actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
     
-            let idmat = commands.spawn_empty_id();
-            actions.material.create.push(OpsMaterialCreate::ops(idmat, DefaultShader::KEY));
-            // let idmat = defaultmat.0;
-            actions.material.usemat.push(OpsMaterialUse::ops(cube, idmat, DemoScene::PASS_OPAQUE));
-
-            testdata.0.insert(0, (cube, idmat));
+                for _ in 0..TEST_SIZE {
+                    let random = &mut testdata.2;
+                    let instance = commands.spawn_empty_id();
+                    actions.instance.create.push(OpsInstanceMeshCreation::ops(source, instance));
+                    actions.transform.tree.push(OpsTransformNodeParent::ops(instance, scene));
+                    actions.transform.localsrt.push(OpsTransformNodeLocal::ops(instance, ETransformSRT::Translation(random.gen_range(-0.5f32..0.5f32) as f32 * (TEST_SIZE as f32), random.gen_range(-0.5f32..0.5f32) * (TEST_SIZE as f32), random.gen_range(0f32..0.5f32) * (TEST_SIZE as f32))));
+                    actions.transform.localsrt.push(OpsTransformNodeLocal::ops(instance, ETransformSRT::Scaling(0.5, 0.5, 0.5)));
+                    
+                    // let instance = commands.spawn_empty_id();
+                    // actions.transform.tree.push(OpsTransformNodeParent::ops(instance, scene));
+                    // actions.transform.create.push(OpsTransformNode::ops(scene, instance));
+                    // actions.transform.localsrt.push(OpsTransformNodeLocal::ops(instance, ETransformSRT::Translation(random.gen_range(-0.5f32..0.5f32) as f32 * (TEST_SIZE as f32), random.gen_range(-0.5f32..0.5f32) * (TEST_SIZE as f32), random.gen_range(0f32..0.5f32) * (TEST_SIZE as f32))));
+                    // actions.transform.localsrt.push(OpsTransformNodeLocal::ops(instance, ETransformSRT::Scaling(0.5, 0.5, 0.5)));
+                    // // actions.transform.tree.push(OpsTransformNodeParent::ops(instance, scene));
+                    // // actions.mesh.create.push(OpsMeshCreation::ops(scene, instance, MeshInstanceState { instance_matrix: true, ..Default::default() }));
+    
+    
+                    temp.push(instance);
+                }
+                testdata.0.push((source, idmat, temp));
+            }
+            
         }
     }
 // }
@@ -69,48 +117,11 @@ pub struct ListTestData(Vec<(Entity, Entity)>, Option<Entity>, WyRng);
 pub struct PluginTest;
 impl Plugin for PluginTest {
     fn build(&self, app: &mut App) {
-        app.insert_resource(ListTestData(vec![], None, pi_wy_rng::WyRng::default()));
-        // app.configure_set(Update, StageTest::Cmd.before(StageScene::Create));
-        // app.add_systems(Update, sys.in_set(StageTest::Cmd));
-        
-        app.insert_resource(SimpleList::default());
-        app.add_startup_system(Update, simple_setup);
-        app.add_systems(Update, sys_simple);
+        log::error!("Okkkk");
+        app.insert_resource(ListTestData(SegQueue::default(), None, pi_wy_rng::WyRng::default(), 0));
+        app.configure_set(Update, StageTest::Cmd.before(StageScene::SceneCreate));
+        app.add_systems(Update, sys.in_set(StageTest::Cmd));
     }
-}
-
-#[derive(Resource, Default)]
-pub struct SimpleList(Vec<(Entity, Number, Number, Number)>);
-
-fn simple_setup(
-    mut commands: Commands,
-    mut list: ResMut<SimpleList>,
-) {
-    let count = 10;
-    for i in 0..count {
-        for j in 0..count {
-            for k in 0..count {
-                let entity = commands.spawn((LocalMatrix::default())).id();
-                list.0.push((entity, i as Number, j as Number, k as Number));
-            }
-        }
-    }
-}
-fn sys_simple(
-    mut items: Query<&mut LocalMatrix>,
-    mut list: ResMut<SimpleList>,
-) {
-    list.0.iter_mut().for_each(|(entity, x, y, z)| {
-        if let Ok(mut matrix) = items.get_mut(*entity) {
-            let mut temp = Matrix::identity();
-            temp.append_scaling_mut(*x + *y + *z);
-            matrix.0 = temp;
-            *x += 0.01;
-            *y += 0.01;
-            *z += 0.01;
-        }
-    });
-    log::warn!("SimpleList {:?}", list.0.capacity());
 }
 
 fn setup(
@@ -127,7 +138,7 @@ fn setup(
         (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
     } else { return; };
 
-    let tes_size = 6;
+    let tes_size = TEST_SIZE;
     fps.frame_ms = 16;
 
     actions.camera.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
@@ -136,27 +147,29 @@ fn setup(
     
 
 
-    for i in 0..tes_size {
+    for i in 0..2 {
+        let source = commands.spawn_empty_id();
+        actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
+        actions.mesh.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { instance_matrix: true, ..Default::default() }));
+        let id_geo = commands.spawn_empty_id();
+        let attrs = CubeBuilder::attrs_meta();
+        actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
+        let idmat = commands.spawn_empty_id();
+        actions.material.create.push(OpsMaterialCreate::ops(idmat, DefaultShader::KEY));
+        actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
+
+        let mut tmp = vec![];
         for j in 0..tes_size {
             for _k in 0..1 {
-                let source = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(source, scene));
-                actions.mesh.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { instance_matrix: true, ..Default::default() }));
-
-                let id_geo = commands.spawn_empty_id();
-                let attrs = CubeBuilder::attrs_meta();
-                actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
-                
-                let idmat = commands.spawn_empty_id();
-                actions.material.create.push(OpsMaterialCreate::ops(idmat, DefaultShader::KEY));
-                // let idmat = defaultmat.0;
-                actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
-
-                actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Translation(i as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32)));
-                actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Scaling(0.2, 0.2, 0.2)));
-
-                testdata.0.push((source, idmat));
+                let instance = commands.spawn_empty_id();
+                actions.instance.create.push(OpsInstanceMeshCreation::ops(source, instance));
+                actions.transform.tree.push(OpsTransformNodeParent::ops(instance, scene));
+                actions.transform.localsrt.push(OpsTransformNodeLocal::ops(instance, ETransformSRT::Translation(i as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32)));
+                actions.transform.localsrt.push(OpsTransformNodeLocal::ops(instance, ETransformSRT::Scaling(0.2, 0.2, 0.2)));
+                tmp.push(instance);
             }
         }
+        testdata.0.push((source, idmat, tmp));
     }
 
     testdata.1 = Some(scene);
@@ -167,14 +180,20 @@ pub enum StageTest {
     Cmd
 }
 
+#[cfg(feature = "dhat-heap")]
+#[global_allocator]
+static ALLOC: dhat::Alloc = dhat::Alloc;
+
 pub fn main() {
+
     let (mut app, window, event_loop) = base::test_plugins();
     
     app.insert_resource(crate::base::DemoOption {
-        orthographic_camera: false,
-        camera_size: 10.,
-        camera_fov: 0.7,
-        camera_position: (0., 10., -40.),
+        orthographic_camera: true,
+        camera_size: TEST_SIZE as f32,
+        camera_fov: 0.9,
+        camera_position: (0., 20., -40.),
+        camera_nearfar: (0.1, TEST_SIZE as f32 + 0.1),
         ..Default::default()
     });
     app.add_startup_system(Update, base::setup_demoinit);
@@ -207,7 +226,7 @@ pub fn main() {
     //     #[cfg(feature = "use_bevy")]
     // app.add_systems(Startup, setup.after(base::setup_default_mat));
     // #[cfg(not(feature = "use_bevy"))]
-    // app.add_startup_system(Update, setup.after(base::setup_default_mat));
+    app.add_startup_system(Update, setup.after(base::setup_default_mat));
     
     
     // app.run()

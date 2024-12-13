@@ -25,11 +25,12 @@ pub mod prelude;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
 pub enum StageScene {
-    Create,
-    _Create,
-    Command,
-    TextureRequest,
-    TextureLoaded,
+    SceneCreate,
+    _SceneCreate,
+    SceneCommand,
+    SceneDispose,
+    SceneTextureRequest,
+    SceneTextureLoaded,
 }
 
 pub struct PluginScene;
@@ -55,11 +56,11 @@ impl Plugin for PluginScene {
 #[cfg(feature = "use_bevy")]
         app.configure_sets(Update,
             (
-                StageScene::Create.after(ERunStageChap::_InitialApply),
-                StageScene::_Create.before(EStageAnimation::Create).after(StageScene::Create),
-                StageScene::Command.after(StageScene::_Create),
-                StageScene::TextureRequest.in_set(FrameDataPrepare).after(StageTextureLoad::TextureRequest).before(StageTextureLoad::TextureLoading),
-                StageScene::TextureLoaded.in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform),
+                StageScene::SceneCreate.after(ERunStageChap::Modify),
+                StageScene::_SceneCreate.before(EStageAnimation::Create).after(StageScene::SceneCreate),
+                StageScene::SceneCommand.after(StageScene::_SceneCreate),
+                StageScene::SceneTextureRequest.in_set(FrameDataPrepare).after(StageTextureLoad::TextureRequest).before(StageTextureLoad::TextureLoading),
+                StageScene::SceneTextureLoaded.in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Collect),
             )
         );
 
@@ -67,49 +68,50 @@ impl Plugin for PluginScene {
         app.add_systems(
             Update,
             (
-                apply_deferred.in_set(StageScene::_Create),
+                apply_deferred.in_set(StageScene::_SceneCreate),
                 (
                     sys_env_texture_load_launch,
                     sys_image_texture_view_load_launch::<BRDFTextureSlot, BRDFTexture>
-                ).in_set(StageScene::TextureRequest),
+                ).in_set(StageScene::SceneTextureRequest),
                 (
                     sys_env_texture_loaded_check,
                     sys_image_texture_view_loaded_check::<BRDFTextureSlot, BRDFTexture>,
-                ).in_set(StageScene::TextureLoaded),
-                sys_create_scene.in_set(StageScene::Create),
+                ).in_set(StageScene::SceneTextureLoaded),
+                sys_create_scene.in_set(StageScene::SceneCreate),
                 (
                     sys_act_scene_ambient,
-                ).in_set(StageScene::Command),
+                ).in_set(StageScene::SceneCommand),
                 (
                     sys_bind_update_scene_ambient,
-                ).in_set(ERunStageChap::Uniform),
+                ).in_set(ERunStageChap::Collect),
                 sys_dispose_about_scene.after(sys_dispose_ready).in_set(ERunStageChap::Dispose),
             )
         );
 
 #[cfg(not(feature = "use_bevy"))]
         app
-            .configure_set(Update, StageScene::Create           .in_set(ERunStageChap::D3).after(ERunStageChap::_InitialApply))
-            .configure_set(Update, StageScene::_Create          .in_set(ERunStageChap::D3).before(EStageAnimation::Create).after(StageScene::Create))
-            .configure_set(Update, StageScene::Command          .in_set(ERunStageChap::D3).after(StageScene::_Create))
-            .configure_set(Update, StageScene::TextureRequest   .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageTextureLoad::TextureRequest).before(StageTextureLoad::TextureLoading))
-            .configure_set(Update, StageScene::TextureLoaded    .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoaded).before(ERunStageChap::Uniform))
+            .configure_set(Update, StageScene::SceneCreate           .in_set(ERunStageChap::Create))
+            .configure_set(Update, StageScene::_SceneCreate          .in_set(ERunStageChap::Create).after(StageScene::SceneCreate))
+            .configure_set(Update, StageScene::SceneCommand          .in_set(ERunStageChap::Modify))
+            .configure_set(Update, StageScene::SceneTextureRequest   .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageScene::SceneCommand).after(StageTextureLoad::TextureRequest).before(StageTextureLoad::TextureLoading))
+            .configure_set(Update, StageScene::SceneTextureLoaded    .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoaded))
+            .configure_set(Update, StageScene::SceneDispose           .in_set(ERunStageChap::Dispose))
             ;
 
 #[cfg(not(feature = "use_bevy"))]
         app
-            .add_systems(Update, sys_env_texture_load_launch                                         .in_set(StageScene::TextureRequest))
-            .add_systems(Update, sys_image_texture_view_load_launch::<BRDFTextureSlot, BRDFTexture>  .in_set(StageScene::TextureRequest))
-            .add_systems(Update, sys_env_texture_loaded_check                                        .in_set(StageScene::TextureLoaded))
-            .add_systems(Update, sys_image_texture_view_loaded_check::<BRDFTextureSlot, BRDFTexture> .in_set(StageScene::TextureLoaded))
+            .add_systems(Update, sys_env_texture_load_launch                                         .in_set(StageScene::SceneTextureRequest))
+            .add_systems(Update, sys_image_texture_view_load_launch::<BRDFTextureSlot, BRDFTexture>  .in_set(StageScene::SceneTextureRequest))
+            .add_systems(Update, sys_env_texture_loaded_check                                        .in_set(StageScene::SceneTextureLoaded))
+            .add_systems(Update, sys_image_texture_view_loaded_check::<BRDFTextureSlot, BRDFTexture> .in_set(StageScene::SceneTextureLoaded))
             .add_systems(Update, sys_create_scene
                 // .run_if(runif_acts::<OpsSceneCreation>)        
-                .in_set(StageScene::Create))
+                .in_set(StageScene::SceneCreate))
             .add_systems(Update, sys_act_scene_ambient
                 // .run_if(runif_acts::<OpsSceneOption>)           
-                .in_set(StageScene::Command))
-            .add_systems(Update, sys_bind_update_scene_ambient   .in_set(ERunStageChap::Uniform))
-            .add_systems(Update, sys_dispose_about_scene             .after(sys_dispose_ready)       .in_set(ERunStageChap::Dispose))
+                .in_set(StageScene::SceneCommand))
+            .add_systems(Update, sys_bind_update_scene_ambient   .in_set(ERunStageChap::Collect))
+            .add_systems(Update, sys_dispose_about_scene             .after(sys_dispose_ready)       .in_set(StageScene::SceneDispose))
             ;
     }
     

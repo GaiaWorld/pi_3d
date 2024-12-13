@@ -33,24 +33,6 @@ pub struct TypeAnimeContexts<'w> {
     pub enable: ResMut<'w, TypeAnimeContext<Enable>>,
     pub camerafov: ResMut<'w, TypeAnimeContext<CameraFov>>,
     pub camerasize: ResMut<'w, TypeAnimeContext<CameraOrthSize>>,
-    // pub alpha: ResMut<'w, TypeAnimeContext<Alpha>>,
-    // pub alphacutoff: ResMut<'w, TypeAnimeContext<Cutoff>>,
-    // pub maintex_uscale: ResMut<'w, TypeAnimeContext<MainTexUScale>>,
-    // pub maintex_vscale: ResMut<'w, TypeAnimeContext<MainTexVScale>>,
-    // pub maintex_uoffset: ResMut<'w, TypeAnimeContext<MainTexUOffset>>,
-    // pub maintex_voffset: ResMut<'w, TypeAnimeContext<MainTexVOffset>>,
-    // pub opacitytex_uscale: ResMut<'w, TypeAnimeContext<OpacityTexUScale>>,
-    // pub opacitytex_vscale: ResMut<'w, TypeAnimeContext<OpacityTexVScale>>,
-    // pub opacitytex_uoffset: ResMut<'w, TypeAnimeContext<OpacityTexUOffset>>,
-    // pub opacitytex_voffset: ResMut<'w, TypeAnimeContext<OpacityTexVOffset>>,
-    // pub masktex_uscale: ResMut<'w, TypeAnimeContext<MaskTexUScale>>,
-    // pub masktex_vscale: ResMut<'w, TypeAnimeContext<MaskTexVScale>>,
-    // pub masktex_uoffset: ResMut<'w, TypeAnimeContext<MaskTexUOffset>>,
-    // pub masktex_voffset: ResMut<'w, TypeAnimeContext<MaskTexVOffset>>,
-    // pub maskcutoff: ResMut<'w, TypeAnimeContext<MaskCutoff>>,
-    // pub maincolor: ResMut<'w, TypeAnimeContext<MainColor>>,
-    // pub lightdiffuse: ResMut<'w, TypeAnimeContext<LightDiffuse>>,
-    // pub boneoffset: ResMut<'w, TypeAnimeContext<InstanceBoneoffset>>,
     pub indices_range: ResMut<'w, TypeAnimeContext<IndiceRenderRange>>,
 
     pub float: ResMut<'w, TypeAnimeContext<AnimatorableFloat>>,
@@ -59,6 +41,24 @@ pub struct TypeAnimeContexts<'w> {
     pub vec4s: ResMut<'w, TypeAnimeContext<AnimatorableVec4>>,
     pub uints: ResMut<'w, TypeAnimeContext<AnimatorableUint>>,
     pub _ints: ResMut<'w, TypeAnimeContext<AnimatorableSint>>,
+}
+impl<'w> MemSize for TypeAnimeContexts<'w> {
+    fn memsize(&self) -> usize {
+        self.position.memsize()
+        + self.euler.memsize()
+        + self.quaternion.memsize()
+        + self.scaling.memsize()
+        + self.enable.memsize()
+        + self.camerafov.memsize()
+        + self.camerasize.memsize()
+        + self.indices_range.memsize()
+        + self.float.memsize()
+        + self.vec2s.memsize()
+        + self.vec3s.memsize()
+        + self.vec4s.memsize()
+        + self.uints.memsize()
+        + self._ints.memsize()
+    }
 }
 
 
@@ -71,24 +71,6 @@ pub struct TypeAnimeAssetMgrs<'w> {
     pub enable: Res<'w, ShareAssetMgr<TypeFrameCurve<Enable>>>,
     pub camerafov: Res<'w, ShareAssetMgr<TypeFrameCurve<CameraFov>>>,
     pub camerasize: Res<'w, ShareAssetMgr<TypeFrameCurve<CameraOrthSize>>>,
-    // pub alpha: Res<'w, ShareAssetMgr<TypeFrameCurve<Alpha>>>,
-    // pub alphacutoff: Res<'w, ShareAssetMgr<TypeFrameCurve<Cutoff>>>,
-    // pub mainuscl_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<MainTexUScale>>>,
-    // pub mainvscl_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<MainTexVScale>>>,
-    // pub mainuoff_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<MainTexUOffset>>>,
-    // pub mainvoff_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<MainTexVOffset>>>,
-    // pub opacityuscl_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<OpacityTexUScale>>>,
-    // pub opacityvscl_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<OpacityTexVScale>>>,
-    // pub opacityuoff_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<OpacityTexUOffset>>>,
-    // pub opacityvoff_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<OpacityTexVOffset>>>,
-    // pub maskuscl_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<MaskTexUScale>>>,
-    // pub maskvscl_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<MaskTexVScale>>>,
-    // pub maskuoff_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<MaskTexUOffset>>>,
-    // pub maskvoff_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<MaskTexVOffset>>>,
-    // pub maskcutoff_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<MaskCutoff>>>,
-    // pub maincolor_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<MainColor>>>,
-    // pub lightdiffuse_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<LightDiffuse>>>,
-    // pub boneoff_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<InstanceBoneoffset>>>,
     pub indicerange_curves: Res<'w, ShareAssetMgr<TypeFrameCurve<IndiceRenderRange>>>,
 
     pub float: Res<'w, ShareAssetMgr<TypeFrameCurve<AnimatorableFloat>>>,
@@ -97,4 +79,22 @@ pub struct TypeAnimeAssetMgrs<'w> {
     pub vec4s: Res<'w, ShareAssetMgr<TypeFrameCurve<AnimatorableVec4>>>,
     pub uints: Res<'w, ShareAssetMgr<TypeFrameCurve<AnimatorableUint>>>,
     pub _ints: Res<'w, ShareAssetMgr<TypeFrameCurve<AnimatorableSint>>>,
+}
+impl<'w> MemSize for TypeAnimeAssetMgrs<'w> {
+    fn memsize(&self) -> usize {
+        self.position.size()
+        + self.euler.size()
+        + self.quaternion.size()
+        + self.scaling.size()
+        + self.enable.size()
+        + self.camerafov.size()
+        + self.camerasize.size()
+        + self.indicerange_curves.size()
+        + self.float.size()
+        + self.vec2s.size()
+        + self.vec3s.size()
+        + self.vec4s.size()
+        + self.uints.size()
+        + self._ints.size()
+    }
 }

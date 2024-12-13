@@ -1,4 +1,4 @@
-use crate::ecs::Resource;
+use crate::{ecs::Resource, prelude::MemSize};
 use pi_bevy_render_plugin::constant::texture_sampler::{ColorFormat, DepthStencilFormat};
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -11,9 +11,19 @@ pub struct LightLimitInfo {
 
 #[derive(Resource)]
 pub struct ModelLightLimit(pub LightLimitInfo);
+impl MemSize for ModelLightLimit {
+    fn memsize(&self) -> usize {
+        8
+    }
+}
 
 #[derive(Resource)]
 pub struct SceneLightLimit(pub LightLimitInfo);
+impl MemSize for SceneLightLimit {
+    fn memsize(&self) -> usize {
+        8
+    }
+}
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ShadowLimitInfo {
@@ -26,3 +36,8 @@ pub struct ShadowLimitInfo {
 
 #[derive(Resource)]
 pub struct SceneShadowLimit(pub ShadowLimitInfo);
+impl MemSize for SceneShadowLimit {
+    fn memsize(&self) -> usize {
+        12
+    }
+}

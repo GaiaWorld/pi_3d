@@ -17,6 +17,7 @@ pub enum StageCamera {
     CameraCommand,
     CameraRenderer,
     CameraCalcMatrix,
+    CameraDispose,
 }
 
 
@@ -48,6 +49,11 @@ pub struct ActionSetCamera<'w> {
     // pub pixelsize: ResMut<'w, ActionListCameraPixelSize>,
     pub forceinclude: ResMut<'w, ActionListViewerForceInclude>,
 }
+impl<'w> MemSize for ActionSetCamera<'w> {
+    fn memsize(&self) -> usize {
+        self.create.memsize() + self.param.memsize() + self.target.memsize() + self.forceinclude.memsize()
+    }
+}
 
 #[cfg(feature = "use_bevy")]
 pub type StateCameraQuery = QueryState<(&'static Camera, &'static ModelList, &'static ModelListAfterCulling)>;
@@ -57,7 +63,9 @@ pub type StateCameraQuery = QueryState<(&'static Camera, &'static ModelList, &'s
 pub fn sys_state_camera(
     mut state: ResMut<StateCamera>,
     cameras: Query<(&Camera, &ModelList, &ModelListAfterCulling)>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_state_camera"));
     state.culling = 0;
     if let Some(camera) = state.camera {
         if let Ok((_camera, includes, culling)) = cameras.get(camera) {

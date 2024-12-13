@@ -17,3 +17,8 @@ pub struct ActionSetLighting<'w> {
     // pub radius: ResMut<'w, ActionListLightRadius>,
     // pub spotangle: ResMut<'w, ActionListSpotLightAngle>,
 }
+impl<'w> MemSize for ActionSetLighting<'w> {
+    fn memsize(&self) -> usize {
+        self.create.memsize() + self.param.memsize()
+    }
+}

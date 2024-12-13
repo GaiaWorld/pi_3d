@@ -40,3 +40,8 @@ pub enum UniformModifier {
 
 #[derive(Debug, Clone, Copy, Resource)]
 pub struct SingleIDBaseDefaultMaterial(pub Entity);
+impl MemSize for SingleIDBaseDefaultMaterial {
+    fn memsize(&self) -> usize {
+        8
+    }
+}

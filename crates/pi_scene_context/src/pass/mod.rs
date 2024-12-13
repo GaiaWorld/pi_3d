@@ -19,10 +19,11 @@ use crate::materials::prelude::StageMaterial;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
 pub enum StagePassObject {
-    Create,
-    _CreateApply,
-    Command,
-    EffectModify,
+    PassCreate,
+    _PassCreate,
+    PassCommand,
+    PassReady,
+    PassDispose,
 }
 
 #[derive(Clone, Component, Default)]
@@ -51,10 +52,10 @@ impl Plugin for PluginPassObject {
         app.configure_sets(
             Update,
             (
-                StagePassObject::Create.after(StageMaterial::Command).after(StageModel::AbstructMeshCommand).after(StageMaterial::Use),
-                StagePassObject::_CreateApply.after(StagePassObject::Create),
-                StagePassObject::Command.after(StagePassObject::_CreateApply).before(StageRenderer::RenderStateCommand),
-                StagePassObject::EffectModify.in_set(FrameDataPrepare).after(StagePassObject::_CreateApply).after(StageMaterial::Ready).before(StageRenderer::PassBindGroup),
+                StagePassObject::PassCreate.after(StageMaterial::MatCommand).after(StageModel::AbstructMeshCommand).after(StageMaterial::MatUse),
+                StagePassObject::_PassCreate.after(StagePassObject::PassCreate),
+                StagePassObject::PassCommand.after(StagePassObject::_PassCreate).before(StageRenderer::RenderStateCommand),
+                StagePassObject::PassReady.in_set(FrameDataPrepare).after(StagePassObject::_PassCreate).after(StageMaterial::MatReady).before(StageRenderer::PassBindGroup),
             )
         );
 
@@ -62,32 +63,33 @@ impl Plugin for PluginPassObject {
         app.add_systems(
             Update, 
             (
-                apply_deferred.in_set(StagePassObject::_CreateApply),
-                sys_create_pass_object.in_set(StagePassObject::Create),
-                sys_act_pass_object.in_set(StagePassObject::Command),
+                apply_deferred.in_set(StagePassObject::_PassCreate),
+                sys_create_pass_object.in_set(StagePassObject::PassCreate),
+                sys_act_pass_object.in_set(StagePassObject::PassCommand),
                 (
                     sys_modify_pass_effect_by_material
-                ).chain().in_set(StagePassObject::EffectModify),
+                ).chain().in_set(StagePassObject::PassReady),
             )
         );
 
 #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StagePassObject::Create      .in_set(ERunStageChap::D3).after(StageMaterial::Command).after(StageModel::AbstructMeshCommand).after(StageMaterial::Use))
-        .configure_set(Update, StagePassObject::_CreateApply.in_set(ERunStageChap::D3).after(StagePassObject::Create))
-        .configure_set(Update, StagePassObject::Command     .in_set(ERunStageChap::D3).after(StagePassObject::_CreateApply).before(StageRenderer::RenderStateCommand))
-        .configure_set(Update, StagePassObject::EffectModify.in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(StagePassObject::_CreateApply).after(StageMaterial::Ready).before(StageRenderer::PassBindGroup))
+        .configure_set(Update, StagePassObject::PassCreate      .in_set(ERunStageChap::Modify).after(StageMaterial::MatUse).after(StageModel::InstanceCreate))
+        .configure_set(Update, StagePassObject::_PassCreate     .in_set(ERunStageChap::Modify).after(StagePassObject::PassCreate))
+        .configure_set(Update, StagePassObject::PassCommand     .in_set(ERunStageChap::Modify).after(StagePassObject::_PassCreate).before(StageRenderer::RenderStateCommand))
+        .configure_set(Update, StagePassObject::PassReady       .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare).after(StageMaterial::MatReady).before(StageRenderer::PassBindGroup))
+        .configure_set(Update, StagePassObject::PassDispose     .in_set(ERunStageChap::Dispose))
         ;
 
 #[cfg(not(feature = "use_bevy"))]
         app
         .add_systems(Update, sys_create_pass_object
             // .run_if(runif_acts::<OpsPassObject>)  
-            .in_set(StagePassObject::Create))
+            .in_set(StagePassObject::PassCreate))
         .add_systems(Update, sys_act_pass_object
             // .run_if(runif_acts::<OpsRenderState>)     
-            .in_set(StagePassObject::Command))
-        .add_systems(Update, sys_modify_pass_effect_by_material  .in_set(StagePassObject::EffectModify))
+            .in_set(StagePassObject::PassCommand))
+        .add_systems(Update, sys_modify_pass_effect_by_material  .in_set(StagePassObject::PassReady))
         ;
     }
 }

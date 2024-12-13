@@ -24,7 +24,10 @@ pub fn sys_create_scene(
     mut geocreate: ResMut<ActionListGeometryCreate>,
     mut meshstate: ResMut<ActionListMeshStateModify>,
     // mut alter: Alter<(), (), (BundleScene, SceneBoundingPool, SceneColliderPool, SceneAnimationContext, BoundingBoxDisplay), ()>,
+
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_create_scene"));
     cmds.drain().for_each(|OpsSceneCreation(entity, pool, pool2)| {
 
         let id_left = commands.spawn_empty_id();

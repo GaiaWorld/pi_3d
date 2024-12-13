@@ -677,6 +677,18 @@ pub struct GLTFResLoader {
     pub successquerys: SegQueue<QueryKey>,
     pub failquerys: SegQueue<QueryKey>,
 }
+impl MemSize for GLTFResLoader {
+    fn memsize(&self) -> usize {
+        self.waiting.len() * 16 + 256
+        + self.querys.capacity() * 24
+        + self.loaded.capacity() * 16
+        + self.errors.capacity() * 12
+        + self.successed.capacity() * 16
+        + self.failed.capacity() * 16
+        + self.successquerys.len() * 16 + 256
+        + self.failquerys.len() * 16 + 256
+    }
+}
 impl GLTFResLoader {
     pub fn new() -> Self {
         Self {
@@ -777,14 +789,15 @@ pub fn sys_gltf_analy(
     assets_mgr: Res<ShareAssetMgr<GLTF>>,
     device: Res<PiRenderDevice>,
     queue: Res<PiRenderQueue>,
-    mut _performance: ResMut<Performance>,
+    mut performance: ResMut<Performance>,
 ) {
-    if _performance.debug { _performance.t_gltfanaly = pi_time::Instant::now(); }
+    // performance.systems.push(String::from("sys_gltf_analy"));
+    if performance.debug { performance.t_gltfanaly = pi_time::Instant::now(); }
 
     loader.load(&assets_mgr);
     loader.check(&mut commands, &vb_assets_mgr, &mut vballocator, &device, &queue, &anime_assets, &mut particlesys, &mut particlesys_res, &assets_mgr);
 
-    if _performance.debug { _performance.gltfanaly = (pi_time::Instant::now() - _performance.t_gltfanaly).as_micros() as u32; }
+    if performance.debug { performance.gltfanaly = (pi_time::Instant::now() - performance.t_gltfanaly).as_micros() as u32; }
 }
 
 

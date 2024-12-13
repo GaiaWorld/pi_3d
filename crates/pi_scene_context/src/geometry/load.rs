@@ -11,7 +11,10 @@ use super::{base::*, AssetDescVBSlots, AssetResVBSlots, LoadedKeyVBSlots};
         mut data_map: ResMut<VertexBufferDataMap3D>,
         mut geoloader: ResMut<GeometryVBLoader>,
         mut geometries: Query<(&AssetDescVBSlots, &mut LoadedKeyVBSlots, &mut AssetResVBSlots, &mut AssetResBufferIndicesComp, &mut AssetKeyBufferIndices, &IndicesBufferDescComp, &mut FlagGeometryDirty)>,
+
+        // mut performance: ResMut<Performance>,
     ) {
+        // performance.systems.push(String::from("sys_vertex_buffer_loaded"));
         let mut data0 = data_map.single_create(&device, &queue, &mut allocator, &asset_mgr);
         let mut data2 = data_map.single_create_instance(&device, &queue, &mut allocator);
         data2.drain().for_each(|(k, v)| { data0.insert(k, v); });

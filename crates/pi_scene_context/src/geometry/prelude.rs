@@ -18,6 +18,11 @@ pub use super::base::*;
 pub struct ActionSetGeometry<'w> {
     pub create: ResMut<'w, ActionListGeometryCreate>,
 }
+impl<'w> MemSize for ActionSetGeometry<'w> {
+    fn memsize(&self) -> usize {
+        self.create.memsize()
+    }
+}
 
 #[derive(SystemParam)]
 pub struct ResourceGeometry<'w> {

@@ -62,7 +62,10 @@ use super::base::*;
 
     pub fn sys_calc_transform_matrix(
         mut viewers: Query<(&ViewerViewMatrix, &ViewerProjectionMatrix, &mut ViewerTransformMatrix), Or<(Changed<ViewerViewMatrix>, Changed<ViewerProjectionMatrix>)>>,
+
+        // mut performance: ResMut<Performance>,
     ) {
+        // performance.systems.push(String::from("sys_calc_transform_matrix"));
         viewers.iter_mut().for_each(|(view_matrix, project_matrix, mut transform)| {
             // log::debug!("SysCamera Transform Matrix: p = {:?}, v = {:?}", project_matrix.0, view_matrix.0);
 
@@ -77,8 +80,10 @@ use super::base::*;
             Or<(
                 Changed<BindViewer>, Changed<ViewerTransformMatrix>, 
             )>
-        >
+        >,
+        // mut performance: ResMut<Performance>,
     ) {
+        // performance.systems.push(String::from("sys_update_viewer_uniform"));
         viewers.iter().for_each(
             |(
                 bind,

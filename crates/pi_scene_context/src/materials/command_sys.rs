@@ -48,7 +48,9 @@ pub fn sys_create_material(
     mut errors: ResMut<ErrorRecord>,
     mut alter: Alter<(), (), MaterialBundle, ()>,
     engineopt: Res<EngineCustomPlugins>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_create_material"));
     cmds.drain().for_each(|OpsMaterialCreate(entity, key_shader, texatlas)| {
         // log::warn!("MaterialInit: {:?}", entity);
         if commands.get_entity(entity).is_none() { 
@@ -99,7 +101,9 @@ pub fn sys_act_material_use(
     passes: Query<&PassMaterialID>,
     empty: Res<SingleEmptyEntity>,
     mut errors: ResMut<ErrorRecord>,
+    mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_act_material_use"));
     cmds.drain().for_each(|cmd| {
         match cmd {
             OpsMaterialUse::Use(id_mesh, id_mat, pass) => {
@@ -195,7 +199,9 @@ pub fn sys_act_material_value(
     anime_assets: TypeAnimeAssetMgrs,
     mut anime_contexts: TypeAnimeContexts,
     mut targetanimations: ResMut<ActionListAnimationGroupAction>,
+    mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_act_material_value"));
     cmdsvalb.drain().for_each(|cmd| {
         match cmd {
             OpsUniformValB::Mat4(entity, slot, val) => {

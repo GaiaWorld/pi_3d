@@ -31,6 +31,9 @@ impl<F: Default + Clone + Component> EntityRefInfo<F> {
     pub fn len(&self) -> usize {
         self.refs.len()
     }
+    pub fn capacity(&self) -> usize {
+        self.refs.capacity()
+    }
     pub fn insert(&mut self, entity: Entity) -> bool {
         if !self.refs.contains(&entity) {
             self.refs.insert(entity);

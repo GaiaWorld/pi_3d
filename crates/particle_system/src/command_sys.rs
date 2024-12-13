@@ -36,7 +36,9 @@ pub type ParticleBundle = (
 pub fn sys_create_particle_calculator(
     mut cmds: ResMut<ActionListCPUParticleCalculator>,
     mut commands: Commands,
+    mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_create_particle_calculator"));
     cmds.drain().for_each(|OpsCPUParticleCalculator(entity, cfg)| {
         let mut entitycmd = if let Some(cmd) = commands.get_entity(entity) {
             cmd
@@ -58,7 +60,7 @@ pub fn sys_create_cpu_partilce_system(
     empty: Res<SingleEmptyEntity>,
     mut disposeready: ResMut<ActionListDisposeReadyForRef>,
     mut meshes: ResMut<ActionListMeshStateModify>,
-    mut performance: ResMut<ParticleSystemPerformance>,
+    mut psperformance: ResMut<ParticleSystemPerformance>,
     lightlimit: Res<ModelLightLimit>,
     commonbindmodel: Res<CommonBindModel>,
     mut meshprimitivestate: ResMut<ActionListRenderState>,
@@ -68,7 +70,9 @@ pub fn sys_create_cpu_partilce_system(
     mut passinsert: Insert<(BundleEntity, PassObjInitBundle, PassTag)>,
     mut altergeo: Alter<(), (), BundleGeometry, ()>,
     engineopt: Res<EngineCustomPlugins>,
+    mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_create_cpu_partilce_system"));
     cmds.drain().for_each(|OpsCPUParticleSystem(id_scene, entity, trailmesh, trailgeo, calculator, attributes, update_buffer_interval_frame)| {
         let mut _entitycmd = if let Some(cmd) = commands.get_entity(entity) {
             cmd
@@ -86,7 +90,7 @@ pub fn sys_create_cpu_partilce_system(
         )) = calculators.get(idcalculator) {
             // log::warn!("create_cpu_partilce_system");
             let maxcount = base.maxcount;
-            performance.maxparticles = (performance.maxparticles.max(maxcount as u32) / 64 + 1) * 64;
+            psperformance.maxparticles = (psperformance.maxparticles.max(maxcount as u32) / 64 + 1) * 64;
 
             if let Some(val) = base.render_align() {
                 meshes.push(OpsMeshStateModify::ops(entity, EMeshStateModify::Alignment(val)));
@@ -99,7 +103,7 @@ pub fn sys_create_cpu_partilce_system(
                     ParticleSystemRunningState { isrunning: false, deltatime: 0, update_buffer_interval_frame, waitframe: 0, updatebuffer: false },
                     ParticleSystemModifyState,
                     ParticleRandom::new(0),
-                    ParticleSystemTime::new(performance.frame_time_ms),
+                    ParticleSystemTime::new(psperformance.frame_time_ms),
                     ParticleSystemEmission::new(),
                     ParticleIDs::new(calculator, maxcount),
                     ParticleEmitMatrix::new(maxcount, &base.scaling_space, &base.simulation_space),
@@ -209,7 +213,9 @@ pub fn sys_act_partilce_system_state(
     mut trail_cmds: ResMut<ActionListCPUParticleSystemTrailMaterial>,
     trail_items: Query<&ParticleTrailMesh>,
     mut actions: ResMut<ActionListMaterialUse>,
+    mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_act_partilce_system_state"));
     trail_cmds.drain().for_each(|OpsCPUParticleSystemTrailMaterial(entity, idmat, pass)| {
         if let Ok(trail) = trail_items.get(entity) {
             actions.push(OpsMaterialUse::Use(trail.mesh, idmat, pass));

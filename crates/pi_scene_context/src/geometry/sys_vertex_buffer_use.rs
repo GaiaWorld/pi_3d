@@ -19,8 +19,9 @@ pub fn sys_vertex_buffer_slots_loaded(
     >,
     mut geometries: Query<&mut RenderGeometryComp>,
     mut meshes: Query<(&mut RenderGeometryEable, &MeshInstanceState)>,
-    // devicelimits: Res<DeviceLimits3D>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_vertex_buffer_slots_loaded"));
     let mut counter = 0;
     let changes = changes.iter().chain(addeds.iter());
     changes.for_each(|entity| {
@@ -114,7 +115,9 @@ pub fn sys_geometry_enable(
     changes: ComponentChanged<RenderGeometryComp>,
     geometries: Query<(&RenderGeometryComp, &MeshID)>,
     mut meshes: Query<&mut RenderGeometryEable>,
+    // mut performance: ResMut<Performance>,
 ) {
+    // performance.systems.push(String::from("sys_geometry_enable"));
     addeds.iter().chain(changes.iter()).for_each(|entity| {
         if let Ok((geometrycomp, idmesh)) = geometries.get(*entity) {
             if let Ok(mut state) = meshes.get_mut(idmesh.0) {

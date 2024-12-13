@@ -9,7 +9,7 @@ mod uint;
 mod int;
 mod mat4;
 
-use crate::{ecs::*, prelude::runif_3d};
+use crate::{ecs::*, object::{sys_dispose, sys_dispose_can}, prelude::runif_3d};
 // use bevy_app::{App, Plugin, Update};
 // use bevy_ecs::{schedule::{SystemSet, IntoSystemSetConfig, apply_deferred, IntoSystemConfigs}, entity::Entity};
 
@@ -70,11 +70,11 @@ impl Plugin for PluginGlobalAnimation {
         app.insert_resource(ActionListAnimeGroupDispose::default());
         app.insert_resource(ActionListAnimationGroupAction::default());
 
-        app.configure_set(Update, EStageAnimation::Create       .in_set(ERunStageChap::D3));
-        app.configure_set(Update, EStageAnimation::_CreateApply .in_set(ERunStageChap::D3).after(EStageAnimation::Create));
-        app.configure_set(Update, EStageAnimation::Command      .in_set(ERunStageChap::D3).after(EStageAnimation::_CreateApply));
-        app.configure_set(Update, EStageAnimation::Running      .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(EStageAnimation::Command).before(ERunStageChap::Anime));
-        app.configure_set(Update, EStageAnimation::Dispose      .in_set(ERunStageChap::D3).after(EStageAnimation::Running).after(ERunStageChap::Dispose));
+        app.configure_set(Update, EStageAnimation::Create       .in_set(ERunStageChap::Modify));
+        app.configure_set(Update, EStageAnimation::_CreateApply .in_set(ERunStageChap::Modify).after(EStageAnimation::Create));
+        app.configure_set(Update, EStageAnimation::Command      .in_set(ERunStageChap::Modify).after(EStageAnimation::_CreateApply));
+        app.configure_set(Update, EStageAnimation::Running      .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(EStageAnimation::Command));
+        app.configure_set(Update, EStageAnimation::Dispose      .in_set(ERunStageChap::Dispose));
         
 #[cfg(feature="use_bevy")]
 {
@@ -104,8 +104,8 @@ impl Plugin for PluginGlobalAnimation {
         .add_systems(Update, sys_act_reset_while_animationgroup_start                                                            .in_set(EStageAnimation::Command))
         .add_systems(Update, sys_act_animation_group_action          .after(sys_act_reset_while_animationgroup_start)    .in_set(EStageAnimation::Command))
         .add_systems(Update, sys_act_dispose_animation_group         .after(sys_act_animation_group_action)              .in_set(EStageAnimation::Command))
-        .add_systems(Update, sys_animation_removed_data_clear                                                            .in_set(EStageAnimation::Dispose))
-        .add_systems(Update, sys_reset_anime_performance             .after(sys_animation_removed_data_clear)    .in_set(EStageAnimation::Dispose))
+        .add_systems(Update, sys_animation_removed_data_clear                                                            .in_set(EStageAnimation::Running))
+        .add_systems(Update, sys_reset_anime_performance             .after(sys_animation_removed_data_clear)    .in_set(EStageAnimation::Running))
         ;
 }
 
@@ -162,8 +162,9 @@ impl<D: TAnimatableComp> Plugin for PluginTypeAnime<D> {
 {
     
     app
-        .add_systems(Update, sys_apply_removed_data::<D>     .before(sys_animation_removed_data_clear)    .in_set(EStageAnimation::Dispose))
-        .add_systems(Update, sys_calc_type_anime::<D>    .in_set(EStageAnimation::Running))
+        .add_systems(Update, sys_apply_removed_data::<D>     .before(sys_animation_removed_data_clear)    .in_set(EStageAnimation::Running))
+        .add_systems(Update, sys_calc_type_anime::<D>       .before(sys_apply_removed_data::<D>).in_set(EStageAnimation::Running))
+        .add_systems(Update, sys_remove_anime_target_record::<D>       .before(sys_dispose).after(sys_dispose_can).in_set(ERunStageChap::_Dispose))
         ;
 }
     }

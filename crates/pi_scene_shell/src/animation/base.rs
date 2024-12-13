@@ -1,4 +1,4 @@
-use crate::{ecs::*, prelude::ActionList};
+use crate::{ecs::*, prelude::{ActionList, MemSize}};
 
 use std::hash::Hash;
 
@@ -62,6 +62,11 @@ impl<D: TAnimatableComp> TypeAnimeContext<D> {
         Self { ctx: TypeAnimationContext::<D, AssetTypeFrameCurve<D>>::new(ty, runtime_info_map) }
     }
 }
+impl<D: TAnimatableComp> MemSize for TypeAnimeContext<D> {
+    fn memsize(&self) -> usize {
+        self.ctx.curves().len() * 16
+    }
+}
 
 pub trait TAnimatableComp: Default + FrameDataValue + Component + TAssetCapacity {
 
@@ -109,6 +114,22 @@ pub struct GlobalAnimeAbout {
     pub dispose_animationgroups: Vec<(Entity, AnimationGroupID)>,
     pub group_records: XHashMap<AnimationGroupID, (Entity, CurveFrameEvent<AnimeFrameEventData>, u8)>,
 }
+impl MemSize for GlobalAnimeAbout {
+    fn memsize(&self) -> usize {
+        let mut result = 0;
+        self.runtimeinfos.list.iter().for_each(|item| {
+            item.iter().for_each(|(_, item)| {
+                result += item.capacity() * 32;
+            });
+            result += item.capacity() * 32;
+        });
+        result += self.runtimeinfos.list.capacity() * 32;
+
+        result + 4
+        + self.dispose_animationgroups.capacity() * 16
+        + self.group_records.capacity() * (8 + 56 + 8 + 8)
+    }
+}
 impl GlobalAnimeAbout {
     pub(crate) const CURVE_FRAME_EVENT_FRAMES: u16 = 60000;
     pub(crate) fn record_group(&mut self,  id_group: AnimationGroupID, group: Entity) {
@@ -147,6 +168,12 @@ impl GlobalAnimeAbout {
 /// 记录已产生的动画事件的数据
 #[derive(Resource, Deref, DerefMut, Default)]
 pub struct GlobalAnimeEvents(pub Vec<(Entity, Entity, u8, u32)>);
+
+impl MemSize for GlobalAnimeEvents {
+    fn memsize(&self) -> usize {
+        self.0.capacity() * 24
+    }
+}
 
 /// 记录动画目标非动画修改的值,用于动画结束或启动时重置目标属性
 #[derive(Resource, Deref, DerefMut, Default)]

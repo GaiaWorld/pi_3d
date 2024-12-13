@@ -101,6 +101,7 @@ pub fn sys_update_culling_by_cullinginfo(
     boundings: Query<(&SceneID, &GeometryBounding, &GeometryCullingMode, &InstanceSourceRefs, &ModelInstanceAttributes)>,
     instances: Query<&InstanceMesh>,
 ) {
+    // log::error!("sys_update_culling_by_cullinginfo");
     addeds.iter().chain(changes.iter()).for_each(|entity| {
         if let Ok(instance) = instances.get(*entity) {
             if let Ok((idscene, info, mode, _instances, _)) = boundings.get(instance.0) {

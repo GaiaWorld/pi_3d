@@ -131,6 +131,11 @@ impl CombineDataCommon {
         self.0.size()
     }
 }
+impl MemSize for CombineDataCommon {
+    fn memsize(&self) -> usize {
+        self.0.size()
+    }
+}
 
 #[derive(Resource)]
 pub struct CombineBuffer {
@@ -138,6 +143,11 @@ pub struct CombineBuffer {
     pub data: DataPool,
     initmax: usize,
     pub maxcombinesize: usize,
+}
+impl MemSize for CombineBuffer {
+    fn memsize(&self) -> usize {
+        self.data.size() + 32
+    }
 }
 impl CombineBuffer {
     pub fn new(initmax: usize, allocator: &mut VertexBufferAllocator3D, device: &PiRenderDevice, queue: &PiRenderQueue) -> Self {
