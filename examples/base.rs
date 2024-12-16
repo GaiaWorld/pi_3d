@@ -286,6 +286,7 @@ pub fn setup_demoinit(
 ) {
     
     ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(ShaderDistortion::KEY), ShaderDistortion::meta(&mut nodematblocks, &engineopt));
+    ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(MainOpacityShader::KEY), MainOpacityShader::meta(&engineopt));
     ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(copy::ShaderImageCopy::KEY), copy::ShaderImageCopy::res(&engineopt));
     ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(unlit_material::PlanarShadow::KEY), unlit_material::PlanarShadow::meta(&engineopt));
     ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(ShaderPBR::KEY), ShaderPBR::meta(&mut nodematblocks, &engineopt));

@@ -402,7 +402,7 @@ pub fn sys_info_resource(
     // log::warn!("DrawCall: {:?} WorldMatrix: {:?} DrawList {:?} Culling {:?} Uniform: {:?}", performance.drawcalls, performance.worldmatrix, performance.drawobjs, performance.culling, (performance.uniformupdate, performance.uniformbufferupdate));
     log::warn!(
         "WorldMem: {:?}, Materials: {:?}, BindBuffer: {:?}, VertexBufferSize: {:?}, Shaders: {:?}, Pipeline: {:?}, ImageTexture: {:?},",
-        (entitycount, cmd.world().mem_size(), actions.memsize(), resource.memsize()), actinstance.memsize(), states.mem_bindbuffer, states.size_geometrybuffer, states.mem_shader, states.count_pipeline, states.mem_imgtexture
+        (entitycount, actions.memsize(), resource.memsize()), actinstance.memsize(), states.mem_bindbuffer, states.size_geometrybuffer, states.mem_shader, states.count_pipeline, states.mem_imgtexture
     );
     // log::warn!(
     //     "PSCount: {:?}, PSPerformance: {:?}, sys_emitmatrix: {:?}, sys_direction: {:?}, sys_update_buffer: {:?}, sys_update_buffer_trail: {:?}, sys_emission: {:?}, sys_emitter: {:?}, sys_force_over_life_time: {:?}, sys_prewarm: {:?}",
