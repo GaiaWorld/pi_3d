@@ -30,44 +30,62 @@ pub fn sys_calc_render_matrix_pre(
 }
 
 pub fn sys_calc_render_matrix(
+    added: ComponentChanged<FlagRenderWorldMatrix>,
+    changes: ComponentChanged<FlagRenderWorldMatrix>,
     mut meshes: Query<
         (Entity, &AbstructMesh, &LocalScaling, &GlobalMatrix, &ScalingMode, &ModelVelocity, &mut AbsoluteTransform),
-        Changed<FlagRenderWorldMatrix>
+        // Changed<FlagRenderWorldMatrix>
     >,
     instances: Query<&InstanceMesh>,
     renderalignments: Query<&RenderAlignment>,
     pose: Query<&RenderPoseMatrix>,
     mut matrixs: Query<&mut RenderWorldMatrix>,
+    entitysets: Res<EntityFilterForComponentChanged>,
 ) {
     // let time = pi_time::Instant::now();
+    let mut entities = entitysets.pop();
+    changes.iter().for_each(|entity| {
+        entities.insert(*entity);
+    });
+    added.iter().for_each(|entity| {
+        entities.insert(*entity);
+    });
     let mut rotation = Rotation3::identity();
     let mut tempmatrix = Matrix::identity();
     let mut tempmatrix2 = Matrix::identity();
     let mut tempmatrix3 = Matrix::identity();
-    meshes.iter_mut().for_each(|(
-        entity, _,
-        localscaling, transform, scalingmode, velocity, mut abstransform
-    )| {
-        let renderalignment = if let Ok(instance) = instances.get(entity) {
-            renderalignments.get(instance.0)
-        } else {
-            renderalignments.get(entity)
-        };
-        if let Ok(renderalignment) = renderalignment {
-            if let Ok(mut wm) = matrixs.get_mut(entity) {
+    entities.iter().for_each(|entity| {
+        if let Ok((
+            entity, _,
+            localscaling, transform, scalingmode, velocity, mut abstransform
+        )) = meshes.get_mut(*entity) {
+            let renderalignment = if let Ok(instance) = instances.get(entity) {
+                renderalignments.get(instance.0)
+            } else {
+                renderalignments.get(entity)
+            };
+            if let Ok(renderalignment) = renderalignment {
+                if let Ok(mut wm) = matrixs.get_mut(entity) {
+        
+                    // log::warn!("calc_render_matrix:");
+                    // render_wm.0.clone_from(&worldmatrix.0);
+                    // render_wminv.0.clone_from(&worldmatrix_inv.0);
     
-                // log::warn!("calc_render_matrix:");
-                // render_wm.0.clone_from(&worldmatrix.0);
-                // render_wminv.0.clone_from(&worldmatrix_inv.0);
-
-                _calc_render_matrix(
-                    velocity, localscaling, scalingmode, renderalignment, transform,
-                    &mut abstransform, &mut wm, pose.get(entity),
-                    &mut rotation, &mut tempmatrix, &mut tempmatrix2, &mut tempmatrix3
-                );
+                    _calc_render_matrix(
+                        velocity, localscaling, scalingmode, renderalignment, transform,
+                        &mut abstransform, &mut wm, pose.get(entity),
+                        &mut rotation, &mut tempmatrix, &mut tempmatrix2, &mut tempmatrix3
+                    );
+                }
             }
         }
     });
+    entitysets.push(entities);
+    // meshes.iter_mut().for_each(|(
+    //     entity, _,
+    //     localscaling, transform, scalingmode, velocity, mut abstransform
+    // )| {
+    // });
     // let time1 = pi_time::Instant::now();
     // log::error!("sys_calc_render_matrix");
 }

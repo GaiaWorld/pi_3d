@@ -1,3 +1,5 @@
+use crossbeam::queue::SegQueue;
+
 use crate::ecs::*;
 
 use crate::prelude::*;
@@ -58,6 +60,24 @@ impl OpsDisposeCan {
     }
 }
 pub type ActionListDisposeCan = ActionList<OpsDisposeCan>;
+
+#[derive(Resource, Default)]
+pub struct EntityFilterForComponentChanged(pub SegQueue<XHashSet<Entity>>);
+impl EntityFilterForComponentChanged {
+    pub fn pop(&self) -> XHashSet<Entity> {
+        if let Some(mut set) = self.0.pop() {
+            set.clear();
+            set
+        } else {
+            XHashSet::default()
+        }
+    }
+    pub fn push(&self, set: XHashSet<Entity>) {
+        if self.0.len() < 64 {
+            self.0.push(set)
+        }
+    }
+}
 
 pub fn sys_dispose_ready(
     mut cmds: ResMut<ActionListDisposeReady>,

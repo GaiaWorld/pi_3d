@@ -54,17 +54,23 @@ use super::prelude::*;
         mut performance: ResMut<Performance>,
         changes: ComponentChanged<FlagLocalMatrix>,
         mut localmatrixs: Query<(Entity, &LocalPosition, &LocalScaling, &LocalRotation, &mut LocalMatrix)>,
+        entitysets: Res<EntityFilterForComponentChanged>,
     ) {
         // log::warn!("LocalMatrix: ");
         if performance.debug { performance.t_worldmatrix = pi_time::Instant::now(); }
 
+        let mut entities = entitysets.pop();
         changes.iter().for_each(|entity| {
+            entities.insert(*entity);
+        });
+        entities.iter().for_each(|entity| {
             if let Ok((_entity, position, scaling, rotation, mut localmatrix)) = localmatrixs.get_mut(*entity) {
                 // log::warn!("LocalMatrixCalc: {:?}", entity);
                 CoordinateSytem3::matrix4_compose_rotation(&scaling.0, &rotation.0, &position.0, &mut localmatrix.0);
             }
         });
 
+        entitysets.push(entities);
         if performance.debug { performance.worldmatrix = (pi_time::Instant::now() - performance.t_worldmatrix).as_micros() as u32; }
     }
 
@@ -99,20 +105,31 @@ pub fn sys_transform_dirty(
 
     mut layers: Query<(Entity, &mut TransformNodeDirty)>,
     tree: EntityTree,
+    entitysets: Res<EntityFilterForComponentChanged>,
     // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_transform_dirty"));
 
-    let changes = changes0.iter().chain(changes1.iter()).chain(changes2.iter());
+    // let changes = changes0.iter().chain(changes1.iter()).chain(changes2.iter());
 
-    changes.for_each(|entity| {
+    let mut entities = entitysets.pop();
+    changes0.iter().for_each(|entity| {
+        entities.insert(*entity);
+    });
+    changes1.iter().for_each(|entity| {
+        entities.insert(*entity);
+    });
+    changes2.iter().for_each(|entity| {
+        entities.insert(*entity);
+    });
+    entities.iter().for_each(|entity| {
         if let Ok((_entity, mut item)) = layers.get_mut(*entity) {
             *item = TransformNodeDirty(true);
         }
     });
 
-    let changes = changes0.iter().chain(changes1.iter()).chain(changes2.iter());
-    changes.for_each(|entity| {
+    // let changes = changes0.iter().chain(changes1.iter()).chain(changes2.iter());
+    entities.iter().for_each(|entity| {
         if let Ok((entity, mut _item)) = layers.get_mut(*entity) {
             if let Some(down) = tree.get_down(entity) {
                 tree.iter(down.head()).for_each(|child| {
@@ -121,6 +138,7 @@ pub fn sys_transform_dirty(
             }
         }
     });
+    entitysets.push(entities);
 }
 
 fn iter_dirty(
@@ -151,13 +169,18 @@ fn iter_dirty(
         mut temp0: ResMut<TmpTransformWorldCalc0>,
         mut temp1: ResMut<TmpTransformWorldCalc1>,
         mut performance: ResMut<Performance>,
+        entitysets: Res<EntityFilterForComponentChanged>,
     ) {
         // performance.systems.push(String::from("sys_world_matrix_calc"));
         if performance.debug { performance.t_worldmatrix = pi_time::Instant::now(); }
 
+        let mut entities = entitysets.pop();
+        changes.iter().for_each(|entity| {
+            entities.insert(*entity);
+        });
         let mut level = 1;
         {
-            changes.iter().for_each(|child| {
+            entities.iter().for_each(|child| {
                 let child = *child;
 
                 if let Ok(flag) = dirtyflags.get(child) {
@@ -206,6 +229,7 @@ fn iter_dirty(
 
         state.max_level = level as u32;
         
+        entitysets.push(entities);
         if performance.debug { performance.worldmatrix += (pi_time::Instant::now() - performance.t_worldmatrix).as_micros() as u32; }
     }
 

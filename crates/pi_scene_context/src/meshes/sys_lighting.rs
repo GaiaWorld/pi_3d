@@ -56,10 +56,18 @@ pub fn sys_model_direct_lighting_modify_by_model(
     addeds: ComponentAdded<LayerMask>,
     changes: ComponentChanged<LayerMask>,
     meshes: Query<(Entity, &SceneID, &ModelLightingIndexs)>,
+    entitysets: Res<EntityFilterForComponentChanged>,
     // mut record: ResMut<pi_scene_shell::run_stage::RunSystemRecord>,
 ) {
     // record.0.push(String::from("sys_model_direct_lighting_modify_by_model"));
-    addeds.iter().chain(changes.iter()).for_each(|entity| {
+    let mut entities = entitysets.pop();
+    changes.iter().for_each(|entity| {
+        entities.insert(*entity);
+    });
+    addeds.iter().for_each(|entity| {
+        entities.insert(*entity);
+    });
+    entities.iter().for_each(|entity| {
         if let Ok((idm, idscene, ids)) = meshes.get(*entity) {
             if let Ok(queuedirect) = scenes.get(idscene.0) {
                 if let Ok(my) = layermask.get(idm) {
@@ -79,6 +87,7 @@ pub fn sys_model_direct_lighting_modify_by_model(
             }
         }
     });
+    entitysets.push(entities);
 }
 
 pub fn sys_model_point_lighting_modify_by_model(
@@ -94,10 +103,21 @@ pub fn sys_model_point_lighting_modify_by_model(
     changes: ComponentChanged<LayerMask>,
     changes3: ComponentChanged<ModelForceLightings>,
     meshes: Query<(Entity, &SceneID, &ModelLightingIndexs, &ModelForceLightings)>,
+    entitysets: Res<EntityFilterForComponentChanged>,
     // mut record: ResMut<pi_scene_shell::run_stage::RunSystemRecord>,
 ) {
     // record.0.push(String::from("sys_model_point_lighting_modify_by_model"));
-    addeds.iter().chain(changes.iter()).chain(changes3.iter()).for_each(|entity| {
+    let mut entities = entitysets.pop();
+    changes.iter().for_each(|entity| {
+        entities.insert(*entity);
+    });
+    addeds.iter().for_each(|entity| {
+        entities.insert(*entity);
+    });
+    changes3.iter().for_each(|entity| {
+        entities.insert(*entity);
+    });
+    entities.iter().for_each(|entity| {
         if let Ok((idm, idscene, ids, forcelights)) = meshes.get(*entity) {
             if let Ok(queuepoint) = scenes.get(idscene.0) {
                 if let Ok(my) = layermask.get(idm) {
@@ -163,4 +183,5 @@ pub fn sys_model_point_lighting_modify_by_model(
             }
         }
     });
+    entitysets.push(entities);
 }

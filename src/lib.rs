@@ -572,6 +572,32 @@ impl<'w> MemSize for ActionSets<'w> {
         + self.disposeref.memsize()
     }
 }
+impl<'w> ActionSets<'w> {
+    pub fn record(&self, result: &mut [f64], mut offset: usize) -> usize {
+        offset += 0; result[offset] = self.scene.memsize() as f64;
+        offset += 1; result[offset] = self.scene_dispose.memsize() as f64;
+        offset += 1; result[offset] = self.obj_dispose.memsize() as f64;
+        offset += 1; result[offset] = self.camera.memsize() as f64;
+        offset += 1; result[offset] = self.light.memsize() as f64;
+        offset += 1; result[offset] = self.shadow.memsize() as f64;
+        offset += 1; result[offset] = self.transform.memsize() as f64;
+        offset += 1; result[offset] = self.mesh.memsize() as f64;
+        offset += 1; result[offset] = self.skin.memsize() as f64;
+        offset += 1; result[offset] = self.instance.memsize() as f64;
+        offset += 1; result[offset] = self.geometry.memsize() as f64;
+        offset += 1; result[offset] = self.material.memsize() as f64;
+        offset += 1; result[offset] = self.anime.memsize() as f64;
+        offset += 1; result[offset] = self.animation.memsize() as f64;
+        offset += 1; result[offset] = self.renderer.memsize() as f64;
+        offset += 1; result[offset] = self.trail.memsize() as f64;
+        offset += 1; result[offset] = self.parsys.memsize() as f64;
+        offset += 1; result[offset] = self.property_targetanimation.memsize() as f64;
+        offset += 1; result[offset] = self.spritecreate.memsize() as f64;
+        offset += 1; result[offset] = self.spritemodify.memsize() as f64;
+        offset += 1; result[offset] = self.disposeref.memsize() as f64;
+        offset
+    }
+}
 
 #[derive(SystemParam)]
 pub struct ResourceSets<'w> {
@@ -609,6 +635,7 @@ pub struct ResourceSets<'w> {
     pub matrix0: Res<'w, TmpTransformWorldCalc0>,
     pub matrix1: Res<'w, TmpTransformWorldCalc1>,
     pub texloader2: Res<'w, ImageTextureViewLoader2>,
+    pub vballocator: Res<'w, VertexBufferAllocator3D>,
 }
 impl<'w> MemSize for ResourceSets<'w> {
     fn memsize(&self) -> usize {
@@ -641,6 +668,42 @@ impl<'w> MemSize for ResourceSets<'w> {
         + self.commondata.memsize()
         + self.matrix0.memsize()
         + self.matrix1.memsize()
-        + self.texloader2.memsize()
+        + self.texloader2.memsize() 
+        + self.vballocator.total_buffer_size() as usize
+    }
+}
+impl<'w> ResourceSets<'w> {
+    pub fn record(&self, result: &mut [f64], mut offset: usize) -> usize {
+        offset += 0; result[offset] = self.node_material_blocks.memsize() as f64;
+        offset += 1; result[offset] = self.imgtex_loader.memsize() as f64;
+        offset += 1; result[offset] = self.imgtex_loader_state.memsize() as f64;
+        offset += 1; result[offset] = self.imgtex_asset.size() as f64;
+        offset += 1; result[offset] = self.imgtexview_asset.size() as f64;
+        offset += 1; result[offset] = self.gltf2_asset.size() as f64;
+        offset += 1; result[offset] = self.anime_assets.memsize() as f64;
+        offset += 1; result[offset] = self.anime_contexts.memsize() as f64;
+        offset += 1; result[offset] = self.render_targets.memsize() as f64;
+        offset += 1; result[offset] = self.asset_samp.size() as f64;
+        offset += 1; result[offset] = self.asset_atlas.0.size() as f64;
+        offset += 1; result[offset] = self.scene_lighting_limit.memsize() as f64;
+        offset += 1; result[offset] = self.model_lighting_limit.memsize() as f64;
+        offset += 1; result[offset] = self.scene_shadow_limit.memsize() as f64;
+        offset += 1; result[offset] = self.vb_mgr.size() as f64;
+        offset += 1; result[offset] = self.vb_wait.size() as f64;
+        offset += 1; result[offset] = self.shader_metas.size() as f64;
+        offset += 1; result[offset] = self.anime_global.memsize() as f64;
+        offset += 1; result[offset] = self.anime_events.memsize() as f64;
+        offset += 1; result[offset] = self.trailbuffer.memsize() as f64;
+        offset += 1; result[offset] = self.particlesys.memsize() as f64;
+        offset += 1; result[offset] = self.error_record.memsize() as f64;
+        offset += 1; result[offset] = self.textureatlas.size() as f64;
+        offset += 1; result[offset] = self.enginopt.memsize() as f64;
+        offset += 1; result[offset] = self.combinebuffer.memsize() as f64;
+        offset += 1; result[offset] = self.commondata.memsize() as f64;
+        offset += 1; result[offset] = self.matrix0.memsize() as f64;
+        offset += 1; result[offset] = self.matrix1.memsize() as f64;
+        offset += 1; result[offset] = self.texloader2.memsize() as f64;
+        offset += 1; result[offset] = self.vballocator.total_buffer_size() as f64;
+        offset
     }
 }

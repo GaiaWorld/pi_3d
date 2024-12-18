@@ -19,12 +19,19 @@ pub fn sys_vertex_buffer_slots_loaded(
     >,
     mut geometries: Query<&mut RenderGeometryComp>,
     mut meshes: Query<(&mut RenderGeometryEable, &MeshInstanceState)>,
+    entitysets: Res<EntityFilterForComponentChanged>,
     // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_vertex_buffer_slots_loaded"));
     let mut counter = 0;
-    let changes = changes.iter().chain(addeds.iter());
-    changes.for_each(|entity| {
+    let mut entities = entitysets.pop();
+    addeds.iter().for_each(|entity| {
+        entities.insert(*entity);
+    });
+    changes.iter().for_each(|entity| {
+        entities.insert(*entity);
+    });
+    entities.iter().for_each(|entity| {
         if let Ok((
             idgeo, 
             (idmesh, geodesc, indicesdesc, indices, indiceskey)
@@ -107,6 +114,7 @@ pub fn sys_vertex_buffer_slots_loaded(
             }
         }
     });
+    entitysets.push(entities);
     // log::error!("sys_vertex_buffer_slots_loaded {:?}", counter);
 }
 

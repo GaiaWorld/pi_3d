@@ -19,9 +19,17 @@ pub fn sys_material_textures_modify(
     >,
     device: Res<PiRenderDevice>,
     asset_samp: Res<ShareAssetMgr<SamplerRes>>,
+    entitysets: Res<EntityFilterForComponentChanged>,
 ) {
     // log::debug!("SysMaterialMetaChange: ");
-    addeds.iter().chain(changes.iter()) .for_each(|entity| {
+    let mut entities = entitysets.pop();
+    addeds.iter().for_each(|entity| {
+        entities.insert(*entity);
+    });
+    changes.iter().for_each(|entity| {
+        entities.insert(*entity);
+    });
+    entities.iter().for_each(|entity| {
         if let Ok((
             effect, mut texparams,
             mut slots,
@@ -67,6 +75,7 @@ pub fn sys_material_textures_modify(
             }
         }
     });
+    entitysets.push(entities);
 }
 
 pub fn sys_material_uniform_apply(
@@ -78,10 +87,15 @@ pub fn sys_material_uniform_apply(
     _uints: Query<(Ticker<&AnimatorableUint >, &AnimatorableUniform)>,
     items: Query<(&BindEffect, &UniformAnimated)>,
     mut performance: ResMut<Performance>,
+    entitysets: Res<EntityFilterForComponentChanged>,
 ) {
     if performance.debug { performance.t_uniformbufferupdate = pi_time::Instant::now(); }
-
+    let mut entities = entitysets.pop();
     changes.iter().for_each(|entity| {
+        entities.insert(*entity);
+    });
+
+    entities.iter().for_each(|entity| {
         if let Ok((bind, animated)) = items.get(*entity) {
             if let Some(bind) = &bind.0 {
                 animated.0.iter().for_each(|_k| {
@@ -130,7 +144,7 @@ pub fn sys_material_uniform_apply(
             }
         }
     });
-
+    entitysets.push(entities);
     if performance.debug { performance.uniformbufferupdate = (pi_time::Instant::now() - performance.t_uniformbufferupdate).as_micros() as u32; }
 }
 
@@ -144,10 +158,15 @@ pub fn sys_texture_ready(
             , &mut EffectTextureSamplersComp
         )
     >,
+    entitysets: Res<EntityFilterForComponentChanged>,
     // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_texture_ready"));
+    let mut entities = entitysets.pop();
     changes.iter().for_each(|entity| {
+        entities.insert(*entity);
+    });
+    entities.iter().for_each(|entity| {
         if let Ok((
             _entity, binddesc, keys
             , textures, samplers
@@ -175,6 +194,7 @@ pub fn sys_texture_ready(
             }    
         }
     });
+    entitysets.push(entities);
 }
 
 pub fn sys_dispose_about_material(

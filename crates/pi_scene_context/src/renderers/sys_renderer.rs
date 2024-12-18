@@ -25,10 +25,18 @@ use super::{
         asset_mgr_bindgroup: Res<ShareAssetMgr<BindGroup>>,
         bindpassindexs: Res<BindPassIndexPool>,
         mut errors: ResMut<ErrorRecord>,
+        entitysets: Res<EntityFilterForComponentChanged>,
         // mut performance: ResMut<Performance>,
     ) {
         // performance.systems.push(String::from("sys_pass_bind_groups"));
-        addeds.iter().chain(changes.iter()).for_each(|entity| {
+        let mut entities = entitysets.pop();
+        changes.iter().for_each(|entity| {
+            entities.insert(*entity);
+        });
+        addeds.iter().for_each(|entity| {
+            entities.insert(*entity);
+        });
+        entities.iter().for_each(|entity| {
             if let Ok((_id_pass, idmodel, idmat, idrenderer, mut bindgroups, mut flag, passidx)) = passes.get_mut(*entity) {
                 let (idscene, idviewer) = if let Ok((idscene, idviewer)) = renderers.get(idrenderer.0) {
                     (idscene.0, idviewer.0)
@@ -154,6 +162,7 @@ use super::{
                 // log::error!("Bindgroups Fail Pass");
             }
         });
+        entitysets.push(entities);
     }
 
 /// 渲染器搜集渲染
@@ -171,9 +180,23 @@ use super::{
         geochanges: ComponentChanged<VertexBufferLayoutsComp>,
         geometrys: Query<(Entity, &MeshID)>,
         mut passes: Query<(&mut PassGeometryID, &mut PassPipelineStateDirty, &mut PassFlagShader)>,
+        entitysets: Res<EntityFilterForComponentChanged>,
     ) {
         // let time1 = pi_time::Instant::now();
-        addeds0.iter().chain(changes0.iter()).chain(addeds1.iter()).chain(changes1.iter()).for_each(|entity| {
+        let mut entities = entitysets.pop();
+        addeds0.iter().for_each(|entity| {
+            entities.insert(*entity);
+        });
+        changes0.iter().for_each(|entity| {
+            entities.insert(*entity);
+        });
+        addeds1.iter().for_each(|entity| {
+            entities.insert(*entity);
+        });
+        changes1.iter().for_each(|entity| {
+            entities.insert(*entity);
+        });
+        entities.iter().for_each(|entity| {
             if let Ok((id_geo, passids)) = models.get(*entity) {
                 // log::error!("sys_pass_shader_request_by_model");
                 passids.0.iter().for_each(|id| {
@@ -185,7 +208,15 @@ use super::{
                 });
             }
         });
-        geoaddeds.iter().chain(geochanges.iter()).for_each(|entity| {
+
+        entities.clear();
+        geoaddeds.iter().for_each(|entity| {
+            entities.insert(*entity);
+        });
+        geochanges.iter().for_each(|entity| {
+            entities.insert(*entity);
+        });
+        entities.iter().for_each(|entity| {
             // log::error!("sys_pass_shader_request_by_geometry");
             if let Ok((entity, idmesh)) = geometrys.get(*entity) {
                 if let Ok((id_geo, passids)) = models.get(idmesh.0) {
@@ -201,6 +232,7 @@ use super::{
                 }
             }
         });
+        entitysets.push(entities);
         // log::debug!("SysPassShaderRequestByModel: {:?}", pi_time::Instant::now() - time1);
     }
 
@@ -217,9 +249,17 @@ use super::{
         assets: Res<ShareAssetMgr<Shader3D>>,
         device: Res<PiRenderDevice>,
         engineopt: Res<EngineCustomPlugins>,
+        entitysets: Res<EntityFilterForComponentChanged>,
     ) {
         // let time1 = pi_time::Instant::now();
-        addeds.iter().chain(changes.iter()).for_each(|entity| {
+        let mut entities = entitysets.pop();
+        changes.iter().for_each(|entity| {
+            entities.insert(*entity);
+        });
+        addeds.iter().for_each(|entity| {
+            entities.insert(*entity);
+        });
+        entities.iter().for_each(|entity| {
             if let Ok((id_pass, disposeready, id_model, id_geo, idmat, bindgroups, mut old_shader, mut flagpipeline)) = passes.get_mut(*entity) {
 
                 if disposeready.0 == true { return; }
@@ -275,6 +315,7 @@ use super::{
                 }
             }
         });
+        entitysets.push(entities);
 
         // log::debug!("SysPassShaderRequestByPass: {:?}", pi_time::Instant::now() - time1);
     }
@@ -290,6 +331,7 @@ use super::{
         viewers: Query<(&ModelList, &ForceIncludeModelList)>,
         modelspass: Query<&PassIDs>,
         mut passes: Query<&mut PassPipelineStateDirty>,
+        entitysets: Res<EntityFilterForComponentChanged>,
     ) {
         passaddeds.iter().chain(passaddeds2.iter()).chain(passchanges.iter()).chain(passchanges2.iter()).for_each(|entity| {
             // log::error!("sys_pass_pipeline_request_by_model");
@@ -298,9 +340,16 @@ use super::{
             }
         });
 
-        let changes = changes0.iter().chain(changes.iter());
+        let mut entities = entitysets.pop();
+        changes.iter().for_each(|entity| {
+            entities.insert(*entity);
+        });
+        changes0.iter().for_each(|entity| {
+            entities.insert(*entity);
+        });
+        // let changes = changes0.iter().chain(changes.iter());
         // let time1 = pi_time::Instant::now();
-        changes.for_each(|entity| {
+        entities.iter().for_each(|entity| {
             // log::error!("sys_pass_pipeline_request_by_renderer");
             if let Ok((param, idviewer, passtag)) = renderers.get(*entity) {
                 if param.enable.0 {
@@ -315,6 +364,7 @@ use super::{
                 }
             }
         });
+        entitysets.push(entities);
     }
 
     fn _pass_pipeline_request_by_renderer(
@@ -339,9 +389,17 @@ use super::{
         assets: ResMut<ShareAssetMgr<Pipeline3D>>,
         device: Res<PiRenderDevice>,
         mut errors: ResMut<ErrorRecord>,
+        entitysets: Res<EntityFilterForComponentChanged>,
     ) {
         // let time1 = pi_time::Instant::now();
-        addeds.iter().chain(changes.iter()).for_each(|entity| {
+        let mut entities = entitysets.pop();
+        changes.iter().for_each(|entity| {
+            entities.insert(*entity);
+        });
+        addeds.iter().for_each(|entity| {
+            entities.insert(*entity);
+        });
+        entities.iter().for_each(|entity| {
             if let Ok((
                 id_pass, disposeready, id_model, bindgroups, shader, mut oldpipeline, idrenderer,
                 renderstate, mut flag
@@ -401,7 +459,7 @@ use super::{
                 }
             }
         });
-
+        entitysets.push(entities);
         // // log::trace!("SysPassPipelineRequest: {:?}", pi_time::Instant::now() - time1);
     }
 
