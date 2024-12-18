@@ -595,7 +595,7 @@ impl<'w> ActionSets<'w> {
         offset += 1; result[offset] = self.spritecreate.memsize() as f64;
         offset += 1; result[offset] = self.spritemodify.memsize() as f64;
         offset += 1; result[offset] = self.disposeref.memsize() as f64;
-        offset
+        offset + 1
     }
 }
 
@@ -704,6 +704,6 @@ impl<'w> ResourceSets<'w> {
         offset += 1; result[offset] = self.matrix1.memsize() as f64;
         offset += 1; result[offset] = self.texloader2.memsize() as f64;
         offset += 1; result[offset] = self.vballocator.total_buffer_size() as f64;
-        offset
+        offset + 1
     }
 }
