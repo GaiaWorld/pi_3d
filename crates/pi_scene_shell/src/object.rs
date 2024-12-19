@@ -205,6 +205,7 @@ impl Plugin for PluginDispose {
         app.insert_resource(ActionListDisposeReadyForRef::default());
         app.insert_resource(ActionListDisposeReady::default());
         app.insert_resource(ActionListDisposeCan::default());
+        app.insert_resource(EntityFilterForComponentChanged::default());
 
 #[cfg(feature = "use_bevy")]
 {
