@@ -8,13 +8,13 @@ pub trait TEntityRef {
 }
 
 #[derive(Component)]
-pub struct EntityRefInfo<F: Default + Clone + Component> {
+pub struct EntityRefInfo<F: Default + Component> {
     refs: XHashSet<Entity>,
     pub dirty: bool,
     pub request_dispose: bool,
     p: PhantomData<F>,
 }
-impl<F: Default + Clone + Component> Default for EntityRefInfo<F> {
+impl<F: Default + Component> Default for EntityRefInfo<F> {
     fn default() -> Self {
         Self {
             refs: XHashSet::default(),
@@ -24,7 +24,7 @@ impl<F: Default + Clone + Component> Default for EntityRefInfo<F> {
         }
     }
 }
-impl<F: Default + Clone + Component> EntityRefInfo<F> {
+impl<F: Default + Component> EntityRefInfo<F> {
     pub fn iter(&self) -> Iter<Entity> {
         self.refs.iter()
     }

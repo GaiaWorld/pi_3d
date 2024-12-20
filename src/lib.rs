@@ -636,6 +636,7 @@ pub struct ResourceSets<'w> {
     pub matrix1: Res<'w, TmpTransformWorldCalc1>,
     pub texloader2: Res<'w, ImageTextureViewLoader2>,
     pub vballocator: Res<'w, VertexBufferAllocator3D>,
+    pub texcombine: ResMut<'w, TextureCombineAtlas2DMgr>,
 }
 impl<'w> MemSize for ResourceSets<'w> {
     fn memsize(&self) -> usize {

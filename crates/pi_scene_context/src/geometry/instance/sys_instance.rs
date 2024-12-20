@@ -50,7 +50,7 @@ impl Ord for TmpInstanceSort {
     pub fn sys_tick_instanced_buffer_update_single(
         actives: Query<(&GlobalEnable, &InstanceMesh, &RenderQueueSortParam, &AbstructMeshCullingFlag, &GlobalMatrix, &LocalPosition), With<AbstructMesh>>,
         instanceattributes: Query<&ModelInstanceAttributes>,
-        changes: ComponentChanged<InstanceSourceRefs>,
+        changeds: ComponentChanged<InstanceSourceRefs>,
         mut sources: Query<
             (
                 Entity, &EInstanceSortMode, &InstanceSourceRefs, &GeometryID, &MeshInstanceState, &mut InstancedMeshTransparentSortCollection
@@ -66,6 +66,7 @@ impl Ord for TmpInstanceSort {
         mut temp: ResMut<TmpCommonVec>,
         mut combinedata: ResMut<CombineDataCommon>,
         engineopt: Res<EngineCustomPlugins>,
+        entitysets: Res<EntityFilterForComponentChanged>,
         // mut performance: ResMut<Performance>,
     ) {
         // performance.systems.push(String::from("sys_tick_instanced_buffer_update_single"));
@@ -75,7 +76,11 @@ impl Ord for TmpInstanceSort {
         let mut maxx = f32::MIN;
         let mut maxy = f32::MIN;
         let mut maxz = f32::MIN;
-        changes.iter().for_each(|entity| {
+        let mut entities = entitysets.pop();
+        changeds.iter().for_each(|entity| {
+            entities.insert(*entity);
+        });
+        entities.iter().for_each(|entity| {
             if let Ok((idsource, sortmode, instances, idgeo, meshinsstate, mut instancessortinfos)) = sources.get_mut(*entity) {
                 if let Ok(disposed) = dispoeds.get(idsource) {
                     if disposed.0 == true { return; }
@@ -188,6 +193,7 @@ impl Ord for TmpInstanceSort {
                 }
             }
         });
+        entitysets.push(entities);
     }
 
 
@@ -199,7 +205,6 @@ impl Ord for TmpInstanceSort {
             (
                 Entity, &EInstanceSortMode, &InstanceSourceRefs, &GeometryID, &MeshInstanceState, &mut InstancedMeshTransparentSortCollection
             ),
-            // Changed<InstanceSourceRefs>
         >,
         dispoeds: Query<&DisposeReady>,
         geometrys: Query<&InstancedInfoComp>,

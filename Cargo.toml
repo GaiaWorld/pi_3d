@@ -1,6 +1,6 @@
 [package]
 name = "pi_3d"
-version = "1.0.9"
+version = "1.0.10"
 authors = ["baip0002 <2494156981@qq.com>"]
 edition = "2021"
 description = "3D Framework for Scene."
@@ -316,6 +316,10 @@ path = "examples/effects/stripes_virtual.rs"
 [[example]]
 name = "distortion_uv"
 path = "examples/effects/distortion_uv.rs"
+
+[[example]]
+name = "material_array"
+path = "examples/effects/material_array.rs"
 
 [[example]]
 name = "anime_opacity_clip"

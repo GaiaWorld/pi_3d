@@ -34,7 +34,6 @@ pub fn sys_calc_render_matrix(
     changes: ComponentChanged<FlagRenderWorldMatrix>,
     mut meshes: Query<
         (Entity, &AbstructMesh, &LocalScaling, &GlobalMatrix, &ScalingMode, &ModelVelocity, &mut AbsoluteTransform),
-        // Changed<FlagRenderWorldMatrix>
     >,
     instances: Query<&InstanceMesh>,
     renderalignments: Query<&RenderAlignment>,
@@ -264,8 +263,13 @@ pub fn sys_animator_update_instance_attribute(
     mut items: Query<(&mut ModelInstanceAttributes, &InstanceAttributeAnimated)>,
     instances: Query<&InstanceMesh>,
     mut meshes: Query<&mut InstanceSourceRefs>,
+    entitysets: Res<EntityFilterForComponentChanged>,
 ) {
+    let mut entities = entitysets.pop();
     changes.iter().for_each(|entity| {
+        entities.insert(*entity);
+    });
+    entities.iter().for_each(|entity| {
         if let Ok((mut attributes, animators)) = items.get_mut(*entity) {
             animators.0.iter().for_each(|key| {
                 if let Some(offset) = attributes.offset(key) {
@@ -312,6 +316,7 @@ pub fn sys_animator_update_instance_attribute(
             }
         }
     });
+    entitysets.push(entities);
 }
 
 pub fn sys_dispose_about_mesh(

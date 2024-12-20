@@ -11,7 +11,7 @@ pub fn sys_modify_pass_effect_by_material(
     changes2: ComponentChanged<DirtyMaterialRefs>,
     changes3: ComponentChanged<BindEffect>,
     changes4: ComponentChanged<EffectTextureSamplersComp>,
-    materials: Query<&MaterialRefs>,
+    materials: Query<(&MaterialRefs, &DirtyMaterialRefs)>,
     mut passes: Query<&mut PassBindGroupsDirty>,
     // mut performance: ResMut<Performance>,
 ) {
@@ -23,7 +23,7 @@ pub fn sys_modify_pass_effect_by_material(
     });
     changes.iter().for_each(|entity| {
         // log::error!("sys_modify_pass_effect_by_material");
-        if let Ok(list) = materials.get(*entity) {
+        if let Ok((list, _dirty)) = materials.get(*entity) {
             list.iter().for_each(|target| {
                 if let Ok(mut dirty) = passes.get_mut(*target) {
                     *dirty = PassBindGroupsDirty;
@@ -33,17 +33,17 @@ pub fn sys_modify_pass_effect_by_material(
     });
     changes2.iter().for_each(|entity| {
         // log::error!("sys_modify_pass_effect_by_material");
-        if let Ok(list) = materials.get(*entity) {
-            list.iter().for_each(|target| {
-                if let Ok(mut dirty) = passes.get_mut(*target) {
+        if let Ok((_list, dirty)) = materials.get(*entity) {
+            while let Some(target) = dirty.0.pop() {
+                if let Ok(mut dirty) = passes.get_mut(target) {
                     *dirty = PassBindGroupsDirty;
                 }
-            });
+            }
         }
     });
     changes3.iter().for_each(|entity| {
         // log::error!("sys_modify_pass_effect_by_material");
-        if let Ok(list) = materials.get(*entity) {
+        if let Ok((list, _dirty)) = materials.get(*entity) {
             list.iter().for_each(|target| {
                 if let Ok(mut dirty) = passes.get_mut(*target) {
                     *dirty = PassBindGroupsDirty;
@@ -53,7 +53,7 @@ pub fn sys_modify_pass_effect_by_material(
     });
     changes4.iter().for_each(|entity| {
         // log::error!("sys_modify_pass_effect_by_material");
-        if let Ok(list) = materials.get(*entity) {
+        if let Ok((list, dirty)) = materials.get(*entity) {
             list.iter().for_each(|target| {
                 if let Ok(mut dirty) = passes.get_mut(*target) {
                     *dirty = PassBindGroupsDirty;

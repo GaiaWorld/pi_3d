@@ -62,6 +62,7 @@ pub fn sys_create_material(
         if let Some(meta) = asset_shader.get(&key_shader) {
             // log::error!("Material: oK!! {:?}", key_shader);
             let bind = materialmgr.allocate(&key_shader, &meta, &device, &mut allocator, &engineopt);
+            // log::error!("MaterialData Allocate: {:?}", (&key_shader, bind.is_some()));
             let effect_val_bind = BindEffectValues::new(&device, key_shader.clone(), meta.clone(), bind);
             // let mut matcmds = commands.entity(entity);
 
@@ -90,6 +91,7 @@ pub fn sys_create_material(
             // log::error!("ERROR_MATERIAL_SHADER_NOTFOUND: {:?}", key_shader);
         }
     });
+    materialmgr.check();
 }
 
 pub fn sys_act_material_use(
@@ -113,12 +115,12 @@ pub fn sys_act_material_use(
                         let oldmat = matid.0;
                         if matid.0 != id_mat {
                             // use
-                            if materialrefs.insert(id_mesh) { *flag = DirtyMaterialRefs::default(); }
+                            if materialrefs.insert(id_mesh) { flag.0.push(id_mesh); flag.set_changed(); }
                             *matid = LinkedMaterialID(id_mat);
 
                             // unuse
                             if let Ok((mut materialrefs, mut flag, _)) = materials.get_mut(oldmat) {
-                                if materialrefs.remove(&id_mesh) { *flag = DirtyMaterialRefs::default(); }
+                                if materialrefs.remove(&id_mesh) { flag.0.push(id_mesh); flag.set_changed(); }
                             }
                         }
                     // Model
@@ -136,12 +138,12 @@ pub fn sys_act_material_use(
                             if oldmat != id_mat {
                                 // use
                                 // *matid = PassMaterialID(id_mat);
-                                if materialrefs.insert(id_pass) { *flag = DirtyMaterialRefs::default(); }
+                                if materialrefs.insert(id_pass) { flag.0.push(id_pass); flag.set_changed(); }
                                 
                                 // unuse
-                                if let Ok((mut materialrefs, mut _flag, _)) = materials.get_mut(oldmat) {
+                                if let Ok((mut materialrefs, mut flag, _)) = materials.get_mut(oldmat) {
                                     if materialrefs.remove(&id_pass) {
-                                        // *flag = DirtyMaterialRefs::default();
+                                        flag.0.push(id_pass); flag.set_changed();
                                     }
                                 }
 
@@ -164,7 +166,7 @@ pub fn sys_act_material_use(
                     // unuse
                     if let Ok((mut materialrefs, mut flag, _)) = materials.get_mut(old) {
                         if materialrefs.remove(&id_mesh) {
-                            *flag = DirtyMaterialRefs::default();
+                            flag.0.push(id_mesh); flag.set_changed();
                         }
                     // } else {
                     //     cmds.push(OpsMaterialUse::UnUse(id_mesh, id_mat));

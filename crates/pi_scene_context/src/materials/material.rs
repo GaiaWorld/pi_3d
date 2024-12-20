@@ -1,4 +1,5 @@
 
+use crossbeam::queue::SegQueue;
 use pi_scene_shell::prelude::*;
 use pi_scene_math::{Number, Matrix, Vector4, Vector2, Matrix2};
 
@@ -21,8 +22,8 @@ impl TEntityRef for LinkedMaterialID {
     }
 }
 
-#[derive(Clone, Component, Default)]
-pub struct DirtyMaterialRefs;
+#[derive(Component, Default)]
+pub struct DirtyMaterialRefs(pub SegQueue<Entity>);
 
 /// 材质被哪些实体使用
 pub type MaterialRefs = EntityRefInfo<DirtyMaterialRefs>;

@@ -133,11 +133,11 @@ pub fn sys_geometry_enable(
             }
         }
     });
-    changes.iter().for_each(|entity| {
-        if let Ok((geometrycomp, idmesh)) = geometries.get(*entity) {
-            if let Ok(mut state) = meshes.get_mut(idmesh.0) {
-                *state = RenderGeometryEable(geometrycomp.is_some());
-            }
-        }
-    });
+    // changes.iter().for_each(|entity| {
+    //     if let Ok((geometrycomp, idmesh)) = geometries.get(*entity) {
+    //         if let Ok(mut state) = meshes.get_mut(idmesh.0) {
+    //             *state = RenderGeometryEable(geometrycomp.is_some());
+    //         }
+    //     }
+    // });
 }

@@ -383,13 +383,13 @@ const float ADDRESS_MIRROR_REPEAT = 2.0;
 const vec2 M_ONE = vec2(1.);
 const vec2 M_ZERO = vec2(0.);
 vec2 uvAtlas(vec2 uv, vec4 atlas, vec4 mode) {
-    // vec2 f = floor(uv);
-    // vec2 temp = max(M_ZERO, M_ONE - mode.xy) * min(M_ONE, max(M_ZERO, uv)) 
-    //           + min(M_ONE,          mode.xy) * abs(
-    //                 uv - f 
-    //           + max(M_ZERO, mode.xy - M_ONE) * (3. * f - 2. * (uv + floor(0.5 * uv)))
-    //         );
-    return uv * atlas.xy + atlas.zw;
+    vec2 f = floor(uv);
+    vec2 temp = max(M_ZERO, M_ONE - mode.xy) * min(M_ONE, max(M_ZERO, uv)) 
+              + min(M_ONE,          mode.xy) * abs(
+                    uv - f 
+              + max(M_ZERO, mode.xy - M_ONE) * (3. * f - 2. * (uv + floor(0.5 * uv)))
+            );
+    return temp * atlas.xy + atlas.zw;
 }
 ";
         // Shader 定义 Varying 代码

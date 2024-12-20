@@ -68,10 +68,6 @@ impl Plugin for PluginRunstage {
 
         app.insert_resource(RunState3D::default());
 
-        if app.world.get_resource::<EngineCustomPlugins>().is_none() {
-            app.insert_resource(EngineCustomPlugins::default());
-        }
-
         let device = app.world.get_resource::<PiRenderDevice>().unwrap();
         let limits = device.limits();
         app.insert_resource(DeviceLimits3D(limits));

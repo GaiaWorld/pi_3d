@@ -333,14 +333,27 @@ use super::{
         mut passes: Query<&mut PassPipelineStateDirty>,
         entitysets: Res<EntityFilterForComponentChanged>,
     ) {
-        passaddeds.iter().chain(passaddeds2.iter()).chain(passchanges.iter()).chain(passchanges2.iter()).for_each(|entity| {
+        let mut entities = entitysets.pop();
+        passaddeds.iter().for_each(|entity| {
+            entities.insert(*entity);
+        });
+        passaddeds2.iter().for_each(|entity| {
+            entities.insert(*entity);
+        });
+        passchanges.iter().for_each(|entity| {
+            entities.insert(*entity);
+        });
+        passchanges2.iter().for_each(|entity| {
+            entities.insert(*entity);
+        });
+        entities.iter().for_each(|entity| {
             // log::error!("sys_pass_pipeline_request_by_model");
             if let Ok(mut flag) = passes.get_mut(*entity) {
                 *flag = PassPipelineStateDirty;
             }
         });
 
-        let mut entities = entitysets.pop();
+        entities.clear();
         changes.iter().for_each(|entity| {
             entities.insert(*entity);
         });
@@ -470,14 +483,26 @@ use super::{
         changes1: ComponentChanged<IndiceRenderRange>,
         changes2: ComponentChanged<VertexRenderRange>,
         mut passes: Query<&mut PassDrawDirty>,
+        entitysets: Res<EntityFilterForComponentChanged>,
     ) {
-        changes0.iter().chain(changes1.iter()).chain(changes2.iter()).for_each(|entity| {
+        let mut entities = entitysets.pop();
+        changes0.iter().for_each(|entity| {
+            entities.insert(*entity);
+        });
+        changes1.iter().for_each(|entity| {
+            entities.insert(*entity);
+        });
+        changes2.iter().for_each(|entity| {
+            entities.insert(*entity);
+        });
+        entities.iter().for_each(|entity| {
             if let Ok(passids) = models.get(*entity) {
                 passids.0.iter().for_each(|id| {
                     if let Ok(mut drawdirty) = passes.get_mut(*id) { *drawdirty = PassDrawDirty; }
                 });
             }
         });
+        entitysets.push(entities);
 
         // // log::trace!("SysPassDrawLoad: {:?}", pi_time::Instant::now() - time1);
     }
@@ -488,8 +513,13 @@ use super::{
         changes: ComponentChanged<PassDrawDirty>,
         mut passes: Query<(&PassModelID, &PassBindGroups, &PassPipeline, &mut PassDraw)>,
         // mut commands: Commands,
+        entitysets: Res<EntityFilterForComponentChanged>,
     ) {
+        let mut entities = entitysets.pop();
         changes.iter().for_each(|entity| {
+            entities.insert(*entity);
+        });
+        entities.iter().for_each(|entity| {
             if let Ok((id_model, bindgroups, pipeline, mut old_draw)) = passes.get_mut(*entity) {
                 if let (Some(_), Some(_)) = (bindgroups.val(), pipeline.val()) {
                     if let Ok((id_geo, geoenable, disposed)) = models.get(id_model.0) {
@@ -518,6 +548,7 @@ use super::{
                 }
             }
         });
+        entitysets.push(entities);
 
         // // log::trace!("SysPassDrawLoad: {:?}", pi_time::Instant::now() - time1);
     }

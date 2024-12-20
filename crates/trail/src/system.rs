@@ -80,14 +80,15 @@ pub fn sys_trail_update(
 pub fn sys_dispose_about_trail_linked(
     transforms: Query<&DisposeReady, Changed<DisposeReady>>,
     trails: Query<(Entity, &TrailParam, &TrailGeometry)>,
-    mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
-    mut _disposecanlist: ResMut<ActionListDisposeCan>,
+    // mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
+    mut disposecanlist: ResMut<ActionListDisposeCan>,
 ) {
     trails.iter().for_each(|(entity, idlinked, _)| {
         if let Ok(state) = transforms.get(idlinked.linked) {
             if state.0 == false { return; }
 
-            disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
+            // disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
+            disposecanlist.push(OpsDisposeCan::ops(entity));
         }
     });
 }

@@ -351,6 +351,7 @@ pub fn test_plugins() -> (App, Arc<pi_winit::window::Window>,EventLoop<()>) {
     app.add_plugins(PluginLocalLoad);
     app.add_plugins(PluginFrameTime);
             
+    app.insert_resource(EngineCustomPlugins::default());
     PluginBundleDefault::add(&mut app);
     
     app.add_plugins(PluginNodeMaterial);
@@ -435,6 +436,7 @@ pub fn test_plugins_with_gltf() -> (App, Arc<Window>, EventLoop<()>) {
     app.add_plugins(PluginLocalLoad);
     app.add_plugins(PluginFrameTime);
 
+    app.insert_resource(EngineCustomPlugins::default());
     PluginBundleDefault::add(&mut app);
 
     app.add_plugins(PluginNodeMaterial);
