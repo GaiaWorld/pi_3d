@@ -654,7 +654,8 @@ fn _sys_image_texture_view_load_launch2(
             }
         },
         EKeyTexture::Image(_key) => {
-            fail.push((entity, param, slot));
+            fail.push((entity, param.clone(), slot));
+            None
             // todo!()
             // // log::warn!("Texture Load {:?}", (key.url()));
             // let key_u64 = key.asset_u64();
