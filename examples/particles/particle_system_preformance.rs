@@ -52,7 +52,7 @@ fn setup(
                     attrs.push(VertexBufferDesc::instance_world_matrix());
                     attrs.push(VertexBufferDesc::instance_color());
                     attrs.push(VertexBufferDesc::instance_tilloff());
-                    actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
+                    actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, CubeBuilder::indices_meta()));
                     //
                     let syskey = String::from("Test");
                     let syscfg = demo_cfg(10000., 50.);

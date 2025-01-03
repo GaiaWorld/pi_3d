@@ -50,7 +50,7 @@ pub fn sys_create_scene(
             meshrenderstate.push(OpsRenderState::primitive_state(bounding, PassTag::PASS_TAG_08, EPrimitiveState::CPolygonMode(PolygonMode::Line)));
 
             meshrenderstate.push(OpsRenderState::render_queue(bounding, i32::MAX, i32::MAX));
-            geocreate.push(OpsGeomeryCreate::ops(bounding, boundinggeo, pi_mesh_builder::cube::CubeBuilder::attrs_meta(), Some(pi_mesh_builder::cube::CubeBuilder::indices_meta())));
+            geocreate.push(OpsGeomeryCreate::ops(bounding, boundinggeo, pi_mesh_builder::cube::CubeBuilder::attrs_meta(), pi_mesh_builder::cube::CubeBuilder::indices_meta()));
 
             if let Some(bundle) = ActionScene::init(lightlimit.0, shadowlimit.0, &mut dynbuffer, &device, &asset_samp) {
                 let bundle = (

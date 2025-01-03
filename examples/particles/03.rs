@@ -102,7 +102,7 @@ fn setup(
         source,
         id_geo,
         attrs,
-        Some(CubeBuilder::indices_meta()),
+        CubeBuilder::indices_meta(),
     ));
 
     let idmat = commands.spawn_empty_id();

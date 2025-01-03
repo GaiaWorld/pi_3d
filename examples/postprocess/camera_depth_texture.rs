@@ -133,7 +133,7 @@ impl Plugin for PluginTest {
     
     {
         let vertices = CubeBuilder::attrs_meta();
-        let indices = Some(CubeBuilder::indices_meta());
+        let indices = CubeBuilder::indices_meta();
         let mut state: MeshInstanceState = MeshInstanceState::default();
         // state.state = InstanceState::INSTANCE_BASE | InstanceState::INSTANCE_CUSTOM_VEC4_A | InstanceState::INSTANCE_CUSTOM_VEC4_B;
         let cube = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
@@ -146,7 +146,7 @@ impl Plugin for PluginTest {
         actions.transform.localsrt.push(OpsTransformNodeLocal::ops(cube, ETransformSRT::Translation(0., -1., 0.)));
     }
 
-    let (vertices, indices) = (CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta()));
+    let (vertices, indices) = (CubeBuilder::attrs_meta(), CubeBuilder::indices_meta());
     let state: MeshInstanceState = MeshInstanceState {
         instance_matrix: true,
         instances: vec![
@@ -238,7 +238,7 @@ impl Plugin for PluginTest {
             actions.renderer.connect.push(OpsRendererConnect::ops(demopass.skywater_renderer, demopass.transparent_renderer, true));
     
             let vertices = CubeBuilder::attrs_meta();
-            let indices = Some(CubeBuilder::indices_meta());
+            let indices = CubeBuilder::indices_meta();
             let state = MeshInstanceState::default();
             let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
             actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Scaling(100., 0.5, 100.)));

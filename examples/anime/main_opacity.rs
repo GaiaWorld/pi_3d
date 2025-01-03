@@ -41,7 +41,7 @@ fn setup(
     actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
 
     let vertices = CubeBuilder::attrs_meta();
-    let indices = Some(CubeBuilder::indices_meta());
+    let indices = CubeBuilder::indices_meta();
     let state = base::instance_attr(false, false, false);
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 

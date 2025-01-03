@@ -36,7 +36,7 @@ fn setup(
     actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
 
     let vertices = CubeBuilder::attrs_meta();
-    let indices = Some(CubeBuilder::indices_meta());
+    let indices = CubeBuilder::indices_meta();
     let state = base::instance_attr(true, true, false);
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
     actions.mesh.state.push(OpsMeshStateModify::ops(source, EMeshStateModify::Alignment(ERenderAlignment::StretchedBillboard) ));

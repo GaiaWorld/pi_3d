@@ -137,7 +137,7 @@ impl Plugin for PluginTest {
     
     {
         let vertices = CubeBuilder::attrs_meta();
-        let indices = Some(CubeBuilder::indices_meta());
+        let indices = CubeBuilder::indices_meta();
         let mut state: MeshInstanceState = MeshInstanceState::default();
         // state.state = InstanceState::INSTANCE_BASE | InstanceState::INSTANCE_CUSTOM_VEC4_A | InstanceState::INSTANCE_CUSTOM_VEC4_B;
         let cube = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
@@ -287,7 +287,7 @@ impl Plugin for PluginTest {
                 //     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat));
                 //     let id_geo = commands.spawn_empty_id();
                 //     let instancestate = 0;
-                //     actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta()), instancestate));
+                //     actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, CubeBuilder::attrs_meta(), CubeBuilder::indices_meta(), instancestate));
                 // } else {
                     actions.transform.create.push(OpsTransformNode::ops(scene, source));
                 // }

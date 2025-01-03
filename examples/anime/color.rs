@@ -38,7 +38,7 @@ fn setup(
     actions.camera.target.push(OpsCameraTarget::ops(camera01, 0., -1., 4.));
 
     let vertices = CubeBuilder::attrs_meta();
-    let indices = Some(CubeBuilder::indices_meta());
+    let indices = CubeBuilder::indices_meta();
     let state = base::instance_attr(true, false, false);
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 

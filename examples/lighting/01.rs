@@ -94,7 +94,7 @@ impl Plugin for PluginTest {
         idmat
     };
 
-    let (vertices, indices) = (CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta()));
+    let (vertices, indices) = (CubeBuilder::attrs_meta(), CubeBuilder::indices_meta());
     let state: MeshInstanceState = base::instance_attr(true, false, false);
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 

@@ -548,12 +548,24 @@ impl EVertexAttribute {
         match self {
             EVertexAttribute::Buildin(val, _) => {
                 match val {
-                    EBuildinVertexAtribute::Color4 => {},
-                    EBuildinVertexAtribute::UV => {},
-                    EBuildinVertexAtribute::Normal => {},
-                    _ => { result += val.kind().as_str(); result += crate::prelude::S_SPACE; },
+                    EBuildinVertexAtribute::Color4 => {
+                        result += val.var_code(); result += " = V"; result += val.var_code(); result += ";\r\n";
+                    },
+                    EBuildinVertexAtribute::UV => {
+                        result += val.var_code(); result += " = V"; result += val.var_code(); result += ";\r\n";
+                    },
+                    EBuildinVertexAtribute::Normal => {
+                        result += val.var_code(); result += " = V"; result += val.var_code(); result += ";\r\n";
+                    },
+                    EBuildinVertexAtribute::Position2D => {
+                        result += "vec3 "; result += ShaderVarVertices::POSITION;
+                        result += " = vec3(V"; result += val.var_code(); result += ",0.);\r\n";
+                    },
+                    _ => {
+                        result += val.kind().as_str(); result += crate::prelude::S_SPACE;
+                        result += val.var_code(); result += " = V"; result += val.var_code(); result += ";\r\n";
+                    },
                 }
-                result += val.var_code(); result += " = V"; result += val.var_code(); result += ";\r\n";
 
                 match val {
                     EBuildinVertexAtribute::InsWorldRow4 => {

@@ -43,7 +43,7 @@ fn setup(
     // actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, root));
 
     let vertices = CubeBuilder::attrs_meta();
-    let indices = Some(CubeBuilder::indices_meta());
+    let indices = CubeBuilder::indices_meta();
     let state = MeshInstanceState::default();
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 

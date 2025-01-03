@@ -125,7 +125,7 @@ impl Plugin for PluginTest {
     let instancestate = InstanceState::INSTANCE_BASE;
     actions.mesh.create.push(OpsMeshCreation::ops(scene, source, MeshInstanceState { state: instancestate, use_single_instancebuffer: false, ..Default::default() }));
     let id_geo = commands.spawn_empty_id();
-    actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs.clone(), Some(CubeBuilder::indices_meta())));
+    actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs.clone(), CubeBuilder::indices_meta()));
     actions.transform.localpos.push(OpsTransformNodeLocalPosition::ops(source, 0., -1., 0.));
     actions.material.usemat.push(OpsMaterialUse::Use(source, lightingmat, DemoScene::PASS_OPAQUE));
     actions.mesh.depth_compare.push(OpsDepthCompare::ops(source, CompareFunction::Greater));

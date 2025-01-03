@@ -5,7 +5,7 @@ use pi_atom::Atom;
 use pi_scene_shell::prelude::*;
 use pi_node_materials::{prelude::*, NodeMaterialBlocks};
 use pi_scene_context::prelude::*;
-use pi_mesh_builder::cube::*;
+use pi_mesh_builder::{cube::*, quad::QuadBuilder};
 use unlit_material::*;
 
 #[path = "../base.rs"]
@@ -35,8 +35,8 @@ fn setup(
 
     actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
 
-    let vertices = CubeBuilder::attrs_meta();
-    let indices = Some(CubeBuilder::indices_meta());
+    let vertices = QuadBuilder::attrs_meta();
+    let indices = None;
     let state = MeshInstanceState::default();
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 

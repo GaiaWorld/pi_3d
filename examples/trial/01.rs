@@ -119,7 +119,7 @@ fn setup(
     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Translation(0., 10., 0.)));
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
     let id_geo = commands.spawn_empty_id();
-    actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta())));
+    actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, CubeBuilder::attrs_meta(), CubeBuilder::indices_meta()));
     
     let node = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node, scene));
     actions.transform.create.push(OpsTransformNode::ops(scene, node));
@@ -187,7 +187,7 @@ fn setup(
         //     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat));
         //     let id_geo = commands.spawn_empty_id();
         //     let instancestate = 0;
-        //     actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta()), instancestate));
+        //     actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, CubeBuilder::attrs_meta(), CubeBuilder::indices_meta(), instancestate));
         // } else {
             actions.transform.create.push(OpsTransformNode::ops(scene, source));
         // }

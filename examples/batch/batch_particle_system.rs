@@ -74,7 +74,7 @@ fn setup(
                 let item = {
                     
                     let vertices = CubeBuilder::attrs_meta();
-                    let indices = Some(CubeBuilder::indices_meta());
+                    let indices = CubeBuilder::indices_meta();
                     let state = base::particelsystem_mesh_state();
                     let source = base::DemoScene::mesh(&mut commands, scene, node, &mut actions,  vertices, indices, state);
 

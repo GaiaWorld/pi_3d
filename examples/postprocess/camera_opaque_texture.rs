@@ -127,7 +127,7 @@ impl Plugin for PluginTest {
     
     {
         let vertices = CubeBuilder::attrs_meta();
-        let indices = Some(CubeBuilder::indices_meta());
+        let indices = CubeBuilder::indices_meta();
         let mut state: MeshInstanceState = MeshInstanceState::default();
         // state.state = InstanceState::INSTANCE_BASE | InstanceState::INSTANCE_CUSTOM_VEC4_A | InstanceState::INSTANCE_CUSTOM_VEC4_B;
         let cube = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
@@ -230,7 +230,7 @@ impl Plugin for PluginTest {
     
 
             let vertices = CubeBuilder::attrs_meta();
-            let indices = Some(CubeBuilder::indices_meta());
+            let indices = CubeBuilder::indices_meta();
             let state = MeshInstanceState::default();
             let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
             actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Scaling(4., 4., 4.)));

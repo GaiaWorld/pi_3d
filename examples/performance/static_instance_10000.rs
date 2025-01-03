@@ -105,7 +105,7 @@ impl PluginTest {
         let mut attrs = CubeBuilder::attrs_meta();
         attrs.push(VertexBufferDesc::instance_world_matrix());
         attrs.push(VertexBufferDesc::instance_color());
-        engine.use_geometry(source, attrs, Some(CubeBuilder::indices_meta()));
+        engine.use_geometry(source, attrs, CubeBuilder::indices_meta());
         engine.use_default_material(source);
         engine.layer_mask(source, LayerMask::default());
 

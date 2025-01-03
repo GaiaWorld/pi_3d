@@ -22,7 +22,7 @@ impl QuadBuilder {
                 keypos, 
                 VertexBufferDescRange::default(),
                 vec![
-                    EVertexAttribute::Buildin(EBuildinVertexAtribute::Position, wgpu::VertexFormat::Float32x3),
+                    EVertexAttribute::Buildin(EBuildinVertexAtribute::Position2D, wgpu::VertexFormat::Float32x2),
                     EVertexAttribute::Buildin(EBuildinVertexAtribute::Normal, wgpu::VertexFormat::Float32x3),
                     EVertexAttribute::Buildin(EBuildinVertexAtribute::UV, wgpu::VertexFormat::Float32x2),
                     // VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 },
@@ -52,14 +52,14 @@ impl QuadBuilder {
             0., 0., 1.,
         ]
     }
-    pub fn vertices() -> [f32; 48] {
+    pub fn vertices() -> [f32; 42] {
         [
-            -0.5, -0.5,  0.,      0., 0., 1.,     0., 0.,    
-            0.5, -0.5,  0.,      0., 0., 1.,     1., 0.,   
-            0.5,  0.5,  0.,      0., 0., 1.,     1., 1.,  
-            -0.5, -0.5,  0.,      0., 0., 1.,     0., 0.,   
-            0.5,  0.5,  0.,      0., 0., 1.,     1., 1.,   
-            -0.5, 0.5,  0.,      0., 0., 1.,     0., 1.,
+            -0.5, -0.5,   0., 0., 1.,     0., 0.,    
+             0.5, -0.5,   0., 0., 1.,     1., 0.,   
+             0.5,  0.5,   0., 0., 1.,     1., 1.,  
+            -0.5, -0.5,   0., 0., 1.,     0., 0.,   
+             0.5,  0.5,   0., 0., 1.,     1., 1.,   
+            -0.5,  0.5,   0., 0., 1.,     0., 1.,
         ]
     }
     pub fn indices() -> [u16;6] {

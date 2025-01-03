@@ -36,7 +36,7 @@ fn setup(
     actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
 
     let vertices = CubeBuilder::attrs_meta();
-    let indices = Some(CubeBuilder::indices_meta());
+    let indices = CubeBuilder::indices_meta();
     let state = MeshInstanceState::default();
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 
@@ -46,18 +46,18 @@ fn setup(
     let idmat = commands.spawn_empty_id();
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
     actions.material.create.push(OpsMaterialCreate::ops(idmat, MainOpacityShader::KEY));
-    // actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
-    //     slotname: Atom::from(BlockMainTexture::KEY_TEX),
-    //     sample: KeySampler::linear_repeat(),
-    //     url: EKeyTexture::from("assets/images/fractal.png"),
-    //     ..Default::default()
-    // }));
-    // actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
-    //     slotname: Atom::from(BlockOpacityTexture::KEY_TEX),
-    //     sample: KeySampler::linear_repeat(),
-    //     url: EKeyTexture::from("assets/images/icon_city.png"),
-    //     ..Default::default()
-    // }));
+    actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
+        slotname: Atom::from(BlockMainTexture::KEY_TEX),
+        sample: KeySampler::linear_repeat(),
+        url: EKeyTexture::from("assets/images/fractal.png"),
+        ..Default::default()
+    }));
+    actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
+        slotname: Atom::from(BlockOpacityTexture::KEY_TEX),
+        sample: KeySampler::linear_repeat(),
+        url: EKeyTexture::from("assets/images/icon_city.png"),
+        ..Default::default()
+    }));
     actions.material.val.push(OpsUniformVal::vec4(
             idmat, 
             Atom::from(BlockEmissiveTexture::KEY_INFO), 

@@ -513,7 +513,7 @@ pub fn sys_move_ray_collider(
         if let Ok((sceneid, transformatrix)) = viewers.get(viewer) {
                 
             if events.raybox.is_none() {
-                let (vertices, indices) = (CubeBuilder::attrs_meta(), Some(CubeBuilder::indices_meta()));
+                let (vertices, indices) = (CubeBuilder::attrs_meta(), CubeBuilder::indices_meta());
                 let state: MeshInstanceState = MeshInstanceState::default();
                 let source = DemoScene::mesh(&mut commands, sceneid.0, sceneid.0, &mut actions,  vertices, indices, state);
                 actions.material.usemat.push(OpsMaterialUse::ops(source, defaultmat.0, DemoScene::PASS_TRANSPARENT));

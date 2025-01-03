@@ -39,7 +39,7 @@ fn setup(
     actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
 
     let vertices = CubeBuilder::attrs_meta();
-    let indices = Some(CubeBuilder::indices_meta());
+    let indices = CubeBuilder::indices_meta();
     let id_group = commands.spawn_empty_id();
     actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
 

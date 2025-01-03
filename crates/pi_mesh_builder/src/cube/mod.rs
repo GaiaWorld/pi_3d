@@ -17,7 +17,7 @@ impl CubeBuilder {
     // const KEY_BUFFER:           IDAssetVertexBuffer = -1000;
     // const VERTEX_COUNT:         usize = 24;
     const POSITION_OFFSET:      usize = 0;
-    const POSITION_SIZE:        usize = 72 * 4;
+    const POSITION_SIZE:        usize = 288 * 4;
     // const NORMAL_OFFSET:        usize = Self::POSITION_OFFSET + Self::POSITION_SIZE;
     // const NORMAL_SIZE:          usize = 72* 4 ;
     // const UV_OFFSET:            usize = Self::NORMAL_OFFSET + Self::NORMAL_SIZE;
@@ -42,9 +42,10 @@ impl CubeBuilder {
             ),
         ]
     }
-    pub fn indices_meta() -> IndicesBufferDesc {
-        let key = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES);
-        IndicesBufferDesc { format: wgpu::IndexFormat::Uint16, buffer_range: None, buffer: key }
+    pub fn indices_meta() -> Option<IndicesBufferDesc> {
+        // let key = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES);
+        // Some(IndicesBufferDesc { format: wgpu::IndexFormat::Uint16, buffer_range: None, buffer: key })
+        None
     }
     pub fn position() -> [f32; 72] {
         let mut temp = [
@@ -116,6 +117,52 @@ impl CubeBuilder {
              // y = -1
              0.5, -0.5,  0.5,       0., -1.,  0.,      1., 1.,
              0.5, -0.5, -0.5,       0., -1.,  0.,      1., 0.,
+            -0.5, -0.5, -0.5,       0., -1.,  0.,      0., 0.,
+            -0.5, -0.5,  0.5,       0., -1.,  0.,      0., 1.
+        ]
+    }
+    pub fn vertices_noindies() -> [f32; 288] {
+        [
+            // z = 1
+             0.5, -0.5,  0.5,       0.,  0.,  1.,      1., 0.,
+            -0.5, -0.5,  0.5,       0.,  0.,  1.,      0., 0.,
+            -0.5,  0.5,  0.5,       0.,  0.,  1.,      0., 1.,
+             0.5, -0.5,  0.5,       0.,  0.,  1.,      1., 0.,
+            -0.5,  0.5,  0.5,       0.,  0.,  1.,      0., 1.,
+             0.5,  0.5,  0.5,       0.,  0.,  1.,      1., 1., 
+            // z = -1
+             0.5,  0.5, -0.5,       0.,  0., -1.,      1., 1.,
+            -0.5,  0.5, -0.5,       0.,  0., -1.,      0., 1.,
+            -0.5, -0.5, -0.5,       0.,  0., -1.,      0., 0.,
+             0.5,  0.5, -0.5,       0.,  0., -1.,      1., 1.,
+            -0.5, -0.5, -0.5,       0.,  0., -1.,      0., 0.,
+             0.5, -0.5, -0.5,       0.,  0., -1.,      1., 0., 
+            // x = 1
+             0.5,  0.5, -0.5,       1.,  0.,  0.,      1., 0.,
+             0.5, -0.5, -0.5,       1.,  0.,  0.,      0., 0.,
+             0.5, -0.5,  0.5,       1.,  0.,  0.,      0., 1.,
+             0.5,  0.5, -0.5,       1.,  0.,  0.,      1., 0.,
+             0.5, -0.5,  0.5,       1.,  0.,  0.,      0., 1.,
+             0.5,  0.5,  0.5,       1.,  0.,  0.,      1., 1.,
+            // x = -1
+            -0.5,  0.5,  0.5,      -1.,  0.,  0.,      1., 1.,
+            -0.5, -0.5,  0.5,      -1.,  0.,  0.,      0., 1.,
+            -0.5, -0.5, -0.5,      -1.,  0.,  0.,      0., 0.,
+            -0.5,  0.5,  0.5,      -1.,  0.,  0.,      1., 1.,
+            -0.5, -0.5, -0.5,      -1.,  0.,  0.,      0., 0.,
+            -0.5,  0.5, -0.5,      -1.,  0.,  0.,      1., 0.,
+            // y = 1
+            -0.5,  0.5,  0.5,       0.,  1.,  0.,      0., 1.,
+            -0.5,  0.5, -0.5,       0.,  1.,  0.,      0., 0.,
+             0.5,  0.5, -0.5,       0.,  1.,  0.,      1., 0.,
+            -0.5,  0.5,  0.5,       0.,  1.,  0.,      0., 1.,
+             0.5,  0.5, -0.5,       0.,  1.,  0.,      1., 0.,
+             0.5,  0.5,  0.5,       0.,  1.,  0.,      1., 1.,
+             // y = -1
+             0.5, -0.5,  0.5,       0., -1.,  0.,      1., 1.,
+             0.5, -0.5, -0.5,       0., -1.,  0.,      1., 0.,
+            -0.5, -0.5, -0.5,       0., -1.,  0.,      0., 0.,
+             0.5, -0.5,  0.5,       0., -1.,  0.,      1., 1.,
             -0.5, -0.5, -0.5,       0., -1.,  0.,      0., 0.,
             -0.5, -0.5,  0.5,       0., -1.,  0.,      0., 1.
         ]
@@ -212,17 +259,17 @@ impl Plugin for PluginCubeBuilder {
         let mut allocator = app.world.get_resource_mut::<VertexBufferAllocator3D>().unwrap();
         let mut singequad = SingleCube::default();
         let key = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER);
-        if let Some(bufferrange) = allocator.create_not_updatable_buffer(&device, &queue, &bytemuck::cast_slice(&CubeBuilder::vertices()).iter().map(|v| *v).collect::<Vec<u8>>(), None) {
+        if let Some(bufferrange) = allocator.create_not_updatable_buffer(&device, &queue, &bytemuck::cast_slice(&CubeBuilder::vertices_noindies()).iter().map(|v| *v).collect::<Vec<u8>>(), None) {
             if let Ok(range) = asset_mgr.insert(key.asset_u64(), bufferrange) {
                 singequad.0 = Some(range);
             }
         }
-        let key = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES);
-        if let Some(bufferrange) = allocator.create_not_updatable_buffer_for_index(&device, &queue, &bytemuck::cast_slice(&CubeBuilder::indices()).iter().map(|v| *v).collect::<Vec<u8>>()) {
-            if let Ok(range) = asset_mgr.insert(key.asset_u64(), bufferrange) {
-                singequad.1 = Some(range);
-            }
-        }
+        // let key = KeyVertexBuffer::from(CubeBuilder::KEY_BUFFER_INDICES);
+        // if let Some(bufferrange) = allocator.create_not_updatable_buffer_for_index(&device, &queue, &bytemuck::cast_slice(&CubeBuilder::indices()).iter().map(|v| *v).collect::<Vec<u8>>()) {
+        //     if let Ok(range) = asset_mgr.insert(key.asset_u64(), bufferrange) {
+        //         singequad.1 = Some(range);
+        //     }
+        // }
         app.insert_resource(singequad);
         // app.add_startup_system(setup);
     }

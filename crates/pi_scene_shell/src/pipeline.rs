@@ -47,7 +47,7 @@ impl KeyRenderPipeline3D {
 
         let pipeline_layout = device.create_pipeline_layout(
             &wgpu::PipelineLayoutDescriptor {
-                label: None,
+                label: Some(key.key_shader.key_meta.as_str()),
                 bind_group_layouts: &layouts,
                 push_constant_ranges: &[],
             }

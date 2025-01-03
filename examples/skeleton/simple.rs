@@ -131,7 +131,7 @@ fn setup(
     let id_geo = commands.spawn_empty_id();
     let mut attrs = CubeBuilder::attrs_meta();
     attrs.push(jointdesc);
-    actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, Some(CubeBuilder::indices_meta())));
+    actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, CubeBuilder::indices_meta()));
 
     let idmat = commands.spawn_empty_id();
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));

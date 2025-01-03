@@ -131,7 +131,7 @@ pub fn setup(
     
     {
         let vertices = CubeBuilder::attrs_meta();
-        let indices = Some(CubeBuilder::indices_meta());
+        let indices = CubeBuilder::indices_meta();
         let mut state: MeshInstanceState = MeshInstanceState::default();
         // state.state = InstanceState::INSTANCE_BASE | InstanceState::INSTANCE_CUSTOM_VEC4_A | InstanceState::INSTANCE_CUSTOM_VEC4_B;
         let cube = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
