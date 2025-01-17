@@ -67,24 +67,22 @@ impl MaterialData {
         let mut texture_info = vec![];
         let mut effect_value = None;
 
+        let mut disenable_material_array = engineopt.disenable_material_array;
         let maxcount = if let Some(bind) = ShaderBindEffectValueArr::new(device, key_meta.clone(), meta.clone(), allocator, engineopt) {
             let maxcount = bind.maxcount;
             effect_value = Some(Arc::new(bind));
             maxcount
         } else {
             let limit = device.limits();
-            if engineopt.disenable_material_array == false {
+            disenable_material_array = true;
+            // if engineopt.disenable_material_array == false {
                 engineopt.maxlen_material_array.min(limit.max_uniform_buffer_binding_size / BindEffectTextureInfo::ITEM_SIZE as u32)
-            } else { 1 }
+            // } else { 1 }
         };
 
         let texlen = meta.textures.len();
         let seq = Share::new(SegQueue::default());
-        let matarrlen = if engineopt.disenable_material_array {
-            None
-        } else {
-            Some(maxcount)
-        };
+        let matarrlen = Some(maxcount);
         for i in 0..maxcount {
             seq.push(i as u32);
         }
@@ -184,6 +182,7 @@ impl RefBindGroupMaterial {
 
         let mut result = String::from("");
         let mut bind = 0;
+        let mut texidx = 0;
 
         if let Some(item) = &self.effect_value {
             result += item.vs_define_code(set, bind, engineopt).as_str();
@@ -191,9 +190,10 @@ impl RefBindGroupMaterial {
         }
 
         for item in self.texture_info.iter() {
-            let key = &meta.textures[bind as usize - 1];
+            let key = &meta.textures[texidx];
             result += item.vs_define_code(set, bind, &key.slotname).as_str();
             bind += 1;
+            texidx += 1;
         }
 
         result
@@ -202,15 +202,17 @@ impl RefBindGroupMaterial {
     pub fn fs_define_code(&self, set: u32, meta: &ShaderEffectMeta, engineopt: &EngineCustomPlugins) -> String {
         let mut result = String::from("");
         let mut bind = 0;
+        let mut texidx = 0;
 
         if let Some(item) = &self.effect_value {
             result += item.fs_define_code(set, bind, engineopt).as_str();
             bind += 1;
         }
         for item in self.texture_info.iter() {
-            let key = &meta.textures[bind as usize - 1];
+            let key = &meta.textures[texidx];
             result += item.vs_define_code(set, bind, &key.slotname).as_str();
             bind += 1;
+            texidx += 1;
         }
 
         result

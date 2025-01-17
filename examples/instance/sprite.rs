@@ -17,7 +17,6 @@ mod copy;
 fn setup(
     mut commands: Commands,
     mut actions: pi_3d::ActionSets,
-    mut atlasmgr: ResMut<TextureFrameAtlasManager>,
     mut matmetas: ResMut<ShareAssetMgr<ShaderEffectMeta>>,
     mut animegroupres: ResourceAnimationGroup,
     mut fps: ResMut<SingleFrameTimeCommand>,
@@ -89,8 +88,6 @@ fn setup(
     atlas.width = 128;
     let frame: SpriteFrame = SpriteFrame::from_data(&[1, 1, 128, 128, 0, 0, 128, 128, 0, 0, 128, 128]);
     atlas.append_frame(String::from(frame_name), frame);
-    let idxframe = atlas.get_frame_idx(String::from(frame_name));
-    atlasmgr.insert(keyatals, atlas);
 
     let sprite = commands.spawn_empty_id();
     actions.transform.tree.push(OpsTransformNodeParent::ops(sprite, scene));

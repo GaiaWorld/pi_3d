@@ -49,7 +49,7 @@ pub fn sys_create_geometry(
             attrs.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::InsWorldRow3, wgpu::VertexFormat::Float32x4));
             attrs.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::InsWorldRow4, wgpu::VertexFormat::Float32x4));
         }
-        if engineopt.disenable_material_array == false && (instancestate.instance_matrix || instancestate.instances.len() > 0) {
+        if instancestate.instance_matrix || instancestate.instances.len() > 0 {
             attrs.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::MatIdxs, wgpu::VertexFormat::Uint32x4));
         }
         instancestate.instances.iter().for_each(|attr| {

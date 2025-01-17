@@ -14,9 +14,11 @@ use pi_world::single_res::{SingleRes, SingleResMut};
 use pi_world_macros::Resource;
 use wgpu::Origin3d;
 
+use crate::prelude::MemSize;
+
 
 pub type KeyTextureFrameAtlas   = u64;
-pub type IdxTextureFrame        = u16;
+pub type IdxTextureFrame        = u32;
 pub type IdxTextureFrameAnim    = u8;
 
 #[derive(Clone)]
@@ -40,6 +42,8 @@ pub struct SpriteFrame {
     pub frame_y: u16,
     pub frame_w: u16,
     pub frame_h: u16,
+    pub w: u16,
+    pub h: u16,
 }
 impl SpriteFrame {
     pub fn from_data(data: &[u16]) -> Self {
@@ -56,6 +60,8 @@ impl SpriteFrame {
             frame_y: data[9],
             frame_w: data[10],
             frame_h: data[11],
+            w: data[12],
+            h: data[13],
         }
     }
 }
@@ -420,4 +426,15 @@ pub fn sys_texture_combine(
     }
 }
 
-
+#[derive(Resource)]
+pub struct ResSpriteFrames(pub Vec<SpriteFrame>);
+impl Default for ResSpriteFrames {
+    fn default() -> Self {
+        Self(Vec::with_capacity(4096))
+    }
+}
+impl MemSize for ResSpriteFrames {
+    fn memsize(&self) -> usize {
+        self.0.capacity() * 26
+    }
+}

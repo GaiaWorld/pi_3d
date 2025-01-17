@@ -628,7 +628,7 @@ pub struct ResourceSets<'w> {
     pub trailbuffer: ResMut<'w, ResTrailBuffer>,
     pub particlesys: ResourceParticleSystem<'w>,
     pub error_record: ResMut<'w, ErrorRecord>,
-    pub textureatlas: ResMut<'w, TextureFrameAtlasManager>,
+    pub textureatlas: ResMut<'w, ResSpriteFrames>,
     pub enginopt: Res<'w, EngineCustomPlugins>,
     pub combinebuffer: Res<'w, CombineBuffer>,
     pub commondata: Res<'w, CombineDataCommon>,
@@ -663,7 +663,7 @@ impl<'w> MemSize for ResourceSets<'w> {
         + self.trailbuffer.memsize()
         + self.particlesys.memsize()
         + self.error_record.memsize()
-        + self.textureatlas.size()
+        + self.textureatlas.memsize()
         + self.enginopt.memsize()
         + self.combinebuffer.memsize()
         + self.commondata.memsize()
@@ -697,7 +697,7 @@ impl<'w> ResourceSets<'w> {
         offset += 1; result[offset] = self.trailbuffer.memsize() as f64;
         offset += 1; result[offset] = self.particlesys.memsize() as f64;
         offset += 1; result[offset] = self.error_record.memsize() as f64;
-        offset += 1; result[offset] = self.textureatlas.size() as f64;
+        offset += 1; result[offset] = self.textureatlas.memsize() as f64;
         offset += 1; result[offset] = self.enginopt.memsize() as f64;
         offset += 1; result[offset] = self.combinebuffer.memsize() as f64;
         offset += 1; result[offset] = self.commondata.memsize() as f64;

@@ -245,25 +245,23 @@ fn texture_code(slotname: &str, bindname: &str, tex_sampler_type: &wgpu::Texture
     let mut uv = String::from("uvAtlas(uv * tilloff.xy + tilloff.zw + os, ");
     uv += slotname;
     uv += BindEffectTextureInfo::SUFFIX_TILLOFF;
-    if engineopt.disenable_material_array == false {
+    // if engineopt.disenable_material_array == false {
         uv += "[vMatIdx]";
-    }
+    // }
     uv += ",";
     uv += slotname;
     uv += BindEffectTextureInfo::SUFFIX_ADDRESS;
-    if engineopt.disenable_material_array == false {
+    // if engineopt.disenable_material_array == false {
         uv += "[vMatIdx]";
-    }
+    // }
     uv += ")";
     
     let mut coord = String::from("");
     coord += slotname;
     coord += BindEffectTextureInfo::SUFFIX_ADDRESS;
-    if engineopt.disenable_material_array == false {
-        if engineopt.disenable_material_array == false {
-            coord += "[vMatIdx]";
-        }
-    };
+    // if engineopt.disenable_material_array == false {
+        coord += "[vMatIdx]";
+    // };
     coord += ".w";
 
     // let uv = String::from("uv * tilloff.xy + tilloff.zw + os");

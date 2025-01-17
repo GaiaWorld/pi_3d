@@ -27,6 +27,7 @@ pub fn sys_modify_sprite(
     // atlasmgr: Res<TextureFrameAtlasManager>,
     mut cmdsfloat: ResMut<ActionListInstanceAttr>,
     mut flagrendermatrix: Query<&mut FlagRenderWorldMatrix>,
+    sprites: Res<ResSpriteFrames>,
 ) {
     let rotmat = Rotation3::from_euler_angles(0., 0., -std::f32::consts::PI * 0.5);
     let mut tmp = Matrix::identity();
@@ -36,32 +37,21 @@ pub fn sys_modify_sprite(
     let max = u16::MAX as f32;
     cmds.drain().for_each(|OpsSpriteModify(entity, keyframe, tilloffkey)| {
         if let Ok(mut posematrix) = items.get_mut(entity) {
-            let (frame, atlaswidth, atlasheight) = match keyframe {
+            let frame = match keyframe {
                 super::SpriteModify::Idx(keyframe) => {
-                    // if let Ok(spriteinfo) = sprites.get(entity) {
-                    //     if let Some(keyatlas) = &spriteinfo.atlas {
-                    //         if let Some(atlas) = atlasmgr.get(keyatlas) {
-                    //             if let Some(frame) = atlas.get_frame_by_idx(keyframe) {
-                    //                 (frame.clone(), atlas.width, atlas.height)
-                    //             } else {
-                    //                 return;
-                    //             }
-                    //         } else {
-                    //             return;
-                    //         }
-                    //     } else {
-                    //         return;
-                    //     }
-                    // } else {
-                    //     return;
-                    // }
-                    return;
+                    if let Some(spriteinfo) = sprites.0.get(keyframe as usize) {
+                        spriteinfo.clone()
+                    } else {
+                        return;
+                    }
                 },
                 super::SpriteModify::Data(data) => {
-                    (SpriteFrame::from_data(&data.as_slice()[0..12]), data[12], data[13])
+                    SpriteFrame::from_data(&data.as_slice())
                 }
             };
 
+            let atlaswidth = frame.w;
+            let atlasheight = frame.h;
             let mut su = frame.frame_w as f32 / atlaswidth   as f32;
             let mut sv = frame.frame_h as f32 / atlasheight  as f32;
             let ou = frame.frame_x as f32 / atlaswidth   as f32;

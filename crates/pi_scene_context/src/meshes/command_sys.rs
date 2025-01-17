@@ -420,8 +420,8 @@ impl ActionMesh {
         //     )
         // );
         // state.instances.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::ModelMaterialSkin));
-        
-        let meshinstanceattributes = ModelInstanceAttributes::new(&state.instances, state.instance_matrix, !engineopt.disenable_material_array);
+
+        let meshinstanceattributes = ModelInstanceAttributes::new(&state.instances, state.instance_matrix, true);
 
         // let passids = PassIDs([entity, entity, entity, entity, entity, entity, entity, entity]);
         let id01 = passinsert.insert(create_passobj(entity, scene, empty.id(), PassTag::PASS_TAG_01));

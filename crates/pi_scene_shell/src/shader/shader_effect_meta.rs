@@ -216,9 +216,9 @@ impl ShaderEffectMeta {
         // uniforms.float_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from(crate::static_string::S_FLOAT), name: item.tag().clone() }) } });
         // uniforms.uint_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from(crate::static_string::S_UINT), name: item.tag().clone() }) } });
 
-        if engineopt.disenable_material_array == false {
+        // if engineopt.disenable_material_array == false {
             varyings.0.push(Varying { format: Atom::from(crate::static_string::S_UINT), name: Atom::from(crate::static_string::S_V_MAT_IDX) });
-        }
+        // }
 
         let size = varyings.size() + vs.size() + fs.size();
 
@@ -285,7 +285,7 @@ impl ShaderEffectMeta {
         // Running Start
         code += "void main() {";    code += crate::prelude::S_BREAK;
 
-        if engineopt.disenable_material_array == false {
+        // if engineopt.disenable_material_array == false {
             code += crate::prelude::S_UVEC4;
             code += " ";
             code += ShaderVarUniform::MATIDX;
@@ -293,7 +293,7 @@ impl ShaderEffectMeta {
             code += ShaderVarUniform::_MATIDX;
             code += ";";
             code += crate::prelude::S_BREAK;
-        }
+        // }
 
         // 预制内容
         code += EVertexDataKind::Color4.kind();     code += crate::prelude::S_SPACE; code += ShaderVarVertices::COLOR4 ;    code += " = vec4(1., 1., 1., 1.);"; code += crate::prelude::S_BREAK;
