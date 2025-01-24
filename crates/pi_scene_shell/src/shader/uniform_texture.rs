@@ -262,7 +262,7 @@ fn texture_code(slotname: &str, bindname: &str, tex_sampler_type: &wgpu::Texture
     // if engineopt.disenable_material_array == false {
         coord += "[vMatIdx]";
     // };
-    coord += ".w";
+    coord += ".w * 1.";
 
     // let uv = String::from("uv * tilloff.xy + tilloff.zw + os");
     let uvatlas = &uv;

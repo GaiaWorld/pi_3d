@@ -307,19 +307,18 @@ impl ShaderEffectMeta {
             code += val;
         });
 
-        
-        if engineopt.disenable_material_array == false {
-            // 固定的 MatIdx 代码
-            code += crate::static_string::S_V_MAT_IDX;
-            code += " = ";
-            code += ShaderVarUniform::MATIDX;
-            code += "[";
-            code += ShaderVarUniform::IDX_PASS;
-            code += ".x] & ";
-            code += ShaderVarUniform::IDX_PASS;
-            code += ".y;";
-            code += crate::prelude::S_BREAK;
+        // 固定的 MatIdx 代码
+        code += crate::static_string::S_V_MAT_IDX;
+        code += " = ";
+        code += ShaderVarUniform::MATIDX;
+        code += "[";
+        code += ShaderVarUniform::IDX_PASS;
+        code += ".x] & ";
+        code += ShaderVarUniform::IDX_PASS;
+        code += ".y;";
+        code += crate::prelude::S_BREAK;
 
+        if engineopt.disenable_material_array == false {
             if BindDefines::need_effect_value(self.binddefines) {
                 code += "MatParam matParam = Mat[";
                 code += crate::static_string::S_V_MAT_IDX;

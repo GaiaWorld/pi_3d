@@ -82,12 +82,11 @@ impl MaterialData {
 
         let texlen = meta.textures.len();
         let seq = Share::new(SegQueue::default());
-        let matarrlen = Some(maxcount);
         for i in 0..maxcount {
             seq.push(i as u32);
         }
         for i in 0..texlen {
-            if let Some(bind) = BindEffectTextureInfo::new(matarrlen, allocator, engineopt) {
+            if let Some(bind) = BindEffectTextureInfo::new(maxcount, allocator, engineopt) {
                 texture_info.push(Arc::new(bind));
             } else {
                 return result;
@@ -96,19 +95,15 @@ impl MaterialData {
         
         let mut key_binds = Vec::with_capacity(4);
 
-        let mut binding = 0;
-
         if let Some(bind) = &effect_value {
             if let Some(key) = bind.key_bind() {
                 key_binds.push(key);
-                binding += 1;
             }
         }
 
         for bind in texture_info.iter() {
             if let Some(key) = bind.key_bind() {
                 key_binds.push(key);
-                binding += 1;
             }
         }
 

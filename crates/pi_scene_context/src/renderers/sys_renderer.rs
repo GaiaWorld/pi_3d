@@ -671,7 +671,11 @@ use super::{
                 opaque_list.drain(..).for_each(|drawinfo| {
                     // log::warn!("{:?}", tmp);
                     if let Some(tempdraw) = lastdraw.take() {
-                        if tempdraw.instancecount() + drawinfo.instancecount() < engineopt.max_instance_batch_count && tempdraw.can_batch_instance_memory(&drawinfo, true) && combinebuffer.usedsize() + drawinfo.instancedatasize() < combinebuffer.maxcombinesize && combinebuffer.combinecommon(drawinfo.instancedatasize()) {
+                        let batchcount_ok = tempdraw.instancecount() + drawinfo.instancecount() < engineopt.max_instance_batch_count;
+                        let batchmem_ok = tempdraw.can_batch_instance_memory(&drawinfo, true);
+                        let batchmaxsize_ok = combinebuffer.usedsize() + drawinfo.instancedatasize() < combinebuffer.maxcombinesize;
+                        let batchcomb_ok = combinebuffer.combinecommon(drawinfo.instancedatasize());
+                        if batchcount_ok && batchmem_ok && batchmaxsize_ok && batchcomb_ok {
                             _combine_instance(&mut combinebuffer, &mut lastinsdata, &drawinfo);
                             lastdraw = Some(tempdraw);
                         } else {
@@ -699,7 +703,11 @@ use super::{
                 }
                 transparent_list.drain(..).for_each(|drawinfo| {
                     if let Some(tempdraw) = lastdraw.take() {
-                        if tempdraw.instancecount() + drawinfo.instancecount() < engineopt.max_instance_batch_count && tempdraw.can_batch_instance_memory(&drawinfo, true) && combinebuffer.usedsize() + drawinfo.instancedatasize() < combinebuffer.maxcombinesize && combinebuffer.combinecommon(drawinfo.instancedatasize()) {
+                        let batchcount_ok = tempdraw.instancecount() + drawinfo.instancecount() < engineopt.max_instance_batch_count;
+                        let batchmem_ok = tempdraw.can_batch_instance_memory(&drawinfo, true);
+                        let batchmaxsize_ok = combinebuffer.usedsize() + drawinfo.instancedatasize() < combinebuffer.maxcombinesize;
+                        let batchcomb_ok = combinebuffer.combinecommon(drawinfo.instancedatasize());
+                        if batchcount_ok && batchmem_ok && batchmaxsize_ok && batchcomb_ok {
                             _combine_instance(&mut combinebuffer, &mut lastinsdata, &drawinfo);
                             lastdraw = Some(tempdraw);
                         } else {
