@@ -114,6 +114,7 @@ impl TextureCombineAtlas2DMgr {
             
             if let Some(atlas) = self.map.get_mut(&key) {
                 if let Some(texture) = atlas.combine(format, ktx.pixel_width(), ktx.pixel_height(), device, queue) {
+                    // log::error!("Combine: {:?}", (&keyimage.url));
                     for data in ktx.textures() {
                         texture.update_texture(queue, data);
                     }

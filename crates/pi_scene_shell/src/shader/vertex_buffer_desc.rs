@@ -219,7 +219,9 @@ impl KeyShaderFromAttributes {
         self.0.iter().for_each(|attr| {
             result += &attr.vs_running_code();
         });
-
+        self.0.iter().for_each(|attr| {
+            result += &attr.vs_running_code_for_morphinfluence();
+        });
         result
     }
     pub fn fs_running_code(&self, meta: &ShaderEffectMeta) -> String {

@@ -24,6 +24,12 @@ impl ShaderVarUniform {
     pub const IBL_YY_ZZ                 : &'static str = "_SphericalYY_ZZ"      ;
     pub const IBL_ZZ                    : &'static str = "_SphericalZZ"         ;
 
+    pub const CLIP_PLANE0               : &'static str = "PI_CLIP_PLANE0"       ;
+    pub const CLIP_PLANE1               : &'static str = "PI_CLIP_PLANE1"       ;
+    pub const CLIP_PLANE2               : &'static str = "PI_CLIP_PLANE2"       ;
+    pub const CLIP_PLANE3               : &'static str = "PI_CLIP_PLANE3"       ;
+    pub const ICLIP_PLANE               : &'static str = "I_CLIP_PLANE"         ;
+
     pub const LIGHTING_INFOS            : &'static str = "_LightingInfos"       ;
     pub const DIRECT_LIGHT_DIRECTION    : &'static str = "_DirectLightDirection";
     pub const DIRECT_LIGHT_COLOR        : &'static str = "_DirectLightColor"    ;
@@ -40,6 +46,7 @@ impl ShaderVarUniform {
     pub const HEMI_LIGHT_DIRECTION      : &'static str = "_HemiLightDirection"  ;
     pub const SHADOWMAP_TEXTURE         : &'static str = "_ShadowMap"           ;
 
+    pub const MODEL_MORPHINFLUENCE      : &'static str = "_MorphInfluence"      ;
     pub const MODEL_LIGHTS_COUNT        : &'static str = "_MLightsCount"        ;
     pub const MODEL_LIGHTS_INDEXS       : &'static str = "_MLightsIndexs"       ;
     pub const MODEL_DIRECTLIGHT_COUNT   : &'static str = "_MDirectLightCount"   ;
@@ -123,6 +130,11 @@ impl ShaderVarVertices {
     pub const INS_CUSTOM_VEC4_B         : &'static str = "A_INS_F_Vec4B"       ;
     pub const INS_CUSTOM_VEC4_C         : &'static str = "A_INS_F_Vec4C"       ;
     pub const INS_CUSTOM_VEC4_D         : &'static str = "A_INS_F_Vec4D"       ;
+
+    pub const POSITION_M                : &'static str = "A_POSITION_M"        ;
+    pub const NORMAL_M                  : &'static str = "A_NORMAL_M"          ;
+    pub const COLOR4_M                  : &'static str = "A_COLOR4_M"          ;
+    pub const UV_M                      : &'static str = "A_UV_M"              ;
     
     pub const INS_VEC4_A                : &'static str = "A_INS_Vec4A"         ;
     pub const INS_VEC4_B                : &'static str = "A_INS_Vec4B"         ;
@@ -202,6 +214,7 @@ impl ShaderVarVarying {
     pub const UV7                       : &'static str = "v_uv7"        ;
     pub const UV8                       : &'static str = "v_uv8"        ;
     pub const TEXTURE_IDS               : &'static str = "V_TEXTURE_IDS";
+    pub const VCLIP_PLANE               : &'static str = "vClipDistance";
 }
 
 

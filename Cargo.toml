@@ -101,7 +101,7 @@ pi_key_alloter          = { path = "../pi_key_alloter" }
 pi_arr                  = { path = "../pi_arr" }
 
 [dev-dependencies]
-wgpu            = { version = "0.1", registry = "yn", package = "pi_wgpu", features = ["use_wgpu"] }
+# wgpu            = { version = "0.1", registry = "yn", package = "pi_wgpu", features = ["use_wgpu"] }
 pi_winit        = { version = "0.27", registry = "yn", package = "winit" }
 rand            = "0.8"
 ktx             = "0.3"
@@ -152,6 +152,10 @@ path = "examples/simple/dispose.rs"
 [[example]]
 name = "instance_enable"
 path = "examples/simple/instance_enable.rs"
+
+[[example]]
+name = "morphtargetinfluence"
+path = "examples/simple/morphtargetinfluence.rs"
 
 [[example]]
 name = "sprite"

@@ -22,7 +22,9 @@ impl ShaderBindModelAboutMatrix {
     pub const SIZE_WORLD_MATRIX_INV:        wgpu::DynamicOffset = 16 * 4;
     pub const OFFSET_VELOCITY:              wgpu::DynamicOffset = Self::OFFSET_WORLD_MATRIX_INV + Self::SIZE_WORLD_MATRIX_INV;
     pub const SIZE_VELOCITY:                wgpu::DynamicOffset = 4 * 4;
-    pub const OFFSET_U32_A:                 wgpu::DynamicOffset = Self::OFFSET_VELOCITY + Self::SIZE_VELOCITY;
+    pub const OFFSET_MORPHINFLUENCE:        wgpu::DynamicOffset = Self::OFFSET_VELOCITY + Self::SIZE_VELOCITY;
+    pub const SIZE_MORPHINFLUENCE:          wgpu::DynamicOffset = 4 * 4;
+    pub const OFFSET_U32_A:                 wgpu::DynamicOffset = Self::OFFSET_MORPHINFLUENCE + Self::SIZE_MORPHINFLUENCE;
     pub const SIZE_U32_A:                   wgpu::DynamicOffset = 1 * 4;
     pub const OFFSET_U32_B:                 wgpu::DynamicOffset = Self::OFFSET_U32_A + Self::SIZE_U32_A;
     pub const SIZE_U32_B:                   wgpu::DynamicOffset = 1 * 4;
@@ -41,6 +43,7 @@ impl ShaderBindModelAboutMatrix {
             range.write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX as usize, bytemuck::cast_slice(matrix.as_slice()));
             range.write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX_INV as usize, bytemuck::cast_slice(matrix.as_slice()));
             range.write_data(ShaderBindModelAboutMatrix::OFFSET_VELOCITY as usize, bytemuck::cast_slice(&[0f32, 0f32, 0f32, 0f32]));
+            range.write_data(ShaderBindModelAboutMatrix::OFFSET_MORPHINFLUENCE as usize, bytemuck::cast_slice(&[0f32, 0f32, 0f32, 0f32]));
             range.write_data(ShaderBindModelAboutMatrix::OFFSET_U32_A as usize, bytemuck::cast_slice(&[0u32, 0u32, 0u32, 0u32]));
             Some(
                 Self {
@@ -61,6 +64,7 @@ impl ShaderBindModelAboutMatrix {
         result += ShaderSetBind::code_uniform(crate::prelude::S_MAT4, ShaderVarUniform::_WORLD_MATRIX).as_str();
         result += ShaderSetBind::code_uniform(crate::prelude::S_MAT4, ShaderVarUniform::_WORLD_MATRIX_INV).as_str();
         result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::_VELOCITY).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::MODEL_MORPHINFLUENCE).as_str();
         result += ShaderSetBind::code_uniform(crate::prelude::S_UINT, ShaderVarUniform::_SKIN_BONE_OFFSET0).as_str();
         result += ShaderSetBind::code_uniform(crate::prelude::S_UINT, ShaderVarUniform::_SKIN_BONE_OFFSET1).as_str();
         result += ShaderSetBind::code_uniform(crate::prelude::S_UINT, "placeholder_0").as_str();
@@ -97,6 +101,7 @@ impl TShaderBindCode for ShaderBindModelAboutMatrix {
         result += ShaderSetBind::code_uniform(crate::prelude::S_MAT4, ShaderVarUniform::_WORLD_MATRIX).as_str();
         result += ShaderSetBind::code_uniform(crate::prelude::S_MAT4, ShaderVarUniform::_WORLD_MATRIX_INV).as_str();
         result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::_VELOCITY).as_str();
+        result += ShaderSetBind::code_uniform(crate::prelude::S_VEC4, ShaderVarUniform::MODEL_MORPHINFLUENCE).as_str();
         result += ShaderSetBind::code_uniform(crate::prelude::S_UINT, ShaderVarUniform::_SKIN_BONE_OFFSET0).as_str();
         result += ShaderSetBind::code_uniform(crate::prelude::S_UINT, ShaderVarUniform::_SKIN_BONE_OFFSET1).as_str();
         result += ShaderSetBind::code_uniform(crate::prelude::S_UINT, "placeholder_0").as_str();

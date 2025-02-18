@@ -165,127 +165,129 @@ pub fn sys_image_texture_load_launch(
             continue;
         }
         let imageresult = AssetMgr::load(&image_assets_mgr, &param);
-        match imageresult {
-            pi_assets::mgr::LoadResult::Ok(res) => {
-                if id > 0 {
-                    loader.success_load.push(id);
-                    loader.success.insert(id, res);
+        match mode {
+            ETextureLoaderMode::D2 => {
+                match imageresult {
+                    pi_assets::mgr::LoadResult::Ok(res) => {
+                        if id > 0 {
+                            loader.success_load.push(id);
+                            loader.success.insert(id, res);
+                        }
+                    },
+                    pi_assets::mgr::LoadResult::Wait(f) => {
+                        if id > 0 {
+                            again.push(info);
+                        }
+                        let (failquene, device, queue) = (loader.fail_imgtex.clone(), (device).clone(), (queue).clone());
+                        RENDER_RUNTIME.spawn(async move {
+                            match f.await {
+                                Ok(_result) => {
+
+                                },
+                                Err(_err) => failquene.push((param.clone(), EErrorImageLoad::CacheFail))
+                            }
+                        })
+                        .unwrap();
+                    },
+                    LoadResult::Receiver(recv) => {
+                        if let Some(err) = loader.fail_reason.get(&param) {
+                            if id > 0 {
+                                loader.fails.push(id);
+                                let err = err.clone();
+                                loader.failrecord.insert(id, err);
+                                state.image_fail += 1;
+                            }
+                        } else {
+                            match &param.file {
+                                false => loader.fail_imgtex.push((param, EErrorImageLoad::CanntLoadDataTexture)),
+                                true => {
+                                    if id > 0 {
+                                        again.push(info);
+                                    }
+                                    let (failquene, device, queue) = (loader.fail_imgtex.clone(), (device).clone(), (queue).clone());
+                                    let (loading_img, loading_data) = (loader.loading_image.clone(), loader.loading_data.clone());
+                                    let param = param.clone();
+
+                                    if param.cancombine {
+                                        if loader.loading.contains(&param) == false {
+                                            loader.loading.insert(param.clone());
+                                            RENDER_RUNTIME.spawn(async move {
+                                                if param.compressed {
+                                                    match pi_hal::file::load_from_url(&param.url).await {
+                                                        Ok(data) => {
+                                                            loading_data.push((param, data, recv));
+                                                        },
+                                                        Err(_) => failquene.push((param.clone(), EErrorImageLoad::LoadFail)),
+                                                    }
+                                                } else {
+                                                    match pi_hal::image::load_from_url(&param.url).await {
+                                                        Ok(img) => {
+                                                            loading_img.push((param, img, recv));
+                                                        },
+                                                        Err(_) => failquene.push((param.clone(), EErrorImageLoad::LoadFail)),
+                                                    }
+                                                }
+                                            })
+                                            .unwrap();
+                                        }
+                                    } else {
+                                        RENDER_RUNTIME.spawn(async move {
+                                            let haldesc = pi_hal::texture::ImageTextureDesc {
+                                                url: param.url.clone(),
+                                                srgb: false,
+                                                useage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+                                            };
+                                            match pi_hal::image_texture_load::load_from_url(&haldesc, &device, &queue).await {
+                                                Ok(data) => {
+                                                    match recv.receive(param.clone(), Ok(ImageTextureFrame::new(data))).await {
+                                                        Ok(_result) => {},
+                                                        Err(_) => failquene.push((param.clone(), EErrorImageLoad::CacheFail))
+                                                    }
+                                                },
+                                                Err(_) => {
+                                                    failquene.push((param.clone(), EErrorImageLoad::LoadFail));
+                                                },
+                                            };
+                                        })
+                                        .unwrap();
+                                    }
+                                },
+                            }
+                        }
+                    }
                 }
             },
-            _ => {
-                if let Some(err) = loader.fail_reason.get(&param) {
-                    if id > 0 {
-                        loader.fails.push(id);
-                        let err = err.clone();
-                        loader.failrecord.insert(id, err);
-                        state.image_fail += 1;
-                    }
-                } else {
-                    match mode {
-                        ETextureLoaderMode::D2 => match &param.file {
-                            false => loader.fail_imgtex.push((param, EErrorImageLoad::CanntLoadDataTexture)),
-                            true => {
-                                if id > 0 {
-                                    again.push(info);
+            ETextureLoaderMode::Env => {
+                
+                match imageresult {
+                    pi_assets::mgr::LoadResult::Ok(res) => {
+                        if id > 0 {
+                            loader.success_load.push(id);
+                            loader.success.insert(id, res);
+                        }
+                    },
+                    _ => {
+                        if id > 0 {
+                            again.push(info);
+                        }
+                        if param.file {
+                            loader.fail_imgtex.push((param.clone(), EErrorImageLoad::LoadFail));
+                        } else {
+                            let (failquene, device, queue) = (loader.fail_imgtex.clone(), (device).clone(), (queue).clone());
+                            let param = param.clone();
+                            RENDER_RUNTIME.spawn(async move {
+                                match EnvironmentTextureTools::async_load(param.clone(), device, queue, imageresult).await {
+                                    Ok(_) => {},
+                                    Err(_) => {
+                                        failquene.push((param.clone(), EErrorImageLoad::LoadFail))
+                                    },
                                 }
-                                let (failquene, device, queue) = (loader.fail_imgtex.clone(), (device).clone(), (queue).clone());
-                                let (loading_img, loading_data) = (loader.loading_image.clone(), loader.loading_data.clone());
-                                let param = param.clone();
-
-                                if param.cancombine {
-                                    if loader.loading.contains(&param) == false {
-                                        match imageresult {
-                                            LoadResult::Ok(_r) => {},
-                                            LoadResult::Wait(f) => {
-                                                RENDER_RUNTIME.spawn(async move {
-                                                    match f.await {
-                                                        Ok(_result) => {},
-                                                        Err(_err) => failquene.push((param.clone(), EErrorImageLoad::CacheFail))
-                                                    }
-                                                })
-                                                .unwrap();
-                                            },
-                                            LoadResult::Receiver(recv) => {
-                                                loader.loading.insert(param.clone());
-                                                RENDER_RUNTIME.spawn(async move {
-                                                    if param.compressed {
-                                                        match pi_hal::file::load_from_url(&param.url).await {
-                                                            Ok(data) => {
-                                                                loading_data.push((param, data, recv));
-                                                            },
-                                                            Err(_) => failquene.push((param.clone(), EErrorImageLoad::LoadFail)),
-                                                        }
-                                                    } else {
-                                                        match pi_hal::image::load_from_url(&param.url).await {
-                                                            Ok(img) => {
-                                                                loading_img.push((param, img, recv));
-                                                            },
-                                                            Err(_) => failquene.push((param.clone(), EErrorImageLoad::LoadFail)),
-                                                        }
-                                                    }
-                                                })
-                                                .unwrap();
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    RENDER_RUNTIME.spawn(async move {
-                                        
-                                        match imageresult {
-                                            LoadResult::Ok(r) => {},
-                                            LoadResult::Wait(f) => match f.await {
-                                                Ok(_result) => {},
-                                                Err(_err) => failquene.push((param.clone(), EErrorImageLoad::CacheFail))
-                                            },
-                                            LoadResult::Receiver(recv) => {
-    
-                                                let haldesc = pi_hal::texture::ImageTextureDesc {
-                                                    url: param.url.clone(),
-                                                    srgb: false,
-                                                    useage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
-                                                };
-                                                match pi_hal::image_texture_load::load_from_url(&haldesc, &device, &queue).await {
-                                                    Ok(data) => {
-                                                        match recv.receive(param.clone(), Ok(ImageTextureFrame::new(data))).await {
-                                                            Ok(_result) => {},
-                                                            Err(_) => failquene.push((param.clone(), EErrorImageLoad::CacheFail))
-                                                        }
-                                                    },
-                                                    Err(_) => {
-                                                        failquene.push((param.clone(), EErrorImageLoad::LoadFail));
-                                                    },
-                                                };
-                                            }
-                                        }
-                                    })
-                                    .unwrap();
-                                }
-                            },
-                        },
-                        ETextureLoaderMode::Env => 
-                        {
-                            if id > 0 {
-                                again.push(info);
-                            }
-                            if param.file {
-                                loader.fail_imgtex.push((param.clone(), EErrorImageLoad::LoadFail));
-                            } else {
-                                let (failquene, device, queue) = (loader.fail_imgtex.clone(), (device).clone(), (queue).clone());
-                                let param = param.clone();
-                                RENDER_RUNTIME.spawn(async move {
-                                    match EnvironmentTextureTools::async_load(param.clone(), device, queue, imageresult).await {
-                                        Ok(_) => {},
-                                        Err(_) => {
-                                            failquene.push((param.clone(), EErrorImageLoad::LoadFail))
-                                        },
-                                    }
-                                })
-                                .unwrap();
-                            }
-                        },
+                            })
+                            .unwrap();
+                        }
                     }
                 }
-            }
+            },
         }
     }
 

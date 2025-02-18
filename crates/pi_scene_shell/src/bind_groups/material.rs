@@ -273,3 +273,8 @@ impl HashAsResource for BindGroupMaterial {
         self.bind_group.key().asset_u64().hash(state);
     }
 }
+impl TBindGroupHashForShader for BindGroupMaterial {
+    fn hash_for_shader<H: std::hash::Hasher>(&self, state: &mut H) {
+        // todo!()
+    }
+}

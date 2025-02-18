@@ -304,6 +304,9 @@ pub fn sys_act_mesh_modify(
                     *flag = FlagRenderWorldMatrix;
                 }
             },
+            EMeshValueStateModify::MorphInfluence(val0, val1, val2, val3) => if let Ok(bind) = skinoff_items.get(entity) {
+                bind.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_MORPHINFLUENCE as usize, bytemuck::cast_slice(&[val0, val1, val2, val3]));
+            },
         }
     });
 }

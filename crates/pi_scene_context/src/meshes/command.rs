@@ -79,6 +79,7 @@ pub enum EMeshValueStateModify {
     IndiceRange(Option<(u32, u32)>),
     VertexRange(Option<(u32, u32)>),
     Velocity(Number, Number, Number),
+    MorphInfluence(Number, Number, Number, Number),
 }
 pub struct OpsAbstructMeshValueStateModify(pub(crate) Entity, pub(crate) EMeshValueStateModify);
 impl OpsAbstructMeshValueStateModify {

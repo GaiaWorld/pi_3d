@@ -322,8 +322,12 @@ pub enum EBuildinVertexAtribute {
     InsWorldRow2            ,
     InsWorldRow3            ,
     InsWorldRow4            ,
-    MatIdxs              ,
+    MatIdxs                 ,
     ModelMaterialSkin       ,
+    PositionM               ,
+    NormalM                 ,
+    UVM                     ,
+    Color4M                 ,
 }
 impl EBuildinVertexAtribute {
     pub fn format(&self) -> wgpu::VertexFormat {
@@ -353,6 +357,10 @@ impl EBuildinVertexAtribute {
             EBuildinVertexAtribute::InsWorldRow4 => wgpu::VertexFormat::Float32x4,
             EBuildinVertexAtribute::MatIdxs => wgpu::VertexFormat::Uint32x4,
             EBuildinVertexAtribute::ModelMaterialSkin => wgpu::VertexFormat::Uint32x4,
+            EBuildinVertexAtribute::PositionM => wgpu::VertexFormat::Float32x3,
+            EBuildinVertexAtribute::NormalM => wgpu::VertexFormat::Float32x3,
+            EBuildinVertexAtribute::UVM => wgpu::VertexFormat::Float32x2,
+            EBuildinVertexAtribute::Color4M => wgpu::VertexFormat::Float32x4,
         }
     }
     pub fn kind(&self) -> String {
@@ -385,6 +393,10 @@ impl EBuildinVertexAtribute {
             EBuildinVertexAtribute::InsWorldRow4            => ShaderVarVertices::INS_WORLD_ROW4,
             EBuildinVertexAtribute::MatIdxs                 => ShaderVarVertices::INS_MAT_IDX,
             EBuildinVertexAtribute::ModelMaterialSkin       => ShaderVarVertices::INS_MODEL_MAT_SKIN,
+            EBuildinVertexAtribute::PositionM               => ShaderVarVertices::POSITION_M,
+            EBuildinVertexAtribute::NormalM                 => ShaderVarVertices::NORMAL_M,
+            EBuildinVertexAtribute::UVM                     => ShaderVarVertices::UV_M,
+            EBuildinVertexAtribute::Color4M                 => ShaderVarVertices::COLOR4_M,
         }
     }
 }
@@ -585,6 +597,33 @@ impl EVertexAttribute {
             },
             EVertexAttribute::Custom(val) => {
                 result += val.vs_running_code(); result += crate::prelude::S_BREAK;
+            },
+        }
+
+        result
+    }
+    pub fn vs_running_code_for_morphinfluence(&self) -> String {
+        let mut result = String::from("");
+        match self {
+            EVertexAttribute::Buildin(val, _) => {
+                match val {
+                    EBuildinVertexAtribute::PositionM => {
+                        result += ShaderVarVertices::POSITION; result += "+=("; result += ShaderVarVertices::POSITION_M; result += "-"; result += ShaderVarVertices::POSITION; result += ")*"; result += ShaderVarUniform::MODEL_MORPHINFLUENCE; result += ".x;\r\n";
+                    },
+                    EBuildinVertexAtribute::Color4M => {
+                        result += ShaderVarVertices::COLOR4; result += "+=("; result += ShaderVarVertices::COLOR4_M; result += "-"; result += ShaderVarVertices::COLOR4; result += ")*"; result += ShaderVarUniform::MODEL_MORPHINFLUENCE; result += ".x;\r\n";
+                    },
+                    EBuildinVertexAtribute::NormalM => {
+                        result += ShaderVarVertices::NORMAL; result += "+=("; result += ShaderVarVertices::NORMAL_M; result += "-"; result += ShaderVarVertices::NORMAL; result += ")*"; result += ShaderVarUniform::MODEL_MORPHINFLUENCE; result += ".x;\r\n";
+                    },
+                    EBuildinVertexAtribute::UVM => {
+                        result += ShaderVarVertices::UV; result += "+=("; result += ShaderVarVertices::UV_M; result += "-"; result += ShaderVarVertices::UV; result += ")*"; result += ShaderVarUniform::MODEL_MORPHINFLUENCE; result += ".x;\r\n";
+                    },
+                    _ => {
+                    },
+                }
+            },
+            EVertexAttribute::Custom(val) => {
             },
         }
 

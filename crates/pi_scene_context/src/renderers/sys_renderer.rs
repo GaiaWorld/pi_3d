@@ -1,4 +1,4 @@
-use std::{ops::Range, sync::Arc};
+use std::{hash::Hasher, ops::Range, sync::Arc};
 
 use pi_scene_shell::{prelude::*, run_stage::EngineCustomPlugins};
 use crate::{
@@ -761,72 +761,78 @@ fn shader(
     let key_attributes = &vb.1;
 
     let (set0, set1, set2, set3) = (&bindgroups.scene, &bindgroups.model, bindgroups.matvalues.as_ref(), bindgroups.textures.as_ref());
-    let mut setidx = 0;
-    let mut vs_defined_snippets = vec![];
-    let mut fs_defined_snippets = vec![];
-    let mut vs_extend_varying = String::from("");
-    let mut fs_extend_varying = String::from("");
-    let mut vs_running_model_snippets = vec![];
-    let mut vs_running_attribute_snippets = vec![];
-    let vs_running_after_effect_snippets = vec![];
-    let mut vs_running_before_effect_snippets = vec![];
-    let mut fs_running_before_effect_snippets = vec![];
-    let fs_running_after_effect_snippets = vec![];
 
-    // log::error!("Shader: {:?}", key_meta);
-    // log::error!("{:?}", key_attributes);
-    // log::error!("{:?}", key_attributes.vs_define_code());
-
-    vs_defined_snippets.push(key_attributes.vs_define_code());
-    vs_extend_varying += &key_attributes.vs_varying_code(meta.varyings.0.len() as u32, meta);
-    fs_extend_varying += &key_attributes.fs_varying_code(meta.varyings.0.len() as u32, meta);
-
-    if let Some(set) = set0 {
-        vs_defined_snippets.push(set.vs_define_code(setidx));
-        fs_defined_snippets.push(set.fs_define_code(setidx));
-        setidx += 1;
-    }
-
-    if let Some(set) = set1 {
-        let skin = set.key().key.skin;
-        vs_defined_snippets.push(set.vs_define_code(setidx));
-        fs_defined_snippets.push(set.fs_define_code(setidx));
-
-        vs_running_attribute_snippets.push(set.vs_running_model_snippet(meta));
-        vs_running_model_snippets.push(skin.running_code());
-        vs_running_model_snippets.push(renderalignment.running_code());
-
-        vs_defined_snippets.push(renderalignment.define_code());
-
-        setidx += 1;
-    }
-    vs_running_attribute_snippets.push(key_attributes.vs_running_code());
-    fs_running_before_effect_snippets.push(key_attributes.fs_running_code(meta));
-
-    if let Some(set) = set2 {
-        vs_defined_snippets.push(set.vs_define_code(setidx, meta, engineopt));
-        fs_defined_snippets.push(set.fs_define_code(setidx, meta, engineopt));
-        setidx += 1;
-    }
-    
-    if let Some(set) = set3 {
-        vs_defined_snippets.push(set.vs_define_code(setidx, meta, engineopt));
-        fs_defined_snippets.push(set.fs_define_code(setidx, meta, engineopt));
-        setidx += 1;
-    }
-
+    let mut hash = DefaultHasher::default();
+    if let Some(set) = set0 { set.hash_for_shader(&mut hash); }
+    if let Some(set) = set1 { set.hash_for_shader(&mut hash); }
+    if let Some(set) = set2 { set.hash_for_shader(&mut hash); }
+    if let Some(set) = set3 { set.hash_for_shader(&mut hash); }
     let key_shader = KeyShader3D {
         key_meta: key_meta.clone(),
         bind_defines: meta.binddefines,
         key_attributes: key_attributes.clone(),
         renderalignment: renderalignment,
+        bindgroups_for_shader: hash.finish(),
     };
 
     if let Some(shader) = assets.get(&key_shader) {
         // log::debug!("SysPassShaderRequestByModel: 4");
         Ok(shader)
     } else {
+        let mut setidx = 0;
+        let mut vs_defined_snippets = vec![];
+        let mut fs_defined_snippets = vec![];
+        let mut vs_extend_varying = String::from("");
+        let mut fs_extend_varying = String::from("");
+        let mut vs_running_model_snippets = vec![];
+        let mut vs_running_attribute_snippets = vec![];
+        let vs_running_after_effect_snippets = vec![];
+        let mut vs_running_before_effect_snippets = vec![];
+        let mut fs_running_before_effect_snippets = vec![];
+        let fs_running_after_effect_snippets = vec![];
+    
+        // log::error!("Shader: {:?}", key_meta);
+        // log::error!("{:?}", key_attributes);
+        // log::error!("{:?}", key_attributes.vs_define_code());
+    
+        vs_defined_snippets.push(key_attributes.vs_define_code());
+        vs_extend_varying += &key_attributes.vs_varying_code(meta.varyings.0.len() as u32, meta);
+        fs_extend_varying += &key_attributes.fs_varying_code(meta.varyings.0.len() as u32, meta);
+    
+        if let Some(set) = set0 {
+            vs_defined_snippets.push(set.vs_define_code(setidx));
+            fs_defined_snippets.push(set.fs_define_code(setidx));
+            setidx += 1;
+        }
+    
+        if let Some(set) = set1 {
+            let skin = set.key().key.skin;
+            vs_defined_snippets.push(set.vs_define_code(setidx));
+            fs_defined_snippets.push(set.fs_define_code(setidx));
+    
+            vs_running_attribute_snippets.push(set.vs_running_model_snippet(meta));
+            vs_running_model_snippets.push(skin.running_code());
+            vs_running_model_snippets.push(renderalignment.running_code());
+    
+            vs_defined_snippets.push(renderalignment.define_code());
+    
+            setidx += 1;
+        }
+        vs_running_attribute_snippets.push(key_attributes.vs_running_code());
+        fs_running_before_effect_snippets.push(key_attributes.fs_running_code(meta));
+    
+        if let Some(set) = set2 {
+            vs_defined_snippets.push(set.vs_define_code(setidx, meta, engineopt));
+            fs_defined_snippets.push(set.fs_define_code(setidx, meta, engineopt));
+            setidx += 1;
+        }
         
+        if let Some(set) = set3 {
+            vs_defined_snippets.push(set.vs_define_code(setidx, meta, engineopt));
+            fs_defined_snippets.push(set.fs_define_code(setidx, meta, engineopt));
+            setidx += 1;
+        }
+
         let shader = meta.build_2(
             &device,
             &key_meta,

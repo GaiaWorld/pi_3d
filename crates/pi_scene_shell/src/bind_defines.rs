@@ -19,6 +19,7 @@ impl BindDefines {
     pub const MAT_INDEX : u32               = 1 << 12;
     pub const SKIN : u32                    = 1 << 13;
     pub const EFFECT_TEXTURE_ATLAS : u32    = 1 << 14;
+    pub const EFFECT_CLIPPLANE : u32        = 1 << 15;
 
     // pub const SCREEN_DEPTH_TARGET: u32      = 0b0000_0000_0000_0000_0000_0010_0000_0000;
     pub fn need_viewer(val: u32) -> bool {

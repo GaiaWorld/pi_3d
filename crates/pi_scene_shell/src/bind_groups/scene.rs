@@ -8,7 +8,7 @@ use pi_render::{
     },
     asset::TAssetKeyU64
 };
-use crate::{binds::*, forward_rendering::*, prelude::{EqAsResource, HashAsResource}, shader::ShaderVarUniform};
+use crate::{binds::*, forward_rendering::*, prelude::{EqAsResource, HashAsResource}, shader::{ShaderVarUniform, TBindGroupHashForShader}};
 
 #[derive(Debug, Default, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct KeyShaderSetScene {
@@ -269,5 +269,10 @@ impl EqAsResource for BindGroupScene {
 impl HashAsResource for BindGroupScene {
     fn hash_resource<H: std::hash::Hasher>(&self, state: &mut H) {
         self.bind_group.key().asset_u64().hash(state);
+    }
+}
+impl TBindGroupHashForShader for BindGroupScene {
+    fn hash_for_shader<H: std::hash::Hasher>(&self, state: &mut H) {
+        // todo!()
     }
 }

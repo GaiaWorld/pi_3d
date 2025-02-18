@@ -16,8 +16,8 @@ impl CubeBuilder {
     // const KEY_BUFFER_INDICES:   IDAssetVertexBuffer = -1001;
     // const KEY_BUFFER:           IDAssetVertexBuffer = -1000;
     // const VERTEX_COUNT:         usize = 24;
-    const POSITION_OFFSET:      usize = 0;
-    const POSITION_SIZE:        usize = 288 * 4;
+    pub const POSITION_OFFSET:      usize = 0;
+    pub const POSITION_SIZE:        usize = 288 * 4;
     // const NORMAL_OFFSET:        usize = Self::POSITION_OFFSET + Self::POSITION_SIZE;
     // const NORMAL_SIZE:          usize = 72* 4 ;
     // const UV_OFFSET:            usize = Self::NORMAL_OFFSET + Self::NORMAL_SIZE;

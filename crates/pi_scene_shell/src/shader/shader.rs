@@ -19,6 +19,10 @@ pub trait TShaderBlockCode {
     fn fs_running_code(&self) -> String;
 }
 
+pub trait TBindGroupHashForShader {
+    fn hash_for_shader<H: std::hash::Hasher>(&self, state: &mut H);
+}
+
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum EKeyShader3DSetBlock {
     Scene(KeyShaderSetScene),
@@ -34,6 +38,7 @@ pub struct KeyShader3D {
     pub key_attributes: KeyShaderFromAttributes,
     pub bind_defines: BindDefine,
     pub renderalignment: ERenderAlignmentForShader,
+    pub bindgroups_for_shader: u64,
 }
 
 // pub type Shader3D = Shader<4, EKeyShader3DSetBlock>;

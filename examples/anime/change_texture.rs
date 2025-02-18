@@ -39,12 +39,16 @@ fn setup(
     queue: Res<PiRenderQueue>,
     mut testtex: ResMut<ResDemoTex>,
     engineopt: Res<EngineCustomPlugins>,
+    mut texatlas: ResMut<TextureCombineAtlas2DMgr>,
 ) {
     let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
         (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
     } else { return; };
 
     ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(OpacityClipShader::KEY), OpacityClipShader::create(&nodematblocks, &engineopt));
+
+    texatlas.append_desc(KeyAtlasDesc { format: wgpu::TextureFormat::Bc3RgbaUnorm }, &assets.1, 4, 2048, 2);
+    texatlas.append_desc(KeyAtlasDesc { format: wgpu::TextureFormat::Bc2RgbaUnorm }, &assets.1, 4, 2048, 2);
 
     let tes_size = 2;
     fps.frame_ms = 50;
@@ -54,30 +58,31 @@ fn setup(
     let w = ktx.pixel_width();
     let h = ktx.pixel_height();
     log::warn!("{:?}", (w, h));
-    let mut url: EKeyTexture = EKeyTexture::from("assets/images/fractal.png");
-    let key = Atom::from("TESTTEX");
-    let url = {
-        let width = 1024;
-        let height = 1024;
-        let dimension = wgpu::TextureViewDimension::D2;
-        let format = wgpu::TextureFormat::Bc3RgbaUnorm;
-
-        let texkey = KeyImageTextureFrame { url: key.clone(), file: false, compressed: true, cancombine: false
-        };
-
-        let device = &assets.1;
-        let queue = &queue;
-        let texture = ImageTextureFrame::create_data_texture(
-            &device, &queue, &key, width, height, format,
-            dimension, true, 1, None, None, 0
-        );
-        match image_assets_mgr.insert(texkey.clone(), ImageTextureFrame::new(texture)) {
-            Ok(data) => { testtex.tex = Some(data) },
-            Err(_) => {},
-        };
-
-        EKeyTexture::ImageFrame(KeyImageTextureViewFrame::new(texkey, TextureViewDesc::default() ))
-    };
+    // let mut url: EKeyTexture = EKeyTexture::from("assets/images/fractal.png");
+    // let key = Atom::from("TESTTEX");
+    // let url = {
+    //     let width = 1024;
+    //     let height = 1024;
+    //     let dimension = wgpu::TextureViewDimension::D2;
+    //     let format = wgpu::TextureFormat::Bc3RgbaUnorm;
+    //     let texkey = KeyImageTextureFrame { url: key.clone(), file: false, compressed: true, cancombine: false
+    //     };
+    //     let device = &assets.1;
+    //     let queue = &queue;
+    //     let texture = ImageTextureFrame::create_data_texture(
+    //         &device, &queue, &key, width, height, format,
+    //         dimension, true, 4, None, None, 0
+    //     );
+    //     match image_assets_mgr.insert(texkey.clone(), ImageTextureFrame::new(texture)) {
+    //         Ok(data) => { testtex.tex = Some(data) },
+    //         Err(_) => {},
+    //     };
+    //     EKeyTexture::ImageFrame(KeyImageTextureViewFrame::new(texkey, TextureViewDesc::default() ))
+    // };
+    let texkey = KeyImageTextureFrame { url: Atom::from("assets/fight_res/eatingFlower.s3tc.ktx"), file: true, compressed: true, cancombine: true };
+    let url = EKeyTexture::ImageFrame(KeyImageTextureViewFrame::new(texkey, TextureViewDesc::default() ));
+    let texkey2 = KeyImageTextureFrame { url: Atom::from("assets/fight_res/bulletsEffect.s3tc.ktx"), file: true, compressed: true, cancombine: true };
+    let url2 = EKeyTexture::ImageFrame(KeyImageTextureViewFrame::new(texkey2, TextureViewDesc::default() ));
 
     actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
 
@@ -106,12 +111,12 @@ fn setup(
         url: url,
         ..Default::default()
     }));
-    // actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
-    //     slotname: Atom::from(BlockOpacityTexture::KEY_TEX),
-    //     filter: true,
-    //     sample: KeySampler::linear_repeat(),
-    //     url: EKeyTexture::from("assets/images/eff_ui_ll_085.png"),
-    // }));
+    actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
+        slotname: Atom::from(BlockOpacityTexture::KEY_TEX),
+        sample: KeySampler::linear_repeat(),
+        url: url2,
+        ..Default::default()
+    }));
     actions.material.val.push(OpsUniformVal::float(
             idmat, 
             Atom::from(BlockCutoff::KEY_VALUE), 
@@ -228,25 +233,25 @@ pub fn sys_sub_texture(
     // ];
 
 
-    let path = Atom::from(path);
-    let queue = queue.clone();
-    if tex.tex.is_some() {
-        let requestid = 0;
-        let dimension = wgpu::TextureViewDimension::D2;
-        let format = wgpu::TextureFormat::Bc3RgbaUnorm;
-        let key = Atom::from("TESTTEX");
-        let texkey = KeyImageTextureFrame { url: key.clone(), file: false, compressed: true, 
-            cancombine: false
-        };
-        let mut atlas = XHashMap::default();
-        let mut idx = 0;
-        for (path, x, y, w, h) in info {
-            atlas.insert(Atom::from(path), (requestid, idx, true, x, y, w, h));
-            idx += 1;
-        }
-        cmds.request(requestid, texkey, atlas, &assets);
-        tex.tex = None;
-    }
+    // let path = Atom::from(path);
+    // let queue = queue.clone();
+    // if tex.tex.is_some() {
+    //     let requestid = 0;
+    //     let dimension = wgpu::TextureViewDimension::D2;
+    //     let format = wgpu::TextureFormat::Bc3RgbaUnorm;
+    //     let key = Atom::from("TESTTEX");
+    //     let texkey = KeyImageTextureFrame { url: key.clone(), file: false, compressed: true, 
+    //         cancombine: false
+    //     };
+    //     let mut atlas = XHashMap::default();
+    //     let mut idx = 0;
+    //     for (path, x, y, w, h) in info {
+    //         atlas.insert(Atom::from(path), (requestid, idx, true, x, y, w, h));
+    //         idx += 1;
+    //     }
+    //     cmds.request(requestid, texkey, atlas, &assets);
+    //     tex.tex = None;
+    // }
 
     cmds.successed().for_each(|requestid| {
         log::warn!("Success: {}", requestid);
@@ -254,91 +259,6 @@ pub fn sys_sub_texture(
     cmds.failed().for_each(|requestid| {
         log::warn!("Failed: {}", requestid);
     });
-}
-
-pub struct S3TC {
-    data: Vec<u8>,
-    width: u32,
-    height: u32,
-    size_per_pixel: u32,
-    format: wgpu::TextureFormat,
-}
-impl S3TC {
-    pub fn new(width: u32, height: u32, format: wgpu::TextureFormat) -> Self {
-        let mut vec = vec![];
-        let len = width * height;
-        match format {
-            wgpu::TextureFormat::Rgba8Unorm => {
-                let mut data = Vec::with_capacity((len * 4) as usize);
-                for _ in 0..len {
-                    data.push(128);
-                    data.push(0);
-                    data.push(0);
-                    data.push(255);
-                }
-                let size_per_pixel = 4;
-                Self {
-                    data: data,
-                    width,
-                    height,
-                    size_per_pixel,
-                    format
-                }
-            },
-            wgpu::TextureFormat::Bc1RgbaUnorm => todo!(),
-            wgpu::TextureFormat::Bc1RgbaUnormSrgb => todo!(),
-            wgpu::TextureFormat::Bc2RgbaUnorm => todo!(),
-            wgpu::TextureFormat::Bc2RgbaUnormSrgb => todo!(),
-            wgpu::TextureFormat::Bc3RgbaUnorm => {
-                let val: u16 = (0 << 11) + (0 << 5) + (0 << 0);
-                let vv = [val,val,val,val];
-                let tmp = bytemuck::cast_slice(&vv);
-                let mut val = vec![];
-                val.extend_from_slice(tmp);
-                val.push(0);
-                val.push(0);
-                val.push(0);
-                val.push(0);
-                val.push(0);
-                val.push(0);
-                val.push(0);
-                val.push(0);
-                let len = len / 4 / 4;
-                for _ in 0..len {
-                    vec.extend_from_slice(&val);
-                }
-                let size_per_pixel = 16;
-                Self {
-                    data: vec,
-                    width: width / 4,
-                    height: height / 4,
-                    size_per_pixel,
-                    format
-                }
-            },
-            wgpu::TextureFormat::Bc3RgbaUnormSrgb => todo!(),
-            wgpu::TextureFormat::Astc { block, channel } => {
-                match block {
-                    wgpu::AstcBlock::B4x4 => todo!(),
-                    wgpu::AstcBlock::B5x4 => todo!(),
-                    wgpu::AstcBlock::B5x5 => todo!(),
-                    wgpu::AstcBlock::B6x5 => todo!(),
-                    wgpu::AstcBlock::B6x6 => todo!(),
-                    wgpu::AstcBlock::B8x5 => todo!(),
-                    wgpu::AstcBlock::B8x6 => todo!(),
-                    wgpu::AstcBlock::B8x8 => todo!(),
-                    wgpu::AstcBlock::B10x5 => todo!(),
-                    wgpu::AstcBlock::B10x6 => todo!(),
-                    wgpu::AstcBlock::B10x8 => todo!(),
-                    wgpu::AstcBlock::B10x10 => todo!(),
-                    wgpu::AstcBlock::B12x10 => todo!(),
-                    wgpu::AstcBlock::B12x12 => todo!(),
-                }
-            },
-            _ => todo!()
-        }
-    }
-
 }
 
 pub fn sys_anime_event(

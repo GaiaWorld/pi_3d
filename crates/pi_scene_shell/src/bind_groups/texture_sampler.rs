@@ -173,3 +173,10 @@ impl HashAsResource for BindGroupTextureSamplers {
         self.bind_group.key().asset_u64().hash(state);
     }
 }
+impl TBindGroupHashForShader for BindGroupTextureSamplers {
+    fn hash_for_shader<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.key.1.textures.iter().for_each(|tex| {
+            tex.0.view_dimension().hash(state);
+        });
+    }
+}
