@@ -318,7 +318,7 @@ pub fn test_plugins() -> (App, Arc<pi_winit::window::Window>,EventLoop<()>) {
     let height = 600;
 
     let mut opt = PiRenderOptions::default();
-    // opt.backends = wgpu::Backends::VULKAN;
+    opt.backends = wgpu::Backends::GL;
     app.insert_resource(opt);
 
 	let (w, eventloop) = {
@@ -481,7 +481,7 @@ pub fn setup_default_mat(
     mut actionsmat: ResMut<ActionListMaterialCreate>,
 ) {
     let entity = mat.0;
-    actionsmat.push(OpsMaterialCreate::ops(entity, DefaultShader::KEY));
+    actionsmat.push(OpsMaterialCreate::ops_with_matarray(entity, DefaultShader::KEY));
 }
 
 pub fn active_lighting_shadow(mut state3d: ResMut<RunState3D>) {

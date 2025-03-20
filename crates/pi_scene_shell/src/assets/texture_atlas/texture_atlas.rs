@@ -378,8 +378,12 @@ pub fn sys_texture_combine(
             }
         }
     }
-    
+    let mut idcounter = 0;
     while let Some((key, file, data)) = cmds.loaded_quene2.pop() {
+        idcounter = idcounter + 1;
+        if idcounter >= 1024 {
+            log::error!("sys_image_texture_loaded");
+        }
         if let Some(atlas) = cmds.records.get(&key) {
             if let Some((requestid, _, _, xoffset, yoffset, width, height)) = atlas.get(&file) {
                 let dataoffset = 0;

@@ -23,7 +23,7 @@ impl PluginImageCopy {
 
         // {
             let copymat = commands.spawn_empty_id();
-            actions.material.create.push(OpsMaterialCreate::ops(copymat, ShaderImageCopy::KEY));
+            actions.material.create.push(OpsMaterialCreate::ops_with_matarray(copymat, ShaderImageCopy::KEY));
             
             if let Some(pre_render_target) = source_render_target {
                 match pre_render_target {
@@ -82,7 +82,7 @@ impl PluginImageCopy {
 
         // {
             let copymat = commands.spawn_empty_id();
-            actions.material.create.push(OpsMaterialCreate::ops(copymat, ShaderImageCopy::KEY));
+            actions.material.create.push(OpsMaterialCreate::ops_with_matarray(copymat, ShaderImageCopy::KEY));
             
             if let Some(pre_render_target) = source_render_target {
                 match pre_render_target {

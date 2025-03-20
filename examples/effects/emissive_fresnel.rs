@@ -50,7 +50,7 @@ fn setup(
 
     let idmat = commands.spawn_empty_id();
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
-    actions.material.create.push(OpsMaterialCreate::ops(
+    actions.material.create.push(OpsMaterialCreate::ops_with_matarray(
         idmat,
         EmissiveFresnelShader::KEY,
     ));

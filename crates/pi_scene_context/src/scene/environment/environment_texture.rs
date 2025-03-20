@@ -95,7 +95,12 @@ pub fn sys_env_texture_loaded_check(
 ) {
     let mut item = loader.wait.pop();
     let mut waitagain = vec![];
+    let mut idcounter = 0;
     while let Some((entity, key, id, _)) = item {
+        idcounter = idcounter + 1;
+        if idcounter >= 1024 {
+            log::error!("sys_image_texture_loaded");
+        }
         item = loader.wait.pop();
 
         let key_u64 = key.asset_u64();

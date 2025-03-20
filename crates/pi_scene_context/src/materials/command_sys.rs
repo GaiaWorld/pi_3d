@@ -51,7 +51,7 @@ pub fn sys_create_material(
     // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_create_material"));
-    cmds.drain().for_each(|OpsMaterialCreate(entity, key_shader, texatlas)| {
+    cmds.drain().for_each(|OpsMaterialCreate(entity, key_shader, matarray)| {
         // log::warn!("MaterialInit: {:?}", entity);
         if commands.get_entity(entity).is_none() { 
             // log::error!("Material: Not Found!! {:?}", key_shader);
@@ -61,7 +61,7 @@ pub fn sys_create_material(
 
         if let Some(meta) = asset_shader.get(&key_shader) {
             // log::error!("Material: oK!! {:?}", key_shader);
-            let bind = materialmgr.allocate(&key_shader, &meta, &device, &mut allocator, &engineopt);
+            let bind = materialmgr.allocate(&key_shader, &meta, &device, &mut allocator, &engineopt, matarray);
             // log::error!("MaterialData Allocate: {:?}", (&key_shader, bind.is_some()));
             let effect_val_bind = BindEffectValues::new(&device, key_shader.clone(), meta.clone(), bind);
             // let mut matcmds = commands.entity(entity);

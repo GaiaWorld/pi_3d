@@ -39,7 +39,7 @@ fn setup(
     actions.transform.create.push(OpsTransformNode::ops(scene, node));
 
     let idmattrail = commands.spawn_empty_id();
-    actions.material.create.push(OpsMaterialCreate::ops(idmattrail, UnlitShader::KEY));
+    actions.material.create.push(OpsMaterialCreate::ops_with_matarray(idmattrail, UnlitShader::KEY));
     actions.material.valb.push(OpsUniformValB::texture(idmattrail, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         sample: KeySampler::linear_repeat(),
@@ -77,7 +77,7 @@ fn setup(
                     //
                     let idmat = commands.spawn_empty_id();
                     actions.material.usemat.push(OpsMaterialUse::ops(source, idmattrail, DemoScene::PASS_OPAQUE));
-                    actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
+                    actions.material.create.push(OpsMaterialCreate::ops_with_matarray(idmat, UnlitShader::KEY));
                     actions.parsys.trailmaterial.push(OpsCPUParticleSystemTrailMaterial::ops(source, idmattrail, DemoScene::PASS_TRANSPARENT));
                     source
                 };

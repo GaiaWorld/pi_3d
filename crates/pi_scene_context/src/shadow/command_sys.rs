@@ -47,7 +47,7 @@ pub fn sys_create_shadow_generator(
             
             // log::error!("Shadow 01");
             let bindviewer = BindViewer::new(&mut dynallocator);
-            matcreatecmds.push(OpsMaterialCreate::ops(mat, ShaderShadowGenerator::KEY));
+            matcreatecmds.push(OpsMaterialCreate::ops_with_matarray(mat, ShaderShadowGenerator::KEY));
             matusecmds.push(OpsMaterialUse::ops(entity, mat, passtag));
             
             // log::error!("Shadow 02");

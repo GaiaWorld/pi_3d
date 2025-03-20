@@ -5,11 +5,11 @@ use crate::pass::PassTag;
 
 pub struct OpsMaterialCreate(pub Entity, pub KeyShaderMeta, pub bool);
 impl OpsMaterialCreate {
-    pub fn ops(mat: Entity, shader_meta: &str) -> Self {
-        Self(mat, Atom::from(shader_meta), false)
-    }
-    pub fn ops_texatlas(mat: Entity, shader_meta: &str) -> Self {
+    pub fn ops_with_matarray(mat: Entity, shader_meta: &str) -> Self {
         Self(mat, Atom::from(shader_meta), true)
+    }
+    pub fn ops(mat: Entity, shader_meta: &str, withmatarray: bool) -> Self {
+        Self(mat, Atom::from(shader_meta), withmatarray)
     }
 }
 pub type ActionListMaterialCreate = ActionList<OpsMaterialCreate>;

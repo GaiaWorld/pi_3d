@@ -245,7 +245,7 @@ impl ShaderBindEffectValueArr {
         key_meta: KeyShaderMeta,
         meta: Handle<ShaderEffectMeta>,
         allocator: &mut BindBufferAllocator,
-        engineopt: &EngineCustomPlugins
+        maxlen_material_array: u32
     ) -> Option<Self> {
         let limit = device.limits();
         let uniforms = &meta.uniforms;
@@ -301,11 +301,8 @@ impl ShaderBindEffectValueArr {
         } else {
             let step = 4 * 4;
             let item_size = (total_size + step - 1) / step * step;
-            let maxcount = if engineopt.disenable_material_array == false {
-                engineopt.maxlen_material_array.min(limit.max_uniform_buffer_binding_size / item_size).min(limit.max_uniform_buffer_binding_size / BindEffectTextureInfo::ITEM_SIZE as u32)
-            } else {
-                1
-            };
+            let maxcount = maxlen_material_array.min(limit.max_uniform_buffer_binding_size / item_size).min(limit.max_uniform_buffer_binding_size / BindEffectTextureInfo::ITEM_SIZE as u32);
+            // let maxcount = 1;
             total_size = item_size * maxcount;
             match allocator.allocate(total_size ) {
                 Some(data) => {

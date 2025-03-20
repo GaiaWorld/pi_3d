@@ -867,6 +867,7 @@ fn pipeline(
     // log::error!("Create pipeline");
     
     let key_shader = shader.key().clone();
+    log::error!("Shader: {:?}", &key_shader);
     let bind_group_layouts = bindgroups.bind_group_layouts();
     let key_bindgroup_layouts = KeyPipelineFromBindGroup(bindgroups.key_bindgroup_layouts());
 
@@ -1023,7 +1024,7 @@ fn _combine_instance(
 }
 
 fn collect_draw_batch(
-    combinedata: &mut CombineBuffer,
+    combinebuffer: &mut CombineBuffer,
     tempdraw: DrawTmpRef,
     instancedata: &EVerteicesInstance,
     renderer: &mut Renderer,
@@ -1054,16 +1055,16 @@ fn collect_draw_batch(
             let mut end = mem.data.end;
             if temp < mem.data.end {
                 end = temp + size;
-                let hascount = combinedata.data.len();
+                let hascount = combinebuffer.data.len();
                 if hascount < end {
                     let placehold: [u8;4] = [0, 0, 0, 0];
                     let count = end - hascount;
-                    combinedata.record(&placehold[0..count]);
+                    combinebuffer.record(&placehold[0..count]);
                 }
             }
             Range { start, end }
         };
-        let data = combinedata.data(&range, allocator, device, queue);
+        let data = combinebuffer.data(&range, allocator, device, queue);
 
         if let Some(data) = data {
             // log::warn!("Draw Instance {:?}", (&instances, &range));

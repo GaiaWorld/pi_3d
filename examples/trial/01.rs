@@ -106,7 +106,7 @@ fn setup(
     actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 )));
 
     let idmat = commands.spawn_empty_id();
-    actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
+    actions.material.create.push(OpsMaterialCreate::ops_with_matarray(idmat, UnlitShader::KEY));
     actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         sample: KeySampler::linear_repeat(),

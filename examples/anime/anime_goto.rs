@@ -52,7 +52,7 @@ fn setup(
                 let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices.clone(), indices.clone(), base::instance_attr(false, false, false));
                 let idmat = commands.spawn_empty_id();
                 actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
-                actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
+                actions.material.create.push(OpsMaterialCreate::ops_with_matarray(idmat, UnlitShader::KEY));
                 actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
                     slotname: Atom::from(BlockMainTexture::KEY_TEX),
                     sample: KeySampler::default(),

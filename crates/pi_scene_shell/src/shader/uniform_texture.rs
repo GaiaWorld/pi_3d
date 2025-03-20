@@ -11,7 +11,7 @@ use pi_render::{
     rhi::sampler::EAddressMode
 };
 
-use crate::{binds::BindEffectTextureInfo, prelude::EngineCustomPlugins};
+use crate::{binds::{BindEffectTextureInfo, BindEffectTextureTilloff}, prelude::EngineCustomPlugins};
 
 use super::{UniformPropertyName, ShaderSetBind, TUnifromShaderProperty};
 
@@ -244,7 +244,7 @@ pub fn texture_bind_code_mat(engineopt: &EngineCustomPlugins, tex_sampler_type: 
 fn texture_code(slotname: &str, bindname: &str, tex_sampler_type: &wgpu::TextureSampleType, dimension: wgpu::TextureViewDimension, engineopt: &EngineCustomPlugins) -> String {
     let mut uv = String::from("uvAtlas(uv * tilloff.xy + tilloff.zw + os, ");
     uv += slotname;
-    uv += BindEffectTextureInfo::SUFFIX_TILLOFF;
+    uv += BindEffectTextureTilloff::SUFFIX_TILLOFF;
     // if engineopt.disenable_material_array == false {
         uv += "[vMatIdx]";
     // }

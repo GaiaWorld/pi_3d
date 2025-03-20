@@ -114,7 +114,7 @@ impl Plugin for PluginTest {
     let lightingmat = {
         
         let idmat = commands.spawn_empty_id();
-        actions.material.create.push(OpsMaterialCreate::ops(idmat, pbr_material::ShaderPBR::KEY));
+        actions.material.create.push(OpsMaterialCreate::ops_with_matarray(idmat, pbr_material::ShaderPBR::KEY));
         // actions.material.create.push(OpsMaterialCreate::ops(idmat, StandardShader::KEY, EPassTag::Opaque));
         actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
             slotname: Atom::from(BlockMainTexture::KEY_TEX),
@@ -149,7 +149,7 @@ impl Plugin for PluginTest {
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
     let planarmat =  {
         let idmat = commands.spawn_empty_id();
-        actions.material.create.push(OpsMaterialCreate::ops(idmat, unlit_material::PlanarShadow::KEY));
+        actions.material.create.push(OpsMaterialCreate::ops_with_matarray(idmat, unlit_material::PlanarShadow::KEY));
         idmat
     };
     actions.material.usemat.push(OpsMaterialUse::Use(source, planarmat, DemoScene::PASS_TRANSPARENT));
@@ -237,7 +237,7 @@ impl Plugin for PluginTest {
             actions.mesh.state.push(OpsMeshStateModify::ops(source, EMeshStateModify::CastShadow(false)));
 
             let distortiommat = commands.spawn_empty_id();
-            actions.material.create.push(OpsMaterialCreate::ops(distortiommat, distortion_material::ShaderDistortion::KEY));
+            actions.material.create.push(OpsMaterialCreate::ops_with_matarray(distortiommat, distortion_material::ShaderDistortion::KEY));
             actions.material.usemat.push(OpsMaterialUse::Use(source, distortiommat, DemoScene::PASS_TRANSPARENT));
             actions.material.valb.push(OpsUniformValB::texture(distortiommat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockMainTexture::KEY_TEX), url: EKeyTexture::from("./assets/images/eff_uv_lf_002.png"), sample: KeySampler::linear_repeat(), ..Default::default() }));
             actions.material.val.push(OpsUniformVal::vec2(distortiommat, Atom::from(BlockMainTextureUVOffsetSpeed::KEY_PARAM), 100., 100.));

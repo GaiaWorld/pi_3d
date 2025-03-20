@@ -135,7 +135,7 @@ fn setup(
 
     let idmat = commands.spawn_empty_id();
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
-    actions.material.create.push(OpsMaterialCreate::ops(idmat, UnlitShader::KEY));
+    actions.material.create.push(OpsMaterialCreate::ops_with_matarray(idmat, UnlitShader::KEY));
     actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from("_MainTex"),
         sample: KeySampler::default(),

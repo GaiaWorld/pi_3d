@@ -103,7 +103,7 @@ fn setup(
     actions.transform.tree.push(OpsTransformNodeParent::ops(node, root));
 
     let idmat = commands.spawn_empty_id();
-    actions.material.create.push(OpsMaterialCreate::ops(idmat, OpacityClipShader::KEY));
+    actions.material.create.push(OpsMaterialCreate::ops_with_matarray(idmat, OpacityClipShader::KEY));
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
     actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMainTexture::KEY_TEX),

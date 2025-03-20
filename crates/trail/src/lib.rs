@@ -62,7 +62,7 @@ impl Plugin for PluginTrail {
     fn build(&self, app: &mut App) {
         let maxcount = if let Some(arg) = app.world.get_resource::<ArgTrailBufferSize>() {
             arg.0 as u32
-        } else {  4 * 1024 * 1024 };
+        } else {  64 * 1024 };
 
         let device = app.world.get_resource::<PiRenderDevice>().unwrap().0.clone();
         let queue = app.world.get_resource::<PiRenderQueue>().unwrap().0.clone();
@@ -105,7 +105,7 @@ impl Plugin for PluginTrail {
         .configure_set( Update, StageTrail::TrailCreate .in_set(ERunStageChap::Create).after(StageSkeleton::_SkinCreate))
         .configure_set( Update, StageTrail::_TrailCreate.in_set(ERunStageChap::Create).after(StageTrail::TrailCreate).before(StageTransform::TransformCommand).before(StageEnable::Command))
         .configure_set( Update, StageTrail::TrailCommand.in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageTrail::_TrailCreate))
-        .configure_set( Update, StageTrail::TrailUpdate .in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageTrail::TrailCommand).after(StageGeometry::GeometryLoaded))
+        .configure_set( Update, StageTrail::TrailUpdate .in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageTrail::TrailCommand).before(StageGeometry::GeometryLoaded))
         .configure_set( Update, StageTrail::TrailDispose.in_set(ERunStageChap::Dispose).before(StageTransform::TransformDispose))
         ;
 

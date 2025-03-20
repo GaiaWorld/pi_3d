@@ -124,7 +124,7 @@ impl Plugin for PluginTest {
     let lightingmat = {
         
         let idmat = commands.spawn_empty_id();
-        actions.material.create.push(OpsMaterialCreate::ops(idmat, pbr_material::ShaderPBR::KEY));
+        actions.material.create.push(OpsMaterialCreate::ops_with_matarray(idmat, pbr_material::ShaderPBR::KEY));
         // actions.material.create.push(OpsMaterialCreate::ops(idmat, StandardShader::KEY, EPassTag::Opaque));
         actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
             slotname: Atom::from(BlockMainTexture::KEY_TEX),
@@ -162,7 +162,7 @@ impl Plugin for PluginTest {
     ActionMaterial::regist_material_meta(&matmetas, KeyShaderMeta::from(unlit_material::PlanarShadow::KEY), unlit_material::PlanarShadow::meta(&engineopt));
     let planarmat =  {
         let idmat = commands.spawn_empty_id();
-        actions.material.create.push(OpsMaterialCreate::ops(idmat, unlit_material::PlanarShadow::KEY));
+        actions.material.create.push(OpsMaterialCreate::ops_with_matarray(idmat, unlit_material::PlanarShadow::KEY));
         idmat
     };
     actions.material.usemat.push(OpsMaterialUse::Use(source, planarmat, DemoScene::PASS_SKY_WATER));
@@ -230,7 +230,7 @@ impl Plugin for PluginTest {
 
         {
             let distortiommat = commands.spawn_empty_id();
-            actions.material.create.push(OpsMaterialCreate::ops(distortiommat, distortion_material::ShaderDistortion::KEY));
+            actions.material.create.push(OpsMaterialCreate::ops_with_matarray(distortiommat, distortion_material::ShaderDistortion::KEY));
             actions.material.valb.push(OpsUniformValB::texture(distortiommat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockMainTexture::KEY_TEX), url: EKeyTexture::from("assets/images/eff_wm_trail_fml_001_89_clamp.png"), sample: KeySampler::linear_repeat(), ..Default::default() }));
             // actions.material.val.push(OpsUniformVal::vec2(distortiommat, Atom::from(BlockMainTextureUVOffsetSpeed::KEY_PARAM), 100., 100.));
             actions.material.valb.push(OpsUniformValB::texture_from_target(distortiommat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockEmissiveTexture::KEY_TEX), ..Default::default() }, opaquetarget.unwrap(), Atom::from(BlockEmissiveTexture::KEY_TILLOFF)));
@@ -343,7 +343,7 @@ pub fn main() {
     
     #[cfg(feature = "use_bevy")]
     app.add_systems(Startup, base::active_lighting_shadow);
-    #[cfg(feature = "use_bevy")]
+    #[cfg(not(feature = "use_bevy"))]
     app.add_startup_system(Update, base::active_lighting_shadow);
     
     crate::base::run_loop(app, window, event_loop)

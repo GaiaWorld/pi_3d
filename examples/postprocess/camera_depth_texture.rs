@@ -114,7 +114,7 @@ impl Plugin for PluginTest {
     let lightingmat = {
         
         let idmat = commands.spawn_empty_id();
-        actions.material.create.push(OpsMaterialCreate::ops(idmat, pbr_material::ShaderPBR::KEY));
+        actions.material.create.push(OpsMaterialCreate::ops_with_matarray(idmat, pbr_material::ShaderPBR::KEY));
         // actions.material.create.push(OpsMaterialCreate::ops(idmat, StandardShader::KEY, EPassTag::Opaque));
         actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
             slotname: Atom::from(BlockMainTexture::KEY_TEX),
@@ -127,7 +127,7 @@ impl Plugin for PluginTest {
 
     let predepthmat = {
         let idmat = commands.spawn_empty_id();
-        actions.material.create.push(OpsMaterialCreate::ops(idmat, predepth::ShaderPreDepth::KEY));
+        actions.material.create.push(OpsMaterialCreate::ops_with_matarray(idmat, predepth::ShaderPreDepth::KEY));
         idmat
     };
     
@@ -247,7 +247,7 @@ impl Plugin for PluginTest {
             actions.mesh.render_state.push(OpsRenderState::blend(source, DemoScene::PASS_TRANSPARENT, blend));
 
             let distortiommat = commands.spawn_empty_id();
-            actions.material.create.push(OpsMaterialCreate::ops(distortiommat, water::ShaderWater::KEY));
+            actions.material.create.push(OpsMaterialCreate::ops_with_matarray(distortiommat, water::ShaderWater::KEY));
             actions.material.usemat.push(OpsMaterialUse::Use(source, distortiommat, DemoScene::PASS_TRANSPARENT));
             // actions.material.valb.push(OpsUniformValB::texture(distortiommat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockMainTexture::KEY_TEX), url: EKeyTexture::from("./assets/images/eff_uv_lf_002.png"), sample: KeySampler::linear_repeat(), ..Default::default() }));
             // actions.material.val.push(OpsUniformVal::vec2(distortiommat, Atom::from(BlockMainTextureUVOffsetSpeed::KEY_PARAM), 100., 100.));

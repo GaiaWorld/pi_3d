@@ -42,6 +42,7 @@ pub fn sys_update_collider(
         entities.insert(*entity);
     });
     let mut temp = Vector3::zeros();
+    // log::error!("sys_update_collider: {:?}", entities.len());
     entities.iter().for_each(|entity| {
         if let Ok((collider, idscene, dispose)) = items.get(*entity) {
             if let Ok(mut pool) = scenes.get_mut(idscene.0) {
@@ -54,7 +55,11 @@ pub fn sys_update_collider(
                         pool.set(*entity, collider, worldmatrix.matrix(), &mut temp);
                     }
                 }
+            } else {
+                // log::error!("sys_update_collider Scene Not Found SceneColliderPool : ");
             }
+        } else {
+            // log::error!("sys_update_collider Item Component Not Found : ");
         }
     });
     changes0.iter().for_each(|entity| {

@@ -84,7 +84,7 @@ fn setup(
     actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, CubeBuilder::indices_meta()));
     
     let idmat = commands.spawn_empty_id();
-    actions.material.create.push(OpsMaterialCreate::ops(idmat, DefaultShader::KEY));
+    actions.material.create.push(OpsMaterialCreate::ops_with_matarray(idmat, DefaultShader::KEY));
     // let idmat = defaultmat.0;
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
 

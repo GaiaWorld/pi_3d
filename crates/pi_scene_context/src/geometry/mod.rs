@@ -47,18 +47,18 @@ impl Plugin for PluginGeometry {
         };
         let vbsize = if let Some(arg) = app.world.get_resource::<ArgVertexBufferAllocator3DSize>() {
             arg.0
-        } else { 10 * 1024 * 1024 };
+        } else { 64 * 1024 };
         let insbsize = if let Some(arg) = app.world.get_resource::<ArgInstanceBufferAllocatorSize>() {
             arg.0
-        } else { 2 * 1024 * 1024 };
+        } else { 64 * 1024 };
 
         let device = app.world.get_resource::<PiRenderDevice>().unwrap();
         let queue = app.world.get_resource::<PiRenderQueue>().unwrap();
-        let mut allocator = VertexBufferAllocator3D(VertexBufferAllocator::new(vbsize as usize, cfg.0.timeout));
+        let mut allocator = VertexBufferAllocator3D(VertexBufferAllocator::create(vbsize as usize, cfg.0.timeout, true));
         let instanceallocator = InstanceBufferAllocator::new(insbsize, &mut allocator, device, queue);
         
         app.insert_resource(CombineBuffer::new(option.combinebuffersize, &mut allocator, device, queue));
-        app.insert_resource(CombineDataCommon::new(512 * 1024));
+        app.insert_resource(CombineDataCommon::new(option.combinebuffersize));
 
         app.insert_resource(allocator);
         app.insert_resource(instanceallocator);

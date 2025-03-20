@@ -45,7 +45,7 @@ fn setup(
 
     let idmat = commands.spawn_empty_id();
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_TRANSPARENT));
-    actions.material.create.push(OpsMaterialCreate::ops(idmat, StripesVirtualShader::KEY));
+    actions.material.create.push(OpsMaterialCreate::ops_with_matarray(idmat, StripesVirtualShader::KEY));
     actions.material.val.push(OpsUniformVal::float(
             idmat, 
             Atom::from(StripesVirtualShader::KEY_SPEED), 

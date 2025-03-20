@@ -119,7 +119,7 @@ impl Plugin for PluginTest {
     let lightingmat = {
         
         let idmat = commands.spawn_empty_id();
-        actions.material.create.push(OpsMaterialCreate::ops(idmat, pbr_material::ShaderPBR::KEY));
+        actions.material.create.push(OpsMaterialCreate::ops_with_matarray(idmat, pbr_material::ShaderPBR::KEY));
         // actions.material.create.push(OpsMaterialCreate::ops(idmat, StandardShader::KEY, EPassTag::Opaque));
         actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
             slotname: Atom::from(BlockMainTexture::KEY_TEX),

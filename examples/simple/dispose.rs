@@ -86,7 +86,7 @@ pub struct ListTestData(SegQueue<(Entity, Entity, Vec<Entity>)>, Option<Entity>,
                 actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, CubeBuilder::indices_meta()));
                 let idmat = commands.spawn_empty_id();
                 actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
-                actions.material.create.push(OpsMaterialCreate::ops(idmat, MainOpacityShader::KEY));
+                actions.material.create.push(OpsMaterialCreate::ops_with_matarray(idmat, MainOpacityShader::KEY));
                 actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
                     slotname: Atom::from(BlockMainTexture::KEY_TEX),
                     sample: KeySampler::linear_repeat(),
@@ -162,7 +162,7 @@ fn setup(
         let attrs = CubeBuilder::attrs_meta();
         actions.geometry.create.push(OpsGeomeryCreate::ops(source, id_geo, attrs, CubeBuilder::indices_meta()));
         let idmat = commands.spawn_empty_id();
-        actions.material.create.push(OpsMaterialCreate::ops(idmat, DefaultShader::KEY));
+        actions.material.create.push(OpsMaterialCreate::ops_with_matarray(idmat, DefaultShader::KEY));
         actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
 
         let mut tmp = vec![];

@@ -9,7 +9,7 @@ use pi_render::{
         bind::TKeyBind,
         bind_group::*, sampler::BindDataSampler, shader::TShaderSetBlock, 
         shader_stage::EShaderStage,
-        texture::{BindDataTexture2D, ETextureViewUsage}
+        texture::{BindDataTexture2D, ETextureViewUsage, ImageTextureFrame}
     }
 };
 use crate::{binds::*, prelude::{EngineCustomPlugins, EqAsResource, HashAsResource}, shader::* };
@@ -22,16 +22,16 @@ pub struct EffectTextureSampler(pub ETextureViewUsage, pub BindDataSampler, pub 
 impl EffectTextureSampler {
     pub fn tilloff(&self) -> [f32;4] {
         match &self.0 {
-            ETextureViewUsage::Tex(arc) => [1., 1., 0., 0.],
-            ETextureViewUsage::TexWithId(arc) => [1., 1., 0., 0.],
-            ETextureViewUsage::Image(arc) => [1., 1., 0., 0.],
+            ETextureViewUsage::Tex(arc) => ImageTextureFrame::DEFAULT_TILLOFF,
+            ETextureViewUsage::TexWithId(arc) => ImageTextureFrame::DEFAULT_TILLOFF,
+            ETextureViewUsage::Image(arc) => ImageTextureFrame::DEFAULT_TILLOFF,
             ETextureViewUsage::ImageFrame(arc) => {
                 arc.texture().tilloff()
             },
-            ETextureViewUsage::SRT(arc) => [1., 1., 0., 0.],
+            ETextureViewUsage::SRT(arc) => ImageTextureFrame::DEFAULT_TILLOFF,
         }
     }
-    pub fn coord(&self) -> u32 {
+    pub fn coord(&self) -> u8 {
         match &self.0 {
             ETextureViewUsage::Tex(arc) => 0,
             ETextureViewUsage::TexWithId(arc) => 0,

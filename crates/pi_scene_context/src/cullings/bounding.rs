@@ -71,6 +71,8 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
             }
         });
         temp.sort_by(|a, b| b.2.cmp(&a.2));
+
+        // log::error!("Ray Test List: {:?}", (temp.len()));
         let mut lastalphaindex = i32::MAX;
         let mut isok = false;
         for (entity, item, sortparam) in temp.iter() {

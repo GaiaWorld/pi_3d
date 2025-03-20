@@ -210,9 +210,12 @@ impl BindEffectValues {
         value.iter().for_each(|v| { self.bytes[offset] = *v; offset += 1; });
         self.bind.update_data(updateoffset, value);
     }
-    pub fn update_texture(&self, texidx: usize, tilloff: &[f32;4], wrap_u: EAddressMode, wrap_v: EAddressMode, wrap_w: EAddressMode, coord: u32) {
+    pub fn update_texture(&self, texidx: usize, tilloff: &[f32;4], wrap_u: EAddressMode, wrap_v: EAddressMode, wrap_w: EAddressMode, coord: u8) {
         if let Some(bind) = self.bind.texture_info.get(texidx) {
-            bind.update(self.bind.matidx() as usize, bytemuck::cast_slice(tilloff), wrap_u.to_u8() as u32, wrap_v.to_u8() as u32, wrap_w.to_u8() as u32, coord);
+            bind.update(self.bind.matidx() as usize, wrap_u.to_u8(), wrap_v.to_u8(), wrap_w.to_u8(), coord);
+        }
+        if let Some(bind) = self.bind.texture_till.get(texidx) {
+            bind.update(self.bind.matidx() as usize, bytemuck::cast_slice(tilloff));
         }
     }
     pub fn write_data(&self, offset: usize, value: &[u8]) {

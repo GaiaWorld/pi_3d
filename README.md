@@ -56,6 +56,10 @@
     * 跳跃
 * 包围盒检测
 
+## iOS 16+
+* InstancedBuffer 共用Buffer尺寸尽量小
+* BindBuffer 共用Buffer尺寸尽量小
+
 request: 
     ColorFormat
     DepthStencilFormat

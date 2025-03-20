@@ -99,9 +99,12 @@ pi_assets               = { path = "../pi_assets" }
 pi_map                  = { path = "../pi_map" }
 pi_key_alloter          = { path = "../pi_key_alloter" }
 pi_arr                  = { path = "../pi_arr" }
+wgpu                    = { path = "../wgpu/wgpu" }
+wgpu-hal                = { path = "../wgpu/wgpu-hal" }
+naga                    = { path = "../wgpu/naga" }
 
 [dev-dependencies]
-# wgpu            = { version = "0.1", registry = "yn", package = "pi_wgpu", features = ["use_wgpu"] }
+wgpu            = { version = "0.1", registry = "yn", package = "pi_wgpu", features = ["use_wgpu"] }
 pi_winit        = { version = "0.27", registry = "yn", package = "winit" }
 rand            = "0.8"
 ktx             = "0.3"

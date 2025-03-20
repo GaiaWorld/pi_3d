@@ -5,7 +5,7 @@ use pi_scene_shell::prelude::*;
 use crate::{prelude::{RenderGeometryComp, ActionListDisposeCan, ActionListDisposeReadyForRef, OpsDisposeCan, MeshInstanceState}, object::ActionEntity};
 
 use super::{
-    base::*, instance::instanced_buffer::{InstanceBufferAllocator, InstancedInfo, InstancedInfoComp}, vertex_buffer_useinfo::*
+    base::*, instance::instanced_buffer::{InstancedInfo, InstancedInfoComp}, vertex_buffer_useinfo::*
 };
 
 use super::command::*;
@@ -24,7 +24,6 @@ pub fn sys_create_geometry(
     mut geoloader: ResMut<GeometryVBLoader>,
     mut vb_data_map: ResMut<VertexBufferDataMap3D>,
     asset_mgr: Res<ShareAssetMgr<EVertexBufferRange>>,
-    mut instanceallocator: ResMut<InstanceBufferAllocator>,
     mut _disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
     engineopt: Res<EngineCustomPlugins>,
@@ -76,7 +75,7 @@ pub fn sys_create_geometry(
         let loader = &mut geoloader.loader_vertices;
         let max: usize = geo_desc.slot_count();
         for slot in 0..max {
-            if let Some((desc, buff)) = init_geometry_vertices_slot(&geo_desc, &asset_mgr, &mut instanceallocator, &mut instacned, slot) {
+            if let Some((desc, buff)) = init_geometry_vertices_slot(&geo_desc, &asset_mgr, &mut instacned, slot) {
                 if let Some(buff) = buff {
                     datalist[slot] = Some(AssetResVBSlot::from(buff));
                     keyslist[slot] = Some(desc.key.clone());
@@ -170,7 +169,6 @@ fn init_geometry_vertices_slot
 (
     geodesc: &GeometryDesc,
     asset_mgr: &ShareAssetMgr<EVertexBufferRange>,
-    _instanceallocator: &mut InstanceBufferAllocator,
     instancecomp: &mut InstancedInfoComp,
     // instancestate: u32,
     slot_index: usize,

@@ -75,11 +75,12 @@ pub fn _pass_effect_ready<'a>(
         (true, Some(textures)) => {
             if textures.textures.len() == meta.textures.len() {
                 let len = textures.textures.len();
-                let bindval = bind.0.as_ref().unwrap();
-                for texidx in 0..len {
-                    let tex = &textures.textures[texidx];
-                    let desc = &texturekeys.0[texidx];
-                    bindval.update_texture(texidx, &tex.tilloff(), desc.wrapu, desc.wrapv, desc.wrapw, tex.coord());
+                if let Some(bindval) = bind.0.as_ref() {
+                    for texidx in 0..len {
+                        let tex = &textures.textures[texidx];
+                        let desc = &texturekeys.0[texidx];
+                        bindval.update_texture(texidx, &tex.tilloff(), desc.wrapu, desc.wrapv, desc.wrapw, tex.coord());
+                    }
                 }
                 (bind.0.as_ref(), Some(textures), Some((effect_key.0.clone(), meta.clone())))
             } else {

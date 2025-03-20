@@ -48,7 +48,7 @@ pub fn setup(
     let mut mats = vec![];
     {
         let idmattrail = commands.spawn_empty_id();
-        actions.material.create.push(OpsMaterialCreate::ops(idmattrail, UnlitShader::KEY));
+        actions.material.create.push(OpsMaterialCreate::ops_with_matarray(idmattrail, UnlitShader::KEY));
         actions.material.valb.push(OpsUniformValB::texture(idmattrail, UniformTextureWithSamplerParam {
             slotname: Atom::from(BlockMainTexture::KEY_TEX),
             sample: KeySampler::linear_repeat(),
@@ -60,7 +60,7 @@ pub fn setup(
 
     {
         let idmattrail = commands.spawn_empty_id();
-        actions.material.create.push(OpsMaterialCreate::ops(idmattrail, UnlitShader::KEY));
+        actions.material.create.push(OpsMaterialCreate::ops_with_matarray(idmattrail, UnlitShader::KEY));
         actions.material.valb.push(OpsUniformValB::texture(idmattrail, UniformTextureWithSamplerParam {
             slotname: Atom::from(BlockMainTexture::KEY_TEX),
             sample: KeySampler::linear_repeat(),

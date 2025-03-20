@@ -6,6 +6,7 @@ mod scene;
 mod model;
 mod effect_textureids;
 mod effect_texture_info;
+mod effect_texture_tilloff;
 mod clipplane;
 
 pub use effect_value::*;
@@ -16,3 +17,4 @@ pub use model::*;
 pub use clipplane::*;
 pub use effect_textureids::*;
 pub use effect_texture_info::*;
+pub use effect_texture_tilloff::*;

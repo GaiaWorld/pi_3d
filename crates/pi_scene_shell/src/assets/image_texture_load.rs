@@ -151,7 +151,12 @@ pub fn sys_image_texture_load_launch(
 ) {
     let mut again = vec![];
     let mut item = loader.wait.pop();
+    let mut idcounter = 0;
     while let Some(info) = item {
+        idcounter = idcounter + 1;
+        if idcounter >= 1024 {
+            log::error!("sys_image_texture_loaded");
+        }
         let id = info.id;
         let param = info.key.clone();
         let mode = info.mode;
@@ -301,7 +306,12 @@ pub fn sys_image_texture_loaded(
     device: Res<PiRenderDevice>,
     queue: Res<PiRenderQueue>,
 ) {
+    let mut idcounter = 0;
     while let Some((keyimage, data, receiver)) = loader.loading_image.pop() {
+        idcounter = idcounter + 1;
+        if idcounter >= 1024 {
+            log::error!("sys_image_texture_loaded");
+        }
         loader.loading.remove(&keyimage);
         let failquene = loader.fail_imgtex.clone();
         if let Some(texture) = combinemgr.combine_image(&keyimage, &data, &device, &queue) {
@@ -464,7 +474,12 @@ fn _sys_image_texture_view_loaded_check(
 ) {
     let mut item = wait.pop();
     let mut waitagain = vec![];
+    let mut idcounter = 0;
     while let Some((entity, key, id, _)) = item {
+        idcounter = idcounter + 1;
+        if idcounter >= 1024 {
+            log::error!("sys_image_texture_loaded");
+        }
         item = wait.pop();
 
         let key_u64 = key.asset_u64();

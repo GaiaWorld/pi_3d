@@ -18,10 +18,10 @@ pub mod texture;
 pub struct ResourceDefaultTextures {
     pub white1: Handle<TextureRes>,
     pub white2: Handle<TextureRes>,
-    pub white3: Handle<TextureRes>,
+    // pub white3: Handle<TextureRes>,
     pub black1: Handle<TextureRes>,
     pub black2: Handle<TextureRes>,
-    pub black3: Handle<TextureRes>,
+    // pub black3: Handle<TextureRes>,
 }
 
 pub(crate) fn update_data(
@@ -51,10 +51,10 @@ pub fn set_up_uniforms(
     let texture = DefaultTexture::create(device, queue, EDefaultTexture::White, wgpu::TextureDimension::D2);
     let texture = texture.create_view(&desc);
     let white2 = asset_tex.insert(Atom::from(DefaultTexture::WHITE_2D).asset_u64() as u64, TextureRes::new(1, 1, 4, texture, true, wgpu::TextureFormat::Rgba8Unorm)).unwrap();
-    // 
-    let texture = DefaultTexture::create(device, queue, EDefaultTexture::White, wgpu::TextureDimension::D3);
-    let texture = texture.create_view(&desc);
-    let white3 = asset_tex.insert(Atom::from(DefaultTexture::WHITE_3D).asset_u64() as u64, TextureRes::new(1, 1, 4, texture, true, wgpu::TextureFormat::Rgba8Unorm)).unwrap();
+    // // 
+    // let texture = DefaultTexture::create(device, queue, EDefaultTexture::White, wgpu::TextureDimension::D3);
+    // let texture = texture.create_view(&desc);
+    // let white3 = asset_tex.insert(Atom::from(DefaultTexture::WHITE_3D).asset_u64() as u64, TextureRes::new(1, 1, 4, texture, true, wgpu::TextureFormat::Rgba8Unorm)).unwrap();
     // 
     let texture = DefaultTexture::create(device, queue, EDefaultTexture::Black, wgpu::TextureDimension::D1);
     let texture = texture.create_view(&desc);
@@ -64,17 +64,17 @@ pub fn set_up_uniforms(
     let texture = texture.create_view(&desc);
     let black2 = asset_tex.insert(Atom::from(DefaultTexture::BLACK_2D).asset_u64() as u64, TextureRes::new(1, 1, 4, texture, true, wgpu::TextureFormat::Rgba8Unorm)).unwrap();
     // 
-    let texture = DefaultTexture::create(device, queue, EDefaultTexture::Black, wgpu::TextureDimension::D3);
-    let texture = texture.create_view(&desc);
-    let black3 = asset_tex.insert(Atom::from(DefaultTexture::BLACK_3D).asset_u64() as u64, TextureRes::new(1, 1, 4, texture, true, wgpu::TextureFormat::Rgba8Unorm)).unwrap();
-    // log::warn!("DefaultTexture OK!");
+    // let texture = DefaultTexture::create(device, queue, EDefaultTexture::Black, wgpu::TextureDimension::D3);
+    // let texture = texture.create_view(&desc);
+    // let black3 = asset_tex.insert(Atom::from(DefaultTexture::BLACK_3D).asset_u64() as u64, TextureRes::new(1, 1, 4, texture, true, wgpu::TextureFormat::Rgba8Unorm)).unwrap();
+    // // log::warn!("DefaultTexture OK!");
 
     ResourceDefaultTextures {
         white1,
         white2,
-        white3,
+        // white3,
         black1,
         black2,
-        black3,
+        // black3,
     }
 }
