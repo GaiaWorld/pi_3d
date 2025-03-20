@@ -1,6 +1,6 @@
 [package]
 name = "pi_gltf2_load"
-version = "1.0.3"
+version = "1.1.0"
 authors = ["baip0002 <2494156981@qq.com>"]
 edition = "2021"
 description = "GLTF2 Res Manager."
@@ -9,42 +9,42 @@ license = "MIT OR Apache-2.0"
 keywords = ["GLTF2 Res"]
 
 [dependencies]
-pi_futures      = "0.1"
-pi-async-rt     = "0.1"
-pi_share        = "0.4"
-pi_hash         = "0.1"
-pi_assets       = "0.14"
-pi_time         = "0.3"
-pi_atom         = { version = "0.5", features = ["serde"] }
+pi_futures          = "0.1"
+pi-async-rt             = "0.2"
+pi_share                = "0.5"
+pi_hash             = "0.1"
+pi_assets               = "0.15"
+pi_time                 = "0.5"
+pi_atom                 = { version = "0.6", features = ["serde"] }
 
 
-bevy_ecs        = "0.11"
-pi_world        = { version = "0.1" }
+bevy_ecs            = "0.11"
+pi_world            = { version = "0.2" }
 # bevy_ecs        = "0.11"
 
-wgpu            = { version = "0.1", registry = "yn", package = "pi_wgpu" }
-naga            = { version = "0.19", features = [ "glsl-in", ] }
-bytemuck        = { version = "1.4", features = ["derive"] }
-log             = "0.4"
+wgpu                = { version = "0.2", registry = "yn", package = "pi_wgpu" }
+naga                = { version = "0.19", features = [ "glsl-in", ] }
+bytemuck            = { version = "1.4", features = ["derive"] }
+log                 = "0.4"
 
-smallvec        = "1.9"
-crossbeam       = "0.8"
-futures         = "0.3"
-derive_deref    = "1.1"
-base64          = "0.21"
+smallvec            = "1.9"
+crossbeam           = "0.8"
+futures             = "0.3"
+derive_deref        = "1.1"
+base64              = "0.21"
 
-pi_hal              = { version = "0.1", registry = "yn" }
+pi_hal              = { version = "0.2", registry = "yn" }
 
-pi_render           = { version = "0.1", registry = "yn" }
-render_utils        = { version = "0.1", registry = "yn" }
-render_derive       = { version = "0.1", registry = "yn" }
+pi_render           = { version = "0.2", registry = "yn" }
+render_utils        = { version = "0.2", registry = "yn" }
+render_derive       = { version = "0.2", registry = "yn" }
 
 pi_scene_math       = { version = "0.0.*", registry = "yn" }
-pi_animation        = { version = "0.1", registry = "yn" }
+pi_animation        = { version = "0.2", registry = "yn" }
 pi_curves           = { version = "*", registry = "yn" }
 pi_gltf             = { version = "0.1", registry = "yn", features = ["extras"] }
 
-pi_scene_context    = { version = "1.1", registry = "yn", path = "../pi_scene_context" }
-pi_scene_shell      = { version = "1.0", registry = "yn", path = "../pi_scene_shell" }
-pi_node_materials   = { version = "1.0", registry = "yn", path = "../node_materials" }
-pi_particle_system  = { version = "1.0", registry = "yn", path = "../particle_system" }
+pi_scene_context    = { version = "1.2", registry = "yn", path = "../pi_scene_context" }
+pi_scene_shell      = { version = "1.1", registry = "yn", path = "../pi_scene_shell" }
+pi_node_materials   = { version = "1.1", registry = "yn", path = "../node_materials" }
+pi_particle_system  = { version = "1.1", registry = "yn", path = "../particle_system" }

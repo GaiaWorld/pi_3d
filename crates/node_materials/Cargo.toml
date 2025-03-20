@@ -1,6 +1,6 @@
 [package]
 name = "pi_node_materials"
-version = "1.0.4"
+version = "1.1.0"
 authors = ["baip0002 <2494156981@qq.com>"]
 edition = "2021"
 description = "3D Framework for Scene."
@@ -9,18 +9,18 @@ license = "MIT OR Apache-2.0"
 keywords = ["3d scene"]
 
 [dependencies]
-pi_share        = "0.4"
-pi_slotmap      = "0.1"
+pi_share                = "0.5"
+pi_slotmap          = "0.2"
 pi_hash         = "0.1"
-pi_assets       = "0.14"
-pi_time         = "0.3"
-pi_atom         = { version = "0.5", features = ["serde"] }
+pi_assets               = "0.15"
+pi_time                 = "0.5"
+pi_atom                 = { version = "0.6", features = ["serde"] }
 
 bevy_ecs        = "0.11"
-pi_world        = { version = "0.1" }
+pi_world        = { version = "0.2" }
 # bevy_ecs        = "0.11"
 
-wgpu            = { version = "0.1", registry = "yn", package = "pi_wgpu" }
+wgpu            = { version = "0.2", registry = "yn", package = "pi_wgpu" }
 naga            = { version = "0.19", features = [ "glsl-in", ] }
 log             = "0.4"
 
@@ -30,13 +30,13 @@ futures         = "0.3"
 derive_deref    = "1.1"
 
 
-pi_render           = { version = "0.1", registry = "yn" }
-render_utils        = { version = "0.1", registry = "yn" }
-render_derive       = { version = "0.1", registry = "yn" }
+pi_render           = { version = "0.2", registry = "yn" }
+render_utils        = { version = "0.2", registry = "yn" }
+render_derive       = { version = "0.2", registry = "yn" }
 
 pi_scene_math       = { version = "0.0.*", registry = "yn" }
-pi_animation        = { version = "0.1", registry = "yn" }
+pi_animation        = { version = "0.2", registry = "yn" }
 pi_curves           = { version = "*", registry = "yn" }
 
-pi_scene_context    = { version = "1.1", registry = "yn", path = "../pi_scene_context" }
-pi_scene_shell      = { version = "1.0", registry = "yn", path = "../pi_scene_shell" }
+pi_scene_context    = { version = "1.2", registry = "yn", path = "../pi_scene_context" }
+pi_scene_shell      = { version = "1.1", registry = "yn", path = "../pi_scene_shell" }

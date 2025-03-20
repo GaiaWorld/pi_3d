@@ -1,6 +1,6 @@
 [package]
 name = "pi_scene_shell"
-version = "1.0.17"
+version = "1.1.0"
 authors = ["baip0002 <2494156981@qq.com>"]
 edition = "2021"
 description = "Framework."
@@ -15,7 +15,7 @@ use_pi_ecs = []
 
 [dependencies]
 log                 = "0.4"
-wgpu                = { version = "0.1", registry = "yn", package = "pi_wgpu" }
+wgpu                = { version = "0.2", registry = "yn", package = "pi_wgpu" }
 naga                = { version = "0.19", features = [ "glsl-in", ] }
 nalgebra            = "0.32"
 simba               = "0.8"
@@ -37,7 +37,7 @@ futures             = "0.3"
 
 parry3d             = "0.13"
 lazy_static         = "1.4"
-pi_spatial          = "0.5"
+pi_spatial          = "0.6"
 matrixmultiply      = "0.3"
 
 guillotiere         = { version = "0.6" }
@@ -53,36 +53,36 @@ derive_deref        = "1.1"
 serde_json          = { features = ["raw_value"], version = "1.0" }
 serde               = { features = ["derive"], version = "1.0" }
 
-pi_slotmap          = "0.1"
-pi_hash             = "0.1"
-pi_share            = "0.4"
-pi_null             = "0.1"
-pi_time             = "0.3"
-pi_map              = "0.2"
+pi_slotmap              = "0.2"
+pi_hash                 = "0.1"
+pi_share                = "0.5"
+pi_null                 = "0.1"
+pi_time                 = "0.5"
+pi_map                  = "0.2"
 
-pi_atom             = { version="0.5", features = ["serde"] }
+pi_atom                 = { version = "0.6", features = ["serde"] }
 
-pi_assets           = "0.14"
-pi_futures          = "0.1"
+pi_assets               = "0.15"
+pi_futures              = "0.1"
 
-pi-async-rt         = "0.1"
-pi_slotmap_tree     = "0.3"
-pi_hal              = { version = "0.1", registry = "yn" }
+pi-async-rt             = "0.2"
+pi_slotmap_tree         = "0.4"
+pi_hal                  = { version = "0.2", registry = "yn" }
 
-pi_bevy_ecs_extend      = { version = "0.1", registry = "yn" }
-pi_bevy_winit_window    = { version = "0.1", registry = "yn" }
-pi_bevy_render_plugin   = { version = "0.1", registry = "yn" }
-pi_bevy_asset           = { version = "0.1", registry = "yn" }
+pi_bevy_ecs_extend      = { version = "0.2", registry = "yn" }
+pi_bevy_winit_window    = { version = "0.2", registry = "yn" }
+pi_bevy_render_plugin   = { version = "0.2", registry = "yn" }
+pi_bevy_asset           = { version = "0.2", registry = "yn" }
 
-pi_render               = { version = "0.1", registry = "yn" }
-render_utils            = { version = "0.1", registry = "yn" }
-render_derive           = { version = "0.1", registry = "yn" }
+pi_render               = { version = "0.2", registry = "yn" }
+render_utils            = { version = "0.2", registry = "yn" }
+render_derive           = { version = "0.2", registry = "yn" }
 
 pi_scene_math           = { version = "0.0.*", registry = "yn" }
-pi_animation            = { version = "0.1", registry = "yn" }
+pi_animation            = { version = "0.2", registry = "yn" }
 pi_curves               = { version = "*", registry = "yn" }
 
 
-pi_world            = { version = "0.1" }
+pi_world            = { version = "0.2" }
 pi_world_macros     = "0.1"
 
