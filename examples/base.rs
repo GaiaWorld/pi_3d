@@ -506,7 +506,7 @@ pub fn sys_move_ray_collider(
     mut actions: pi_3d::ActionSets,
     mut commands: Commands,
     defaultmat: Res<SingleIDBaseDefaultMaterial>,
-    sortparam: Query<(&RenderQueueSortParam, &GlobalEnable)>,
+    sortparam: Query<&GlobalEnable>,
 ) {
 
     if let (Some((x, y)), Some(viewer)) = (events.cursormoved, events.viewer) {

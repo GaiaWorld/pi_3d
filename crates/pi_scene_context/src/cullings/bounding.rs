@@ -10,7 +10,7 @@ use super::{base::{PiRay, PickResult, TBoundingInfoCalc, TFilter}, bounding_sphe
 
 #[derive(Default, Clone)]
 pub struct VecBoundingInfoCalc {
-    pool: XHashMap<Entity, ((Number, Number, Number), (Number, Number, Number), Number)>,
+    pool: XHashMap<Entity, ((Number, Number, Number), (Number, Number, Number), Number, i32)>,
     fast: XHashSet<Entity>,
     temp: XHashSet<Entity>,
 }
@@ -20,9 +20,9 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
         self.fast.insert(key);
         self.pool.remove(&key);
     }
-    fn add(&mut self, key: Entity, min: (Number, Number, Number), max: (Number, Number, Number), intersection_treshold: Number) {
+    fn add(&mut self, key: Entity, min: (Number, Number, Number), max: (Number, Number, Number), intersection_treshold: Number, alphaindex: i32) {
         self.fast.remove(&key);
-        self.pool.insert(key, (min, max, intersection_treshold));
+        self.pool.insert(key, (min, max, intersection_treshold, alphaindex));
     }
 
     fn remove(&mut self, key: Entity) {
@@ -52,7 +52,7 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
 
     fn ray_test(
         &self, piray: &PiRay, result: &mut Option<PickResult>,
-        sortparams: &Query<(&RenderQueueSortParam, &GlobalEnable)>,
+        sortparams: &Query<&GlobalEnable>,
     ) {
         let origin = Point3::new(piray.origin.0, piray.origin.1, piray.origin.2);
         let ray = parry3d::query::Ray::new(origin, Vector3::new(piray.direction.0, piray.direction.1, piray.direction.2));
@@ -64,18 +64,18 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
         );
         let mut temp = vec![];
         self.pool.iter().for_each(|(entity, item)| {
-            if let Ok((sortparam, genable)) = sortparams.get(*entity) {
+            if let Ok(genable) = sortparams.get(*entity) {
                 if genable.0 {
-                    temp.push((*entity, item, *sortparam));
+                    temp.push((*entity, item));
                 }
             }
         });
-        temp.sort_by(|a, b| b.2.cmp(&a.2));
+        temp.sort_by(|a, b| b.1.3.cmp(&a.1.3));
 
         // log::error!("Ray Test List: {:?}", (temp.len()));
         let mut lastalphaindex = i32::MAX;
         let mut isok = false;
-        for (entity, item, sortparam) in temp.iter() {
+        for (entity, item) in temp.iter() {
             aabb.mins.x = item.0 .0;
             aabb.mins.y = item.0 .1;
             aabb.mins.z = item.0 .2;
@@ -87,13 +87,13 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
             let centery = (item.0 .1 + item.1 .1) * 0.5;
             let centerz = (item.0 .2 + item.1 .2) * 0.5;
 
-            if isok && lastalphaindex != sortparam.index {
+            if isok && lastalphaindex != item.3 {
                 break;
             }
             if !intersects_sphere((centerx, centery, centerz), item.2, 0., &piray.origin, &piray.direction) {
                 continue;
             }
-            lastalphaindex = sortparam.index;
+            lastalphaindex = item.3;
             if let Some(d) = aabb.cast_local_ray(&ray, f32::MAX, false) {
                 // println!("========= id: {:?}, aabb: {:?}, dest: {}",  entity, aabb, d);
                 // println!("========= dest： {}", dest);
@@ -104,6 +104,7 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
                         target: *entity,
                         min: item.0,
                         max: item.1,
+                        sortindex: item.3,
                         pickdetail: None,
                         bybounding: false
                     });

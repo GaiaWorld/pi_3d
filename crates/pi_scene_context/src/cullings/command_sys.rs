@@ -10,9 +10,9 @@ pub fn sys_act_collider(
     // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_act_collider"));
-    cmds.drain().for_each(|OpsCollider(entity, min, max, intersection_treshold)| {
+    cmds.drain().for_each(|OpsCollider(entity, min, max, intersection_treshold, sortindex)| {
         if let Some(mut cmd) = commands.get_entity(entity) {
-            cmd.insert(Collider { minimum: min, maximum: max, intersection_treshold })
+            cmd.insert(Collider { minimum: min, maximum: max, intersection_treshold, sortindex })
         } else { return; };
     });
 }

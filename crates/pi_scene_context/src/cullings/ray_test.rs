@@ -9,7 +9,7 @@ pub fn ray_cast(
     ray: &PiRay,
     idscene: Entity,
     check_bounding_while_no_collider: bool,
-    sortparams: &Query<(&RenderQueueSortParam, &GlobalEnable)>,
+    sortparams: &Query<&GlobalEnable>,
 ) -> Option<PickResult> {
     let mut result = None;
     if let Ok((colliderpool, boundingpool)) = scenes.get(idscene) {
@@ -28,7 +28,7 @@ pub fn ray_cast_scene(
     scene: (&SceneColliderPool, &SceneBoundingPool),
     ray: &PiRay,
     check_bounding_while_no_collider: bool,
-    sortparams: &Query<(&RenderQueueSortParam, &GlobalEnable)>,
+    sortparams: &Query<&GlobalEnable>,
 ) -> Option<PickResult> {
     let mut result = None;
     let (colliderpool, boundingpool) = scene;

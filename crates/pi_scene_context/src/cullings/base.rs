@@ -1,20 +1,20 @@
 use pi_scene_shell::prelude::*;
 use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::TToolVector3, Vector3, Matrix, Number, Point3};
 
-use crate::{flags::GlobalEnable, prelude::{MeshInstanceState, RenderQueueSortParam}, viewer::prelude::ViewerTransformMatrix};
+use crate::{flags::GlobalEnable, prelude::MeshInstanceState, viewer::prelude::ViewerTransformMatrix};
 
 use super::{bounding::VecBoundingInfoCalc, oct_tree::BoundingOctTree};
 
 pub trait TBoundingInfoCalc {
     fn add_fast(&mut self, key: Entity);
-    fn add(&mut self, key: Entity, min: (Number, Number, Number), max: (Number, Number, Number), intersection_treshold: Number);
+    fn add(&mut self, key: Entity, min: (Number, Number, Number), max: (Number, Number, Number), intersection_treshold: Number, sortindex: i32);
     fn remove(&mut self, key: Entity);
     fn culling<F: TFilter>(&mut self, vp: &Matrix, filter: F, result: &mut Vec<Entity>);
     fn ray_test(
         &self,
         piray: &PiRay,
         result: &mut Option<PickResult>,
-        sortparams: &Query<(&RenderQueueSortParam, &GlobalEnable)>,
+        sortparams: &Query<&GlobalEnable>,
     );
     fn entities(&self) -> Vec<Entity>;
     fn size(&self) -> usize;
@@ -94,15 +94,16 @@ pub enum ECullingStrategy {
 pub struct Collider {
     pub minimum: Vector3,
     pub maximum: Vector3,
-    pub intersection_treshold: Number
+    pub intersection_treshold: Number,
+    pub sortindex: i32,
 }
 impl Default for Collider {
     fn default() -> Self {
-        Self { minimum: Vector3::new(-0.5, -0.5, -0.5), maximum: Vector3::new(0.5, 0.5, 0.5), intersection_treshold: 0. }
+        Self { minimum: Vector3::new(-0.5, -0.5, -0.5), maximum: Vector3::new(0.5, 0.5, 0.5), intersection_treshold: 0., sortindex: i32::MIN }
     }
 }
 impl Collider {
-    pub fn minmax(&self, matrix: &Matrix, temp: &mut Vector3) -> ((Number, Number, Number), (Number, Number, Number), Number) {
+    pub fn minmax(&self, matrix: &Matrix, temp: &mut Vector3) -> ((Number, Number, Number), (Number, Number, Number), Number, i32) {
         CoordinateSytem3::transform_normal_floats(1., 1., 1., matrix, temp);
         let radius = self.minimum.metric_distance(&self.maximum).abs() * 0.5 * temp.x.max(temp.y).max(temp.z);
 
@@ -113,7 +114,8 @@ impl Collider {
         (
             (Number::min(min.0, max.0), Number::min(min.1, max.1), Number::min(min.2, max.2)),
             (Number::max(min.0, max.0), Number::max(min.1, max.1), Number::max(min.2, max.2)),
-            radius * (1.0 + self.intersection_treshold)
+            radius * (1.0 + self.intersection_treshold),
+            self.sortindex
         )
     }
 }
@@ -170,6 +172,7 @@ pub struct PickResult {
     pub target: Entity,
     pub min: (Number, Number, Number),
     pub max: (Number, Number, Number),
+    pub sortindex: i32,
     pub bybounding: bool,
     pub pickdetail: Option<(Number, Number, Number)>,
 }
@@ -228,15 +231,15 @@ impl SceneColliderPool {
 
         match self {
             SceneColliderPool::List(items) => {
-                let (min, max, intersection_treshold) = info.minmax(matrix, temp);
-                items.add(entity, min, max, intersection_treshold)
+                let (min, max, intersection_treshold, sortindex) = info.minmax(matrix, temp);
+                items.add(entity, min, max, intersection_treshold, sortindex)
             },
             SceneColliderPool::QuadTree() => {
                 
             },
             SceneColliderPool::OctTree(items) => {
-                let (min, max, intersection_treshold) = info.minmax(matrix, temp);
-                items.add(entity, min, max, intersection_treshold)
+                let (min, max, intersection_treshold, sortindex) = info.minmax(matrix, temp);
+                items.add(entity, min, max, intersection_treshold, sortindex)
             },
         }
     }
@@ -244,7 +247,7 @@ impl SceneColliderPool {
         &self,
         ray: &PiRay,
         result: &mut Option<PickResult>,
-        sortparams: &Query<(&RenderQueueSortParam, &GlobalEnable)>,
+        sortparams: &Query<&GlobalEnable>,
     ) {
         match self {
             SceneColliderPool::List(item) => item.ray_test(ray, result, sortparams),
@@ -332,12 +335,12 @@ impl SceneBoundingPool {
                     ECullingStrategy::Optimistic => {
                         // log::warn!("{:?}", (entity, &matrix.0));
                         let (min, max) = info.minmax(matrix);
-                        items.add(entity, min, max, 0.)
+                        items.add(entity, min, max, 0., i32::MIN)
                     },
                     ECullingStrategy::STANDARD => {
                         // log::warn!("00000");
                         let (min, max) = info.minmax(matrix);
-                        items.add(entity, min, max, 0.)
+                        items.add(entity, min, max, 0., i32::MIN)
                     },
                 }
             },
@@ -351,11 +354,11 @@ impl SceneBoundingPool {
                     },
                     ECullingStrategy::Optimistic => {
                         let (min, max) = info.minmax(matrix);
-                        items.add(entity, min, max, 0.)
+                        items.add(entity, min, max, 0., i32::MIN)
                     },
                     ECullingStrategy::STANDARD => {
                         let (min, max) = info.minmax(matrix);
-                        items.add(entity, min, max, 0.)
+                        items.add(entity, min, max, 0., i32::MIN)
                     },
                 }
             },
@@ -386,7 +389,7 @@ impl SceneBoundingPool {
         &self,
         ray: &PiRay,
         result: &mut Option<PickResult>,
-        sortparams: &Query<(&RenderQueueSortParam, &GlobalEnable)>,
+        sortparams: &Query<&GlobalEnable>,
     ) {
         match self {
             SceneBoundingPool::List(item) => item.ray_test(ray, result, sortparams),

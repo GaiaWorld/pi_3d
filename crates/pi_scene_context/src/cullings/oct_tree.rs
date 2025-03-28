@@ -8,7 +8,7 @@ use super::{
     bounding::is_in_frustum, bounding_sphere::intersects_sphere,
 };
 
-pub type TOctTreeBind = Number;
+pub type TOctTreeBind = (Number, i32);
 
 pub struct BoundingOctTree {
     fast: XHashSet<Entity>,
@@ -30,7 +30,7 @@ impl TBoundingInfoCalc for BoundingOctTree {
         self.fast.insert(key);
         self.tree.remove(BoundingKey(key));
     }
-    fn add(&mut self, key: Entity, min: (Number, Number, Number), max: (Number, Number, Number), intersection_treshold: TOctTreeBind) {
+    fn add(&mut self, key: Entity, min: (Number, Number, Number), max: (Number, Number, Number), intersection_treshold: Number, sortindex: i32) {
         // println!("add: {:?}", (key, min, max));
         self.fast.remove(&key);
         self.tree.remove(BoundingKey(key));
@@ -56,7 +56,7 @@ impl TBoundingInfoCalc for BoundingOctTree {
                 Point3::new(min.0, min.1, min.2),
                 Point3::new(max.0, max.1, max.2),
             ),
-            intersection_treshold,
+            (intersection_treshold, sortindex),
         );
     }
 
@@ -103,7 +103,7 @@ impl TBoundingInfoCalc for BoundingOctTree {
 
     fn ray_test(
         &self, piray: &PiRay, result: &mut Option<PickResult>,
-        sortparams: &Query<(&RenderQueueSortParam, &GlobalEnable)>,
+        sortparams: &Query<&GlobalEnable>,
     ) {
         let ray = Ray::new(
             Point3::new(piray.origin.0, piray.origin.1, piray.origin.2),
@@ -122,7 +122,7 @@ impl TBoundingInfoCalc for BoundingOctTree {
             Point3::new(maxx, maxy, maxz),
         );
 
-        let mut args: (Ray, f32, &mut Option<PickResult>, &Query<'_, (&RenderQueueSortParam, &GlobalEnable)>) = (ray, f32::MAX, result, sortparams);
+        let mut args: (Ray, f32, &mut Option<PickResult>, &Query<'_, &GlobalEnable>) = (ray, f32::MAX, result, sortparams);
 
         self.tree.query(&aabb, intersects, &mut args, ray_test_func);
     }
@@ -170,12 +170,12 @@ pub fn ab_query_func<F: TFilter>(
 }
 
 pub fn ray_test_func(
-    arg: &mut (Ray, f32, &mut Option<PickResult>, &Query<(&RenderQueueSortParam, &GlobalEnable)>),
+    arg: &mut (Ray, f32, &mut Option<PickResult>, &Query<&GlobalEnable>),
     id: BoundingKey,
     aabb: &Aabb,
-    _bind: &Number,
+    _bind: &(Number, i32),
 ) {
-    if let Ok((sortparam, genble)) = arg.3.get(id.0) {
+    if let Ok(genble) = arg.3.get(id.0) {
         if genble.0 == false {
             return;
         }
@@ -184,7 +184,7 @@ pub fn ray_test_func(
         let centery = (aabb.mins .y + aabb.maxs .y) * 0.5;
         let centerz = (aabb.mins .z + aabb.maxs .z) * 0.5;
 
-        if !intersects_sphere((centerx, centery, centerz), *_bind, 0., &(arg.0.origin.x, arg.0.origin.y, arg.0.origin.z), &(arg.0.dir.x, arg.0.dir.y, arg.0.dir.z)) {
+        if !intersects_sphere((centerx, centery, centerz), _bind.0, 0., &(arg.0.origin.x, arg.0.origin.y, arg.0.origin.z), &(arg.0.dir.x, arg.0.dir.y, arg.0.dir.z)) {
             return;
         }
         if let Some(distance) = aabb.cast_ray(&Isometry3::identity(), &arg.0, f32::MAX, false) {
@@ -198,6 +198,7 @@ pub fn ray_test_func(
                     max: (aabb.maxs.x, aabb.maxs.y, aabb.maxs.z),
                     pickdetail: None,
                     bybounding: false,
+                    sortindex: _bind.1
                 });
             }
         }
