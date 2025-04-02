@@ -94,6 +94,7 @@ pub fn sys_modify_sprite(
                 tmp.append_translation_mut(&tempposition);
             }
             CoordinateSytem3::mul_to(&tempparent, &tmp, &mut posematrix.0);
+            posematrix.1 = true;
             // posematrix.0 = tempparent * posematrix.0;
 
             if let Ok(mut flag) = flagrendermatrix.get_mut(entity) {

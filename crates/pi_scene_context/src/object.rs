@@ -8,6 +8,7 @@ pub type ActionListDispose = ActionListDisposeReady;
 #[derive(Resource, Default)]
 pub struct TmpCommonVec {
     pub instancesort: Vec<TmpInstanceSort>,
+    pub instances: Vec<(Entity, (f32, f32, f32))>,
 }
 impl TmpCommonVec {
     pub fn size(&self) -> usize {

@@ -116,6 +116,7 @@ fn _sys_update_viewer_model_list_by_viewer(
                     *flag_list_model = FlagModelList::default();
                 }
                 instances.iter().for_each(|instance| {
+                    let instance = if let Some(instance) = instance { instance } else { return; };
                     list_model.0.insert(*instance);
                 });
                 *flag_list_model = FlagModelList::default();
@@ -156,11 +157,13 @@ fn _sys_update_viewer_model_list_by_model(
                 list_model.0.insert(id_obj);
                 *flag_list_model = FlagModelList::default();
                 instances.iter().for_each(|instance| {
+                    let instance = if let Some(instance) = instance { instance } else { return; };
                     list_model.0.insert(*instance);
                 });
             } else {
                 list_model.0.remove(&id_obj);
                 instances.iter().for_each(|instance| {
+                    let instance = if let Some(instance) = instance { instance } else { return; };
                     list_model.0.remove(instance);
                 });
             }

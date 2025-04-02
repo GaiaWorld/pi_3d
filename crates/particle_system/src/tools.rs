@@ -97,7 +97,7 @@ pub struct EmitMatrix {
     pub(crate) matrix: Matrix,
     pub(crate) scaling: Vector3,
     // pub(crate) position: Vector3,
-    pub(crate) rotation: Rotation3,
+    pub(crate) rotation: SQuaternion<Number>,
 }
 impl Default for EmitMatrix {
     fn default() -> Self {
@@ -106,7 +106,7 @@ impl Default for EmitMatrix {
             matrix: Matrix::identity(),
             scaling: Vector3::new(1., 1., 1.),
             // position: Vector3::new(0., 0., 0.),
-            rotation: Rotation3::identity(),
+            rotation: SQuaternion::<Number>::identity(),
         }
     }
 }

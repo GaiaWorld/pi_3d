@@ -151,7 +151,7 @@ pub fn sys_test(
     mut list: ResMut<ActionListTestData>,
     scenes: Query<(&SceneColliderPool, &SceneBoundingPool)>,
     viewers: Query<(&ViewerTransformMatrix, &ViewerViewMatrix, &GlobalMatrix)>,
-    sortparam: Query<(&RenderQueueSortParam, &GlobalEnable)>,
+    sortparam: Query<&GlobalEnable>,
     window: Res<PiRenderWindow>,
 ) {
     let mut temp = replace(&mut list.0, vec![]);

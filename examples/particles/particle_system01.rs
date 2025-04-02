@@ -91,7 +91,7 @@ pub fn setup(
 
                     //
                     let syskey = String::from("Test");
-                    let syscfg = demo_cfg(1000., 10.);
+                    let syscfg = demo_cfg(100., 10.);
                     let calculator = commands.spawn_empty_id();
                     actions.parsys.calculator.push(OpsCPUParticleCalculator::ops(calculator, syscfg));
                     let particle_sys_calculator = ParticleSystemCalculatorID(calculator, 1024, particlesys_res.calculator_queue.queue());

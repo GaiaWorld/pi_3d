@@ -400,13 +400,13 @@ impl Default for Performance {
 }
 
 pub trait TRenderAlignmentCalc {
-    fn calc_rotation(&self, g_rotation: &Rotation3, g_velocity: &Vector3, result: &mut Rotation3) -> bool;
+    fn calc_rotation(&self, g_rotation: &SQuaternion<Number>, g_velocity: &Vector3, result: &mut SQuaternion<Number>) -> bool;
     fn calc_local(&self, g_velocity: &Vector3, length_scale: Number, length_modify: Number, temp: &mut Matrix, temp2: &mut Matrix, result: &mut Matrix) -> bool;
-    fn calc_matrix(&self, g_positon: &Vector3, g_scale: &Vector3, g_rotation: &Rotation3, g_velocity: &Vector3, l_positon: &Vector3, l_scale: &Vector3, l_rotation: &Rotation3, l_euler: &Vector3, refwmatrix: & mut Matrix, reflmatrix: & mut Matrix, result: & mut Matrix);
+    fn calc_matrix(&self, g_positon: &Vector3, g_scale: &Vector3, g_rotation: &Quaternion, g_velocity: &Vector3, l_positon: &Vector3, l_scale: &Vector3, l_rotation: &Quaternion, l_euler: &Vector3, refwmatrix: & mut Matrix, reflmatrix: & mut Matrix, result: & mut Matrix);
 }
 impl TRenderAlignmentCalc for ERenderAlignment {
     #[inline(always)]
-    fn calc_rotation(&self, g_rotation: &Rotation3, g_velocity: &Vector3, result: &mut Rotation3) -> bool {
+    fn calc_rotation(&self, g_rotation: &SQuaternion<Number>, g_velocity: &Vector3, result: &mut SQuaternion<Number>) -> bool {
         // let mut m = Rotation3::identity();
         match self {
             ERenderAlignment::View => {
@@ -437,7 +437,7 @@ impl TRenderAlignmentCalc for ERenderAlignment {
                     // log::warn!("Vel B");
                     Vector3::new(0., 0., 1.)
                 };
-                *result = CoordinateSytem3::quaternion_from_unit_vector(&Vector3::z_axis(), &z_axis).to_rotation_matrix();
+                quaternion_from_unit_vector(&Vector3::z_axis(), &z_axis, result);
 
                 // let mut y_axis = Vector3::new(0., 1., 0.);
                 // let mut x_axis = y_axis.cross(&z_axis);
@@ -458,7 +458,7 @@ impl TRenderAlignmentCalc for ERenderAlignment {
                 } else {
                     Vector3::new(1., 0., 0.)
                 };
-                *result = CoordinateSytem3::quaternion_from_unit_vector(&Vector3::x_axis(), &x_axis).to_rotation_matrix();
+                quaternion_from_unit_vector(&Vector3::x_axis(), &x_axis, result);
 
                 // let mut y_axis = Vector3::new(0., 1., 0.);
                 // let mut z_axis = x_axis.cross(&y_axis);
@@ -474,7 +474,7 @@ impl TRenderAlignmentCalc for ERenderAlignment {
             },
             ERenderAlignment::HorizontalBillboard => {
                 // let (_, _, z) =  g_rotation_euler;
-                *result = CoordinateSytem3::rotation_matrix_from_euler_angles((-90_f32).to_radians(), 0., 0.);
+                quaternion_from_euler_angles((-90_f32).to_radians(), 0., 0., result);
                 true
             },
             ERenderAlignment::VerticalBillboard => {
@@ -523,7 +523,7 @@ impl TRenderAlignmentCalc for ERenderAlignment {
     }
 
     #[inline(always)]
-    fn calc_matrix(&self, g_positon: &Vector3, g_scale: &Vector3, g_rotation: &Rotation3, g_velocity: &Vector3, l_positon: &Vector3, l_scale: &Vector3, l_rotation: &Rotation3, l_euler: &Vector3, refwmatrix: & mut Matrix, reflmatrix: & mut Matrix, result: & mut Matrix) {
+    fn calc_matrix(&self, g_positon: &Vector3, g_scale: &Vector3, g_rotation: &Quaternion, g_velocity: &Vector3, l_positon: &Vector3, l_scale: &Vector3, l_rotation: &Quaternion, l_euler: &Vector3, refwmatrix: & mut Matrix, reflmatrix: & mut Matrix, result: & mut Matrix) {
 
         match self {
             ERenderAlignment::View => {
@@ -555,66 +555,47 @@ impl TRenderAlignmentCalc for ERenderAlignment {
 }
 
 #[inline(always)]
-pub fn calc_matrix_view<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rotation: &'a Rotation3, _g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, l_rotation: &'a Rotation3, _l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
-    // let mut matrix = Matrix::identity();
-    
-    // let g_rotation = Rotation3::identity();
-    // matrix4_compose_rotation(g_scale, &g_rotation, g_positon, &mut matrix);
+pub fn calc_matrix_view<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rotation: &'a SQuaternion<Number>, _g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, l_rotation: &'a SQuaternion<Number>, _l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
+
     matrix4_compose_no_rotation(g_scale, g_positon, refwmatrix);
 
-    // let mut l_matrix = Matrix::identity();
-    matrix4_compose_rotation(l_scale, &l_rotation, l_positon, reflmatrix);
+    matrix4_compose_quaternion(l_scale, &l_rotation, l_positon, reflmatrix);
 
     CoordinateSytem3::mul_to(&refwmatrix, &reflmatrix, result);
 }
 #[inline(always)]
-pub fn calc_matrix_world<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rotation: &'a Rotation3, _g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, l_rotation: &'a Rotation3, _l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
-    // let mut matrix = Matrix::identity();
+pub fn calc_matrix_world<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rotation: &'a SQuaternion<Number>, _g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, l_rotation: &'a SQuaternion<Number>, _l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
 
-    // let g_rotation = Rotation3::identity();
-    // matrix4_compose_rotation(g_scale, &g_rotation, g_positon, &mut matrix);
     matrix4_compose_no_rotation(g_scale, g_positon, refwmatrix);
 
-    // let mut l_matrix = Matrix::identity();
-    matrix4_compose_rotation(l_scale, &l_rotation, l_positon, reflmatrix);
+    matrix4_compose_quaternion(l_scale, &l_rotation, l_positon, reflmatrix);
 
     CoordinateSytem3::mul_to(&refwmatrix, &reflmatrix, result);
 }
 #[inline(always)]
-pub fn calc_matrix_local<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, g_rotation: &'a Rotation3, _g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, l_rotation: &'a Rotation3, _l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
-    // let mut matrix = Matrix::identity();
-    
-    matrix4_compose_rotation(g_scale, g_rotation, g_positon, refwmatrix);
-    // let mut l_matrix = Matrix::identity();
-    matrix4_compose_rotation(l_scale, &l_rotation, l_positon, reflmatrix);
+pub fn calc_matrix_local<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, g_rotation: &'a SQuaternion<Number>, _g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, l_rotation: &'a SQuaternion<Number>, _l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
+
+    matrix4_compose_quaternion(g_scale, g_rotation, g_positon, refwmatrix);
+
+    matrix4_compose_quaternion(l_scale, l_rotation, l_positon, reflmatrix);
 
     CoordinateSytem3::mul_to(&refwmatrix, &reflmatrix, result);
-    // refwmatrix.mul_to(reflmatrix, result);
 }
 #[inline(always)]
-pub fn calc_matrix_facing<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rotation: &'a Rotation3, _g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, l_rotation: &'a Rotation3, _l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
-    // let mut matrix = Matrix::identity();
-    
-    // let g_rotation = Rotation3::identity();
-    // matrix4_compose_rotation(g_scale, &g_rotation, g_positon, &mut matrix);
+pub fn calc_matrix_facing<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rotation: &'a SQuaternion<Number>, _g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, l_rotation: &'a SQuaternion<Number>, _l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
+
     matrix4_compose_no_rotation(g_scale, g_positon, refwmatrix);
 
-    // let mut l_matrix = Matrix::identity();
-    matrix4_compose_rotation(l_scale, &l_rotation, l_positon, reflmatrix);
+    matrix4_compose_quaternion(l_scale, &l_rotation, l_positon, reflmatrix);
 
     CoordinateSytem3::mul_to(&refwmatrix, &reflmatrix, result);
-    // refwmatrix.mul_to(reflmatrix, result);
 }
 #[inline(always)]
-pub fn calc_matrix_velocity<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rotation: &'a Rotation3, g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, l_rotation: &'a Rotation3, _l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
-    // let mut matrix = Matrix::identity();
+pub fn calc_matrix_velocity<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rotation: &'a SQuaternion<Number>, g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, l_rotation: &'a SQuaternion<Number>, _l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
 
-    // let g_rotation = Rotation3::identity();
-    // matrix4_compose_rotation(g_scale, &g_rotation, g_positon, &mut matrix);
     matrix4_compose_no_rotation(g_scale, g_positon, refwmatrix);
 
-    // let mut l_matrix = Matrix::identity();
-    matrix4_compose_rotation(l_scale, &l_rotation, l_positon, reflmatrix);
+    matrix4_compose_quaternion(l_scale, &l_rotation, l_positon, reflmatrix);
 
     CoordinateSytem3::mul_to(&refwmatrix, &reflmatrix, result);
 
@@ -631,44 +612,32 @@ pub fn calc_matrix_velocity<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g
     }
 }
 #[inline(always)]
-pub fn calc_matrix_strentched<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rotation: &'a Rotation3, _g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, _l_rotation: &'a Rotation3, _l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
-    // let mut matrix = Matrix::identity();
-    
-    // let g_rotation = Rotation3::identity();
-    // matrix4_compose_rotation(g_scale, &g_rotation, g_positon, &mut matrix);
-    matrix4_compose_no_rotation(g_scale, g_positon, refwmatrix);
+pub fn calc_matrix_strentched<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rotation: &'a SQuaternion<Number>, _g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, _l_rotation: &'a SQuaternion<Number>, _l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
 
-    // let mut l_matrix = Matrix::identity();
-    // matrix4_compose_rotation(l_scale, &g_rotation, l_positon, &mut l_matrix);
+    matrix4_compose_no_rotation(g_scale, g_positon, refwmatrix);
     matrix4_compose_no_rotation(l_scale, l_positon, reflmatrix);
 
     CoordinateSytem3::mul_to(&refwmatrix, &reflmatrix, result);
 }
 #[inline(always)]
-pub fn calc_matrix_horizontal<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rotation: &'a Rotation3, _g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, _l_rotation: &'a Rotation3, l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
-    // let mut matrix = Matrix::identity();
-    
-    // let g_rotation = Rotation3::identity();
-    // matrix4_compose_rotation(g_scale, &g_rotation, g_positon, &mut matrix);
+pub fn calc_matrix_horizontal<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rotation: &'a SQuaternion<Number>, _g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, _l_rotation: &'a SQuaternion<Number>, l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
+
     matrix4_compose_no_rotation(g_scale, g_positon, refwmatrix);
 
-    // let mut l_matrix = Matrix::identity();
-    let l_rotation = CoordinateSytem3::rotation_matrix_from_euler_angles((-90_f32).to_radians(), 0., l_euler.z);
-    matrix4_compose_rotation(l_scale, &l_rotation, l_positon, reflmatrix);
+    let mut l_rotation = SQuaternion::identity();
+    quaternion_from_euler_angles((-90_f32).to_radians(), 0., l_euler.z, &mut l_rotation);
+    matrix4_compose_quaternion(l_scale, &l_rotation, l_positon, reflmatrix);
 
     CoordinateSytem3::mul_to(&refwmatrix, &reflmatrix, result);
 }
 #[inline(always)]
-pub fn calc_matrix_vertical<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rotation: &'a Rotation3, _g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, _l_rotation: &'a Rotation3, l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
-    // let mut matrix = Matrix::identity();
-    
-    // let g_rotation = Rotation3::identity();
-    // matrix4_compose_rotation(g_scale, &g_rotation, g_positon, &mut matrix);
+pub fn calc_matrix_vertical<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rotation: &'a SQuaternion<Number>, _g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, _l_rotation: &'a SQuaternion<Number>, l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
+
     matrix4_compose_no_rotation(g_scale, g_positon, refwmatrix);
 
-    // let mut l_matrix = Matrix::identity();
-    let l_rotation = CoordinateSytem3::rotation_matrix_from_euler_angles(0., l_euler.y, l_euler.z);
-    matrix4_compose_rotation(l_scale, &l_rotation, l_positon, reflmatrix);
+    let mut l_rotation = SQuaternion::identity();
+    quaternion_from_euler_angles(0., l_euler.y, l_euler.z, &mut l_rotation);
+    matrix4_compose_quaternion(l_scale, &l_rotation, l_positon, reflmatrix);
 
     CoordinateSytem3::mul_to(&refwmatrix, &reflmatrix, result);
 }
@@ -714,7 +683,9 @@ pub fn calc_local_strentched_call<'a>(_g_velocity: &'a Vector3, length_scale: Nu
     } else {
         Vector3::new(1., 0., 0.)
     };
-    let d_rotation = CoordinateSytem3::quaternion_from_unit_vector(&Vector3::x_axis(), &x_axis).to_rotation_matrix();
+    let mut quat = SQuaternion::<Number>::identity();
+    quaternion_from_unit_vector(&Vector3::x_axis(), &x_axis, &mut quat);
+    let d_rotation = Quaternion::from_quaternion(quat).to_rotation_matrix();
     
     refwmatrix.fixed_view_mut::<3, 3>(0, 0).copy_from(d_rotation.matrix());
     // result = result * &d_rotation.to_homogeneous();
@@ -741,6 +712,27 @@ pub fn matrix4_compose_rotation(scaling: &Vector3, rotmat: &Rotation3, translati
     result.append_translation_mut(translation);
     // CoordinateSytem3::matrix4_compose_rotation(scaling, rotmat, translation, result)
 }
+
+#[inline(always)]
+pub fn quaternion_from_euler_angles(x: Number, y: Number, z: Number, result: &mut SQuaternion<Number>) {
+    quaternion_from_yaw_pitch_roll(y, x, z, result)
+}
+#[inline(always)]
+pub fn quaternion_from_yaw_pitch_roll(yaw: Number, pitch: Number, roll: Number, result: &mut SQuaternion<Number>) {
+    // Quaternion::from_rotation_matrix(&Self::rotation_matrix_from_euler_angles(x, y, z))
+    let half_roll  = roll * 0.5;
+    let half_pitch = pitch * 0.5;
+    let half_yaw   = yaw * 0.5;
+
+    let (sin_roll, cos_roll) = half_roll.sin_cos();
+    let (sin_pitch, cos_pitch) = half_pitch.sin_cos();
+    let (sin_yaw, cos_yaw) = half_yaw.sin_cos();
+
+    result.i = cos_yaw * sin_pitch * cos_roll + sin_yaw * cos_pitch * sin_roll;
+    result.j = sin_yaw * cos_pitch * cos_roll - cos_yaw * sin_pitch * sin_roll;
+    result.k = cos_yaw * cos_pitch * sin_roll - sin_yaw * sin_pitch * cos_roll;
+    result.w = cos_yaw * cos_pitch * cos_roll + sin_yaw * sin_pitch * sin_roll;
+}
 #[inline(always)]
 pub fn matrix4_compose_no_rotation(scaling: &Vector3, translation: &Vector3, result: &mut Matrix) {
     result.fill_with_identity();
@@ -750,7 +742,7 @@ pub fn matrix4_compose_no_rotation(scaling: &Vector3, translation: &Vector3, res
 }
 
 #[inline(always)]
-pub fn matrix4_compose_quaternion(scale: &Vector3, rotation: &Quaternion, translation: &Vector3, result: &mut Matrix) {
+pub fn matrix4_compose_quaternion(scale: &Vector3, rotation: &SQuaternion<Number>, translation: &Vector3, result: &mut Matrix) {
     let x = rotation.i; let y = rotation.j; let z = rotation.k; let w = rotation.w;
     let x2 = x + x; let y2 = y + y; let z2 = z + z;
     let xx = x * x2; let xy = x * y2; let xz = x * z2;
@@ -773,6 +765,35 @@ pub fn matrix4_compose_quaternion(scale: &Vector3, rotation: &Quaternion, transl
     result[13] = translation.y;
     result[14] = translation.z;
     result[15] = 1.;
+}
+
+#[inline(always)]
+pub fn quaternion_from_unit_vector(axis: &nalgebra::Unit<Vector3>, vec_to: &Vector3, quat: &mut SQuaternion<Number>) {
+    let r = Vector3::dot(axis, vec_to) + 1.0;
+    // let quat = 
+    if r < f32::EPSILON {
+        if f32::abs(axis.x) > f32::abs(axis.z) {
+            // nalgebra::Quaternion::new(0., -1.0 * axis.y, axis.x, 0.)
+            quat.w = 0.;
+            quat.i = -1.0 * axis.y;
+            quat.j = axis.x;
+            quat.k = 0.;
+        } else {
+            quat.w = 0.;
+            quat.i = 0.;
+            quat.j = -1.0 * axis.z;
+            quat.k = axis.y;
+            // nalgebra::Quaternion::new(0., 0.0, -1.0 * axis.z, axis.y)
+        }
+    } else {
+        let temp = Vector3::cross(axis, vec_to);
+        // nalgebra::Quaternion::new(r, temp.x, temp.y, temp.z)
+        quat.w = r;
+        quat.i = temp.x;
+        quat.j = temp.y;
+        quat.k = temp.z;
+    };
+    // quat
 }
 #[inline(always)]
 pub fn calc_local_other<'a>(_g_velocity: &'a Vector3, _length_scale: Number, _length_modify: Number) -> Option<Matrix> {

@@ -39,10 +39,10 @@ pub struct Mesh;
 /// 在 AbstructMesh 实体上 可能设置的 PoseMatrix
 /// 用于 调整目标渲染姿态 , 与节点树世界矩阵 有区别
 #[derive(Component)]
-pub struct RenderPoseMatrix(pub Matrix);
+pub struct RenderPoseMatrix(pub Matrix, pub bool);
 impl Default for RenderPoseMatrix {
     fn default() -> Self {
-        Self(Matrix::identity())
+        Self(Matrix::identity(), false)
     }
 }
 

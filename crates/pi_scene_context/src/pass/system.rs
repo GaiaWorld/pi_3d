@@ -14,9 +14,13 @@ pub fn sys_modify_pass_effect_by_material(
     materials: Query<(&MaterialRefs, &DirtyMaterialRefs)>,
     mut passes: Query<&mut PassBindGroupsDirty>,
     // mut performance: ResMut<Performance>,
+    entitysets: Res<EntityFilterForComponentChanged>,
 ) {
+
+    let mut entities = entitysets.pop();
     // performance.systems.push(String::from("sys_modify_pass_effect_by_material"));
     passaddeds.iter().chain(passchanges.iter()).for_each(|entity| {
+        if !entities.insert(&entity) { return; }
         if let Ok(mut dirty) = passes.get_mut(*entity) {
             *dirty = PassBindGroupsDirty;
         }
@@ -25,6 +29,8 @@ pub fn sys_modify_pass_effect_by_material(
         // log::error!("sys_modify_pass_effect_by_material");
         if let Ok((list, _dirty)) = materials.get(*entity) {
             list.iter().for_each(|target| {
+                let target = if let Some(target) = target { target } else { return; };
+                if !entities.insert(target) { return; }
                 if let Ok(mut dirty) = passes.get_mut(*target) {
                     *dirty = PassBindGroupsDirty;
                 }
@@ -35,6 +41,7 @@ pub fn sys_modify_pass_effect_by_material(
         // log::error!("sys_modify_pass_effect_by_material");
         if let Ok((_list, dirty)) = materials.get(*entity) {
             while let Some(target) = dirty.0.pop() {
+                if !entities.insert(&target) { return; }
                 if let Ok(mut dirty) = passes.get_mut(target) {
                     *dirty = PassBindGroupsDirty;
                 }
@@ -45,6 +52,8 @@ pub fn sys_modify_pass_effect_by_material(
         // log::error!("sys_modify_pass_effect_by_material");
         if let Ok((list, _dirty)) = materials.get(*entity) {
             list.iter().for_each(|target| {
+                let target = if let Some(target) = target { target } else { return; };
+                if !entities.insert(target) { return; }
                 if let Ok(mut dirty) = passes.get_mut(*target) {
                     *dirty = PassBindGroupsDirty;
                 }
@@ -55,6 +64,8 @@ pub fn sys_modify_pass_effect_by_material(
         // log::error!("sys_modify_pass_effect_by_material");
         if let Ok((list, dirty)) = materials.get(*entity) {
             list.iter().for_each(|target| {
+                let target = if let Some(target) = target { target } else { return; };
+                if !entities.insert(target) { return; }
                 if let Ok(mut dirty) = passes.get_mut(*target) {
                     *dirty = PassBindGroupsDirty;
                 }

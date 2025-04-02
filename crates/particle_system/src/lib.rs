@@ -32,7 +32,7 @@ impl Plugin for PluginParticleSystem {
 
         let maxbytes = if let Some(arg) = app.world.get_resource::<ArgParticleTrailBufferSize>() {
             arg.0 as u32
-        } else { 32 * 1024 };
+        } else { 64 * 1024 };
 
         // let cfg2 = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<ResParticleCommonBuffer>();
         let device = app.world.get_resource::<PiRenderDevice>().unwrap().0.clone();

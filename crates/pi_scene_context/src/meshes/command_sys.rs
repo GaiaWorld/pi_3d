@@ -152,7 +152,7 @@ pub fn sys_create_abstract_posematrix(
 ) {
     cmds.drain().for_each(|OpsAbstractMeshPose(entity, matrix)| {
         if let (Some(mut entitycmd), Ok(mut flag)) = (commands.get_entity(entity), flagrendermatrix.get_mut(entity)) {
-            entitycmd.insert(RenderPoseMatrix(matrix));
+            entitycmd.insert(RenderPoseMatrix(matrix, true));
             *flag = FlagRenderWorldMatrix;
         }
     })

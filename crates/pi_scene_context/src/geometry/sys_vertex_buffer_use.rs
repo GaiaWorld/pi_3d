@@ -25,13 +25,14 @@ pub fn sys_vertex_buffer_slots_loaded(
     // performance.systems.push(String::from("sys_vertex_buffer_slots_loaded"));
     let mut counter = 0;
     let mut entities = entitysets.pop();
-    addeds.iter().for_each(|entity| {
-        entities.insert(*entity);
-    });
-    changes.iter().for_each(|entity| {
-        entities.insert(*entity);
-    });
-    entities.iter().for_each(|entity| {
+    // addeds.iter().for_each(|entity| {
+    //     entities.insert(*entity);
+    // });
+    // changes.iter().for_each(|entity| {
+    //     entities.insert(*entity);
+    // });
+    changes.iter().chain(addeds.iter()).for_each(|entity| {
+        if !entities.insert(entity) { return; }
         if let Ok((
             idgeo, 
             (idmesh, geodesc, indicesdesc, indices, indiceskey)

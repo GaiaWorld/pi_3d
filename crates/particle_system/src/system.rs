@@ -4,7 +4,7 @@ use std::{ops::Range, sync::Arc};
 use pi_render::rhi::std140::Std140;
 use pi_scene_shell::{prelude::*, run_stage::EngineCustomPlugins};
 use pi_scene_context::{geometry::instance::{instanced_buffer::*, types::ModelInstanceAttributes}, prelude::*};
-use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolRotation, TToolVector3}, Vector4};
+use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolRotation, TToolVector3}, Quaternion, SQuaternion, Vector4};
 
 use crate::{base::*, ActionListCPUParticleSystemState, OpsCPUParticleSystemState};
 
@@ -85,6 +85,9 @@ pub fn sys_prewarm(
     let mut tempvec3 = Vector3::zeros();
     let mut orbit_center: Vector3 = Vector3::zeros();
     let mut orbit_direction: Vector3 = Vector3::zeros();
+    let mut tmprotation = Rotation3::identity();
+    let mut tmpscl = Vector3::zeros();
+    let mut tmpvec = Vector3::zeros();
 
     items.iter_mut().for_each(|(
         (disposestate, state, localscl, gmatrix, mut gravities, mut ids, mut time, mut modifystate),
@@ -110,7 +113,7 @@ pub fn sys_prewarm(
                     time.run(delta_ms, 1000, base.duration);
 
                     fn_emission(base, &modifiers.emission, &mut random, &mut ids, &mut time, &mut emission, &mut randoms, &mut modifystate);
-                    fn_emitmatrix(localscl, gmatrix, &ids, &mut emitmatrix, &mut abstransform, &global_position);
+                    fn_emitmatrix(localscl, gmatrix, &ids, &mut emitmatrix, &mut abstransform, &global_position, &mut tmpscl, &mut tmprotation, &mut tmpvec);
                     fn_emitter(&modifiers.shapeemitter, &modifiers.startspeed, &mut particlelocal.position, &mut directions, &ids, &time, &randoms, &mut tempvec3);
                     if let (Ok(trailmodifier), Some(trails)) = (calculators_trail.get(ids.calculator.as_ref().unwrap().0), trails.as_deref_mut()) {
                         fn_start_lifetime(&modifiers.startlifetime, &ids, &time, &randoms, &mut particlestart.ages, &mut diewaittimes, Some(trailmodifier), Some(trails));
@@ -278,13 +281,16 @@ pub fn sys_emitmatrix(
     if psperformance.debug { psperformance.time = pi_time::Instant::now(); }
 
     let global_position = Vector3::zeros();
+    let mut tmprotation = Rotation3::identity();
+    let mut tmpscl = Vector3::zeros();
+    let mut tmpvec = Vector3::zeros();
     particle_sys.iter_mut().for_each(|(local_scaling, transform, ids, time, mut emitmatrixdata, mut absolute)| {
         if time.running_delta_ms <= 0 { return; }
         
         fn_emitmatrix(
             local_scaling, transform, ids,
             &mut emitmatrixdata, &mut absolute,
-            &global_position
+            &global_position, &mut tmpscl, &mut tmprotation, &mut tmpvec
         );
     });
     if psperformance.debug { psperformance.sys_emitmatrix = (pi_time::Instant::now() - psperformance.time).as_micros() as u32; }
@@ -292,17 +298,18 @@ pub fn sys_emitmatrix(
 fn fn_emitmatrix(
     local_scaling: &LocalScaling, transform: &GlobalMatrix, ids: &ParticleIDs,
     emitmatrixdata: &mut ParticleEmitMatrix, absolute: &mut AbsoluteTransform,
-    global_position: &Vector3
+    global_position: &Vector3, tmpscl: &mut Vector3, tmprotation: &mut Rotation3, tmpvec: &mut Vector3
 ) {
     let newids = &ids.newids;
     let activeids = &ids.actives;
 
-    let global_scaling = absolute.scaling(transform.matrix()).clone();
     // let global_position = transform.position().clone();
     // log::warn!("Position: {:?} {:?}", &localpos.0, global_position);
 
-    let iso = absolute.iso(transform.matrix());
-    let global_rotation = absolute.rotation(transform.matrix());
+    let iso = absolute.iso(transform.matrix(), tmpvec, tmprotation);
+    let global_scaling = tmpscl;
+    global_scaling.clone_from(absolute.scaling(transform.matrix(), tmpvec, tmprotation));
+    let global_rotation = absolute.rotation_quaternion(transform.matrix(), tmpvec, tmprotation);
 
     emitmatrixdata.emit(
         newids, activeids, &transform.matrix, &transform.matrix_inv, &iso, global_position, global_rotation, &global_scaling,
@@ -690,7 +697,8 @@ pub fn sys_update_buffer(
     let mut reflmatrix = Matrix::identity();
     let mut resultmatrix = Matrix::identity();
     let mut localmatrix = Matrix::identity();
-    let mut l_rotation = Rotation3::identity();
+    // let mut l_rotation = Rotation3::identity();
+    let mut l_quaternion = SQuaternion::<Number>::identity();
     let v3zero = Vector3::zeros();
     let mut h = Vector4::zeros();
     let mut hh = Vector4::zeros();
@@ -801,11 +809,12 @@ pub fn sys_update_buffer(
                                 // let matrix = emitmatrix.matrix.clone();
 
                                 let matrix = if updatebuffer {
-                                    CoordinateSytem3::rotation_matrix_from_euler_angles_toref(eulers.x, eulers.y, eulers.z, &mut l_rotation);
+                                    // CoordinateSytem3::rotation_matrix_from_euler_angles_toref(eulers.x, eulers.y, eulers.z, &mut l_rotation);
+                                    pi_scene_shell::prelude::quaternion_from_euler_angles(eulers.x, eulers.y, eulers.z, &mut l_quaternion);
                                     refwmatrix.copy_from(&emitmatrix.matrix);
                                     calc_matrix(
                                         &emitposition, &emitmatrix.scaling, &emitmatrix.rotation, &g_velocity,
-                                        &v3zero, &scaling, &l_rotation, &eulers,
+                                        &v3zero, &scaling, &l_quaternion, &eulers,
                                         &mut refwmatrix, &mut reflmatrix, &mut resultmatrix
                                     );
 
@@ -820,8 +829,9 @@ pub fn sys_update_buffer(
                                     // let mut matrix = Matrix::identity();
                                     // CoordinateSytem3::matrix4_compose_rotation(&emitmatrix.scaling, &emitmatrix.rotation, &emitposition, &mut matrix);
                                     // let mut local = Matrix::identity();
-                                    CoordinateSytem3::rotation_matrix_from_euler_angles_toref(eulers.x, eulers.y, eulers.z, &mut l_rotation);
-                                    pi_scene_shell::prelude::matrix4_compose_rotation(scaling, &l_rotation, translation, &mut reflmatrix);
+                                    // CoordinateSytem3::rotation_matrix_from_euler_angles_toref(eulers.x, eulers.y, eulers.z, &mut l_rotation);
+                                    pi_scene_shell::prelude::quaternion_from_euler_angles(eulers.x, eulers.y, eulers.z, &mut l_quaternion);
+                                    pi_scene_shell::prelude::matrix4_compose_quaternion(scaling, &l_quaternion, translation, &mut reflmatrix);
                                     // log::warn!("MAREIX: {:?}", matrix);
                                     // log::warn!("LOCAL: {:?}", local);
                                     CoordinateSytem3::mul_to(&emitmatrix.matrix, &reflmatrix, &mut resultmatrix);

@@ -13,9 +13,8 @@ use super::{*, instanced_buffer::*, types::ModelInstanceAttributes, };
 
 #[derive(Clone, Copy)]
 pub struct TmpInstanceSort {
-    pub entity: Entity,
+    pub idx: u32,
     pub index: i32,
-    pub xyz: (f32, f32, f32),
     pub sortparam: f32,
 }
 impl PartialEq for TmpInstanceSort {
@@ -30,6 +29,7 @@ impl Eq for TmpInstanceSort {
 }
 impl PartialOrd for TmpInstanceSort {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        // self.index.partial_cmp(&other.index)
         match self.index.partial_cmp(&other.index) {
             Some(order) => match order {
                 std::cmp::Ordering::Equal => {
@@ -77,10 +77,11 @@ impl Ord for TmpInstanceSort {
         let mut maxy = f32::MIN;
         let mut maxz = f32::MIN;
         let mut entities = entitysets.pop();
+        // changeds.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
         changeds.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
-        entities.iter().for_each(|entity| {
+            if !entities.insert(entity) { return; }
             if let Ok((idsource, sortmode, instances, idgeo, meshinsstate, mut instancessortinfos)) = sources.get_mut(*entity) {
                 if let Ok(disposed) = dispoeds.get(idsource) {
                     if disposed.0 == true { return; }
@@ -91,8 +92,8 @@ impl Ord for TmpInstanceSort {
                         instancessortinfos.use_single_instancebuffer = meshinsstate.use_single_instancebuffer;
     
                         // 实例按渲染队列排序
-                        let sorted_instances = &mut temp.instancesort;
-                        sorted_instances.clear();
+                        temp.instancesort.clear();
+                        temp.instances.clear();
                         
                         let sortparmaidx = match sortmode {
                             EInstanceSortMode::LocalPositionX => 0,
@@ -110,6 +111,7 @@ impl Ord for TmpInstanceSort {
                         };
                         let mut tmpsortparam = [0.;12];
                         instances.iter().for_each(|id| {
+                            let id = if let Some(id) = id { id } else { return; };
                             if let (Ok((enable, _, instancelayer, culling, gtransform, localpos)), Ok(disposed)) = (actives.get(*id), dispoeds.get(*id)) {
                                 if enable.0 == true && disposed.0 == false && culling.0 == true {
                                     let xyz = gtransform.xyz();
@@ -119,29 +121,41 @@ impl Ord for TmpInstanceSort {
                                         xyz.0,  xyz.1,  xyz.2,
                                        -xyz.0, -xyz.1, -xyz.2,
                                     ];
-                                    sorted_instances.push(TmpInstanceSort { entity: *id, index: instancelayer.index, xyz, sortparam: tmpsortparam[sortparmaidx] });
+                                    let idx = temp.instancesort.len() as u32;
+                                    temp.instancesort.push(TmpInstanceSort { index: instancelayer.index, idx, sortparam: tmpsortparam[sortparmaidx] });
+                                    temp.instances.push((*id, xyz));
                                 }
                             }
                         });
-                        sorted_instances.sort();
+
+                        temp.instancesort.sort();
+                        let instances = &temp.instances;
+                        let sorted_instances = &temp.instancesort;
                         // log::warn!("InstanceCount: {}", sorted_instances.len());
     
                         if sorted_instances.len() > 0 {
                             let mut idx: u32 = 0;
+                            minx = f32::MAX;
+                            miny = f32::MAX;
+                            minz = f32::MAX;
+                            maxx = f32::MIN;
+                            maxy = f32::MIN;
+                            maxz = f32::MIN;
                             combinedata.reset();
 
                             let mut tmp_alphaindex = sorted_instances[0].index;
                             let mut tmp_instance_start = 0;
                             let mut tmp_instance_end = 0;
-                            minx = minx.min(sorted_instances[0].xyz.0);
-                            miny = miny.min(sorted_instances[0].xyz.1);
-                            minz = minz.min(sorted_instances[0].xyz.2);
-                            maxx = maxx.max(sorted_instances[0].xyz.0);
-                            maxy = maxy.max(sorted_instances[0].xyz.1);
-                            maxz = maxz.max(sorted_instances[0].xyz.2);
+                            let mut xyz = &instances[sorted_instances[0].idx as usize].1;
+                            minx = minx.min(xyz.0);
+                            miny = miny.min(xyz.1);
+                            minz = minz.min(xyz.2);
+                            maxx = maxx.max(xyz.0);
+                            maxy = maxy.max(xyz.1);
+                            maxz = maxz.max(xyz.2);
 
                             sorted_instances.iter().for_each(|instance| {
-                                let idinstance = instance.entity;
+                                let idinstance = instances[instance.idx as usize].0;
                                 if let Ok(instancedata) = instanceattributes.get(idinstance) {
                                     if tmp_alphaindex != instance.index || tmp_instance_end - tmp_instance_start > engineopt.max_instance_batch_count {
                                         instancessortinfos.ranges.push((tmp_alphaindex, Range { start: tmp_instance_start, end: tmp_instance_end }, ((minx + maxx) * 0.5, (miny + maxy) * 0.5, (minz + maxz) * 0.5)));
@@ -154,12 +168,13 @@ impl Ord for TmpInstanceSort {
                                         maxy = f32::MIN;
                                         maxz = f32::MIN;
                                     }
-                                    minx = minx.min(instance.xyz.0);
-                                    miny = miny.min(instance.xyz.1);
-                                    minz = minz.min(instance.xyz.2);
-                                    maxx = maxx.max(instance.xyz.0);
-                                    maxy = maxy.max(instance.xyz.1);
-                                    maxz = maxz.max(instance.xyz.2);
+                                    xyz = &instances[instance.idx as usize].1;
+                                    minx = minx.min(xyz.0);
+                                    miny = miny.min(xyz.1);
+                                    minz = minz.min(xyz.2);
+                                    maxx = maxx.max(xyz.0);
+                                    maxy = maxy.max(xyz.1);
+                                    maxz = maxz.max(xyz.2);
                                     tmp_instance_end += 1;
     
                                     instancedata.bytes().iter().for_each(|v| { instancessortinfos.data.push(*v); });
@@ -214,9 +229,9 @@ impl Ord for TmpInstanceSort {
         // mut performance: ResMut<Performance>,
     ) {
         let mut entities = entitysets.pop();
-        changeds.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
+        // changeds.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
         // performance.systems.push(String::from("sys_tick_instanced_buffer_update"));
         // log::error!("Instance Update");
         let mut counter = 0;
@@ -227,7 +242,8 @@ impl Ord for TmpInstanceSort {
         let mut maxx = f32::MIN;
         let mut maxy = f32::MIN;
         let mut maxz = f32::MIN;
-        entities.iter().for_each(|entity| {
+        changeds.iter().for_each(|entity| {
+            if !entities.insert(entity) { return; }
             if let Ok((idsource, sortmode, instances, idgeo, meshinsstate, mut instancessortinfos)) = sources.get_mut(*entity) {
                 if let Ok(disposed) = dispoeds.get(idsource) {
                     if disposed.0 == true { return; }
@@ -255,11 +271,12 @@ impl Ord for TmpInstanceSort {
     
                         // 实例按渲染队列排序
                         temp.instancesort.clear();
+                        temp.instances.clear();
                         instancessortinfos.reset();
                         instancessortinfos.use_single_instancebuffer = meshinsstate.use_single_instancebuffer;
                         instancessortinfos.sizeperinstance = instancedinfo.bytes_per_instance as u16;
-                        let sorted_instances = &mut temp.instancesort;
                         instances.iter().for_each(|id| {
+                            let id = if let Some(id) = id { id } else { return; };
                             if let (Ok((enable, _, instancelayer, culling, gtransform, localpos)), Ok(disposed)) = (actives.get(*id), dispoeds.get(*id)) {
                                 if enable.0 == true && disposed.0 == false && culling.0 {
                                     let xyz = gtransform.xyz();
@@ -269,11 +286,15 @@ impl Ord for TmpInstanceSort {
                                          xyz.0,  xyz.1,  xyz.2,
                                         -xyz.0, -xyz.1, -xyz.2,
                                     ];
-                                    sorted_instances.push(TmpInstanceSort { entity: *id, index: instancelayer.index, xyz, sortparam: tmpsortparam[sortparmaidx] });
+                                    let idx = temp.instancesort.len() as u32;
+                                    temp.instancesort.push(TmpInstanceSort { index: instancelayer.index, idx, sortparam: tmpsortparam[sortparmaidx] });
+                                    temp.instances.push((*id, xyz));
                                 }
                             }
                         });
-                        sorted_instances.sort();
+                        temp.instancesort.sort();
+                        let instances = &temp.instances;
+                        let sorted_instances = &temp.instancesort;
     
                         // log::error!("InstanceCount: {:?}", (instances.len(), sorted_instances.len()));
                         if sorted_instances.len() > 0 {
@@ -282,14 +303,15 @@ impl Ord for TmpInstanceSort {
                             let mut tmp_alphaindex = sorted_instances[0].index;
                             let mut tmp_instance_start = 0;
                             let mut tmp_instance_end = 0;
-                            minx = minx.min(sorted_instances[0].xyz.0);
-                            miny = miny.min(sorted_instances[0].xyz.1);
-                            minz = minz.min(sorted_instances[0].xyz.2);
-                            maxx = maxx.max(sorted_instances[0].xyz.0);
-                            maxy = maxy.max(sorted_instances[0].xyz.1);
-                            maxz = maxz.max(sorted_instances[0].xyz.2);
+                            let mut xyz = &instances[sorted_instances[0].idx as usize].1;
+                            minx = minx.min(xyz.0);
+                            miny = miny.min(xyz.1);
+                            minz = minz.min(xyz.2);
+                            maxx = maxx.max(xyz.0);
+                            maxy = maxy.max(xyz.1);
+                            maxz = maxz.max(xyz.2);
                             sorted_instances.iter().for_each(|instance| {
-                                let idinstance = instance.entity;
+                                let idinstance = instances[instance.idx as usize].0;
                                 if let Ok(instancedata) = instanceattributes.get(idinstance) {
                                     if tmp_alphaindex != instance.index || tmp_instance_end - tmp_instance_start > engineopt.max_instance_batch_count {
                                         instancessortinfos.ranges.push((tmp_alphaindex, Range { start: tmp_instance_start, end: tmp_instance_end }, ((minx + maxx) * 0.5, (miny + maxy) * 0.5, (minz + maxz) * 0.5)));
@@ -302,12 +324,13 @@ impl Ord for TmpInstanceSort {
                                         maxy = f32::MIN;
                                         maxz = f32::MIN;
                                     }
-                                    minx = minx.min(instance.xyz.0);
-                                    miny = miny.min(instance.xyz.1);
-                                    minz = minz.min(instance.xyz.2);
-                                    maxx = maxx.max(instance.xyz.0);
-                                    maxy = maxy.max(instance.xyz.1);
-                                    maxz = maxz.max(instance.xyz.2);
+                                    xyz = &instances[instance.idx as usize].1;
+                                    minx = minx.min(xyz.0);
+                                    miny = miny.min(xyz.1);
+                                    minz = minz.min(xyz.2);
+                                    maxx = maxx.max(xyz.0);
+                                    maxy = maxy.max(xyz.1);
+                                    maxz = maxz.max(xyz.2);
                                     tmp_instance_end += 1;
     
                                     unsafe_vec_append_slice(&mut instancessortinfos.data, instancedata.bytes());

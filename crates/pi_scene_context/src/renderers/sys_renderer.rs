@@ -30,13 +30,14 @@ use super::{
     ) {
         // performance.systems.push(String::from("sys_pass_bind_groups"));
         let mut entities = entitysets.pop();
-        changes.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
-        addeds.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
-        entities.iter().for_each(|entity| {
+        // changes.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
+        // addeds.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
+        changes.iter().chain(addeds.iter()).for_each(|entity| {
+            if !entities.insert(entity) { return; }
             if let Ok((_id_pass, idmodel, idmat, idrenderer, mut bindgroups, mut flag, passidx)) = passes.get_mut(*entity) {
                 let (idscene, idviewer) = if let Ok((idscene, idviewer)) = renderers.get(idrenderer.0) {
                     (idscene.0, idviewer.0)
@@ -184,19 +185,20 @@ use super::{
     ) {
         // let time1 = pi_time::Instant::now();
         let mut entities = entitysets.pop();
-        addeds0.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
-        changes0.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
-        addeds1.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
-        changes1.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
-        entities.iter().for_each(|entity| {
+        // addeds0.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
+        // changes0.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
+        // addeds1.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
+        // changes1.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
+        addeds0.iter().chain(addeds1.iter()).chain(changes0.iter()).chain(changes1.iter()).for_each(|entity| {
+            if !entities.insert(entity) { return; }
             if let Ok((id_geo, passids)) = models.get(*entity) {
                 // log::error!("sys_pass_shader_request_by_model");
                 passids.0.iter().for_each(|id| {
@@ -209,14 +211,16 @@ use super::{
             }
         });
 
-        entities.clear();
-        geoaddeds.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
-        geochanges.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
-        entities.iter().for_each(|entity| {
+        // entities.clear();
+        let mut entities = entitysets.pop();
+        // geoaddeds.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
+        // geochanges.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
+        geoaddeds.iter().chain(geochanges.iter()).for_each(|entity| {
+            if !entities.insert(entity) { return; }
             // log::error!("sys_pass_shader_request_by_geometry");
             if let Ok((entity, idmesh)) = geometrys.get(*entity) {
                 if let Ok((id_geo, passids)) = models.get(idmesh.0) {
@@ -253,13 +257,14 @@ use super::{
     ) {
         // let time1 = pi_time::Instant::now();
         let mut entities = entitysets.pop();
-        changes.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
-        addeds.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
-        entities.iter().for_each(|entity| {
+        // changes.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
+        // addeds.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
+        changes.iter().chain(addeds.iter()).for_each(|entity| {
+            if !entities.insert(entity) { return; }
             if let Ok((id_pass, disposeready, id_model, id_geo, idmat, bindgroups, mut old_shader, mut flagpipeline)) = passes.get_mut(*entity) {
 
                 if disposeready.0 == true { return; }
@@ -329,50 +334,58 @@ use super::{
         changes: ComponentChanged<FlagRendererParamForPipeline>,
         renderers: Query<(&RendererParam, &ViewerID, &PassTag)>,
         viewers: Query<(&ModelList, &ForceIncludeModelList)>,
-        modelspass: Query<&PassIDs>,
+        modelspass: Query<(Entity, &PassIDs)>,
         mut passes: Query<&mut PassPipelineStateDirty>,
         entitysets: Res<EntityFilterForComponentChanged>,
     ) {
         let mut entities = entitysets.pop();
-        passaddeds.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
-        passaddeds2.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
-        passchanges.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
-        passchanges2.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
-        entities.iter().for_each(|entity| {
+        // passaddeds.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
+        // passaddeds2.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
+        // passchanges.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
+        // passchanges2.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
+        passaddeds.iter().chain(passaddeds2.iter()).chain(passchanges.iter()).chain(passchanges2.iter()).for_each(|entity| {
+            if !entities.insert(entity) { return; }
             // log::error!("sys_pass_pipeline_request_by_model");
             if let Ok(mut flag) = passes.get_mut(*entity) {
                 *flag = PassPipelineStateDirty;
             }
         });
 
-        entities.clear();
-        changes.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
-        changes0.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
+        // entities.clear();
+        let mut entities = entitysets.pop();
+        // changes.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
+        // changes0.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
         // let changes = changes0.iter().chain(changes.iter());
         // let time1 = pi_time::Instant::now();
-        entities.iter().for_each(|entity| {
+        changes.iter().chain(changes0.iter()).for_each(|entity| {
+            if !entities.insert(entity) { return; }
             // log::error!("sys_pass_pipeline_request_by_renderer");
             if let Ok((param, idviewer, passtag)) = renderers.get(*entity) {
                 if param.enable.0 {
                     if let Ok((modellist, forcemodels)) = viewers.get(idviewer.0) {
-                        modellist.0.iter().for_each(|idmodel| {
-                            if let Ok(passid) = modelspass.get(*idmodel) { _pass_pipeline_request_by_renderer(passid.0[passtag.index()], &mut passes); }
+                        modelspass.iter().for_each(|(idmodel, passid)| {
+                            if modellist.0.contains(&idmodel) || forcemodels.0.contains(&idmodel) {
+                                _pass_pipeline_request_by_renderer(passid.0[passtag.index()], &mut passes);
+                            }
                         });
-                        forcemodels.0.iter().for_each(|idmodel| {
-                            if let Ok(passid) = modelspass.get(*idmodel) { _pass_pipeline_request_by_renderer(passid.0[passtag.index()], &mut passes); }
-                        });
+                        // modellist.0.iter().for_each(|idmodel| {
+                        //     if let Ok(passid) = modelspass.get(*idmodel) { _pass_pipeline_request_by_renderer(passid.0[passtag.index()], &mut passes); }
+                        // });
+                        // forcemodels.0.iter().for_each(|idmodel| {
+                        //     if let Ok(passid) = modelspass.get(*idmodel) { _pass_pipeline_request_by_renderer(passid.0[passtag.index()], &mut passes); }
+                        // });
                     }
                 }
             }
@@ -406,13 +419,14 @@ use super::{
     ) {
         // let time1 = pi_time::Instant::now();
         let mut entities = entitysets.pop();
-        changes.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
-        addeds.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
-        entities.iter().for_each(|entity| {
+        // changes.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
+        // addeds.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
+        changes.iter().chain(addeds.iter()).for_each(|entity| {
+            if !entities.insert(entity) { return; }
             if let Ok((
                 id_pass, disposeready, id_model, bindgroups, shader, mut oldpipeline, idrenderer,
                 renderstate, mut flag
@@ -486,16 +500,17 @@ use super::{
         entitysets: Res<EntityFilterForComponentChanged>,
     ) {
         let mut entities = entitysets.pop();
-        changes0.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
-        changes1.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
-        changes2.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
-        entities.iter().for_each(|entity| {
+        // changes0.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
+        // changes1.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
+        // changes2.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
+        changes0.iter().chain(changes1.iter()).chain(changes2.iter()).for_each(|entity| {
+            if !entities.insert(entity) { return; }
             if let Ok(passids) = models.get(*entity) {
                 passids.0.iter().for_each(|id| {
                     if let Ok(mut drawdirty) = passes.get_mut(*id) { *drawdirty = PassDrawDirty; }
@@ -516,10 +531,11 @@ use super::{
         entitysets: Res<EntityFilterForComponentChanged>,
     ) {
         let mut entities = entitysets.pop();
+        // changes.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
         changes.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
-        entities.iter().for_each(|entity| {
+            if !entities.insert(entity) { return; }
             if let Ok((id_model, bindgroups, pipeline, mut old_draw)) = passes.get_mut(*entity) {
                 if let (Some(_), Some(_)) = (bindgroups.val(), pipeline.val()) {
                     if let Ok((id_geo, geoenable, disposed)) = models.get(id_model.0) {
@@ -867,7 +883,7 @@ fn pipeline(
     // log::error!("Create pipeline");
     
     let key_shader = shader.key().clone();
-    log::error!("Shader: {:?}", &key_shader);
+    // log::error!("Shader: {:?}", &key_shader);
     let bind_group_layouts = bindgroups.bind_group_layouts();
     let key_bindgroup_layouts = KeyPipelineFromBindGroup(bindgroups.key_bindgroup_layouts());
 
