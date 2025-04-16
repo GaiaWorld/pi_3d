@@ -47,6 +47,7 @@ pub struct QueryParam<'w> (
         ),
         ()
     >,
+    Res<'w, EngineCustomPlugins>,
 );
 
 #[derive(SystemParam)]
@@ -60,6 +61,7 @@ pub struct QueryParam0<'w> (
         ),
         (),
     >,
+    Res<'w, EngineCustomPlugins>,
 );
 
 pub struct RenderNode {
@@ -97,7 +99,10 @@ impl Node for RenderNode {
         let mut output = SimpleInOut::default();
 
         // let mut param: QueryParam0 = param.get_mut(world);
-        let (atlas_allocator, query) = (&param.0, &mut param.1);
+        let (atlas_allocator, query, engineopt) = (&param.0, &mut param.1, &param.2);
+        if engineopt.active == false {
+            return Ok(output);
+        }
         if let Ok((
             param, disposed, _renderer, mut to_final_target
         )) = query.get_mut(self.renderer_id) {
@@ -184,7 +189,12 @@ impl Node for RenderNode {
         let mut output = SimpleInOut::default();
 
         // let param: QueryParam = param.get(world);
-        let (screen, _atlas_allocator, query) = (&param.0, &param.1, &param.2);
+        let (screen, _atlas_allocator, query, engineopt) = (&param.0, &param.1, &param.2, &param.3);
+
+        if engineopt.active == false {
+            return Box::pin( async move { Ok(()) } );
+        }
+
         if let Ok((
             param, disposed, renderer, to_final_target
         )) = query.get(self.renderer_id) {
