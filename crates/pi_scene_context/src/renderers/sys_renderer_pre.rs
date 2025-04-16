@@ -20,7 +20,7 @@ pub fn sys_sets_modify_by_viewer(
         Or<(Changed<BindViewer>, Changed<FlagModelList>, Changed<ForceIncludeModelList>, Changed<DirtyViewerRenderersInfo>)>,
     >,
     renderers: Query<(&RendererParam, &PassTag)>,
-    modelspass: Query<&PassIDs>,
+    modelspass: Query<(Entity, &PassIDs)>,
     mut passes: Query<(&DisposeReady, &mut PassRendererID)>,
     // mut performance: ResMut<Performance>,
 ) {
@@ -51,21 +51,26 @@ fn _sets_modify_by_viewer(
     // idviewer: Entity,
     passes: &mut Query<(&DisposeReady, &mut PassRendererID)>,
     // id_scene: Entity,
-    models: &Query<&PassIDs>,
+    models: &Query<(Entity, &PassIDs)>,
     modellist: &ModelList,
     forcemodels: &ForceIncludeModelList,
     passtag: &PassTag,
 ) {
-    modellist.0.iter().for_each(|idmodel| {
-        if let Ok(passid) = models.get(*idmodel) {
+    models.iter().for_each(|(entity, passid)| {
+        if modellist.0.contains(&entity) || forcemodels.0.contains(&entity) {
             __sets_modify_by_viewer(idrenderer, passid.0[passtag.index()], passes);
         }
     });
-    forcemodels.0.iter().for_each(|idmodel| {
-        if let Ok(passid) = models.get(*idmodel) {
-            __sets_modify_by_viewer(idrenderer, passid.0[passtag.index()], passes);
-        }
-    });
+    // modellist.0.iter().for_each(|idmodel| {
+    //     if let Ok(passid) = models.get(*idmodel) {
+    //         __sets_modify_by_viewer(idrenderer, passid.0[passtag.index()], passes);
+    //     }
+    // });
+    // forcemodels.0.iter().for_each(|idmodel| {
+    //     if let Ok(passid) = models.get(*idmodel) {
+    //         __sets_modify_by_viewer(idrenderer, passid.0[passtag.index()], passes);
+    //     }
+    // });
 }
 
 fn __sets_modify_by_viewer(
@@ -143,7 +148,7 @@ pub fn sys_sets_modify_by_scene_extend(
             if sceneid.0 == scene {
                 passids.0.iter().for_each(|idpass| {
                     if let Ok(mut dirty) = passes.get_mut(*idpass) {
-                        // log::error!("sys_sets_modify_by_scene_extend");
+                        // log::error!("PassBindGroupsDirty: scene_extend");
                         *dirty = PassBindGroupsDirty;
                     }
                 });
@@ -169,7 +174,7 @@ pub fn sys_sets_modify_by_model(
             Entity, &PassIDs
         ),
         Or<(
-            Changed<BindModel>, Changed<BindSkinValue>, Changed<SkeletonID>, Changed<ModelLightingIndexs>
+            Changed<BindModel>, Changed<BindSkinValue>, Changed<SkeletonID>, Changed<ModelLightingIndexs>, Changed<ModelBindDefines>
         )>,
     >,
     mut passes: Query<&mut PassBindGroupsDirty>,
@@ -179,7 +184,7 @@ pub fn sys_sets_modify_by_model(
     // let time1 = pi_time::Instant::now();
 
     models.iter().for_each(|(_entity, passids)| {
-        // log::error!("sys_sets_modify_by_model");
+        // log::error!("PassBindGroupsDirty: Model");
         passids.0.iter().for_each(|id| {
             if let Ok(mut dirty) = passes.get_mut(*id) { *dirty = PassBindGroupsDirty; }
         });

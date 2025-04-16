@@ -183,31 +183,35 @@ impl ModelInstanceAttributes {
     pub fn bytes_mut(&mut self) -> &mut Vec<u8> {
         &mut self.bytes
     }
-    pub fn update_worldmatrix(&mut self, data: &Matrix) {
+    pub fn update_worldmatrix(&mut self, data: &Matrix) -> bool {
         if self.worldmatrix {
-            let mut idx = 0;
-            bytemuck::cast_slice(data.as_slice()).iter().for_each(|v| {
-                self.bytes[idx] = *v;
-                idx += 1;
-            });
+            self.bytes.as_mut_slice()[0..64].copy_from_slice(bytemuck::cast_slice(data.as_slice()));
+            // let mut idx = 0;
+            // bytemuck::cast_slice(data.as_slice()).iter().for_each(|v| {
+            //     self.bytes[idx] = *v;
+            //     idx += 1;
+            // });
         }
+        return self.worldmatrix;
     }
     pub fn update_matidx(&mut self, passidx: usize, data: u16) {
         if self.matarray == false || self.bytes.len() == 0 { return }
         let mut idx = if self.worldmatrix { 64 } else { 0 };
         idx += passidx * 2;
-        bytemuck::cast_slice(&[data]).iter().for_each(|v| {
-            self.bytes[idx] = *v;
-            idx += 1;
-        });
+        self.bytes.as_mut_slice()[idx..(idx+2)].copy_from_slice(bytemuck::cast_slice(&[data]));
+        // bytemuck::cast_slice(&[data]).iter().for_each(|v| {
+        //     self.bytes[idx] = *v;
+        //     idx += 1;
+        // });
     }
     pub fn update_matidxs(&mut self, data: &[u16]) {
         if self.matarray == false || self.bytes.len() == 0 { return }
         let mut idx = if self.worldmatrix { 64 } else { 0 };
-        bytemuck::cast_slice(data).iter().for_each(|v| {
-            self.bytes[idx] = *v;
-            idx += 1;
-        });
+        self.bytes.as_mut_slice()[idx..(idx+16)].copy_from_slice(bytemuck::cast_slice(data));
+        // bytemuck::cast_slice(data).iter().for_each(|v| {
+        //     self.bytes[idx] = *v;
+        //     idx += 1;
+        // });
     }
     pub fn offset(&self, key: &Atom) -> Option<&InstanceAttributeOffset> {
         match self.attributes.binary_search_by(|v| v.0.cmp(key) ) {

@@ -35,15 +35,16 @@ pub fn sys_update_collider(
     entitysets: Res<EntityFilterForComponentChanged>,
 ) {
     let mut entities = entitysets.pop();
-    changes.iter().for_each(|entity| {
-        entities.insert(*entity);
-    });
-    addeds.iter().for_each(|entity| {
-        entities.insert(*entity);
-    });
+    // changes.iter().for_each(|entity| {
+    //     entities.insert(*entity);
+    // });
+    // addeds.iter().for_each(|entity| {
+    //     entities.insert(*entity);
+    // });
     let mut temp = Vector3::zeros();
     // log::error!("sys_update_collider: {:?}", entities.len());
-    entities.iter().for_each(|entity| {
+    changes.iter().chain(addeds.iter()).for_each(|entity| {
+        if !entities.insert(entity) { return; }
         if let Ok((collider, idscene, dispose)) = items.get(*entity) {
             if let Ok(mut pool) = scenes.get_mut(idscene.0) {
                 if dispose.0 == true {
@@ -103,13 +104,14 @@ pub fn sys_update_culling_by_cullinginfo(
 ) {
     // log::error!("sys_update_culling_by_cullinginfo");
     let mut entities = entitysets.pop();
-    addeds.iter().for_each(|entity| {
-        entities.insert(*entity);
-    });
-    changes.iter().for_each(|entity| {
-        entities.insert(*entity);
-    });
-    entities.iter().for_each(|entity| {
+    // addeds.iter().for_each(|entity| {
+    //     entities.insert(*entity);
+    // });
+    // changes.iter().for_each(|entity| {
+    //     entities.insert(*entity);
+    // });
+    changes.iter().chain(addeds.iter()).for_each(|entity| {
+        if !entities.insert(entity) { return; }
         if let Ok(instance) = instances.get(*entity) {
             if let Ok((idscene, info, mode, _instances, _)) = boundings.get(instance.0) {
                 if let Ok(mut pool) = scenes.get_mut(idscene.0) {
@@ -122,7 +124,7 @@ pub fn sys_update_culling_by_cullinginfo(
                     }
                 }
             }
-        } else if let Ok((idscene, info, mode, instances, insattr)) = boundings.get(*entity) {
+        } else if let Ok((idscene, info, mode, instancerefs, insattr)) = boundings.get(*entity) {
             if let Ok(mut pool) = scenes.get_mut(idscene.0) {
                 if let Ok((meshworldmatrix, disposed)) = items.get(*entity) {
                     if disposed.0 == true {
@@ -134,8 +136,10 @@ pub fn sys_update_culling_by_cullinginfo(
                             pool.set(*entity, info, mode, &meshworldmatrix.0);
                         }
 
-                        instances.iter().for_each(|instance| {
+                        instancerefs.iter().for_each(|instance| {
+                            if !entities.insert(instance) { return; }
                             let instance = *instance;
+                            // if let Some(instance) = &instance { *instance } else { return; }
                             if let Ok((worldmatrix, disposed)) = items.get(instance) {
                                 if disposed.0 == true {
                                     pool.remove(instance);

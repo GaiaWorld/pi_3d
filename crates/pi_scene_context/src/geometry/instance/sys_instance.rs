@@ -13,9 +13,8 @@ use super::{*, instanced_buffer::*, types::ModelInstanceAttributes, };
 
 #[derive(Clone, Copy)]
 pub struct TmpInstanceSort {
-    pub entity: Entity,
+    pub idx: u32,
     pub index: i32,
-    pub xyz: (f32, f32, f32),
     pub sortparam: f32,
 }
 impl PartialEq for TmpInstanceSort {
@@ -30,6 +29,7 @@ impl Eq for TmpInstanceSort {
 }
 impl PartialOrd for TmpInstanceSort {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        // self.index.partial_cmp(&other.index)
         match self.index.partial_cmp(&other.index) {
             Some(order) => match order {
                 std::cmp::Ordering::Equal => {
@@ -48,7 +48,7 @@ impl Ord for TmpInstanceSort {
 }
 
     pub fn sys_tick_instanced_buffer_update_single(
-        actives: Query<(&GlobalEnable, &InstanceMesh, &RenderQueueSortParam, &AbstructMeshCullingFlag, &GlobalMatrix, &LocalPosition), With<AbstructMesh>>,
+        actives: Query<(&GlobalEnable, &RenderQueueSortParam, &AbstructMeshCullingFlag, &GlobalMatrix, &LocalPosition), With<InstanceMesh>>,
         instanceattributes: Query<&ModelInstanceAttributes>,
         changeds: ComponentChanged<InstanceSourceRefs>,
         mut sources: Query<
@@ -70,17 +70,12 @@ impl Ord for TmpInstanceSort {
         // mut performance: ResMut<Performance>,
     ) {
         // performance.systems.push(String::from("sys_tick_instanced_buffer_update_single"));
-        let mut minx = f32::MAX;
-        let mut miny = f32::MAX;
-        let mut minz = f32::MAX;
-        let mut maxx = f32::MIN;
-        let mut maxy = f32::MIN;
-        let mut maxz = f32::MIN;
         let mut entities = entitysets.pop();
+        // changeds.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
         changeds.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
-        entities.iter().for_each(|entity| {
+            if !entities.insert(entity) { return; }
             if let Ok((idsource, sortmode, instances, idgeo, meshinsstate, mut instancessortinfos)) = sources.get_mut(*entity) {
                 if let Ok(disposed) = dispoeds.get(idsource) {
                     if disposed.0 == true { return; }
@@ -91,102 +86,24 @@ impl Ord for TmpInstanceSort {
                         instancessortinfos.use_single_instancebuffer = meshinsstate.use_single_instancebuffer;
     
                         // 实例按渲染队列排序
-                        let sorted_instances = &mut temp.instancesort;
-                        sorted_instances.clear();
+                        temp.clear();
                         
-                        let sortparmaidx = match sortmode {
-                            EInstanceSortMode::LocalPositionX => 0,
-                            EInstanceSortMode::LocalPositionY => 1,
-                            EInstanceSortMode::LocalPositionZ => 2,
-                            EInstanceSortMode::NagativeLocalPositionX => 3,
-                            EInstanceSortMode::NagativeLocalPositionY => 4,
-                            EInstanceSortMode::NagativeLocalPositionZ => 5,
-                            EInstanceSortMode::GlobalPositionX => 6,
-                            EInstanceSortMode::GlobalPositionY => 7,
-                            EInstanceSortMode::GlobalPositionZ => 8,
-                            EInstanceSortMode::NagativeGlobalPositionX => 9,
-                            EInstanceSortMode::NagativeGlobalPositionY => 10,
-                            EInstanceSortMode::NagativeGlobalPositionZ => 11,
-                        };
-                        let mut tmpsortparam = [0.;12];
-                        instances.iter().for_each(|id| {
-                            if let (Ok((enable, _, instancelayer, culling, gtransform, localpos)), Ok(disposed)) = (actives.get(*id), dispoeds.get(*id)) {
-                                if enable.0 == true && disposed.0 == false && culling.0 == true {
-                                    let xyz = gtransform.xyz();
-                                    tmpsortparam = [
-                                        localpos.0.x,  localpos.0.y,  localpos.0.z,
-                                       -localpos.0.x, -localpos.0.y, -localpos.0.z,
-                                        xyz.0,  xyz.1,  xyz.2,
-                                       -xyz.0, -xyz.1, -xyz.2,
-                                    ];
-                                    sorted_instances.push(TmpInstanceSort { entity: *id, index: instancelayer.index, xyz, sortparam: tmpsortparam[sortparmaidx] });
-                                }
-                            }
-                        });
-                        sorted_instances.sort();
-                        // log::warn!("InstanceCount: {}", sorted_instances.len());
-    
-                        if sorted_instances.len() > 0 {
-                            let mut idx: u32 = 0;
-                            combinedata.reset();
-
-                            let mut tmp_alphaindex = sorted_instances[0].index;
-                            let mut tmp_instance_start = 0;
-                            let mut tmp_instance_end = 0;
-                            minx = minx.min(sorted_instances[0].xyz.0);
-                            miny = miny.min(sorted_instances[0].xyz.1);
-                            minz = minz.min(sorted_instances[0].xyz.2);
-                            maxx = maxx.max(sorted_instances[0].xyz.0);
-                            maxy = maxy.max(sorted_instances[0].xyz.1);
-                            maxz = maxz.max(sorted_instances[0].xyz.2);
-
-                            sorted_instances.iter().for_each(|instance| {
-                                let idinstance = instance.entity;
-                                if let Ok(instancedata) = instanceattributes.get(idinstance) {
-                                    if tmp_alphaindex != instance.index || tmp_instance_end - tmp_instance_start > engineopt.max_instance_batch_count {
-                                        instancessortinfos.ranges.push((tmp_alphaindex, Range { start: tmp_instance_start, end: tmp_instance_end }, ((minx + maxx) * 0.5, (miny + maxy) * 0.5, (minz + maxz) * 0.5)));
-                                        tmp_alphaindex = instance.index;
-                                        tmp_instance_start = tmp_instance_end;
-                                        minx = f32::MAX;
-                                        miny = f32::MAX;
-                                        minz = f32::MAX;
-                                        maxx = f32::MIN;
-                                        maxy = f32::MIN;
-                                        maxz = f32::MIN;
-                                    }
-                                    minx = minx.min(instance.xyz.0);
-                                    miny = miny.min(instance.xyz.1);
-                                    minz = minz.min(instance.xyz.2);
-                                    maxx = maxx.max(instance.xyz.0);
-                                    maxy = maxy.max(instance.xyz.1);
-                                    maxz = maxz.max(instance.xyz.2);
-                                    tmp_instance_end += 1;
-    
-                                    instancedata.bytes().iter().for_each(|v| { instancessortinfos.data.push(*v); });
-                                }
-    
-                                idx += 0;
-                            });
-                            if tmp_instance_start != tmp_instance_end {
-                                instancessortinfos.ranges.push((tmp_alphaindex, Range { start: tmp_instance_start, end: tmp_instance_end }, ((minx + maxx) * 0.5, (miny + maxy) * 0.5, (minz + maxz) * 0.5)));
-                            }
-                            {
-                                let collected = combinedata.data(&Range { start: 0, end: combinedata.usedsize() });
-                                let instancedinfo = buffer;
-                                if let Ok((desclist, mut buffer, mut keys, mut flag)) = slots.get_mut(idgeo.0) {
-                                    let buffer = match instancedinfo.slot() {
-                                        EVertexBufferSlot::Slot01 => { if let Some(buffer) = &mut buffer[0] { keys.0[0] = desclist.key(0); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
-                                        EVertexBufferSlot::Slot02 => { if let Some(buffer) = &mut buffer[1] { keys.0[1] = desclist.key(1); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
-                                        EVertexBufferSlot::Slot03 => { if let Some(buffer) = &mut buffer[2] { keys.0[2] = desclist.key(2); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
-                                        EVertexBufferSlot::Slot04 => { if let Some(buffer) = &mut buffer[3] { keys.0[3] = desclist.key(3); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
-                                        EVertexBufferSlot::Slot05 => { if let Some(buffer) = &mut buffer[4] { keys.0[4] = desclist.key(4); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
-                                        EVertexBufferSlot::Slot06 => { if let Some(buffer) = &mut buffer[5] { keys.0[5] = desclist.key(5); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
-                                        EVertexBufferSlot::Slot07 => { if let Some(buffer) = &mut buffer[6] { keys.0[6] = desclist.key(6); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
-                                        EVertexBufferSlot::Slot08 => { if let Some(buffer) = &mut buffer[7] { keys.0[7] = desclist.key(7); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
-                                        _ => { return; }
-                                    };
-                                    update_instanced_buffer_for_single(buffer, &collected, &instancedcache, &mut allocator, &device, &queue);
-                                }
+                        if collect_instance_info(sortmode, instances, &mut instancessortinfos, &actives, &dispoeds, &instanceattributes, &mut temp, u32::MAX) {
+                            let collected = combinedata.data(&Range { start: 0, end: combinedata.usedsize() });
+                            let instancedinfo = buffer;
+                            if let Ok((desclist, mut buffer, mut keys, mut flag)) = slots.get_mut(idgeo.0) {
+                                let buffer = match instancedinfo.slot() {
+                                    EVertexBufferSlot::Slot01 => { if let Some(buffer) = &mut buffer[0] { keys.0[0] = desclist.key(0); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
+                                    EVertexBufferSlot::Slot02 => { if let Some(buffer) = &mut buffer[1] { keys.0[1] = desclist.key(1); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
+                                    EVertexBufferSlot::Slot03 => { if let Some(buffer) = &mut buffer[2] { keys.0[2] = desclist.key(2); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
+                                    EVertexBufferSlot::Slot04 => { if let Some(buffer) = &mut buffer[3] { keys.0[3] = desclist.key(3); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
+                                    EVertexBufferSlot::Slot05 => { if let Some(buffer) = &mut buffer[4] { keys.0[4] = desclist.key(4); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
+                                    EVertexBufferSlot::Slot06 => { if let Some(buffer) = &mut buffer[5] { keys.0[5] = desclist.key(5); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
+                                    EVertexBufferSlot::Slot07 => { if let Some(buffer) = &mut buffer[6] { keys.0[6] = desclist.key(6); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
+                                    EVertexBufferSlot::Slot08 => { if let Some(buffer) = &mut buffer[7] { keys.0[7] = desclist.key(7); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
+                                    _ => { return; }
+                                };
+                                update_instanced_buffer_for_single(buffer, &collected, &instancedcache, &mut allocator, &device, &queue);
                             }
                         }
                     }
@@ -199,7 +116,7 @@ impl Ord for TmpInstanceSort {
 
     pub fn sys_tick_instanced_buffer_update(
         changeds: ComponentChanged<InstanceSourceRefs>,
-        actives: Query<(&GlobalEnable, &InstanceMesh, &RenderQueueSortParam, &AbstructMeshCullingFlag, &GlobalMatrix, &LocalPosition), With<AbstructMesh>>,
+        actives: Query<(&GlobalEnable, &RenderQueueSortParam, &AbstructMeshCullingFlag, &GlobalMatrix, &LocalPosition), With<InstanceMesh>>,
         instanceattributes: Query<&ModelInstanceAttributes>,
         mut sources: Query<
             (
@@ -214,20 +131,15 @@ impl Ord for TmpInstanceSort {
         // mut performance: ResMut<Performance>,
     ) {
         let mut entities = entitysets.pop();
-        changeds.iter().for_each(|entity| {
-            entities.insert(*entity);
-        });
+        // changeds.iter().for_each(|entity| {
+        //     entities.insert(*entity);
+        // });
         // performance.systems.push(String::from("sys_tick_instanced_buffer_update"));
         // log::error!("Instance Update");
         let mut counter = 0;
         // let mut size = 0;
-        let mut minx = f32::MAX;
-        let mut miny = f32::MAX;
-        let mut minz = f32::MAX;
-        let mut maxx = f32::MIN;
-        let mut maxy = f32::MIN;
-        let mut maxz = f32::MIN;
-        entities.iter().for_each(|entity| {
+        changeds.iter().for_each(|entity| {
+            if !entities.insert(entity) { return; }
             if let Ok((idsource, sortmode, instances, idgeo, meshinsstate, mut instancessortinfos)) = sources.get_mut(*entity) {
                 if let Ok(disposed) = dispoeds.get(idsource) {
                     if disposed.0 == true { return; }
@@ -236,91 +148,14 @@ impl Ord for TmpInstanceSort {
                     if let Ok(InstancedInfoComp(Some(instancedinfo))) = geometrys.get(idgeo.0) {
                         // *renderenable = RenderGeometryEable(false);
     
-                        let sortparmaidx = match sortmode {
-                            EInstanceSortMode::LocalPositionX => 0,
-                            EInstanceSortMode::LocalPositionY => 1,
-                            EInstanceSortMode::LocalPositionZ => 2,
-                            EInstanceSortMode::NagativeLocalPositionX => 3,
-                            EInstanceSortMode::NagativeLocalPositionY => 4,
-                            EInstanceSortMode::NagativeLocalPositionZ => 5,
-                            EInstanceSortMode::GlobalPositionX => 6,
-                            EInstanceSortMode::GlobalPositionY => 7,
-                            EInstanceSortMode::GlobalPositionZ => 8,
-                            EInstanceSortMode::NagativeGlobalPositionX => 9,
-                            EInstanceSortMode::NagativeGlobalPositionY => 10,
-                            EInstanceSortMode::NagativeGlobalPositionZ => 11,
-                        };
-                        
-                        let mut tmpsortparam = [0.;12];
-    
                         // 实例按渲染队列排序
-                        temp.instancesort.clear();
+                        temp.clear();
                         instancessortinfos.reset();
                         instancessortinfos.use_single_instancebuffer = meshinsstate.use_single_instancebuffer;
                         instancessortinfos.sizeperinstance = instancedinfo.bytes_per_instance as u16;
-                        let sorted_instances = &mut temp.instancesort;
-                        instances.iter().for_each(|id| {
-                            if let (Ok((enable, _, instancelayer, culling, gtransform, localpos)), Ok(disposed)) = (actives.get(*id), dispoeds.get(*id)) {
-                                if enable.0 == true && disposed.0 == false && culling.0 {
-                                    let xyz = gtransform.xyz();
-                                    tmpsortparam = [
-                                         localpos.0.x,  localpos.0.y,  localpos.0.z,
-                                        -localpos.0.x, -localpos.0.y, -localpos.0.z,
-                                         xyz.0,  xyz.1,  xyz.2,
-                                        -xyz.0, -xyz.1, -xyz.2,
-                                    ];
-                                    sorted_instances.push(TmpInstanceSort { entity: *id, index: instancelayer.index, xyz, sortparam: tmpsortparam[sortparmaidx] });
-                                }
-                            }
-                        });
-                        sorted_instances.sort();
-    
-                        // log::error!("InstanceCount: {:?}", (instances.len(), sorted_instances.len()));
-                        if sorted_instances.len() > 0 {
-                            let mut idx: u32 = 0;
-                            // let mut collected: Vec<u8> = Vec::with_capacity(sorted_instances.len() * instancedinfo.bytes_per_instance as usize);
-                            let mut tmp_alphaindex = sorted_instances[0].index;
-                            let mut tmp_instance_start = 0;
-                            let mut tmp_instance_end = 0;
-                            minx = minx.min(sorted_instances[0].xyz.0);
-                            miny = miny.min(sorted_instances[0].xyz.1);
-                            minz = minz.min(sorted_instances[0].xyz.2);
-                            maxx = maxx.max(sorted_instances[0].xyz.0);
-                            maxy = maxy.max(sorted_instances[0].xyz.1);
-                            maxz = maxz.max(sorted_instances[0].xyz.2);
-                            sorted_instances.iter().for_each(|instance| {
-                                let idinstance = instance.entity;
-                                if let Ok(instancedata) = instanceattributes.get(idinstance) {
-                                    if tmp_alphaindex != instance.index || tmp_instance_end - tmp_instance_start > engineopt.max_instance_batch_count {
-                                        instancessortinfos.ranges.push((tmp_alphaindex, Range { start: tmp_instance_start, end: tmp_instance_end }, ((minx + maxx) * 0.5, (miny + maxy) * 0.5, (minz + maxz) * 0.5)));
-                                        tmp_alphaindex = instance.index;
-                                        tmp_instance_start = tmp_instance_end;
-                                        minx = f32::MAX;
-                                        miny = f32::MAX;
-                                        minz = f32::MAX;
-                                        maxx = f32::MIN;
-                                        maxy = f32::MIN;
-                                        maxz = f32::MIN;
-                                    }
-                                    minx = minx.min(instance.xyz.0);
-                                    miny = miny.min(instance.xyz.1);
-                                    minz = minz.min(instance.xyz.2);
-                                    maxx = maxx.max(instance.xyz.0);
-                                    maxy = maxy.max(instance.xyz.1);
-                                    maxz = maxz.max(instance.xyz.2);
-                                    tmp_instance_end += 1;
-    
-                                    unsafe_vec_append_slice(&mut instancessortinfos.data, instancedata.bytes());
-                                    // instancedata.bytes().iter().for_each(|v| { instancessortinfos.data.push(*v); });
-                                }
-                                idx += 0;
-                            });
-                            if tmp_instance_start != tmp_instance_end {
-                                instancessortinfos.ranges.push((tmp_alphaindex, Range { start: tmp_instance_start, end: tmp_instance_end }, ((minx + maxx) * 0.5, (miny + maxy) * 0.5, (minz + maxz) * 0.5)));
-                            }
+
+                        if collect_instance_info(sortmode, instances, &mut instancessortinfos, &actives, &dispoeds, &instanceattributes, &mut temp, engineopt.max_instance_batch_count) {
                             counter += 1;
-    
-                            instancessortinfos.count = tmp_instance_end as u32;
                         }
                         // log::error!("{:?}", (instancessortinfos.count, instancessortinfos.data.len()));
                     }
@@ -375,5 +210,91 @@ pub fn update_instanced_buffer_for_single(
             },
             _ => { },
         },
+    }
+}
+
+fn collect_instance_info(
+    sortmode: &EInstanceSortMode,
+    instances: &InstanceSourceRefs,
+    instancessortinfos: &mut InstancedMeshTransparentSortCollection,
+    actives: &Query<(&GlobalEnable, &RenderQueueSortParam, &AbstructMeshCullingFlag, &GlobalMatrix, &LocalPosition), With<InstanceMesh>>,
+    dispoeds: &Query<&DisposeReady>,
+    instanceattributes: &Query<&ModelInstanceAttributes>,
+    temp: &mut TmpCommonVec,
+    max_instance_batch_count: u32,
+) -> bool {
+    
+    let (isglobal, vidx, scl) = sortmode.arg_for_sortparam();
+    let mut alphaindexarr: Vec<(i32, usize)> = vec![];
+    let mut infoarr: Vec<(Vec<Number>, Vec<(Entity, (Number, Number, Number))>)> = vec![];
+
+    instances.iter().for_each(|id| {
+        if let (Ok((enable, instancelayer, culling, gtransform, localpos)), Ok(disposed)) = (actives.get(*id), dispoeds.get(*id)) {
+            if enable.0 == true && disposed.0 == false && culling.0 {
+                let sortparam = if isglobal  {
+                    gtransform.position().as_slice()[vidx] * scl
+                } else {
+                    localpos.0.as_slice()[vidx] * scl
+                };
+                temp.push(*id, instancelayer.index, sortparam, gtransform.xyz());
+                // let idx = temp.instancesort.len() as u32;
+                // temp.instancesort.push(TmpInstanceSort { index: instancelayer.index, idx, sortparam });
+                // temp.instances.push((*id, gtransform.xyz()));
+            }
+        }
+    });
+
+    temp.sort();
+    if  temp.is_empty() == false {
+        let mut minx = f32::MAX;
+        let mut miny = f32::MAX;
+        let mut minz = f32::MAX;
+        let mut maxx = f32::MIN;
+        let mut maxy = f32::MIN;
+        let mut maxz = f32::MIN;
+
+        let mut tmp_alphaindex = i32::MIN;
+        let mut tmp_instance_start = 0;
+        let mut tmp_instance_end = 0;
+        // let mut xyz = &instances[sorted_instances[0].idx as usize].1;
+        // minx = minx.min(xyz.0);
+        // miny = miny.min(xyz.1);
+        // minz = minz.min(xyz.2);
+        // maxx = maxx.max(xyz.0);
+        // maxy = maxy.max(xyz.1);
+        // maxz = maxz.max(xyz.2);
+
+        temp.iter(|(idinstance, index, xyz)| {
+            if let Ok(instancedata) = instanceattributes.get(*idinstance) {
+                if tmp_alphaindex != *index || tmp_instance_end - tmp_instance_start > max_instance_batch_count {
+                    instancessortinfos.ranges.push((tmp_alphaindex, Range { start: tmp_instance_start, end: tmp_instance_end }, ((minx + maxx) * 0.5, (miny + maxy) * 0.5, (minz + maxz) * 0.5)));
+                    tmp_alphaindex = *index;
+                    tmp_instance_start = tmp_instance_end;
+                    minx = f32::MAX;
+                    miny = f32::MAX;
+                    minz = f32::MAX;
+                    maxx = f32::MIN;
+                    maxy = f32::MIN;
+                    maxz = f32::MIN;
+                }
+                minx = minx.min(xyz.0);
+                miny = miny.min(xyz.1);
+                minz = minz.min(xyz.2);
+                maxx = maxx.max(xyz.0);
+                maxy = maxy.max(xyz.1);
+                maxz = maxz.max(xyz.2);
+                tmp_instance_end += 1;
+
+                unsafe_vec_append_slice(&mut instancessortinfos.data, instancedata.bytes());
+            }
+        });
+        if tmp_instance_start != tmp_instance_end {
+            instancessortinfos.ranges.push((tmp_alphaindex, Range { start: tmp_instance_start, end: tmp_instance_end }, ((minx + maxx) * 0.5, (miny + maxy) * 0.5, (minz + maxz) * 0.5)));
+        }
+        
+        instancessortinfos.count = tmp_instance_end as u32;
+        return true;
+    } else {
+        return false;
     }
 }

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use pi_scene_shell::{prelude::*, run_stage::EngineCustomPlugins};
 
 use crate::{
-    geometry::instance::types::ModelInstanceAttributes, object::ActionEntity, pass::*, prelude::{BindModelMatIdx, ModelMatIdxs, TypeAnimeAssetMgrs, TypeAnimeContexts}
+    geometry::instance::types::ModelInstanceAttributes, object::ActionEntity, pass::*, prelude::{BindModel, ModelMatIdxs, TypeAnimeAssetMgrs, TypeAnimeContexts}
 };
 
 use super::{
@@ -98,7 +98,7 @@ pub fn sys_act_material_use(
     mut cmds: ResMut<ActionListMaterialUse>,
     mut renderobjectcmds: ResMut<ActionListPassObject>,
     mut materials: Query<(&mut MaterialRefs, &mut DirtyMaterialRefs, &BindEffect)>,
-    mut meshes: Query<(& PassIDs, &BindModelMatIdx, &mut ModelInstanceAttributes, &mut ModelMatIdxs)>,
+    mut meshes: Query<(& PassIDs, &BindModel, &mut ModelInstanceAttributes, &mut ModelMatIdxs)>,
     mut linkedtargets: Query<&mut LinkedMaterialID>,
     passes: Query<&PassMaterialID>,
     empty: Res<SingleEmptyEntity>,
@@ -127,7 +127,7 @@ pub fn sys_act_material_use(
                     } else if let Ok((passid, matidxs, mut instancedata, mut matidxrecord)) = meshes.get_mut(id_mesh) {
                         let passindex = pass.index();
                         let id_pass = passid.0[passindex];
-                        if let (Some(matidxs), Some(bindeff)) = (&matidxs.0, &bindeffect.0) {
+                        if let (Some(matidxs), Some(bindeff)) = (&matidxs.matidx, &bindeffect.0) {
                             matidxs.update_matidxs(passindex, bindeff.bind.matidx());
                             matidxrecord.0[passindex] = bindeff.bind.matidx() as u16;
                             instancedata.update_matidx(passindex, bindeff.bind.matidx() as u16);

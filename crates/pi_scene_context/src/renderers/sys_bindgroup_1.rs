@@ -12,7 +12,7 @@ pub fn _set1_modify(
     idmodel: Entity,
     _key_meta: &Atom,
     meta: &Handle<ShaderEffectMeta>,
-    models: &Query< ( Option<&BindModel>, &BindModelMatIdx, &BindSkinValue, &SkeletonID, &ModelLightingIndexs ), >,
+    models: &Query< ( &BindModel, &BindSkinValue, &SkeletonID, &ModelLightingIndexs, &ModelBindDefines  ), >,
     device: &PiRenderDevice,
     asset_mgr_bindgroup_layout: &ShareAssetMgr<BindGroupLayout>,
     asset_mgr_bindgroup: &ShareAssetMgr<BindGroup>,
@@ -20,30 +20,49 @@ pub fn _set1_modify(
 ) -> Option<Arc<BindGroupModel>> {
     let mut result = None;
     let mut bind_skin = None;
-    let mut bind_matrix = None;
+    let mut matrix = None;
+    let mut matrixinv = None;
+    let mut morphinfluence = None;
+    let mut skinoffset = None;
+    let mut velocity = None;
     let mut bind_lingingsidx = None;
 
-    if let Ok( ( bind_model, bindmatidx, bind_skl, id_skl, lightingidxs) ) = models.get(idmodel) {
-        if let Some(bindmatidx) = bindmatidx.0.clone() {
-            match (BindDefines::need_model(meta.binddefines), bind_model) {
-                (true, Some(bind)) => {
-                    let item = bind.0.as_ref().unwrap();
-                    bind_matrix = Some(item.clone());
-                    match (&bind_skl.0, id_skl.0) {
-                        (Some(bind), Some(_)) => { bind_skin = Some(bind.clone()); },
-                        (None, None) => { },
-                        _ => {
-                            return result;
-                            // log::warn!("Skinnnnnnn");
-                        }
-                    }; 
-                },
+    if let Ok( ( bind_model, bind_skl, id_skl, lightingidxs, modelbinddefines) ) = models.get(idmodel) {
+        if let Some(bindmatidx) = bind_model.matidx.clone() {
+            let binddefines = meta.binddefines | modelbinddefines.0;
+            match (BindDefines::need_model(binddefines), &bind_model.matrix) {
+                (true, Some(bind)) => { matrix = Some(bind.clone()); },
                 (false, _) => { },
+                _ => { return result; }
+            };
+            match (BindDefines::need_model_matrix_inv(binddefines), &bind_model.matrixinv) {
+                (true, Some(bind)) => { matrixinv = Some(bind.clone()); },
+                (false, _) => { },
+                _ => { return result; }
+            };
+            match (BindDefines::need_model_morphinfluence(binddefines), &bind_model.morphinfluence) {
+                (true, Some(bind)) => { morphinfluence = Some(bind.clone()); },
+                (false, _) => { },
+                _ => { return result; }
+            };
+            match (BindDefines::need_model_skin_ins(binddefines), &bind_model.skinoff) {
+                (true, Some(bind)) => { skinoffset = Some(bind.clone()); },
+                (false, _) => { },
+                _ => { return result; }
+            };
+            match (BindDefines::need_model_velocity(binddefines), &bind_model.velocity) {
+                (true, Some(bind)) => { velocity = Some(bind.clone()); },
+                (false, _) => { },
+                _ => { return result; }
+            };
+            match (&bind_skl.0, id_skl.0) {
+                (Some(bind), Some(_)) => { bind_skin = Some(bind.clone()); },
+                (None, None) => { },
                 _ => {
                     return result;
                 }
-            };
-            match (BindDefines::need_lighting(meta.binddefines), &lightingidxs.bind) {
+            }; 
+            match (BindDefines::need_lighting(binddefines), &lightingidxs.bind) {
                 (true, Some(lighting)) => {
                     bind_lingingsidx = Some(lighting.clone());
                 },
@@ -51,7 +70,7 @@ pub fn _set1_modify(
                 _ => { return result; }
             };
     
-            let key = KeyBindGroupModel::new(bindmatidx, bind_matrix, bind_skin.clone(), bind_lingingsidx);
+            let key = KeyBindGroupModel::new(bindmatidx, matrix, matrixinv, morphinfluence, skinoffset, velocity, bind_skin.clone(), bind_lingingsidx);
     
             let key_bind_group = key.key_bind_group();
             // log::warn!("Set0Loaded : ");

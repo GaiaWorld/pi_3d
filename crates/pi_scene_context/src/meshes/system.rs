@@ -1,6 +1,6 @@
 
 use pi_scene_shell::prelude::*;
-use pi_scene_math::{Matrix, Vector3};
+use pi_scene_math::{Matrix, SQuaternion, Vector3};
 
 use crate::{
     geometry::{
@@ -30,61 +30,46 @@ pub fn sys_calc_render_matrix_pre(
 }
 
 pub fn sys_calc_render_matrix(
-    added: ComponentChanged<FlagRenderWorldMatrix>,
     changes: ComponentChanged<FlagRenderWorldMatrix>,
     mut meshes: Query<
-        (Entity, &AbstructMesh, &LocalScaling, &GlobalMatrix, &ScalingMode, &ModelVelocity, &mut AbsoluteTransform),
+        (&RenderPoseMatrix, &AbstructMesh, &LocalScaling, &GlobalMatrix, &ScalingMode, &ModelVelocity, &mut AbsoluteTransform, &mut RenderWorldMatrix),
     >,
     instances: Query<&InstanceMesh>,
     renderalignments: Query<&RenderAlignment>,
-    pose: Query<&RenderPoseMatrix>,
-    mut matrixs: Query<&mut RenderWorldMatrix>,
+    // mut matrixs: Query<&mut RenderWorldMatrix>,
     entitysets: Res<EntityFilterForComponentChanged>,
 ) {
     // let time = pi_time::Instant::now();
-    let mut entities = entitysets.pop();
-    changes.iter().for_each(|entity| {
-        entities.insert(*entity);
-    });
-    added.iter().for_each(|entity| {
-        entities.insert(*entity);
-    });
     let mut rotation = Rotation3::identity();
+    let mut quaternion = SQuaternion::<Number>::identity();
     let mut tempmatrix = Matrix::identity();
     let mut tempmatrix2 = Matrix::identity();
     let mut tempmatrix3 = Matrix::identity();
-    entities.iter().for_each(|entity| {
+    let mut tempvec3a = Vector3::zeros();
+    let mut tempvec3b = Vector3::zeros();
+    let mut entities = entitysets.pop();
+    changes.iter().for_each(|entity| {
+        if !entities.insert(entity) { return; }
         if let Ok((
-            entity, _,
-            localscaling, transform, scalingmode, velocity, mut abstransform
+            pose, _,
+            localscaling, transform, scalingmode, velocity, mut abstransform, mut wm
         )) = meshes.get_mut(*entity) {
+            let entity = *entity;
             let renderalignment = if let Ok(instance) = instances.get(entity) {
                 renderalignments.get(instance.0)
             } else {
                 renderalignments.get(entity)
             };
             if let Ok(renderalignment) = renderalignment {
-                if let Ok(mut wm) = matrixs.get_mut(entity) {
-        
-                    // log::warn!("calc_render_matrix:");
-                    // render_wm.0.clone_from(&worldmatrix.0);
-                    // render_wminv.0.clone_from(&worldmatrix_inv.0);
-    
-                    _calc_render_matrix(
-                        velocity, localscaling, scalingmode, renderalignment, transform,
-                        &mut abstransform, &mut wm, pose.get(entity),
-                        &mut rotation, &mut tempmatrix, &mut tempmatrix2, &mut tempmatrix3
-                    );
-                }
+                _calc_render_matrix(
+                    velocity, localscaling, scalingmode, renderalignment, transform,
+                    &mut abstransform, &mut wm, pose,
+                    &mut quaternion, &mut tempmatrix, &mut tempmatrix2, &mut tempmatrix3,
+                    &mut tempvec3a, &mut tempvec3b, &mut rotation
+                );
             }
         }
     });
-    entitysets.push(entities);
-    // meshes.iter_mut().for_each(|(
-    //     entity, _,
-    //     localscaling, transform, scalingmode, velocity, mut abstransform
-    // )| {
-    // });
     // let time1 = pi_time::Instant::now();
     // log::error!("sys_calc_render_matrix");
 }
@@ -98,7 +83,7 @@ pub fn sys_instance_matidxs(
 
     changes.iter().for_each(|entity| {
         if let Ok((mut flag, matidxs)) = meshes.get_mut(*entity) {
-            flag.dirty = true;
+            flag.set_changed();
             flag.iter().for_each(|entity| {
                 if let Ok(mut instanceattributes) = instances.get_mut(*entity) {
                     instanceattributes.update_matidxs(&matidxs.0);
@@ -115,25 +100,31 @@ pub fn sys_render_matrix_dirty(
     changes: ComponentChanged<RenderWorldMatrix>,
     mut instances: Query<(&InstanceMesh, &RenderWorldMatrix, &mut ModelInstanceAttributes)>,
     mut meshes: Query<&mut InstanceSourceRefs>,
+    entitysets: Res<EntityFilterForComponentChanged>,
 ) {
     // let time = pi_time::Instant::now();
 
+    let mut entities = entitysets.pop();
+    let mut soureces = entitysets.pop();
     changes.iter().for_each(|entity| {
+        if !entities.insert(&entity) { return; }
         if let Ok((instance, wm, mut instanceattributes)) = instances.get_mut(*entity) {
-            instanceattributes.update_worldmatrix(&wm.0);
-
-            if let Ok(mut flag) = meshes.get_mut(instance.0) {
-                flag.dirty = true;
+            if instanceattributes.update_worldmatrix(&wm.0) {
+                if !soureces.insert(&instance.0) { return; }
+                if let Ok(mut flag) = meshes.get_mut(instance.0) {
+                    flag.set_changed();
+                }
             }
         }
     });
-    
+    entitysets.push(entities);
+    entitysets.push(soureces);
     // let time1 = pi_time::Instant::now();
     // log::debug!("SysInstanceRenderMatrixUpdate: {:?}", time1 - time);
 }
 
 #[inline(always)]
-fn _calc_render_matrix<T>(
+fn _calc_render_matrix(
     velocity: &ModelVelocity,
     localscaling: &LocalScaling,
     scalingmode: &ScalingMode,
@@ -141,41 +132,49 @@ fn _calc_render_matrix<T>(
     transform: &GlobalMatrix,
     abstransform: &mut AbsoluteTransform,
     wm: &mut RenderWorldMatrix,
-    pose: Result<&RenderPoseMatrix, T>,
-    tmprotation: &mut Rotation3,
+    pose: &RenderPoseMatrix,
+    tmpquaternion: &mut SQuaternion<Number>,
     tmpmatrix: &mut Matrix,
     tmpmatrix2: &mut Matrix,
     tmpmatrix3: &mut Matrix,
+    tmpvec3a: &mut Vector3,
+    tmpvec3b: &mut Vector3,
+    tmprotation: &mut Rotation3,
 ) {
-    let pos = transform.position();
-    let mut scl = Vector3::new(1., 1., 1.);
+    let pos = tmpvec3a;
+    let scl = tmpvec3b;
     let g_rotation;
     match scalingmode.0 {
         crate::prelude::EScalingMode::Hierarchy => {
             if renderalignment.0 == ERenderAlignment::Local {
-                if let Ok(pose) = pose {
-                    if pose.0.is_identity(Number::EPSILON) == false {
+                // if let Ok(pose) = pose {
+                    // if pose.0.is_identity(Number::EPSILON) == false {
+                    if pose.1 {
                         CoordinateSytem3::mul_to(&transform.matrix, &pose.0, &mut wm.0);
                     } else {
                         wm.0.clone_from(&transform.matrix);
                     }
-                } else {
-                    wm.0.clone_from(&transform.matrix);
-                }
+                // } else {
+                //     wm.0.clone_from(&transform.matrix);
+                // }
                 // wm.1.clone_from(&transform.matrix_inv);
+                // log::error!("{:?}", &wm.0);
                 return;
             }
-            scl.clone_from(abstransform.scaling(transform.matrix()));
-            g_rotation = abstransform.rotation(transform.matrix());
+            scl.clone_from(abstransform.scaling(transform.matrix(), pos, tmprotation));
+            g_rotation = abstransform.rotation_quaternion(transform.matrix(), scl, tmprotation);
         },
         crate::prelude::EScalingMode::Local => {
             scl.clone_from(&localscaling.0);
-            g_rotation = abstransform.rotation(transform.matrix());
+            g_rotation = abstransform.rotation_quaternion(transform.matrix(), pos, tmprotation);
         },
         crate::prelude::EScalingMode::Shape => {
-            g_rotation = abstransform.rotation(transform.matrix());
+            scl.copy_from_slice(&[1., 1., 1.]);
+            g_rotation = abstransform.rotation_quaternion(transform.matrix(), pos, tmprotation);
         },
     }
+
+    transform.to_position(pos);
 
     let m0 = &mut wm.0;
     // let m1 = &mut wm.1;
@@ -183,8 +182,8 @@ fn _calc_render_matrix<T>(
     // m1.fill_with_identity();
     tmpmatrix.fill_with_identity();
     tmpmatrix2.fill_with_identity();
-    if renderalignment.0.calc_rotation(g_rotation, velocity, tmprotation) {
-        pi_scene_shell::prelude::matrix4_compose_rotation(&scl, &tmprotation, &pos, m0);
+    if renderalignment.0.calc_rotation(g_rotation, velocity, tmpquaternion) {
+        pi_scene_shell::prelude::matrix4_compose_quaternion(&scl, &tmpquaternion, &pos, m0);
     } else {
         pi_scene_shell::prelude::matrix4_compose_no_rotation(&scl, &pos, m0);
     }
@@ -194,13 +193,13 @@ fn _calc_render_matrix<T>(
         m0.copy_from(tmpmatrix);
     }
 
-    if let Ok(pose) = pose {
+    // if let Ok(pose) = pose {
         if pose.0.is_identity(Number::EPSILON) == false {
             CoordinateSytem3::mul_to(&m0, &pose.0, tmpmatrix);
             // m0.mul_to(&pose.0, tmpmatrix);
             m0.copy_from(tmpmatrix);
         }
-    }
+    // }
 
     // m1.clone_from(&m0);
     // CoordinateSytem3::try_inverse_mut(m1);
@@ -217,15 +216,15 @@ pub fn sys_model_for_uniform(
         if let Ok((worldmatrix, bind_model, meshstatic)) = meshes.get(*entity) {
         // log::warn!("SysModelUniformUpdate: {:?}", worldmatrix.0.as_slice());
             if meshstatic.0 { return; }
-            bind_model.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX as usize, bytemuck::cast_slice(worldmatrix.0.as_slice()));
-            bind_model.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX_INV as usize, bytemuck::cast_slice(matrix.as_slice()));
+            bind_model.matrix.as_ref().unwrap().data().write_data(0, bytemuck::cast_slice(worldmatrix.0.as_slice()));
+            bind_model.matrixinv.as_ref().unwrap().data().write_data(0, bytemuck::cast_slice(matrix.as_slice()));
         }
     });
     velocitychanges.iter().for_each(|entity| {
         if let Ok((velocity, bind_model, meshstatic)) = velocitymeshes.get(*entity) {
             if meshstatic.0 { return; }
             let len = (velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z).sqrt();
-            bind_model.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_VELOCITY as usize, bytemuck::cast_slice(&[velocity.x, velocity.y, velocity.z, len]));
+            bind_model.velocity.as_ref().unwrap().data().write_data(0, bytemuck::cast_slice(&[velocity.x, velocity.y, velocity.z, len]));
         }
     });
 }
@@ -235,21 +234,30 @@ pub fn sys_enable_about_instance(
     changes: ComponentChanged<GlobalEnable>,
     changes2: ComponentChanged<GlobalMatrix>,
     mut meshes: Query<&mut InstanceSourceRefs>,
+    entitysets: Res<EntityFilterForComponentChanged>,
 ) {
+    let mut entities = entitysets.pop();
+    let mut sources = entitysets.pop();
     changes.iter().for_each(|entity| {
+        if !entities.insert(&entity) { return; }
         if let Ok(instance) = instances.get(*entity) {
+            if !sources.insert(&instance.0) { return; }
             if let Ok(mut flag) = meshes.get_mut(instance.0) {
-                flag.dirty = true;
+                flag.set_changed();
             }
         }
     });
     changes2.iter().for_each(|entity| {
+        if !entities.insert(&entity) { return; }
         if let Ok(instance) = instances.get(*entity) {
+            if !sources.insert(&instance.0) { return; }
             if let Ok(mut flag) = meshes.get_mut(instance.0) {
-                flag.dirty = true;
+                flag.set_changed();
             }
         }
     });
+    entitysets.push(entities);
+    entitysets.push(sources);
 }
 
 pub fn sys_animator_update_instance_attribute(
@@ -266,10 +274,12 @@ pub fn sys_animator_update_instance_attribute(
     entitysets: Res<EntityFilterForComponentChanged>,
 ) {
     let mut entities = entitysets.pop();
+    let mut sources = entitysets.pop();
+    // changes.iter().for_each(|entity| {
+    //     entities.insert(*entity);
+    // });
     changes.iter().for_each(|entity| {
-        entities.insert(*entity);
-    });
-    entities.iter().for_each(|entity| {
+        if !entities.insert(entity) { return; }
         if let Ok((mut attributes, animators)) = items.get_mut(*entity) {
             animators.0.iter().for_each(|key| {
                 if let Some(offset) = attributes.offset(key) {
@@ -279,39 +289,46 @@ pub fn sys_animator_update_instance_attribute(
                             match atype {
                                 EAnimatorableType::Vec4 => if let Ok((data, _)) = _vec4s.get(entity) {
                                     if data.is_changed() == false { return; }
-                                    bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                                    attributes.bytes_mut()[idx..(idx+16)].copy_from_slice(bytemuck::cast_slice(data.0.as_slice()))
+                                    // bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
                                 },
                                 EAnimatorableType::Vec3 => if let Ok((data, _)) = _vec3s.get(entity) {
                                     if data.is_changed() == false { return; }
-                                    bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                                    attributes.bytes_mut()[idx..(idx+12)].copy_from_slice(bytemuck::cast_slice(data.0.as_slice()))
+                                    // bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
                                 },
                                 EAnimatorableType::Vec2 => if let Ok((data, _)) = _vec2s.get(entity) {
                                     if data.is_changed() == false { return; }
-                                    bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                                    attributes.bytes_mut()[idx..(idx+8)].copy_from_slice(bytemuck::cast_slice(data.0.as_slice()))
+                                    // bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
                                 },
                                 EAnimatorableType::Float => if let Ok((data, _)) = floats.get(entity) {
                                     if data.is_changed() == false { return; }
-                                    bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                                    attributes.bytes_mut()[idx..(idx+4)].copy_from_slice(bytemuck::cast_slice(&[data.0]))
+                                    // bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
                                 },
                                 EAnimatorableType::Uint => if let Ok((data, _)) = _uints.get(entity) {
                                     if data.is_changed() == false { return; }
-                                    bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                                    attributes.bytes_mut()[idx..(idx+4)].copy_from_slice(bytemuck::cast_slice(&[data.0]))
+                                    // bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
                                 },
                                 EAnimatorableType::Int => if let Ok((data, _)) = _sints.get(entity) {
                                     if data.is_changed() == false { return; }
-                                    bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                                    attributes.bytes_mut()[idx..(idx+4)].copy_from_slice(bytemuck::cast_slice(&[data.0]))
+                                    // bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
                                 },
                             }
                         }
                     }
                 }
             });
-            
+            if !entities.insert(entity) { return; }
             if let Ok(mut flag) = meshes.get_mut(*entity) {
-                flag.dirty = true;
+                flag.set_changed();
             } else if let Ok(instance) = instances.get(*entity) {
+                if !entities.insert(&instance.0) { return; }
                 if let Ok(mut flag) = meshes.get_mut(instance.0) {
-                    flag.dirty = true;
+                    flag.set_changed();
                 }
             }
         }
@@ -332,7 +349,6 @@ pub fn sys_dispose_about_mesh(
     mut skeletons: Query<(&mut SkeletonRefs, &Skeleton)>,
     mut materials: Query<&mut MaterialRefs>,
     passes: Query<&PassMaterialID>,
-    empty: Res<SingleEmptyEntity>,
     mut disposecan: Query<&mut DisposeCan>,
     // mut performance: ResMut<Performance>,
 ) {

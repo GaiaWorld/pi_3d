@@ -120,7 +120,7 @@ dhat            = "0.3"
 
 pi_postprocess      = { version = "0.2", registry = "yn" }
 
-pi_gltf             = { path = "../pi_gltf", features = ["extras"] }
+# pi_gltf             = { path = "../pi_gltf", features = ["extras"] }
 env_logger          = "0.9"
 # pi_wgpu         = { version = "*", features = ["single_thread", "use_wgpu"] }
 pi_time                 = "0.5"

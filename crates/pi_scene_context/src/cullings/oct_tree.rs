@@ -66,19 +66,13 @@ impl TBoundingInfoCalc for BoundingOctTree {
     }
 
     fn culling<F: TFilter>(&mut self, transform: &Matrix, filter: F, result: &mut Vec<Entity>) {
-        let iter =  filter.iter();
-        let len = iter.len();
-        if len == 0 {
-            return;
-        }
-
         self.fast.iter().for_each(|item| {
             if filter.filter(*item) {
                 result.push(*item);
             }
         });
 
-        if len > result.len() {
+        // if len > result.len() {
             if let Some(frustum) = compute_frustum(transform) {
                 let mut frustum_planes = FrustumPlanes::default();
                 frustum_planes.from_transform_matrix(transform);
@@ -97,7 +91,7 @@ impl TBoundingInfoCalc for BoundingOctTree {
 
                 self.tree.query(&aabb, intersects, &mut args, ab_query_func);
             }
-        }
+        // }
 
     }
 

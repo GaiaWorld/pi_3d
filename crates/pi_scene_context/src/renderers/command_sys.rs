@@ -168,9 +168,9 @@ pub fn sys_act_renderer_modify(
                 }
                 // else { cmdmodifys.push(cmd) }
             },
-            OpsRendererCommand::Viewport(entity, x, y, z, w) => {
+            OpsRendererCommand::Viewport(entity, x, y, z, w, mind, maxd) => {
                 if let Ok((mut comp, _, _, _)) = renderers.get_mut(entity) {
-                    comp.viewport = RenderViewport(x, y, z, w, 0., 1.);
+                    comp.viewport = RenderViewport(x, y, z, w, mind, maxd);
                 }
                 // else { cmdmodifys.push(cmd) }
             }

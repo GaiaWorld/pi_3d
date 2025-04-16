@@ -1,4 +1,7 @@
+
+use crossbeam::queue::ArrayQueue;
 use crossbeam::queue::SegQueue;
+use pi_slotmap::Key;
 
 use crate::ecs::*;
 
@@ -61,21 +64,155 @@ impl OpsDisposeCan {
 }
 pub type ActionListDisposeCan = ActionList<OpsDisposeCan>;
 
-#[derive(Resource, Default)]
-pub struct EntityFilterForComponentChanged(pub SegQueue<XHashSet<Entity>>);
+
+// #[derive(Default)]
+// pub struct EntityRecord(Vec<Entity>, EntityRepeatCheck, Vec<Entity>);
+// impl EntityRecord {
+//     pub fn insert(&mut self, entity: &Entity) -> bool {
+//         let isinsert = self.1.insert(entity);
+//         if isinsert {
+//             self.0.push(*entity);
+//         }
+//         isinsert
+//     }
+//     pub fn contains(&self, entity: &Entity) -> bool {
+//         return self.1.contains(entity);
+//     }
+//     pub fn sort_after_batch_insert(&mut self) {
+//         self.0.sort_by(|a, b| a.index().cmp(&b.index()));
+//     }
+//     pub fn remove(&mut self, entity: &Entity) -> bool {
+//         if self.1.remove(entity) {
+//             self.2.push(*entity);
+//             return true;
+//         } else {
+//             return false;
+//         }
+//     }
+//     pub fn reset_after_batch_remove(&mut self) {
+//         let mut tmp = vec![];
+//         self.2.drain(..).for_each(|entity| {
+//             match self.0.binary_search_by(|probe| probe.index().cmp(&entity.index())) {
+//                 Ok(idx) => tmp.push(idx),
+//                 Err(_) => {},
+//             };
+//         });
+//         tmp.sort();
+
+//         let deletecount = tmp.len();
+//         if 0 < deletecount {
+//             if let Some(last) = self.0.last() {
+//                 let last = *last;
+//                 while let Some(idx) = tmp.pop() {
+//                     self.0[idx] = last;
+//                 }
+//                 self.0.sort_by(|a, b| a.index().cmp(&b.index()));
+//                 self.0.truncate(self.0.len() - deletecount);
+//             }
+//         }
+//     }
+
+//     pub fn len(&self) -> usize {
+//         self.0.len()
+//     }
+//     pub fn clear(&mut self) {
+//         self.0.clear();
+//         self.1.clear();
+//         self.2.clear();
+//     }
+//     pub fn iter(&self) -> std::slice::Iter<Entity> {
+//         return self.0.iter();
+//     }
+//     pub fn capacity(&self) -> usize {
+//         self.0.capacity() + self.2.capacity()
+//     }
+//     pub fn is_empty(&self) -> bool {
+//         self.0.is_empty()
+//     }
+// }
+
+pub struct EntityRepeatCheck(Vec<u8>, usize);
+impl Default for EntityRepeatCheck {
+    fn default() -> Self {
+        Self(Vec::with_capacity(1024), 0)
+    }
+}
+impl EntityRepeatCheck {
+    pub fn insert(&mut self, entity: &Entity) -> bool {
+        let idx = entity.index();
+        let i = idx / 8;
+        if self.0.len() < i + 1 {
+            for _ in self.0.len()..(i + 1) {
+                self.0.push(0);
+            }
+        }
+        let v0 = self.0[i];
+        let v1 = 1 << (idx % 8);
+        let has = (v0 & v1) > 0;
+        if !has {
+            self.1 += 1;
+        }
+        self.0[idx / 8] = v0 | v1;
+        return !has;
+    }
+    pub fn contains(&self, entity: &Entity) -> bool {
+        let idx = entity.index();
+        let i = idx / 8;
+        if self.0.len() < i + 1 {
+            return false;
+        } else {
+            let v0 = self.0[i];
+            let v1 = 1 << (idx % 8);
+            let has = (v0 & v1) > 0;
+            return has;
+        }
+    }
+    pub fn remove(&mut self, entity: &Entity) -> bool {
+        let idx = entity.index();
+        let i = idx / 8;
+        if self.0.len() < i + 1 {
+            return false;
+        } else {
+            let v0 = self.0[i];
+            let v1 = 1 << (idx % 8);
+            let has = (v0 & v1) > 0;
+            if has {
+                self.0[idx / 8] -= v1;
+                self.1 -= 1;
+            }
+            return has;
+        }
+    }
+    pub fn len(&self) -> usize {
+        self.1
+    }
+    pub fn clear(&mut self) {
+        self.0.clear();
+        self.1 = 0;
+    }
+    pub fn capacity(&self) -> usize {
+        self.0.capacity()
+    }
+}
+
+#[derive(Resource)]
+pub struct EntityFilterForComponentChanged(pub ArrayQueue<EntityRepeatCheck>);
+impl Default for EntityFilterForComponentChanged {
+    fn default() -> Self {
+        Self(ArrayQueue::new(16))
+    }
+}
 impl EntityFilterForComponentChanged {
-    pub fn pop(&self) -> XHashSet<Entity> {
+    pub fn pop(&self) -> EntityRepeatCheck {
         if let Some(mut set) = self.0.pop() {
             set.clear();
             set
         } else {
-            XHashSet::default()
+            EntityRepeatCheck::default()
         }
     }
-    pub fn push(&self, set: XHashSet<Entity>) {
-        if self.0.len() < 64 {
-            self.0.push(set)
-        }
+    pub fn push(&self, set: EntityRepeatCheck) {
+        let _ = self.0.push(set);
     }
 }
 

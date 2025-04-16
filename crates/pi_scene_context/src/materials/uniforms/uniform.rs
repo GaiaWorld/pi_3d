@@ -149,7 +149,8 @@ impl BindEffectValues {
         offsets: &mut  Vec<(Atom, UniformOffset)>,
     ) {
         let offset = UniformOffset::new(vtype, bytes.len() as u16, None);
-        data.iter().for_each(|v| { bytes.push(*v); });
+        unsafe_vec_append_slice(bytes, data);
+        // data.iter().for_each(|v| { bytes.push(*v); });
         offsets.push((key, offset));
     }
     pub fn animator(

@@ -16,8 +16,6 @@ impl BallBuilder {
     pub const KEY_BUFFER_UV:        &'static str = "BallUV";
     pub const KEY_BUFFER_INDICES:   &'static str = "BallIndices";
     pub const KEY_BUFFER:           &'static str = "BallVertices";
-    // const POSITION_OFFSET:      usize = 0;
-    // const POSITION_SIZE:        usize = 72 * 4;
 
     pub fn attrs_meta() -> Vec<VertexBufferDesc> {
         let key = KeyVertexBuffer::from(Self::KEY_BUFFER);
@@ -29,9 +27,6 @@ impl BallBuilder {
                     EVertexAttribute::Buildin(EBuildinVertexAtribute::Position, wgpu::VertexFormat::Float32x3),
                     EVertexAttribute::Buildin(EBuildinVertexAtribute::Normal, wgpu::VertexFormat::Float32x3),
                     EVertexAttribute::Buildin(EBuildinVertexAtribute::UV, wgpu::VertexFormat::Float32x2),
-                    // VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 },
-                    // VertexAttribute { kind: EVertexDataKind::Normal, format: wgpu::VertexFormat::Float32x3 },
-                    // VertexAttribute { kind: EVertexDataKind::UV, format: wgpu::VertexFormat::Float32x2 }
                 ]
             ),
         ]
@@ -48,67 +43,8 @@ pub struct BallParam {
     pub stacks: usize,
 }
 
-// pub trait InterfaceBall {
-//     fn new_ball(&self, scene: ObjectID, sectors: usize, stacks: usize) -> ObjectID;
-// }
-
-// impl InterfaceBall for Engine {
-//     fn new_ball(&self, scene: ObjectID, sectors: usize, stacks: usize) -> ObjectID {
-//         let entity = self.new_object();
-//         let world = self
-//             .add_to_scene(entity, scene)
-//             .as_transform_node(entity)
-//             .transform_parent(entity, scene)
-//             .as_mesh(entity)
-//             .world();
-
-//         let device = world.get_resource::<RenderDevice>().unwrap();
-//         let queue = world.get_resource::<RenderQueue>().unwrap();
-//         println!(">>>>>>>>>>>>>>>>>>>> 0");
-
-//         let (positions, normals, indices, uvs) = generate_sphere(sectors, stacks);
-
-//         println!(">>>>>>>>>>>>>>>>>>>> 1");
-//         let flag = String::from("#") + sectors.to_string().as_str() + "#" + stacks.to_string().as_str();
-//         let keypos = KeyVertexBuffer::from(String::from(BallBuilder::KEY_BUFFER_POSITION) + flag.as_str());
-//         self.create_vertex_buffer(keypos.clone(), bytemuck::cast_slice(positions.as_slice()).iter().map(|v| *v).collect::<Vec<u8>>());
-
-//         let keynormal = KeyVertexBuffer::from(String::from(BallBuilder::KEY_BUFFER_NORMAL) + flag.as_str());
-//         self.create_vertex_buffer(keynormal.clone(), bytemuck::cast_slice(normals.as_slice()).iter().map(|v| *v).collect::<Vec<u8>>());
-        
-//         let keyuv = KeyVertexBuffer::from(String::from(BallBuilder::KEY_BUFFER_UV) + flag.as_str());
-//         self.create_vertex_buffer(keyuv.clone(), bytemuck::cast_slice(uvs.as_slice()).iter().map(|v| *v).collect::<Vec<u8>>());
-
-//         let key = KeyVertexBuffer::from(String::from(BallBuilder::KEY_BUFFER_INDICES) + flag.as_str());
-//         self.create_vertex_buffer(key.clone(), bytemuck::cast_slice(indices.as_slice()).iter().map(|v| *v).collect::<Vec<u8>>());
-
-//         self.use_geometry(
-//             entity,
-//             vec![
-//                 VertexBufferDesc::vertices(keypos, None, vec![VertexAttribute { kind: EVertexDataKind::Position, format: wgpu::VertexFormat::Float32x3 }]),
-//                 VertexBufferDesc::vertices(keynormal, None, vec![VertexAttribute { kind: EVertexDataKind::Normal, format: wgpu::VertexFormat::Float32x3 }]),
-//                 VertexBufferDesc::vertices(keyuv, None, vec![VertexAttribute { kind: EVertexDataKind::UV, format: wgpu::VertexFormat::Float32x2 }]),
-//             ],
-//             Some(
-//                 IndicesBufferDesc { format: wgpu::IndexFormat::Uint16, buffer_range: None, buffer: key }
-//             )
-//         );
-
-//         entity
-//     }
-// }
-
 pub struct PluginBallBuilder;
 impl Plugin for PluginBallBuilder {
-    // fn init(
-    //     &mut self,
-    //     engine: &mut Engine,
-    //     stages: &mut pi_scene_shell::run_stage::RunStage,
-    // ) -> Result<(), ErrorPlugin> {
-
-    //     Ok(())
-    // }
-
     fn build(&self, app: &mut App) {
         let asset_mgr = app.world.get_resource::<ShareAssetMgr<EVertexBufferRange>>().unwrap().clone();
 

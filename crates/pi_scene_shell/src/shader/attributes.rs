@@ -328,6 +328,10 @@ pub enum EBuildinVertexAtribute {
     NormalM                 ,
     UVM                     ,
     Color4M                 ,
+    CustomV4A               ,
+    CustomV4B               ,
+    CustomV4C               ,
+    CustomV4D               ,
 }
 impl EBuildinVertexAtribute {
     pub fn format(&self) -> wgpu::VertexFormat {
@@ -361,6 +365,10 @@ impl EBuildinVertexAtribute {
             EBuildinVertexAtribute::NormalM => wgpu::VertexFormat::Float32x3,
             EBuildinVertexAtribute::UVM => wgpu::VertexFormat::Float32x2,
             EBuildinVertexAtribute::Color4M => wgpu::VertexFormat::Float32x4,
+            EBuildinVertexAtribute::CustomV4A => wgpu::VertexFormat::Float32x4,
+            EBuildinVertexAtribute::CustomV4B => wgpu::VertexFormat::Float32x4,
+            EBuildinVertexAtribute::CustomV4C => wgpu::VertexFormat::Float32x4,
+            EBuildinVertexAtribute::CustomV4D => wgpu::VertexFormat::Float32x4,
         }
     }
     pub fn kind(&self) -> String {
@@ -397,6 +405,10 @@ impl EBuildinVertexAtribute {
             EBuildinVertexAtribute::NormalM                 => ShaderVarVertices::NORMAL_M,
             EBuildinVertexAtribute::UVM                     => ShaderVarVertices::UV_M,
             EBuildinVertexAtribute::Color4M                 => ShaderVarVertices::COLOR4_M,
+            EBuildinVertexAtribute::CustomV4A               => ShaderVarVertices::CUSTOM_VEC4_A,
+            EBuildinVertexAtribute::CustomV4B               => ShaderVarVertices::CUSTOM_VEC4_B,
+            EBuildinVertexAtribute::CustomV4C               => ShaderVarVertices::CUSTOM_VEC4_C,
+            EBuildinVertexAtribute::CustomV4D               => ShaderVarVertices::CUSTOM_VEC4_D,
         }
     }
 }

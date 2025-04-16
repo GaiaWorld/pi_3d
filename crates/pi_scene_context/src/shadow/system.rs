@@ -65,28 +65,44 @@ pub fn sys_shadow_generator_apply_while_shadow_modify(
         Or<(Changed<LinkedMaterialID>, Changed<FlagModelList>, Changed<ForceIncludeModelList>, Changed<ShadowCastPassTag>)>
     >,
     mut matcmds: ResMut<ActionListMaterialUse>,
-    meshes: Query<&MeshCastShadow, With<Mesh>>,
-    instances: Query<&InstanceMesh>,
+    meshes: Query<(Entity, &MeshCastShadow), With<Mesh>>,
+    instances: Query<(Entity, &InstanceMesh)>,
     empty: Res<SingleEmptyEntity>,
+    entitysets: Res<EntityFilterForComponentChanged>,
 ) {
+    let mut sources = entitysets.pop();
+    let mut entities = entitysets.pop();
     shadows.iter().for_each(|(id_mat, modelist, forcemodels, passtag)| {
         if id_mat.0 != empty.id() {
-            modelist.0.iter().for_each(|id_model| {
-                if meshes.contains(*id_model) {
-                    matcmds.push(OpsMaterialUse::Use(*id_model, id_mat.0, passtag.0));
-                } else if let Ok(id_model) = instances.get(*id_model) {
-                    matcmds.push(OpsMaterialUse::Use(id_model.0, id_mat.0, passtag.0));
+            instances.iter().for_each(|(ins, id_model)| {
+                if modelist.0.contains(&ins) || forcemodels.0.contains(&ins) {
+                    sources.insert(&id_model.0);
                 }
             });
-            forcemodels.0.iter().for_each(|id_model| {
-                if meshes.contains(*id_model) {
-                    matcmds.push(OpsMaterialUse::Use(*id_model, id_mat.0, passtag.0));
-                } else if let Ok(id_model) = instances.get(*id_model) {
-                    matcmds.push(OpsMaterialUse::Use(id_model.0, id_mat.0, passtag.0));
+            meshes.iter().for_each(|(id_model, _)| {
+                if entities.insert(&id_model) && (sources.contains(&id_model) || modelist.0.contains(&id_model) || forcemodels.0.contains(&id_model)) {
+                    matcmds.push(OpsMaterialUse::Use(id_model, id_mat.0, passtag.0));
                 }
             });
+            // modelist.0.iter().for_each(|id_model| {
+            //     if meshes.contains(*id_model) {
+            //         matcmds.push(OpsMaterialUse::Use(*id_model, id_mat.0, passtag.0));
+            //     } else if let Ok(id_model) = instances.get(*id_model) {
+            //         matcmds.push(OpsMaterialUse::Use(id_model.0, id_mat.0, passtag.0));
+            //     }
+            // });
+            // forcemodels.0.iter().for_each(|id_model| {
+            //     if meshes.contains(*id_model) {
+            //         matcmds.push(OpsMaterialUse::Use(*id_model, id_mat.0, passtag.0));
+            //     } else if let Ok(id_model) = instances.get(*id_model) {
+            //         matcmds.push(OpsMaterialUse::Use(id_model.0, id_mat.0, passtag.0));
+            //     }
+            // });
         }
     });
+
+    entitysets.push(sources);
+    entitysets.push(entities);
 }
 
 pub fn sys_light_layermask_to_shadow(
@@ -135,6 +151,8 @@ pub fn sys_calc_view_matrix_by_light(
     // record.0.push(String::from("sys_calc_view_matrix_by_light"));
     //  log::debug!("View Matrix Calc:");
     let coordsys = CoordinateSytem3::left();
+    let mut tmpscl = Vector3::zeros();
+    let mut tmprot = Rotation3::identity();
     lights.iter_mut().for_each(|(entity, l_position, idshadow, ldirection)| {
         if let Some(idshadow) = idshadow.0 {
             if let Ok((_linklight, mut viewcalc, mut viewmatrix, mut viewposition, mut viewdirection)) = viewers.get_mut(idshadow) {
@@ -144,7 +162,7 @@ pub fn sys_calc_view_matrix_by_light(
                 if let Ok(parent) = childrens.get(entity) {
                     let parent_id = parent.parent();
                     if let Ok((parent, mut absolute)) = transforms.get_mut(parent_id) {
-                        let iso = absolute.iso(&parent.matrix());
+                        let iso = absolute.iso(&parent.matrix(), &mut tmpscl, &mut tmprot);
                         let (matrix, pos) = viewcalc.view_matrix(&coordsys, l_position, Some((&parent, iso)));
                         *viewmatrix = matrix;
                         *viewposition = pos;

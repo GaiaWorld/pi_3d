@@ -1,4 +1,5 @@
 use crate::ecs::*;
+use crate::math::ResMatrixPool;
 
 use pi_bevy_render_plugin::{PiRenderDevice, PiRenderSystemSet};
 
@@ -71,6 +72,7 @@ impl Plugin for PluginRunstage {
         let device = app.world.get_resource::<PiRenderDevice>().unwrap();
         let limits = device.limits();
         app.insert_resource(DeviceLimits3D(limits));
+        app.insert_resource(ResMatrixPool::create(2048));
 
 #[cfg(feature = "use_bevy")]
 {

@@ -78,6 +78,7 @@ impl ShaderVarUniform {
     pub const _WORLD_MATRIX_INV         : &'static str = "U_PI_WorldToObject"   ;
     pub const VELOCITY                  : &'static str = "PI_ObjectVelocity"    ;
     pub const _VELOCITY                 : &'static str = "U_PI_ObjectVelocity"  ;
+    pub const _SKIN_BONE_OFFSET         : &'static str = "U_PI_SkinBoneOffset"  ;
     pub const _SKIN_BONE_OFFSET0        : &'static str = "U_PI_SkinBoneOffset0" ;
     pub const _SKIN_BONE_OFFSET1        : &'static str = "U_PI_SkinBoneOffset1" ;
     pub const _MATIDX                   : &'static str = "U_PI_MatIdxs"         ;

@@ -40,20 +40,11 @@ impl ShaderBindModelAboutSkinValue {
         };
 
         if let Some(cache) = cache {
-            Some(Self {
-                skin: skin.clone(),
-                data: cache,
-                totalsize: size,
-            })
+            Some(Self { skin: skin.clone(), data: cache, totalsize: size, })
         } else {
-            // log::error!("Skin bind size  {:?}", size);
             if size > 0 {
                 if let Some(buffer) = allocator.allocate(size as u32) {
-                    Some(Self {
-                        skin: skin.clone(),
-                        data: buffer,
-                        totalsize: size,
-                    })
+                    Some(Self { skin: skin.clone(), data: buffer, totalsize: size, })
                 } else {
                     None
                 }

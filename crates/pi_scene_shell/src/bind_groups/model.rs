@@ -20,6 +20,10 @@ pub struct KeyBindGroupModel {
     pub matidx: ShaderBindModelMatIdx,
     pub matrix: Option<ShaderBindModelAboutMatrix>,
     pub skin: Option<ShaderBindModelAboutSkinValue>,
+    pub matrixinv: Option<ShaderBindModelMatrixInv>,
+    pub morphinfluence: Option<ShaderBindModelMorphinfluence>,
+    pub skinoffset: Option<ShaderBindModelSkinOffset>,
+    pub velocity: Option<ShaderBindModelVelocity>,
     pub lightingidxs: Option<BindModelLightIndexs>,
     pub key: KeyShaderSetModel,
     bind_count: u32,
@@ -29,6 +33,10 @@ impl KeyBindGroupModel {
     pub fn new(
         matidx: ShaderBindModelMatIdx,
         matrix: Option<ShaderBindModelAboutMatrix>,
+        matrixinv: Option<ShaderBindModelMatrixInv>,
+        morphinfluence: Option<ShaderBindModelMorphinfluence>,
+        skinoffset: Option<ShaderBindModelSkinOffset>,
+        velocity: Option<ShaderBindModelVelocity>,
         skin: Option<ShaderBindModelAboutSkinValue>,
         lightingidxs: Option<BindModelLightIndexs>,
     ) -> Self {
@@ -51,6 +59,34 @@ impl KeyBindGroupModel {
             }
         }
 
+        if let Some(bind) = &matrixinv {
+            if let Some(key) = bind.key_bind() {
+                key_binds.push(key);
+                binding += 1;
+            }
+        }
+        
+        if let Some(bind) = &morphinfluence {
+            if let Some(key) = bind.key_bind() {
+                key_binds.push(key);
+                binding += 1;
+            }
+        }
+        
+        if let Some(bind) = &skinoffset {
+            if let Some(key) = bind.key_bind() {
+                key_binds.push(key);
+                binding += 1;
+            }
+        }
+        
+        if let Some(bind) = &velocity {
+            if let Some(key) = bind.key_bind() {
+                key_binds.push(key);
+                binding += 1;
+            }
+        }
+        
         if let Some(bind) = &skin {
             key.skin = bind.skin;
             if let Some(key) = bind.key_bind() {
@@ -69,6 +105,10 @@ impl KeyBindGroupModel {
         let result = Self {
             matidx,
             matrix,
+            matrixinv,
+            skinoffset,
+            morphinfluence,
+            velocity,
             skin,
             lightingidxs,
             key,
@@ -95,8 +135,23 @@ impl TShaderSetBlock for KeyBindGroupModel {
             result += self.matidx.vs_define_code(set, bind).as_str();
             bind += 1;
         }
-
         if let Some(item) = &self.matrix {
+            result += item.vs_define_code(set, bind).as_str();
+            bind += 1;
+        }
+        if let Some(item) = &self.matrixinv {
+            result += item.vs_define_code(set, bind).as_str();
+            bind += 1;
+        }
+        if let Some(item) = &self.morphinfluence {
+            result += item.vs_define_code(set, bind).as_str();
+            bind += 1;
+        }
+        if let Some(item) = &self.skinoffset {
+            result += item.vs_define_code(set, bind).as_str();
+            bind += 1;
+        }
+        if let Some(item) = &self.velocity {
             result += item.vs_define_code(set, bind).as_str();
             bind += 1;
         }
@@ -124,6 +179,22 @@ impl TShaderSetBlock for KeyBindGroupModel {
         }
 
         if let Some(item) = &self.matrix {
+            result += item.fs_define_code(set, bind).as_str();
+            bind += 1;
+        }
+        if let Some(item) = &self.matrixinv {
+            result += item.fs_define_code(set, bind).as_str();
+            bind += 1;
+        }
+        if let Some(item) = &self.morphinfluence {
+            result += item.fs_define_code(set, bind).as_str();
+            bind += 1;
+        }
+        if let Some(item) = &self.skinoffset {
+            result += item.fs_define_code(set, bind).as_str();
+            bind += 1;
+        }
+        if let Some(item) = &self.velocity {
             result += item.fs_define_code(set, bind).as_str();
             bind += 1;
         }
@@ -161,11 +232,31 @@ impl BindGroupModel {
         if self.key.matrix.is_some() {
             result += "
     mat4 PI_ObjectToWorld = U_PI_ObjectToWorld;
-    vec4 PI_ObjectVelocity = U_PI_ObjectVelocity;
-    uint PI_SkinBoneOffset0 = U_PI_SkinBoneOffset0;
-    uint PI_SkinBoneOffset1 = U_PI_SkinBoneOffset1;
 ";
         }
+        result += if self.key.matrixinv.is_some() {
+"    mat4 PI_WorldToObject = U_PI_WorldToObject;
+"
+        } else {
+            
+"    // mat4 PI_WorldToObject = U_PI_WorldToObject;
+"
+        };
+        result += if self.key.skinoffset.is_some() {
+"
+    uvec4 PI_SkinBoneOffset = U_PI_SkinBoneOffset;
+"
+        } else {
+"   uvec4 PI_SkinBoneOffset = uvec4(0, 0, 0, 0);
+"
+        };
+        result += if self.key.velocity.is_some() {
+"    vec4 PI_ObjectVelocity = U_PI_ObjectVelocity;
+"
+        } else {
+"    vec4 PI_ObjectVelocity = vec4(1., 0., 0., 1.);
+"
+        };
         
         result
     }

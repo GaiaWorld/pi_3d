@@ -4,7 +4,7 @@ use std::{hash::{DefaultHasher, Hasher}, sync::Arc};
 
 use pi_scene_shell::prelude::*;
 
-use crate::prelude::{BindModel, BindModelMatIdx, CommonBindModel};
+use crate::prelude::{BindModel, CommonBindModel};
 
 
 #[derive(Default, Clone, Resource)]
@@ -215,7 +215,7 @@ impl Plugin for PluginRenderBindGroup {
         let device = app.world.get_resource::<PiRenderDevice>().unwrap();
         if app.world.get_resource::<ResBindBufferAllocator>().is_none() {
             let mut allocator = ResBindBufferAllocator(BindBufferAllocator::new(device));
-            let commonbindmodel = CommonBindModel(BindModel::new(&mut allocator), BindModelMatIdx::new(&mut allocator));
+            let commonbindmodel = CommonBindModel(BindModel::new(&mut allocator));
             let bindpassindexs = BindPassIndexPool::new(&mut allocator);
             app.insert_resource(commonbindmodel);
             app.insert_resource(bindpassindexs);

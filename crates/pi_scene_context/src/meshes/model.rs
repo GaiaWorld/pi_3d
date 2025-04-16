@@ -39,10 +39,10 @@ pub struct Mesh;
 /// 在 AbstructMesh 实体上 可能设置的 PoseMatrix
 /// 用于 调整目标渲染姿态 , 与节点树世界矩阵 有区别
 #[derive(Component)]
-pub struct RenderPoseMatrix(pub Matrix);
+pub struct RenderPoseMatrix(pub Matrix, pub bool);
 impl Default for RenderPoseMatrix {
     fn default() -> Self {
-        Self(Matrix::identity())
+        Self(Matrix::identity(), false)
     }
 }
 
@@ -101,25 +101,32 @@ impl ModelStatic {
 /// 用于记录 Mesh 的模型相关Uniform数据
 /// 包含 Mesh 的渲染矩阵, 骨骼绑定, 关联灯光等等信息
 #[derive(Component, Default, Clone)]
-pub struct BindModel(pub Option<ShaderBindModelAboutMatrix>);
+pub struct BindModel {
+    pub matrix: Option<ShaderBindModelAboutMatrix>,
+    pub matrixinv: Option<ShaderBindModelMatrixInv>,
+    pub skinoff: Option<ShaderBindModelSkinOffset>,
+    pub velocity: Option<ShaderBindModelVelocity>,
+    pub morphinfluence: Option<ShaderBindModelMorphinfluence>,
+    pub matidx: Option<ShaderBindModelMatIdx>,
+}
 impl BindModel {
     pub fn new(
         allocator: &mut BindBufferAllocator,
     ) -> Self {
-        Self(ShaderBindModelAboutMatrix::new(allocator))
+        Self {
+            matrix: ShaderBindModelAboutMatrix::new(allocator),
+            matrixinv: ShaderBindModelMatrixInv::new(allocator),
+            skinoff: ShaderBindModelSkinOffset::new(allocator),
+            velocity: ShaderBindModelVelocity::new(allocator),
+            morphinfluence: ShaderBindModelMorphinfluence::new(allocator),
+            matidx: ShaderBindModelMatIdx::new(allocator),
+        }
     }
 }
 
-/// 用于记录 Mesh 的模型 材质数据Index
-#[derive(Component, Default, Clone)]
-pub struct BindModelMatIdx(pub Option<ShaderBindModelMatIdx>);
-impl BindModelMatIdx {
-    pub fn new(
-        allocator: &mut BindBufferAllocator,
-    ) -> Self {
-        Self(ShaderBindModelMatIdx::new(allocator))
-    }
-}
+#[derive(Component, Clone, Default)]
+pub struct ModelBindDefines(pub u32);
+
 
 #[derive(Component, Clone)]
 pub struct ModelMatIdxs(pub [u16; PassTag::PASS_COUNT]);
@@ -132,7 +139,7 @@ impl Default for ModelMatIdxs {
 /// 通用的一个BindModel,可用于多个粒子系统共用,增加合批机会
 /// 实例化渲染中 BindModel 上的矩形数据并不会使用
 #[derive(Resource)]
-pub struct CommonBindModel(pub BindModel, pub BindModelMatIdx);
+pub struct CommonBindModel(pub BindModel);
 impl MemSize for CommonBindModel {
     fn memsize(&self) -> usize {
         1024

@@ -17,7 +17,7 @@ pub fn sys_model_direct_lighting_modify_by_light(
     layermask: Query<&LayerMask>,
     viewers: Query<(&SceneID, &ModelList)>,
     lightindex: Query<&SceneItemIndex>,
-    meshes: Query<&ModelLightingIndexs>,
+    meshes: Query<(Entity, &ModelLightingIndexs)>,
     // mut record: ResMut<pi_scene_shell::run_stage::RunSystemRecord>,
 ) {
     // record.0.push(String::from("sys_model_direct_lighting_modify_by_light"));
@@ -25,22 +25,40 @@ pub fn sys_model_direct_lighting_modify_by_light(
         if let Ok((scene, queuedirect)) = scenes.get(*entity) {
             viewers.iter().for_each(|(idscene, models)| {
                 if idscene.0 == scene {
-                    models.0.iter().for_each(|idm| {
-                        if let (Ok(ids), Ok(my)) = (meshes.get(*idm), layermask.get(*idm)) {
-                            if let Some(ids) = &ids.bind {
-                                let mut indexlight = vec![];
-                                queuedirect.0.items().for_each(|idlight| {
-                                    if let (Ok(ly), Ok(lidx)) = (layermask.get(*idlight), lightindex.get(*idlight)) {
-                                        if ly.include(my.0) {
-                                            indexlight.push(lidx.val());
+                    meshes.iter().for_each(|(idm, ids)| {
+                        if models.0.contains(&idm) {
+                            if let Ok(my) = layermask.get(idm) {
+                                if let Some(ids) = &ids.bind {
+                                    let mut indexlight = vec![];
+                                    queuedirect.0.items().for_each(|idlight| {
+                                        if let (Ok(ly), Ok(lidx)) = (layermask.get(*idlight), lightindex.get(*idlight)) {
+                                            if ly.include(my.0) {
+                                                indexlight.push(lidx.val());
+                                            }
                                         }
-                                    }
-                                });
-                                // log::error!("Model Direct: {:?}", &indexlight);
-                                ids.direct_light_data(&indexlight);
+                                    });
+                                    // log::error!("Model Direct: {:?}", &indexlight);
+                                    ids.direct_light_data(&indexlight);
+                                }
                             }
                         }
                     });
+                    // models.0.iter().for_each(|idm| {
+                    //     if let (Ok(ids), Ok(my)) = (meshes.get(*idm), layermask.get(*idm)) {
+                    //         if let Some(ids) = &ids.bind {
+                    //             let mut indexlight = vec![];
+                    //             queuedirect.0.items().for_each(|idlight| {
+                    //                 if let (Ok(ly), Ok(lidx)) = (layermask.get(*idlight), lightindex.get(*idlight)) {
+                    //                     if ly.include(my.0) {
+                    //                         indexlight.push(lidx.val());
+                    //                     }
+                    //                 }
+                    //             });
+                    //             // log::error!("Model Direct: {:?}", &indexlight);
+                    //             ids.direct_light_data(&indexlight);
+                    //         }
+                    //     }
+                    // });
                 }
             });
         }
@@ -61,13 +79,14 @@ pub fn sys_model_direct_lighting_modify_by_model(
 ) {
     // record.0.push(String::from("sys_model_direct_lighting_modify_by_model"));
     let mut entities = entitysets.pop();
-    changes.iter().for_each(|entity| {
-        entities.insert(*entity);
-    });
-    addeds.iter().for_each(|entity| {
-        entities.insert(*entity);
-    });
-    entities.iter().for_each(|entity| {
+    // changes.iter().for_each(|entity| {
+    //     entities.insert(*entity);
+    // });
+    // addeds.iter().for_each(|entity| {
+    //     entities.insert(*entity);
+    // });
+    changes.iter().chain(addeds.iter()).for_each(|entity| {
+        if !entities.insert(entity) { return; }
         if let Ok((idm, idscene, ids)) = meshes.get(*entity) {
             if let Ok(queuedirect) = scenes.get(idscene.0) {
                 if let Ok(my) = layermask.get(idm) {
@@ -108,16 +127,17 @@ pub fn sys_model_point_lighting_modify_by_model(
 ) {
     // record.0.push(String::from("sys_model_point_lighting_modify_by_model"));
     let mut entities = entitysets.pop();
-    changes.iter().for_each(|entity| {
-        entities.insert(*entity);
-    });
-    addeds.iter().for_each(|entity| {
-        entities.insert(*entity);
-    });
-    changes3.iter().for_each(|entity| {
-        entities.insert(*entity);
-    });
-    entities.iter().for_each(|entity| {
+    // changes.iter().for_each(|entity| {
+    //     entities.insert(*entity);
+    // });
+    // addeds.iter().for_each(|entity| {
+    //     entities.insert(*entity);
+    // });
+    // changes3.iter().for_each(|entity| {
+    //     entities.insert(*entity);
+    // });
+    changes.iter().chain(changes3.iter()).chain(addeds.iter()).for_each(|entity| {
+        if !entities.insert(entity) { return; }
         if let Ok((idm, idscene, ids, forcelights)) = meshes.get(*entity) {
             if let Ok(queuepoint) = scenes.get(idscene.0) {
                 if let Ok(my) = layermask.get(idm) {

@@ -436,6 +436,7 @@ impl ParticleTrail {
     ) {
         let mut color = Vector4::new(1., 1., 1., 1.);
         let mut localscaling = Vector3::new(1., 0., 0.);
+        let mut localmatrix = Matrix::identity();
         let trailworldspace = trailmodifier.use_world_space;
         newids.iter().for_each(|idx| {
             let randoms = randomlist.get(*idx).unwrap();
@@ -446,7 +447,6 @@ impl ParticleTrail {
             let translation = localpositions.get(*idx).unwrap() + direction.value.scale(-1. * PARTICLE_MIN_VALUE / f32::max(direction.length, 1.));
             let scaling = localscalings.get(*idx).unwrap();
             let eulers = localrotations.get(*idx).unwrap();
-            let mut localmatrix = Matrix::identity();
             CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &translation, &mut localmatrix);
 
             let parentmatrix = &worldmatrixs.get(*idx).unwrap().matrix;
@@ -494,6 +494,7 @@ impl ParticleTrail {
         let mut color = Vector4::new(1., 1., 1., 1.);
         let basesize = Vector3::new(0.5773502691896257 as f32, 0.5773502691896257 as f32, 0.5773502691896257 as f32);
         let mut localscaling = Vector3::new(1., 0., 0.);
+        let mut localmatrix = Matrix::identity();
         activeids.iter().for_each(|idx| {
             let randoms = randomlist.get(*idx).unwrap();
             let particlecolor = colors.get(*idx).unwrap();
@@ -502,7 +503,6 @@ impl ParticleTrail {
             let translation = localpositions.get(*idx).unwrap();
             let scaling = localscalings.get(*idx).unwrap();
             let eulers = localrotations.get(*idx).unwrap();
-            let mut localmatrix = Matrix::identity();
             CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &translation, &mut localmatrix);
 
             let parentmatrix = &worldmatrixs.get(*idx).unwrap().matrix;
@@ -1158,7 +1158,7 @@ impl ParticleVelocityAndForce {
 pub struct ParticleEmitMatrix {
     pub(crate) emits: Vec<EmitMatrix>,
     scaling_mode: fn(& Isometry3, & Vector3, & Vector3, & Matrix, & Matrix, & mut Vector3, & mut Matrix, & mut Matrix),
-    simulation: fn(& mut Vec<EmitMatrix>, & Vec<usize>, & Vec<usize>, & Vector3, & Rotation3, & Matrix, & Matrix),
+    simulation: fn(& mut Vec<EmitMatrix>, & Vec<usize>, & Vec<usize>, & Vector3, & SQuaternion<Number>, & Matrix, & Matrix),
     idx: fn(usize) -> usize,
 }
 impl ParticleEmitMatrix {
@@ -1204,7 +1204,7 @@ impl ParticleEmitMatrix {
         _world_matrix_inv: &Matrix,
         _iso: &Isometry3,
         _global_position: &Vector3,
-        global_rotation: &Rotation3,
+        global_rotation: &SQuaternion<Number>,
         global_scaling: &Vector3,
         local_scaling: &Vector3,
     ) {
@@ -1232,11 +1232,6 @@ impl ParticleEmitMatrix {
 
         result_world_matrix_inv.clone_from(&result_world_matrix);
         CoordinateSytem3::try_inverse_mut(result_world_matrix_inv);
-        // if let Some(temp) = result_world_matrix.try_inverse() {
-        //     result_world_matrix_inv.clone_from(&temp);
-        // } else {
-        //     result_world_matrix_inv.fill_with_identity();
-        // };
     }
     pub fn scaling_mode_shape<'a>(_iso: &'a Isometry3, global_scaling: &'a Vector3, _local_scaling: &'a Vector3, _world_matrix: &'a Matrix, _world_matrix_inv: &'a Matrix, resultscale: &'a mut Vector3, result_world_matrix: &'a mut Matrix, result_world_matrix_inv: &'a mut Matrix) {
         
@@ -1247,25 +1242,22 @@ impl ParticleEmitMatrix {
         
         result_world_matrix_inv.clone_from(&result_world_matrix);
         CoordinateSytem3::try_inverse_mut(result_world_matrix_inv);
-        // if let Some(temp) = result_world_matrix.try_inverse() {
-        //     result_world_matrix_inv.clone_from(&temp);
-        // } else {
-        //     result_world_matrix_inv.fill_with_identity();
-        // };
     }
-    pub fn simulation_local<'a>(emits: &'a mut Vec<EmitMatrix>, _ids: &'a Vec<usize>, _newids: &'a Vec<usize>, scaling: &'a Vector3, global_rotation: &'a Rotation3, emittermatrix: &'a Matrix, emittermatrix_invert: &'a Matrix) {
+    pub fn simulation_local<'a>(emits: &'a mut Vec<EmitMatrix>, _ids: &'a Vec<usize>, _newids: &'a Vec<usize>, scaling: &'a Vector3, global_rotation: &'a SQuaternion<Number>, emittermatrix: &'a Matrix, emittermatrix_invert: &'a Matrix) {
 
         let item = emits.get_mut(0).unwrap();
         item.scaling.clone_from(scaling);
-        item.rotation.clone_from(global_rotation);
+        item.rotation.i = global_rotation.i; item.rotation.j = global_rotation.j; item.rotation.k = global_rotation.k; item.rotation.w = global_rotation.w;
+        // item.rotation.clone_from(global_rotation);
         item.matrix.clone_from(emittermatrix);
         item.matrix_invert.clone_from(emittermatrix_invert);
     }
-    pub fn simulation_world<'a>(emits: &'a mut Vec<EmitMatrix>, _ids: &'a Vec<usize>, _newids: &'a Vec<usize>, scaling: &'a Vector3, global_rotation: &'a Rotation3, emittermatrix: &'a Matrix, emittermatrix_invert: &'a Matrix) {
+    pub fn simulation_world<'a>(emits: &'a mut Vec<EmitMatrix>, _ids: &'a Vec<usize>, _newids: &'a Vec<usize>, scaling: &'a Vector3, global_rotation: &'a SQuaternion<Number>, emittermatrix: &'a Matrix, emittermatrix_invert: &'a Matrix) {
         _newids.iter().for_each(|idx| {
             let item = emits.get_mut(*idx).unwrap();
             item.scaling.clone_from(scaling);
-            item.rotation.clone_from(global_rotation);
+            item.rotation.i = global_rotation.i; item.rotation.j = global_rotation.j; item.rotation.k = global_rotation.k; item.rotation.w = global_rotation.w;
+            // item.rotation.clone_from(global_rotation);
             item.matrix.clone_from(emittermatrix);
             item.matrix_invert.clone_from(emittermatrix_invert);
         });
