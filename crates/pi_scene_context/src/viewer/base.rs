@@ -153,7 +153,7 @@ impl ViewerDistanceCompute {
     pub fn distance(&self, view: &(Number, Number, Number), view_direction: &(Number, Number, Number), target: &(Number, Number, Number)) -> Number {
         (self.call)(view, view_direction, target)
     }
-    pub fn base(view: &(Number, Number, Number), view_direction: &(Number, Number, Number), target: &(Number, Number, Number)) -> Number {
+    pub fn base(view: &(Number, Number, Number), _view_direction: &(Number, Number, Number), target: &(Number, Number, Number)) -> Number {
         let x = target.0 - view.0;
         let y = target.1 - view.1;
         let z = target.2 - view.2;

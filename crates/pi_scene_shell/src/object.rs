@@ -1,4 +1,5 @@
 
+use crossbeam::queue::ArrayQueue;
 use crossbeam::queue::SegQueue;
 use pi_slotmap::Key;
 
@@ -63,69 +64,72 @@ impl OpsDisposeCan {
 }
 pub type ActionListDisposeCan = ActionList<OpsDisposeCan>;
 
-#[derive(Default)]
-pub struct EntityRecord(XHashSet<Entity>, EntityRepeatCheck, Vec<Entity>);
-impl EntityRecord {
-    pub fn insert(&mut self, entity: &Entity) -> bool {
-        let isinsert = self.1.insert(entity);
-        self.0.insert(*entity)
-        // if isinsert {
-        //     self.0.push(*entity);
-        // }
-        // isinsert
-    }
-    pub fn contains(&self, entity: &Entity) -> bool {
-        return self.1.contains(entity);
-    }
-    pub fn sort_after_batch_insert(&mut self) {
-        // self.0.sort_by(|a, b| a.index().cmp(&b.index()));
-    }
-    pub fn remove(&mut self, entity: &Entity) -> bool {
-        self.1.remove(entity);
-        self.0.remove(entity)
-        // if self.1.remove(entity) {
-        //     self.2.push(*entity);
-        //     return true;
-        // } else {
-        //     return false;
-        // }
-    }
-    pub fn reset_after_batch_remove(&mut self) {
-        // let mut tmp = vec![];
-        // self.2.drain(..).for_each(|entity| {
-        //     match self.0.binary_search_by(|probe| probe.index().cmp(&entity.index())) {
-        //         Ok(idx) => tmp.push(idx),
-        //         Err(_) => {},
-        //     };
-        // });
-        // tmp.sort();
 
-        // let deletecount = tmp.len();
-        // if 0 < deletecount {
-        //     if let Some(last) = self.0.last() {
-        //         let last = *last;
-        //         while let Some(idx) = tmp.pop() {
-        //             self.0[idx] = last;
-        //         }
-        //         self.0.sort_by(|a, b| a.index().cmp(&b.index()));
-        //         self.0.truncate(self.0.len() - deletecount);
-        //     }
-        // }
-    }
+// #[derive(Default)]
+// pub struct EntityRecord(Vec<Entity>, EntityRepeatCheck, Vec<Entity>);
+// impl EntityRecord {
+//     pub fn insert(&mut self, entity: &Entity) -> bool {
+//         let isinsert = self.1.insert(entity);
+//         if isinsert {
+//             self.0.push(*entity);
+//         }
+//         isinsert
+//     }
+//     pub fn contains(&self, entity: &Entity) -> bool {
+//         return self.1.contains(entity);
+//     }
+//     pub fn sort_after_batch_insert(&mut self) {
+//         self.0.sort_by(|a, b| a.index().cmp(&b.index()));
+//     }
+//     pub fn remove(&mut self, entity: &Entity) -> bool {
+//         if self.1.remove(entity) {
+//             self.2.push(*entity);
+//             return true;
+//         } else {
+//             return false;
+//         }
+//     }
+//     pub fn reset_after_batch_remove(&mut self) {
+//         let mut tmp = vec![];
+//         self.2.drain(..).for_each(|entity| {
+//             match self.0.binary_search_by(|probe| probe.index().cmp(&entity.index())) {
+//                 Ok(idx) => tmp.push(idx),
+//                 Err(_) => {},
+//             };
+//         });
+//         tmp.sort();
 
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
-    pub fn clear(&mut self) {
-        self.0.clear();
-        self.1.clear();
-        self.2.clear();
-    }
-    pub fn iter(&self) -> std::collections::hash_set::Iter<Entity> {
-    // pub fn iter(&self) -> std::slice::Iter<Entity> {
-        return self.0.iter();
-    }
-}
+//         let deletecount = tmp.len();
+//         if 0 < deletecount {
+//             if let Some(last) = self.0.last() {
+//                 let last = *last;
+//                 while let Some(idx) = tmp.pop() {
+//                     self.0[idx] = last;
+//                 }
+//                 self.0.sort_by(|a, b| a.index().cmp(&b.index()));
+//                 self.0.truncate(self.0.len() - deletecount);
+//             }
+//         }
+//     }
+
+//     pub fn len(&self) -> usize {
+//         self.0.len()
+//     }
+//     pub fn clear(&mut self) {
+//         self.0.clear();
+//         self.1.clear();
+//         self.2.clear();
+//     }
+//     pub fn iter(&self) -> std::slice::Iter<Entity> {
+//         return self.0.iter();
+//     }
+//     pub fn capacity(&self) -> usize {
+//         self.0.capacity() + self.2.capacity()
+//     }
+//     pub fn is_empty(&self) -> bool {
+//         self.0.is_empty()
+//     }
+// }
 
 pub struct EntityRepeatCheck(Vec<u8>, usize);
 impl Default for EntityRepeatCheck {
@@ -186,10 +190,18 @@ impl EntityRepeatCheck {
         self.0.clear();
         self.1 = 0;
     }
+    pub fn capacity(&self) -> usize {
+        self.0.capacity()
+    }
 }
 
-#[derive(Resource, Default)]
-pub struct EntityFilterForComponentChanged(pub SegQueue<EntityRepeatCheck>);
+#[derive(Resource)]
+pub struct EntityFilterForComponentChanged(pub ArrayQueue<EntityRepeatCheck>);
+impl Default for EntityFilterForComponentChanged {
+    fn default() -> Self {
+        Self(ArrayQueue::new(16))
+    }
+}
 impl EntityFilterForComponentChanged {
     pub fn pop(&self) -> EntityRepeatCheck {
         if let Some(mut set) = self.0.pop() {
@@ -200,9 +212,7 @@ impl EntityFilterForComponentChanged {
         }
     }
     pub fn push(&self, set: EntityRepeatCheck) {
-        if self.0.len() < 16 {
-            self.0.push(set)
-        }
+        let _ = self.0.push(set);
     }
 }
 

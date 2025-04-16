@@ -148,7 +148,7 @@ pub fn sys_sets_modify_by_scene_extend(
             if sceneid.0 == scene {
                 passids.0.iter().for_each(|idpass| {
                     if let Ok(mut dirty) = passes.get_mut(*idpass) {
-                        // log::error!("sys_sets_modify_by_scene_extend");
+                        // log::error!("PassBindGroupsDirty: scene_extend");
                         *dirty = PassBindGroupsDirty;
                     }
                 });
@@ -174,7 +174,7 @@ pub fn sys_sets_modify_by_model(
             Entity, &PassIDs
         ),
         Or<(
-            Changed<BindModel>, Changed<BindSkinValue>, Changed<SkeletonID>, Changed<ModelLightingIndexs>
+            Changed<BindModel>, Changed<BindSkinValue>, Changed<SkeletonID>, Changed<ModelLightingIndexs>, Changed<ModelBindDefines>
         )>,
     >,
     mut passes: Query<&mut PassBindGroupsDirty>,
@@ -184,7 +184,7 @@ pub fn sys_sets_modify_by_model(
     // let time1 = pi_time::Instant::now();
 
     models.iter().for_each(|(_entity, passids)| {
-        // log::error!("sys_sets_modify_by_model");
+        // log::error!("PassBindGroupsDirty: Model");
         passids.0.iter().for_each(|id| {
             if let Ok(mut dirty) = passes.get_mut(*id) { *dirty = PassBindGroupsDirty; }
         });

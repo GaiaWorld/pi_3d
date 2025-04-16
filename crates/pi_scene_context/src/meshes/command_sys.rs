@@ -19,7 +19,7 @@ use super::{
 };
 
 
-pub type BundleModelStatic = (GeometryID, ModelStatic, BindModel, BindModelMatIdx, ModelMatIdxs);
+pub type BundleModelStatic = (GeometryID, ModelStatic, BindModel, ModelMatIdxs);
 pub type BundleModel = (
     TransformNodeBundle,
     BundleMesh,
@@ -95,7 +95,7 @@ pub fn sys_create_mesh(
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
     lightlimit: Res<ModelLightLimit>,
     commonbindmodel: Res<CommonBindModel>,
-    mut altermodel: Alter<(), (), (BundleModel, BindModel, BindModelMatIdx, ModelMatIdxs, PassIDs, ModelStatic), ()>,
+    mut altermodel: Alter<(), (), (BundleModel, BindModel, ModelBindDefines, ModelMatIdxs, PassIDs, ModelStatic), ()>,
     mut passinsert: Insert<(BundleEntity, PassObjInitBundle, PassTag)>,
     engineopt: Res<EngineCustomPlugins>,
     // mut performance: ResMut<Performance>,
@@ -173,7 +173,9 @@ pub fn sys_act_target_animation_attribute(
     mut targetanimations: ResMut<ActionListAnimationGroupAction>,
     instances: Query<&InstanceMesh>,
     mut meshes: Query<&mut InstanceSourceRefs>,
+    entitysets: Res<EntityFilterForComponentChanged>,
 ) {
+    let mut entities = entitysets.pop();
     cmds.drain().for_each(|OpsTargetAnimationAttribute(item, attr, group, curve)| {
         let mut mesh = item;
         if let Ok(instance) = instances.get(item) {
@@ -217,11 +219,13 @@ pub fn sys_act_target_animation_attribute(
                 }
                 
             }
+            if !entities.insert(&mesh) { return; }
             if let Ok(mut flag) = meshes.get_mut(mesh) {
-                flag.dirty = true;
+                flag.set_changed();
             }
         }
     });
+    entitysets.push(entities);
 }
 
 pub fn sys_act_mesh_modify(
@@ -238,9 +242,7 @@ pub fn sys_act_mesh_modify(
     mut culling_items: Query<(&mut GeometryCullingMode, &mut ItemCullingDirty)>,
     mut flagrendermatrix: Query<&mut FlagRenderWorldMatrix>,
     mut records: ResMut<AnimeTargetRecordValues<IndiceRenderRange>>,
-    skinoff_items: Query<&BindModel>,
-
-    // mut performance: ResMut<Performance>,
+    mut bindmodels: Query<(&BindModel, &mut ModelBindDefines)>,
 ) {
     // performance.systems.push(String::from("sys_act_mesh_modify"));
     cmds.drain().for_each(|OpsMeshStateModify(entity, cmd)| {
@@ -287,8 +289,11 @@ pub fn sys_act_mesh_modify(
     });
     value_cmds.drain().for_each(|OpsAbstructMeshValueStateModify(entity, val)| {
         match val {
-            EMeshValueStateModify::BoneOffset(val) => if let Ok(bind) = skinoff_items.get(entity) {
-                bind.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_U32_A as usize, bytemuck::cast_slice(&[val]));
+            EMeshValueStateModify::BoneOffset(val) => if let Ok((bind, mut binddefines)) = bindmodels.get_mut(entity) {
+                bind.skinoff.as_ref().unwrap().data().write_data(0, bytemuck::cast_slice(&[val]));
+                if binddefines.0 & BindDefines::MODEL_SKIN_INS != BindDefines::MODEL_SKIN_INS {
+                    binddefines.0 = binddefines.0 | BindDefines::MODEL_SKIN_INS;
+                }
             },
             EMeshValueStateModify::IndiceRange(val) => if let Ok(mut item) = indices_items.get_mut(entity) {
                 records.insert(entity, IndiceRenderRange::new(val.clone()));
@@ -304,8 +309,11 @@ pub fn sys_act_mesh_modify(
                     *flag = FlagRenderWorldMatrix;
                 }
             },
-            EMeshValueStateModify::MorphInfluence(val0, val1, val2, val3) => if let Ok(bind) = skinoff_items.get(entity) {
-                bind.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_MORPHINFLUENCE as usize, bytemuck::cast_slice(&[val0, val1, val2, val3]));
+            EMeshValueStateModify::MorphInfluence(val0, val1, val2, val3) => if let Ok((bind, mut binddefines)) = bindmodels.get_mut(entity) {
+                bind.morphinfluence.as_ref().unwrap().data().write_data(0, bytemuck::cast_slice(&[val0, val1, val2, val3]));
+                if binddefines.0 & BindDefines::MODEL_MORPHINFLUENCE != BindDefines::MODEL_MORPHINFLUENCE {
+                    binddefines.0 = binddefines.0 | BindDefines::MODEL_MORPHINFLUENCE;
+                }
             },
         }
     });
@@ -327,9 +335,11 @@ pub fn sys_act_instance_attribute(
     mut meshes: Query<&mut InstanceSourceRefs>,
 
     mut performance: ResMut<Performance>,
+    entitysets: Res<EntityFilterForComponentChanged>,
 ) {
     // performance.systems.push(String::from("sys_act_instance_attribute"));
 
+    let mut entities = entitysets.pop();
     cmdsfloat.drain().for_each(|OpsInstanceAttr(instance, val, attr)| {
         if let Ok((inssource, mut attributes)) = instances.get_mut(instance) {
             if let Some(info) = attributes.offset(&attr) {
@@ -343,33 +353,34 @@ pub fn sys_act_instance_attribute(
                         EInstanceAttr::Vec4(val) => { animator_vec4.push(OpsAnimatorableVec4::ops(target, instance, AnimatorableVec4::from(val.as_slice()), EAnimatorableEntityType::Attribute)); },
                         EInstanceAttr::Vec3(val) => { animator_vec3.push(OpsAnimatorableVec3::ops(target, instance, AnimatorableVec3::from(val.as_slice()), EAnimatorableEntityType::Attribute)); },
                         EInstanceAttr::Vec2(val) => { animator_vec2.push(OpsAnimatorableVec2::ops(target, instance, AnimatorableVec2::from(val.as_slice()), EAnimatorableEntityType::Attribute)); },
-                        EInstanceAttr::U8x4(val)   => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
-                        EInstanceAttr::U16x4(val) => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
-                        EInstanceAttr::U16x2(val) => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
-                        EInstanceAttr::IVec4(val) => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
+                        EInstanceAttr::U8x4(val)   => attributes.bytes_mut()[offset..(offset+4)] .copy_from_slice(bytemuck::cast_slice(&val)),
+                        EInstanceAttr::U16x4(val) => attributes.bytes_mut()[offset..(offset+8)] .copy_from_slice(bytemuck::cast_slice(&val)),
+                        EInstanceAttr::U16x2(val) => attributes.bytes_mut()[offset..(offset+4)] .copy_from_slice(bytemuck::cast_slice(&val)),
+                        EInstanceAttr::IVec4(val) => attributes.bytes_mut()[offset..(offset+16)].copy_from_slice(bytemuck::cast_slice(&val)),
                     };
                 } else {
                     match val {
-                        EInstanceAttr::Float(val) => bytemuck::cast_slice(&[val]).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
-                        EInstanceAttr::Uint(val) => bytemuck::cast_slice(&[val]).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
-                        EInstanceAttr::Int(val) => bytemuck::cast_slice(&[val]).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
-                        EInstanceAttr::Vec4(val) => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
-                        EInstanceAttr::Vec3(val) => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
-                        EInstanceAttr::Vec2(val) => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
-                        EInstanceAttr::U8x4(val)   => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
-                        EInstanceAttr::U16x4(val) => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
-                        EInstanceAttr::U16x2(val) => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
-                        EInstanceAttr::IVec4(val) => bytemuck::cast_slice(&val).iter().for_each(|v| { attributes.bytes_mut()[offset] = *v; offset += 1; }),
+                        EInstanceAttr::Float(val)      => attributes.bytes_mut()[offset..(offset+4)] .copy_from_slice(bytemuck::cast_slice(&[val])),
+                        EInstanceAttr::Uint(val)       => attributes.bytes_mut()[offset..(offset+4)] .copy_from_slice(bytemuck::cast_slice(&[val])),
+                        EInstanceAttr::Int(val)        => attributes.bytes_mut()[offset..(offset+4)] .copy_from_slice(bytemuck::cast_slice(&[val])),
+                        EInstanceAttr::Vec4(val)  => attributes.bytes_mut()[offset..(offset+16)].copy_from_slice(bytemuck::cast_slice(&val)),  
+                        EInstanceAttr::Vec3(val)  => attributes.bytes_mut()[offset..(offset+12)].copy_from_slice(bytemuck::cast_slice(&val)),  
+                        EInstanceAttr::Vec2(val)  => attributes.bytes_mut()[offset..(offset+8)] .copy_from_slice(bytemuck::cast_slice(&val)),  
+                        EInstanceAttr::U8x4(val)   => attributes.bytes_mut()[offset..(offset+4)] .copy_from_slice(bytemuck::cast_slice(&val)),  
+                        EInstanceAttr::U16x4(val) => attributes.bytes_mut()[offset..(offset+8)] .copy_from_slice(bytemuck::cast_slice(&val)),  
+                        EInstanceAttr::U16x2(val) => attributes.bytes_mut()[offset..(offset+4)] .copy_from_slice(bytemuck::cast_slice(&val)),  
+                        EInstanceAttr::IVec4(val) => attributes.bytes_mut()[offset..(offset+16)].copy_from_slice(bytemuck::cast_slice(&val)),  
                     }
                     ;
                 }
-                
+                if !entities.insert(&inssource.0) { return; }
                 if let Ok(mut flag) = meshes.get_mut(inssource.0) {
-                    flag.dirty = true;
+                    flag.set_changed();
                 }
             }
         }
     });
+    entitysets.push(entities);
 
     forcelight_cmds.drain().for_each(|OpsMeshForceLighting(entity, light, isadd)| {
         // log::warn!("Range: {:?}", val);
@@ -410,7 +421,7 @@ impl ActionMesh {
         mut state: MeshInstanceState,
         lightlimit: &LightLimitInfo,
         commonbindmodel: &CommonBindModel,
-        altermodel: &mut Alter<(), (), (BundleModel, BindModel, BindModelMatIdx, ModelMatIdxs, PassIDs, ModelStatic), ()>,
+        altermodel: &mut Alter<(), (), (BundleModel, BindModel, ModelBindDefines, ModelMatIdxs, PassIDs, ModelStatic), ()>,
         passinsert: &mut Insert<(BundleEntity, PassObjInitBundle, PassTag)>,
         engineopt: &EngineCustomPlugins,
     ) -> bool {
@@ -461,9 +472,13 @@ impl ActionMesh {
         );
 
         if instanceattr {
-            let _ = altermodel.alter(entity, (bundle, commonbindmodel.0.clone(), commonbindmodel.1.clone(), ModelMatIdxs::default(), passids, ModelStatic(true)));
+            let _ = altermodel.alter(entity, (
+                bundle, commonbindmodel.0.clone(), ModelBindDefines::default(), ModelMatIdxs::default(), passids, ModelStatic(true)
+            ));
         } else {
-            let _ = altermodel.alter(entity, (bundle, BindModel::new(allocator), BindModelMatIdx::new(allocator), ModelMatIdxs::default(), passids, ModelStatic(false)));
+            let _ = altermodel.alter(entity, (
+                bundle, BindModel::new(allocator), ModelBindDefines::default(), ModelMatIdxs::default(), passids, ModelStatic(false)
+            ));
         }
 
         return true;

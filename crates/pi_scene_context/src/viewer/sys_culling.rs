@@ -116,7 +116,6 @@ fn _sys_update_viewer_model_list_by_viewer(
                     *flag_list_model = FlagModelList::default();
                 }
                 instances.iter().for_each(|instance| {
-                    let instance = if let Some(instance) = instance { instance } else { return; };
                     list_model.0.insert(*instance);
                 });
                 *flag_list_model = FlagModelList::default();
@@ -157,13 +156,11 @@ fn _sys_update_viewer_model_list_by_model(
                 list_model.0.insert(id_obj);
                 *flag_list_model = FlagModelList::default();
                 instances.iter().for_each(|instance| {
-                    let instance = if let Some(instance) = instance { instance } else { return; };
                     list_model.0.insert(*instance);
                 });
             } else {
                 list_model.0.remove(&id_obj);
                 instances.iter().for_each(|instance| {
-                    let instance = if let Some(instance) = instance { instance } else { return; };
                     list_model.0.remove(instance);
                 });
             }
@@ -184,9 +181,11 @@ pub fn sys_tick_viewer_culling(
         &mut SceneBoundingPool
     >,
     mut performance: ResMut<Performance>,
+    entitysets: Res<EntityFilterForComponentChanged>,
 ) {
     // log::error!("sys_tick_viewer_culling");
     // performance.systems.push(String::from("sys_tick_viewer_culling"));
+    let mut sources = entitysets.pop();
     if performance.debug { performance.t_culling = pi_time::Instant::now(); }
     viewers.iter_mut().for_each(|(idscene, vieweractive, list_model, transform, _cameraview, forceincludes, mut cullings)| {
         cullings.0.clear();
@@ -236,14 +235,16 @@ pub fn sys_tick_viewer_culling(
                 if let Ok(mut flag) = flags.get_mut(*id) {
                     *flag = AbstructMeshCullingFlag(true);
                 }
+                if !sources.insert(id) { return; }
                 if let Ok((mut flag, attrs)) = meshes.get_mut(*id) {
                     if attrs.bytes().len() > 0 {
-                        flag.dirty = true;
+                        flag.set_changed();
                     }
                 }
             });
         }
     });
+    entitysets.push(sources);
     // // 尝试记录已成功剔除的后续不再计算剔除逻辑，但测试结果耗时更长
     // scenes.iter_mut().for_each(|mut items| {
     //     items.reset_temp();

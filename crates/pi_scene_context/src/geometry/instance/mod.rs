@@ -62,6 +62,22 @@ impl EInstanceSortMode {
             _ => EInstanceSortMode::GlobalPositionZ,
         }
     }
+    pub fn arg_for_sortparam(&self) -> (bool, usize, f32) {
+        match self {
+            EInstanceSortMode::LocalPositionX => (false, 0, 1.),
+            EInstanceSortMode::LocalPositionY => (false, 1, 1.),
+            EInstanceSortMode::LocalPositionZ => (false, 2, 1.),
+            EInstanceSortMode::NagativeLocalPositionX => (false, 0, -1.),
+            EInstanceSortMode::NagativeLocalPositionY => (false, 1, -1.),
+            EInstanceSortMode::NagativeLocalPositionZ => (false, 2, -1.),
+            EInstanceSortMode::GlobalPositionX => (true, 0, 1.),
+            EInstanceSortMode::GlobalPositionY => (true, 1, 1.),
+            EInstanceSortMode::GlobalPositionZ => (true, 2, 1.),
+            EInstanceSortMode::NagativeGlobalPositionX => (true, 0, -1.),
+            EInstanceSortMode::NagativeGlobalPositionY => (true, 1, -1.),
+            EInstanceSortMode::NagativeGlobalPositionZ => (true, 2, -1.),
+        }
+    }
 }
 
 /// 标识实例对应的源Mesh是否脏

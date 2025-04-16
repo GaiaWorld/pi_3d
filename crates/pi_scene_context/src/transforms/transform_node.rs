@@ -326,14 +326,14 @@ impl GlobalMatrix {
         (m[12], m[13], m[14])
     }
     pub fn calc(&mut self, p_m: &Matrix, l_matrix: &LocalMatrix) -> bool {
-        let mut flag = true;
+        let mut flag: bool = true;
         // result.matrix.copy_from(&(p_m * l_matrix.0));
         CoordinateSytem3::mul_to(p_m, &l_matrix.0, &mut self.matrix);
         // p_m.mul_to(&l_matrix.0, &mut result.matrix);
 
         if self.matrix.as_slice()[0].is_finite() {
             self.matrix_inv.clone_from(&self.matrix);
-            CoordinateSytem3::try_inverse_mut(&mut self.matrix_inv);
+            flag = CoordinateSytem3::try_inverse_mut(&mut self.matrix_inv);
             // match result.matrix.try_inverse() {
             //     Some(val) => {
             //         result.matrix_inv = val;

@@ -15,8 +15,8 @@ use super::{
             (ObjectID, &PassModelID, &PassMaterialID, &PassRendererID, &mut PassBindGroups, &mut PassFlagShader, &PassTag)
         >,
         renderers: Query<(&SceneID, &ViewerID)>,
-        materials: Query<( &AssetKeyShaderEffect, &AssetResShaderEffectMeta, &BindEffect, &MaterialRefs, &EffectTextureSamplersComp, &TextureKeyList )>,
-        models: Query<( Option<&BindModel>, &BindModelMatIdx, &BindSkinValue, &SkeletonID, &ModelLightingIndexs )>,
+        materials: Query<( &AssetKeyShaderEffect, &AssetResShaderEffectMeta, &BindEffect, &EffectTextureSamplersComp, &TextureKeyList )>,
+        models: Query<( &BindModel, &BindSkinValue, &SkeletonID, &ModelLightingIndexs, &ModelBindDefines )>,
         targets: Res<CustomRenderTargets>,
         viewers: Query<&BindViewer>,
         scenes: Query<(&BindSceneEffect, &SceneLightingInfos, &BRDFTexture, &BRDFSampler, &MainCameraOpaqueTarget, &MainCameraDepthTarget, &SceneShadowRenderTarget, Option<&SceneShadowInfos>, &EnvTexture, &EnvIrradiance, &EnvSampler)>,
@@ -39,21 +39,22 @@ use super::{
         changes.iter().chain(addeds.iter()).for_each(|entity| {
             if !entities.insert(entity) { return; }
             if let Ok((_id_pass, idmodel, idmat, idrenderer, mut bindgroups, mut flag, passidx)) = passes.get_mut(*entity) {
+                
+                let idmodel = idmodel.0;
                 let (idscene, idviewer) = if let Ok((idscene, idviewer)) = renderers.get(idrenderer.0) {
                     (idscene.0, idviewer.0)
                 } else {
-                    // log::error!("Bindgroups viewer Fail");
+                    // log::error!("Bindgroups viewer Fail {:?}", idmodel);
                     return;
                 };
                 let bind_passindex = if let Some(bindpassindex) = bindpassindexs.get(passidx.index()) {
                     bindpassindex
                 } else { 
-                    // log::error!("Bindgroups bind_passindex Fail");
+                    // log::error!("Bindgroups bind_passindex Fail {:?}", idmodel);
                     return;
                 };
 
                 // log::error!("Bindgroups {:?}", (idrenderer.0));
-                let idmodel = idmodel.0;
                 let scenes = &scenes;
                 let device = &device;
                 let asset_mgr_bindgroup_layout = &asset_mgr_bindgroup_layout;
@@ -63,13 +64,13 @@ use super::{
                 let viewers = &viewers;
                 let models = &models;
     
-                if let Ok((effect_key, meta, bind, _list, textures, texkeys)) = materials.get(idmat.0) {
-                    let (bindvalue, bindtextures, effect) = _pass_effect_ready(
+                if let Ok((effect_key, meta, bind, textures, texkeys)) = materials.get(idmat.0) {
+                    let (_bindvalue, bindtextures, effect) = _pass_effect_ready(
                         effect_key, textures, texkeys, meta, bind
                     );
     
                     if let Some((key_meta, meta)) = &effect {
-                        let need_set0 = true;
+                        let _need_set0 = true;
                         let need_set1 = BindDefines::need_bind_group_set1(meta.binddefines);
                         let need_set2 = bind.0.is_some();
                         let need_set3 = meta.textures.len() > 0;
@@ -90,7 +91,7 @@ use super::{
                                     *bindgroups = PassBindGroups::new(None);
                                     *flag = PassFlagShader;
                                 }
-                                // log::error!("Bindgroups Fail set0");
+                                // log::error!("Bindgroups Fail set0 {:?}", idmodel);
                                 return;
                             }
                             temp
@@ -107,7 +108,7 @@ use super::{
                                     *bindgroups = PassBindGroups::new(None);
                                     *flag = PassFlagShader;
                                 }
-                                // log::error!("Bindgroups Fail set1");
+                                // log::error!("Bindgroups Fail set1 {:?}", idmodel);
                                 return;
                             }
                             temp
@@ -119,6 +120,7 @@ use super::{
                             if let Some(bind_group) = create_bind_group(&key_bind_group, &device, &asset_mgr_bindgroup_layout, &asset_mgr_bindgroup) {
                                 Some(Arc::new(BindGroupMaterial::new(BindGroupUsage::new(key_bind_group, bind_group), item.clone())))
                             } else {
+                                // log::error!("Bindgroups Fail set2 {:?}", idmodel);
                                 return;
                             }
                         } else { None };
@@ -146,21 +148,22 @@ use super::{
                             }
                         } else { None };
 
+                        // log::error!("Bindgroups Sccess {:?}", idmodel);
                         let data = BindGroups3D::create(set0, set1, set2, set3);
                         *bindgroups = PassBindGroups::new(Some(data));
                         *flag = PassFlagShader;
                     } else {
-                        // log::error!("Bindgroups Fail effect");
+                        // log::error!("Bindgroups Fail effect {:?}", idmodel);
                     }
                 } else {
-                    // log::error!("Bindgroups Fail materials");
+                    // log::error!("Bindgroups Fail materials {:?}", idmodel);
                     if bindgroups.val().is_some() {
                         *bindgroups = PassBindGroups::new(None);
                         *flag = PassFlagShader;
                     }
                 }
             } else {
-                // log::error!("Bindgroups Fail Pass");
+                // log::error!("Bindgroups Fail Pass", );
             }
         });
         entitysets.push(entities);

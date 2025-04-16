@@ -436,6 +436,7 @@ impl ParticleTrail {
     ) {
         let mut color = Vector4::new(1., 1., 1., 1.);
         let mut localscaling = Vector3::new(1., 0., 0.);
+        let mut localmatrix = Matrix::identity();
         let trailworldspace = trailmodifier.use_world_space;
         newids.iter().for_each(|idx| {
             let randoms = randomlist.get(*idx).unwrap();
@@ -446,7 +447,6 @@ impl ParticleTrail {
             let translation = localpositions.get(*idx).unwrap() + direction.value.scale(-1. * PARTICLE_MIN_VALUE / f32::max(direction.length, 1.));
             let scaling = localscalings.get(*idx).unwrap();
             let eulers = localrotations.get(*idx).unwrap();
-            let mut localmatrix = Matrix::identity();
             CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &translation, &mut localmatrix);
 
             let parentmatrix = &worldmatrixs.get(*idx).unwrap().matrix;
@@ -494,6 +494,7 @@ impl ParticleTrail {
         let mut color = Vector4::new(1., 1., 1., 1.);
         let basesize = Vector3::new(0.5773502691896257 as f32, 0.5773502691896257 as f32, 0.5773502691896257 as f32);
         let mut localscaling = Vector3::new(1., 0., 0.);
+        let mut localmatrix = Matrix::identity();
         activeids.iter().for_each(|idx| {
             let randoms = randomlist.get(*idx).unwrap();
             let particlecolor = colors.get(*idx).unwrap();
@@ -502,7 +503,6 @@ impl ParticleTrail {
             let translation = localpositions.get(*idx).unwrap();
             let scaling = localscalings.get(*idx).unwrap();
             let eulers = localrotations.get(*idx).unwrap();
-            let mut localmatrix = Matrix::identity();
             CoordinateSytem3::matrix4_compose_euler_angle(scaling, eulers, &translation, &mut localmatrix);
 
             let parentmatrix = &worldmatrixs.get(*idx).unwrap().matrix;
@@ -1232,11 +1232,6 @@ impl ParticleEmitMatrix {
 
         result_world_matrix_inv.clone_from(&result_world_matrix);
         CoordinateSytem3::try_inverse_mut(result_world_matrix_inv);
-        // if let Some(temp) = result_world_matrix.try_inverse() {
-        //     result_world_matrix_inv.clone_from(&temp);
-        // } else {
-        //     result_world_matrix_inv.fill_with_identity();
-        // };
     }
     pub fn scaling_mode_shape<'a>(_iso: &'a Isometry3, global_scaling: &'a Vector3, _local_scaling: &'a Vector3, _world_matrix: &'a Matrix, _world_matrix_inv: &'a Matrix, resultscale: &'a mut Vector3, result_world_matrix: &'a mut Matrix, result_world_matrix_inv: &'a mut Matrix) {
         
@@ -1247,11 +1242,6 @@ impl ParticleEmitMatrix {
         
         result_world_matrix_inv.clone_from(&result_world_matrix);
         CoordinateSytem3::try_inverse_mut(result_world_matrix_inv);
-        // if let Some(temp) = result_world_matrix.try_inverse() {
-        //     result_world_matrix_inv.clone_from(&temp);
-        // } else {
-        //     result_world_matrix_inv.fill_with_identity();
-        // };
     }
     pub fn simulation_local<'a>(emits: &'a mut Vec<EmitMatrix>, _ids: &'a Vec<usize>, _newids: &'a Vec<usize>, scaling: &'a Vector3, global_rotation: &'a SQuaternion<Number>, emittermatrix: &'a Matrix, emittermatrix_invert: &'a Matrix) {
 

@@ -86,7 +86,7 @@ pub struct ShaderBindPassIndex {
     pub(crate) data: BindBufferRange,
 }
 impl ShaderBindPassIndex {
-    pub const SIZE: usize = 4 * 2;
+    pub const SIZE: usize = 4 * 4;
     pub const MASK_0: u32 = 0b0000_0000_0000_0000_1111_1111_1111_1111;
     pub const MASK_1: u32 = 0b1111_1111_1111_1111_0000_0000_0000_0000;
     pub fn new(
@@ -94,7 +94,7 @@ impl ShaderBindPassIndex {
         passidx: u32,
     ) -> Option<Self> {
         if let Some(data) = allocator.allocate(Self::SIZE as wgpu::DynamicOffset) {
-            data.write_data(0, bytemuck::cast_slice(&[passidx / 2, if passidx % 2 == 0 { Self::MASK_0 } else { Self::MASK_1 }]));
+            data.write_data(0, bytemuck::cast_slice(&[passidx / 2, if passidx % 2 == 0 { Self::MASK_0 } else { Self::MASK_1 }, 0, 0]));
             Some(Self { data })
         } else {
             None
@@ -110,7 +110,7 @@ impl TShaderBindCode for ShaderBindPassIndex {
         result += ShaderSetBind::code_set_bind_head(set, bind).as_str();
         result += " IDX_PASS {";
         result += crate::prelude::S_BREAK;
-        result += ShaderSetBind::code_uniform(&crate::prelude::S_UVEC2, ShaderVarUniform::IDX_PASS).as_str();
+        result += ShaderSetBind::code_uniform(&crate::prelude::S_UVEC4, ShaderVarUniform::IDX_PASS).as_str();
         result += "};";
         result += crate::prelude::S_BREAK;
         result

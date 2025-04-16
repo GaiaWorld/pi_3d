@@ -335,7 +335,8 @@ impl Node for RenderNode {
                     depth_stencil_attachment = None;
                 };
 
-                if param.auto_clear_color.0 || param.auto_clear_depth.0 || param.auto_clear_stencil.0 {
+                let autoclear = param.auto_clear_color.0 || param.auto_clear_depth.0 || param.auto_clear_stencil.0 ;
+                if autoclear {
                     let mut renderpass = commands.begin_render_pass(
                         &wgpu::RenderPassDescriptor {
                             label: None,
@@ -349,8 +350,8 @@ impl Node for RenderNode {
                     renderpass.set_scissor_rect(x as u32, y as u32, w as u32, h as u32);
                 }
 
-                // log::warn!("Draws: {:?}", renderer.draws.list.len());
                 if renderer.draws.list.len() > 0 && param.enable.0 {
+                    // log::warn!("Draws: {:?}", (renderer.draws.list.len(), (x, y, w, h, min_depth, max_depth)));
                     let mut renderpass = commands.begin_render_pass(
                         &wgpu::RenderPassDescriptor {
                             label: Some(self.renderer_id.index().to_string().as_str()),
@@ -361,7 +362,7 @@ impl Node for RenderNode {
                         }
                     );
         
-                    renderpass.set_viewport(x, y, w, h, 0., max_depth);
+                    renderpass.set_viewport(x, y, w, h, min_depth, max_depth);
                     renderpass.set_scissor_rect(x as u32, y as u32, w as u32, h as u32);
                     DrawList::render(renderer.draws.list.as_slice(), &mut renderpass);
                 }

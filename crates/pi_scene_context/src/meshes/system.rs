@@ -61,27 +61,15 @@ pub fn sys_calc_render_matrix(
                 renderalignments.get(entity)
             };
             if let Ok(renderalignment) = renderalignment {
-                // if let Ok(mut wm) = matrixs.get_mut(entity) {
-        
-                    // log::warn!("calc_render_matrix:");
-                    // render_wm.0.clone_from(&worldmatrix.0);
-                    // render_wminv.0.clone_from(&worldmatrix_inv.0);
-    
-                    _calc_render_matrix(
-                        velocity, localscaling, scalingmode, renderalignment, transform,
-                        &mut abstransform, &mut wm, pose,
-                        &mut quaternion, &mut tempmatrix, &mut tempmatrix2, &mut tempmatrix3,
-                        &mut tempvec3a, &mut tempvec3b, &mut rotation
-                    );
-                // }
+                _calc_render_matrix(
+                    velocity, localscaling, scalingmode, renderalignment, transform,
+                    &mut abstransform, &mut wm, pose,
+                    &mut quaternion, &mut tempmatrix, &mut tempmatrix2, &mut tempmatrix3,
+                    &mut tempvec3a, &mut tempvec3b, &mut rotation
+                );
             }
         }
     });
-    // meshes.iter_mut().for_each(|(
-    //     entity, _,
-    //     localscaling, transform, scalingmode, velocity, mut abstransform
-    // )| {
-    // });
     // let time1 = pi_time::Instant::now();
     // log::error!("sys_calc_render_matrix");
 }
@@ -95,9 +83,8 @@ pub fn sys_instance_matidxs(
 
     changes.iter().for_each(|entity| {
         if let Ok((mut flag, matidxs)) = meshes.get_mut(*entity) {
-            flag.dirty = true;
+            flag.set_changed();
             flag.iter().for_each(|entity| {
-                let entity = if let Some(entity) = entity { entity } else { return; };
                 if let Ok(mut instanceattributes) = instances.get_mut(*entity) {
                     instanceattributes.update_matidxs(&matidxs.0);
                 }
@@ -122,10 +109,11 @@ pub fn sys_render_matrix_dirty(
     changes.iter().for_each(|entity| {
         if !entities.insert(&entity) { return; }
         if let Ok((instance, wm, mut instanceattributes)) = instances.get_mut(*entity) {
-            instanceattributes.update_worldmatrix(&wm.0);
-            if !soureces.insert(&instance.0) { return; }
-            if let Ok(mut flag) = meshes.get_mut(instance.0) {
-                flag.dirty = true;
+            if instanceattributes.update_worldmatrix(&wm.0) {
+                if !soureces.insert(&instance.0) { return; }
+                if let Ok(mut flag) = meshes.get_mut(instance.0) {
+                    flag.set_changed();
+                }
             }
         }
     });
@@ -228,15 +216,15 @@ pub fn sys_model_for_uniform(
         if let Ok((worldmatrix, bind_model, meshstatic)) = meshes.get(*entity) {
         // log::warn!("SysModelUniformUpdate: {:?}", worldmatrix.0.as_slice());
             if meshstatic.0 { return; }
-            bind_model.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX as usize, bytemuck::cast_slice(worldmatrix.0.as_slice()));
-            bind_model.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_WORLD_MATRIX_INV as usize, bytemuck::cast_slice(matrix.as_slice()));
+            bind_model.matrix.as_ref().unwrap().data().write_data(0, bytemuck::cast_slice(worldmatrix.0.as_slice()));
+            bind_model.matrixinv.as_ref().unwrap().data().write_data(0, bytemuck::cast_slice(matrix.as_slice()));
         }
     });
     velocitychanges.iter().for_each(|entity| {
         if let Ok((velocity, bind_model, meshstatic)) = velocitymeshes.get(*entity) {
             if meshstatic.0 { return; }
             let len = (velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z).sqrt();
-            bind_model.0.as_ref().unwrap().data().write_data(ShaderBindModelAboutMatrix::OFFSET_VELOCITY as usize, bytemuck::cast_slice(&[velocity.x, velocity.y, velocity.z, len]));
+            bind_model.velocity.as_ref().unwrap().data().write_data(0, bytemuck::cast_slice(&[velocity.x, velocity.y, velocity.z, len]));
         }
     });
 }
@@ -246,21 +234,30 @@ pub fn sys_enable_about_instance(
     changes: ComponentChanged<GlobalEnable>,
     changes2: ComponentChanged<GlobalMatrix>,
     mut meshes: Query<&mut InstanceSourceRefs>,
+    entitysets: Res<EntityFilterForComponentChanged>,
 ) {
+    let mut entities = entitysets.pop();
+    let mut sources = entitysets.pop();
     changes.iter().for_each(|entity| {
+        if !entities.insert(&entity) { return; }
         if let Ok(instance) = instances.get(*entity) {
+            if !sources.insert(&instance.0) { return; }
             if let Ok(mut flag) = meshes.get_mut(instance.0) {
-                flag.dirty = true;
+                flag.set_changed();
             }
         }
     });
     changes2.iter().for_each(|entity| {
+        if !entities.insert(&entity) { return; }
         if let Ok(instance) = instances.get(*entity) {
+            if !sources.insert(&instance.0) { return; }
             if let Ok(mut flag) = meshes.get_mut(instance.0) {
-                flag.dirty = true;
+                flag.set_changed();
             }
         }
     });
+    entitysets.push(entities);
+    entitysets.push(sources);
 }
 
 pub fn sys_animator_update_instance_attribute(
@@ -277,6 +274,7 @@ pub fn sys_animator_update_instance_attribute(
     entitysets: Res<EntityFilterForComponentChanged>,
 ) {
     let mut entities = entitysets.pop();
+    let mut sources = entitysets.pop();
     // changes.iter().for_each(|entity| {
     //     entities.insert(*entity);
     // });
@@ -291,39 +289,46 @@ pub fn sys_animator_update_instance_attribute(
                             match atype {
                                 EAnimatorableType::Vec4 => if let Ok((data, _)) = _vec4s.get(entity) {
                                     if data.is_changed() == false { return; }
-                                    bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                                    attributes.bytes_mut()[idx..(idx+16)].copy_from_slice(bytemuck::cast_slice(data.0.as_slice()))
+                                    // bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
                                 },
                                 EAnimatorableType::Vec3 => if let Ok((data, _)) = _vec3s.get(entity) {
                                     if data.is_changed() == false { return; }
-                                    bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                                    attributes.bytes_mut()[idx..(idx+12)].copy_from_slice(bytemuck::cast_slice(data.0.as_slice()))
+                                    // bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
                                 },
                                 EAnimatorableType::Vec2 => if let Ok((data, _)) = _vec2s.get(entity) {
                                     if data.is_changed() == false { return; }
-                                    bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                                    attributes.bytes_mut()[idx..(idx+8)].copy_from_slice(bytemuck::cast_slice(data.0.as_slice()))
+                                    // bytemuck::cast_slice(data.0.as_slice()).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
                                 },
                                 EAnimatorableType::Float => if let Ok((data, _)) = floats.get(entity) {
                                     if data.is_changed() == false { return; }
-                                    bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                                    attributes.bytes_mut()[idx..(idx+4)].copy_from_slice(bytemuck::cast_slice(&[data.0]))
+                                    // bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
                                 },
                                 EAnimatorableType::Uint => if let Ok((data, _)) = _uints.get(entity) {
                                     if data.is_changed() == false { return; }
-                                    bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                                    attributes.bytes_mut()[idx..(idx+4)].copy_from_slice(bytemuck::cast_slice(&[data.0]))
+                                    // bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
                                 },
                                 EAnimatorableType::Int => if let Ok((data, _)) = _sints.get(entity) {
                                     if data.is_changed() == false { return; }
-                                    bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
+                                    attributes.bytes_mut()[idx..(idx+4)].copy_from_slice(bytemuck::cast_slice(&[data.0]))
+                                    // bytemuck::cast_slice(&[data.0]).iter().for_each(|v| { attributes.bytes_mut()[idx] = *v; idx += 1; })
                                 },
                             }
                         }
                     }
                 }
             });
-            
+            if !entities.insert(entity) { return; }
             if let Ok(mut flag) = meshes.get_mut(*entity) {
-                flag.dirty = true;
+                flag.set_changed();
             } else if let Ok(instance) = instances.get(*entity) {
+                if !entities.insert(&instance.0) { return; }
                 if let Ok(mut flag) = meshes.get_mut(instance.0) {
-                    flag.dirty = true;
+                    flag.set_changed();
                 }
             }
         }
@@ -344,7 +349,6 @@ pub fn sys_dispose_about_mesh(
     mut skeletons: Query<(&mut SkeletonRefs, &Skeleton)>,
     mut materials: Query<&mut MaterialRefs>,
     passes: Query<&PassMaterialID>,
-    empty: Res<SingleEmptyEntity>,
     mut disposecan: Query<&mut DisposeCan>,
     // mut performance: ResMut<Performance>,
 ) {
@@ -372,7 +376,6 @@ pub fn sys_dispose_about_mesh(
             }
         });
         instancerefs.iter().for_each(|entity| {
-            let entity = if let Some(entity) = entity { entity } else { return; };
             if let Ok(mut dispose) = disposecan.get_mut(*entity) { dispose.0 = true; }
         });
 

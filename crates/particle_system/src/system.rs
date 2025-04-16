@@ -851,10 +851,6 @@ pub fn sys_update_buffer(
                                     temp.as_mut_slice()[80..96 ].copy_from_slice(bytemuck::cast_slice(color.as_slice()));
                                     temp.as_mut_slice()[96..112].copy_from_slice(bytemuck::cast_slice(&uv.data));
                                     unsafe_vec_append_slice(&mut instancesort.data, bytemuck::cast_slice(temp.as_slice()));
-
-                                    // bytemuck::cast_slice(matrix.as_slice()).iter().for_each(|v| { instancesort.data.push(*v); });
-                                    // bytemuck::cast_slice(color.as_slice()).iter().for_each(|v| { instancesort.data.push(*v); });
-                                    // bytemuck::cast_slice(&uv.data).iter().for_each(|v| { instancesort.data.push(*v); });
                                 }
 
                                 index += 1;

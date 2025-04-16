@@ -110,13 +110,13 @@ fn setup(
     // actions.transform.tree.push(OpsTransformNodeParent::ops(bone3, bone0));
     // actions.transform.tree.push(OpsTransformNodeParent::ops(bone4, bone0));
 
-    let data: [u32; 24] = [
-        0, 0, 0, 0, 
-        0, 0, 0, 0, 
-        1, 1, 1, 1, 
-        2, 2, 2, 2, 
-        3, 3, 3, 3, 
-        4, 4, 4, 4, 
+    let data: [u32; 36] = [
+        0, 0, 0, 0, 0, 0, 
+        0, 0, 0, 0, 0, 0, 
+        1, 1, 1, 1, 1, 1, 
+        2, 2, 2, 2, 2, 2, 
+        3, 3, 3, 3, 3, 3, 
+        4, 4, 4, 4, 4, 4, 
     ];
     // normals
     let jointkey = KeyVertexBuffer::from("TestJoint");

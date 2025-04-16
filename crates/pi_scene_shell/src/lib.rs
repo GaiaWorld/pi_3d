@@ -38,6 +38,7 @@ mod vertex_buffer_loader;
 mod vertices;
 mod ecs;
 mod render_state;
+mod math;
 
 pub struct DispatchEnd(pub ShareMutex<bool>);
 

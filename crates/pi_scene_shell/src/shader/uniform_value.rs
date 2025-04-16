@@ -6,37 +6,6 @@ use crate::run_stage::EngineCustomPlugins;
 
 use super::{TUnifromShaderProperty, UniformPropertyName, TBindDescToShaderCode};
 
-
-// pub enum UniformValueKind {
-//     Mat4,
-//     Mat2,
-//     Vec4,
-//     Vec2,
-//     Float,
-//     Int,
-//     Uint,
-//     TextureD1,
-//     TextureD2,
-//     TextureD3,
-// }
-
-// impl UniformValueKind {
-//     pub fn code(&self) -> String {
-//         match self {
-//             UniformValueKind::Mat4              => String::from(crate::prelude::S_MAT4),
-//             UniformValueKind::Mat2              => String::from("mat2"),
-//             UniformValueKind::Vec4              => String::from(crate::prelude::S_VEC4),
-//             UniformValueKind::Vec2              => String::from(crate::prelude::S_VEC2),
-//             UniformValueKind::Float             => String::from(crate::prelude::S_FLOAT),
-//             UniformValueKind::Int               => String::from(crate::prelude::S_INT),
-//             UniformValueKind::Uint              => String::from(crate::prelude::S_UINT),
-//             UniformValueKind::TextureD1         => String::from(crate::prelude::S_TEXTURE2D),
-//             UniformValueKind::TextureD2         => String::from(crate::prelude::S_TEXTURE2D),
-//             UniformValueKind::TextureD3         => String::from("textureCube"),
-//         }
-//     }
-// }
-
 #[derive(Clone)]
 pub struct UniformPropertyMat4(pub UniformPropertyName, pub [f32;16], pub bool);
 impl TUnifromShaderProperty for UniformPropertyMat4 {
@@ -67,37 +36,6 @@ impl Ord for UniformPropertyMat4 {
         self.partial_cmp(other).unwrap()
     }
 }
-
-// #[derive(Clone, Debug)]
-// pub struct UniformPropertyMat2(pub UniformPropertyName, pub [f32;4], pub bool);
-// impl TUnifromShaderProperty for UniformPropertyMat2 {
-//     fn tag(&self) -> &UniformPropertyName {
-//         &self.0
-//     }
-// }
-// impl Hash for UniformPropertyMat2 {
-//     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-//         self.tag().hash(state);
-//     }
-// }
-// impl PartialEq for UniformPropertyMat2 {
-//     fn eq(&self, other: &Self) -> bool {
-//         self.tag().eq(other.tag())
-//     }
-// }
-// impl Eq for UniformPropertyMat2 {
-//     fn assert_receiver_is_total_eq(&self) {}
-// }
-// impl PartialOrd for UniformPropertyMat2 {
-//     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-//         self.tag().partial_cmp(other.tag())
-//     }
-// }
-// impl Ord for UniformPropertyMat2 {
-//     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-//         self.partial_cmp(other).unwrap()
-//     }
-// }
 
 #[derive(Clone)]
 pub struct UniformPropertyVec4(pub UniformPropertyName, pub [f32;4], pub bool);

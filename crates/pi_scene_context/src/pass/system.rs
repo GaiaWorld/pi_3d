@@ -9,7 +9,7 @@ pub fn sys_modify_pass_effect_by_material(
     passchanges: ComponentChanged<PassMaterialID>,
     changes: ComponentChanged<PassTag>,
     changes2: ComponentChanged<DirtyMaterialRefs>,
-    changes3: ComponentChanged<BindEffect>,
+    changes3: ComponentAdded<BindEffect>,
     changes4: ComponentChanged<EffectTextureSamplersComp>,
     materials: Query<(&MaterialRefs, &DirtyMaterialRefs)>,
     mut passes: Query<&mut PassBindGroupsDirty>,
@@ -21,15 +21,15 @@ pub fn sys_modify_pass_effect_by_material(
     // performance.systems.push(String::from("sys_modify_pass_effect_by_material"));
     passaddeds.iter().chain(passchanges.iter()).for_each(|entity| {
         if !entities.insert(&entity) { return; }
+        // log::error!("PassBindGroupsDirty: PassMaterialID");
         if let Ok(mut dirty) = passes.get_mut(*entity) {
             *dirty = PassBindGroupsDirty;
         }
     });
     changes.iter().for_each(|entity| {
-        // log::error!("sys_modify_pass_effect_by_material");
+        // log::error!("PassBindGroupsDirty: PassTag");
         if let Ok((list, _dirty)) = materials.get(*entity) {
             list.iter().for_each(|target| {
-                let target = if let Some(target) = target { target } else { return; };
                 if !entities.insert(target) { return; }
                 if let Ok(mut dirty) = passes.get_mut(*target) {
                     *dirty = PassBindGroupsDirty;
@@ -38,7 +38,7 @@ pub fn sys_modify_pass_effect_by_material(
         }
     });
     changes2.iter().for_each(|entity| {
-        // log::error!("sys_modify_pass_effect_by_material");
+        // log::error!("PassBindGroupsDirty: DirtyMaterialRefs");
         if let Ok((_list, dirty)) = materials.get(*entity) {
             while let Some(target) = dirty.0.pop() {
                 if !entities.insert(&target) { return; }
@@ -49,10 +49,9 @@ pub fn sys_modify_pass_effect_by_material(
         }
     });
     changes3.iter().for_each(|entity| {
-        // log::error!("sys_modify_pass_effect_by_material");
+        // log::error!("PassBindGroupsDirty: BindEffect");
         if let Ok((list, _dirty)) = materials.get(*entity) {
             list.iter().for_each(|target| {
-                let target = if let Some(target) = target { target } else { return; };
                 if !entities.insert(target) { return; }
                 if let Ok(mut dirty) = passes.get_mut(*target) {
                     *dirty = PassBindGroupsDirty;
@@ -61,10 +60,9 @@ pub fn sys_modify_pass_effect_by_material(
         }
     });
     changes4.iter().for_each(|entity| {
-        // log::error!("sys_modify_pass_effect_by_material");
+        // log::error!("PassBindGroupsDirty: EffectTextureSamplersComp");
         if let Ok((list, dirty)) = materials.get(*entity) {
             list.iter().for_each(|target| {
-                let target = if let Some(target) = target { target } else { return; };
                 if !entities.insert(target) { return; }
                 if let Ok(mut dirty) = passes.get_mut(*target) {
                     *dirty = PassBindGroupsDirty;
@@ -95,11 +93,13 @@ pub fn _pass_effect_ready<'a>(
                 }
                 (bind.0.as_ref(), Some(textures), Some((effect_key.0.clone(), meta.clone())))
             } else {
+                // log::error!("textures not ready");
                 (None, None, None)
             }
         },
         (false, _) => (bind.0.as_ref(), None, Some((effect_key.0.clone(), meta.clone()))),
         _ => {
+            // log::error!("texturesamplers not ready");
             (None, None, None)
         }
     }

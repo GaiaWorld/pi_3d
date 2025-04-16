@@ -124,7 +124,7 @@ pub fn sys_update_culling_by_cullinginfo(
                     }
                 }
             }
-        } else if let Ok((idscene, info, mode, instances, insattr)) = boundings.get(*entity) {
+        } else if let Ok((idscene, info, mode, instancerefs, insattr)) = boundings.get(*entity) {
             if let Ok(mut pool) = scenes.get_mut(idscene.0) {
                 if let Ok((meshworldmatrix, disposed)) = items.get(*entity) {
                     if disposed.0 == true {
@@ -136,9 +136,10 @@ pub fn sys_update_culling_by_cullinginfo(
                             pool.set(*entity, info, mode, &meshworldmatrix.0);
                         }
 
-                        instances.iter().for_each(|instance| {
+                        instancerefs.iter().for_each(|instance| {
+                            if !entities.insert(instance) { return; }
+                            let instance = *instance;
                             // if let Some(instance) = &instance { *instance } else { return; }
-                            let instance = if let Some(instance) = instance { *instance } else { return; };
                             if let Ok((worldmatrix, disposed)) = items.get(instance) {
                                 if disposed.0 == true {
                                     pool.remove(instance);

@@ -65,7 +65,7 @@ pub fn sys_create_cpu_partilce_system(
     commonbindmodel: Res<CommonBindModel>,
     mut meshprimitivestate: ResMut<ActionListRenderState>,
     mut cmdps: Alter<(), (), ParticleBundle, ()>,
-    mut altermodel: Alter<(), (), (BundleModel, BindModel, BindModelMatIdx, ModelMatIdxs, PassIDs, ModelStatic), ()>,
+    mut altermodel: Alter<(), (), (BundleModel, BindModel, ModelBindDefines, ModelMatIdxs, PassIDs, ModelStatic), ()>,
     
     mut passinsert: Insert<(BundleEntity, PassObjInitBundle, PassTag)>,
     mut altergeo: Alter<(), (), BundleGeometry, ()>,
@@ -162,6 +162,7 @@ pub fn sys_create_cpu_partilce_system(
                             // ModelStatic,
                             // 显式重置为默认
                            commonbindmodel.0.clone(),
+                           ModelBindDefines::default()
                         );
                         cmd.insert(bundle);
                     }
