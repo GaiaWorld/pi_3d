@@ -366,7 +366,7 @@ pub fn update_instanced_buffer_for_single(
                 };
                 if newbuffer {
                     if let Some(newbuffer) = allocator.create_not_updatable_buffer(device, queue, collected, None) {
-                        *buffer = Arc::new(newbuffer);
+                        *buffer = Share::new(newbuffer);
                     }
                 } else {
                     queue.write_buffer(buffer.buffer(), 0, collected);

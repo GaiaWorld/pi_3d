@@ -473,8 +473,8 @@ impl GLTFTempLoaded {
     }
     fn animation_curve(
         result: &mut GLTF,
-        time_bufferdata: &Arc<Vec<u8>>,
-        value_bufferdata: &Arc<Vec<u8>>,
+        time_bufferdata: &Share<Vec<u8>>,
+        value_bufferdata: &Share<Vec<u8>>,
         time_range: (usize, usize),
         value_range: (usize, usize),
         property_id: EAnimePropertyType,

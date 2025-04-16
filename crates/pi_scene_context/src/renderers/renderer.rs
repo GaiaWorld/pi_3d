@@ -218,9 +218,9 @@ pub struct FlagRendererParamForPipeline;
 /// 存储 Renderer 的渲染目标数据
 #[derive(Clone, Component)]
 pub enum RendererRenderTarget {
-    None(Option<Arc<SafeTargetView>>),
+    None(Option<Share<SafeTargetView>>),
     FinalRender,
-    Custom(Arc<SafeTargetView>),
+    Custom(Share<SafeTargetView>),
 }
 impl Default for RendererRenderTarget {
     fn default() -> Self {

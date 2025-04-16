@@ -72,7 +72,7 @@ pub fn sys_create_trail_mesh(
                 // verticescode.0.0 += EVerticeExtendCode::TRIAL;
                 let slot = AssetDescVBSlot::from(vertex_desc[0].clone());
                 let geo_desc = GeometryDesc { list: vertex_desc };
-                let buffer = AssetResVBSlot::from(EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0))));
+                let buffer = AssetResVBSlot::from(EVerticesBufferUsage::EVBRange(Share::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0))));
                 keyslist[0] = Some(slot.key().clone());
                 desclist[0] = Some(slot);
                 datalist[0] = Some(buffer);
@@ -130,6 +130,6 @@ pub fn act_update_trail_geometry_buffer(
     data: (Arc<NotUpdatableBufferRange>, u32, u32),
 ) {
     if let Ok(mut buffer) = items.get_mut(id_geo) {
-        buffer.0[0] = Some(AssetResVBSlot::from(EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(data.0, data.1, data.2)))));
+        buffer.0[0] = Some(AssetResVBSlot::from(EVerticesBufferUsage::EVBRange(Share::new(EVertexBufferRange::NotUpdatable(data.0, data.1, data.2)))));
     }
 }

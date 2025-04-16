@@ -1076,7 +1076,7 @@ fn collect_draw_batch(
                 vertex: tempdraw.vertexrange.apply(geo),
                 indices: tempdraw.indicerange.apply(geo),
             };
-            draw.insert_vertices(RenderVertices { slot: mem.slot as u32, buffer: EVerticesBufferUsage::EVBRange(Arc::new(data)), buffer_range: None, size_per_value: size_per_value as u64 });
+            draw.insert_vertices(RenderVertices { slot: mem.slot as u32, buffer: EVerticesBufferUsage::EVBRange(Share::new(data)), buffer_range: None, size_per_value: size_per_value as u64 });
             draw.instances = Range { start: 0, end: mem.itemcount };
             let vertex = if let Some(indices) = &draw.indices {
                 indices.value_range().end - indices.value_range().start
@@ -1089,7 +1089,7 @@ fn collect_draw_batch(
         } else {
             // log::error!("create_not_updatable_buffer fail {:?}", bytelen);
             // let data = instancedcache.instance_initial_buffer();
-            // EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(data.0, data.1, data.2)))
+            // EVerticesBufferUsage::EVBRange(Share::new(EVertexBufferRange::NotUpdatable(data.0, data.1, data.2)))
         };
     } else {
         let instances = geo.instances();

@@ -186,7 +186,7 @@ fn init_geometry_vertices_slot
             let info = InstancedInfo::new(desc.stride() as u16, EVertexBufferSlot::from_u8_unsafe(slot_index as u8));
             // log::error!("Geometry Instance: {:?}", EVertexBufferSlot::from_u8_unsafe(slot_index as u8));
             // let data = instanceallocator.instance_initial_buffer();
-            // buffer = Some(EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(data.0, data.1, data.2))));
+            // buffer = Some(EVerticesBufferUsage::EVBRange(Share::new(EVertexBufferRange::NotUpdatable(data.0, data.1, data.2))));
             buffer = None;
             instancecomp.0 = Some(info);
         }

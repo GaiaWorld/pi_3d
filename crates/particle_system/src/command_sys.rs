@@ -174,7 +174,7 @@ pub fn sys_create_cpu_partilce_system(
                         // verticescode.0.0 += EVerticeExtendCode::TRIAL_BILLBOARD;
                         let slot = AssetDescVBSlot::from(vertex_desc[0].clone());
                         let geo_desc = GeometryDesc { list: vertex_desc };
-                        let buffer = AssetResVBSlot::from(EVerticesBufferUsage::EVBRange(Arc::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0))));
+                        let buffer = AssetResVBSlot::from(EVerticesBufferUsage::EVBRange(Share::new(EVertexBufferRange::NotUpdatable(trailbuffer.buffer(), 0, 0))));
                         
                         let mut desclist = AssetDescVBSlots::default();
                         let mut keyslist = LoadedKeyVBSlots::default();

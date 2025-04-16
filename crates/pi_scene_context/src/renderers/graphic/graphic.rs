@@ -64,7 +64,7 @@ pub struct QueryParam0<'w> (
 
 pub struct RenderNode {
     pub renderer_id: ObjectID,
-    pub auto_srt: Option<Arc<SafeTargetView>>
+    pub auto_srt: Option<Share<SafeTargetView>>
 }
 impl RenderNode {
     pub fn new(renderer_id: ObjectID) -> Self {

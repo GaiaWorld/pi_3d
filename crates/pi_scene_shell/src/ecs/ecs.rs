@@ -296,18 +296,20 @@ pub struct SystemState<T: SystemParam>(SystemMeta, T::State);
 impl<T: SystemParam> SystemState<T> {
     pub fn new(world: &mut World) -> Self {
         let mut meta = SystemMeta::new(pi_world::system::TypeInfo::of::<()>());
-        let state = <T as SystemParam>::init_state(world, &mut meta);
+        let mut state = <T as SystemParam>::init_state(world, &mut meta);
+        <T>::init(&mut state);
         Self(meta, state)
     }
+    pub fn init(&mut self) {
+        <T>::init(&mut self.1);
+    }
     pub fn get_mut(&mut self, world: &mut World) -> T {
-        let tick = world.tick();
-        <T>::get_self(&world, &self.0, &mut self.1, tick)
+        <T>::get_self(&mut self.1)
     }
     pub fn get(&mut self, world: &World) -> T {
-        let tick = world.tick();
-        <T>::get_self(&world, &self.0, &mut self.1, tick)
+        <T>::get_self(&mut self.1)
     }
-    pub fn align(&mut self, world: &World) {
-        T::align(world, &self.0, &mut self.1)
+    pub fn align(&mut self) {
+        T::align(&mut self.1)
     }
 }

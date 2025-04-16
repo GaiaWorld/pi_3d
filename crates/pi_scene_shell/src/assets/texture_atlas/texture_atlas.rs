@@ -12,6 +12,7 @@ use pi_hash::{XHashMap, XHashSet};
 use pi_render::{asset::TAssetKeyU64, renderer::texture::{ImageTextureFrame, KeyImageTexture, KeyImageTextureFrame, ResImageTexture}};
 use pi_world::single_res::{SingleRes, SingleResMut};
 use pi_world_macros::Resource;
+use pi_share::Share;
 use wgpu::Origin3d;
 
 use crate::prelude::MemSize;
@@ -184,7 +185,7 @@ pub type TextureFrameAtlasManager = ShareAssetMgr<TextureFrameAtlas>;
 
 #[derive(Resource, Default)]
 pub struct TextureCombineCmds {
-    pub loaded_quene: Arc<SegQueue<(Atom, Atom, Arc<Vec<u8>>)>>,
+    pub loaded_quene: Arc<SegQueue<(Atom, Atom, Share<Vec<u8>>)>>,
     pub loaded_quene2: Arc<SegQueue<(Atom, Atom, pi_hal::image::DynamicImage)>>,
     pub failed_quene: Arc<SegQueue<(Atom, Atom, u16, u32)>>,
     pub cmds: XHashMap<Atom, XHashMap<Atom, (u32, u16, bool, u32, u32, u32, u32)>>,
@@ -369,7 +370,7 @@ pub fn sys_texture_combine(
                                 let (blockw, blockh) = format.block_dimensions();
                                 ImageTextureFrame::update_sub(&tex.texture().texture, &queue, Origin3d { x: xoffset, y: yoffset, z: 0 },
                                     (width as u32 + blockw - 1) / blockw * blockw, (height as u32 + blockh - 1) / blockh * blockh,
-                                    1, aspect, &data, dataoffset
+                                    1, aspect, data, dataoffset
                                 );
                             }
                         }

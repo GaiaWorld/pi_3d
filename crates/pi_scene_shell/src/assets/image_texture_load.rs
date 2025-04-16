@@ -57,7 +57,7 @@ pub struct ImageTextureLoader {
     pub fails: Share<SegQueue<IDImageTextureLoad>>,
     pub loading: XHashSet<KeyImageTextureFrame>,
     pub loading_image: Share<SegQueue<(KeyImageTextureFrame, DynamicImage, Receiver<ImageTextureFrame, GarbageEmpty>)>>,
-    pub loading_data: Share<SegQueue<(KeyImageTextureFrame, Arc<Vec<u8>>, Receiver<ImageTextureFrame, GarbageEmpty>)>>,
+    pub loading_data: Share<SegQueue<(KeyImageTextureFrame, Share<Vec<u8>>, Receiver<ImageTextureFrame, GarbageEmpty>)>>,
     pub fail_reason: XHashMap<KeyImageTextureFrame, EErrorImageLoad>,
     pub fail_imgtex: Share<SegQueue<(KeyImageTextureFrame, EErrorImageLoad)>>,
     pub success: XHashMap<IDImageTextureLoad, Handle<ImageTextureFrame>>,
