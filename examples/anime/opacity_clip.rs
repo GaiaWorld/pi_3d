@@ -33,6 +33,7 @@ fn setup(
     engineopt: Res<EngineCustomPlugins>,
     mut combineatlas: ResMut<TextureCombineAtlas2DMgr>,
     device: Res<PiRenderDevice>,
+    mut testdatas: ResMut<ActionListTestData>,
 ) {
     let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
         (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)
@@ -118,7 +119,7 @@ fn setup(
         };
     
         let animation = anime_contexts.float.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        // actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group, idmat, animation));
+        actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group, idmat, animation));
         actions.material.valb.push(OpsUniformValB::targetanim( idmat, Atom::from(BlockCutoff::KEY_VALUE), id_group.clone(), key_curve0));
     }
     // {
@@ -141,25 +142,25 @@ fn setup(
     //     // actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group, idmat, animation));
     //     actions.material.valb.push(OpsUniformValB::targetanim( idmat, Atom::from(BlockMainTexture::KEY_TILLOFF), id_group.clone(), key_curve0));
     // }
-    {
-        let key_curve0 = pi_atom::Atom::from("Pos");
-        let key_curve0 = key_curve0.asset_u64();
-        let mut curve = FrameCurve::<LocalPosition>::curve_frame_values(10000);
-        curve.curve_frame_values_frame(0, LocalPosition(Vector3::new(0., 0., 0.)));
-        curve.curve_frame_values_frame(10000, LocalPosition(Vector3::new(2., 0., 0.)));
+    // {
+    //     let key_curve0 = pi_atom::Atom::from("Pos");
+    //     let key_curve0 = key_curve0.asset_u64();
+    //     let mut curve = FrameCurve::<LocalPosition>::curve_frame_values(10000);
+    //     curve.curve_frame_values_frame(0, LocalPosition(Vector3::new(0., 0., 0.)));
+    //     curve.curve_frame_values_frame(10000, LocalPosition(Vector3::new(2., 0., 0.)));
         
-        let asset_curve = if let Some(curve) = anime_assets.position.get(&key_curve0) {
-            curve
-        } else {
-            match anime_assets.position.insert(key_curve0, TypeFrameCurve(curve)) {
-                Ok(value) => { value },
-                Err(_e) => { return; },
-            }
-        };
+    //     let asset_curve = if let Some(curve) = anime_assets.position.get(&key_curve0) {
+    //         curve
+    //     } else {
+    //         match anime_assets.position.insert(key_curve0, TypeFrameCurve(curve)) {
+    //             Ok(value) => { value },
+    //             Err(_e) => { return; },
+    //         }
+    //     };
     
-        let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group, root, animation));
-    }
+    //     let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+    //     actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group, root, animation));
+    // }
     let mut parma = AnimationGroupParam::default();
     parma.loop_mode = ELoopMode::Not;
     parma.speed = 0.1;
@@ -169,18 +170,70 @@ fn setup(
     // animegroupres.global.add_frame_event(id_group, 0.5, 100);
     actions.anime.action.push(OpsAnimationGroupAction::listen_start(id_group));
     actions.anime.action.push(OpsAnimationGroupAction::listen_end(id_group));
+
+    testdatas.push((root, 0., scene, 0.));
 }
 
 pub fn sys_anime_event(
     mut events: ResMut<GlobalAnimeEvents>,
+    mut testdatas: ResMut<ActionListTestData>,
+    anime_assets: TypeAnimeAssetMgrs,
+    mut anime_contexts: TypeAnimeContexts,
+    mut actions: pi_3d::ActionSets,
+    mut commands: Commands,
 ) {
     let mut list: Vec<(Entity, Entity, u8, u32)> = replace(&mut events, vec![]);
     list.drain(..).for_each(|item| {
         log::warn!("Event {:?}", item);
     });
+
+    let mut temp: Vec<(ObjectID, f32, ObjectID, f32)> = vec![];
+    testdatas.drain().for_each(|item| {
+        if item.1 > 50. {
+            log::error!("AnimStart!");
+            let scene = item.2;
+            let root = item.0;
+            // let _root = item.0;
+            // let root = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(root, scene));
+            // actions.transform.create.push(OpsTransformNode::ops(scene, root));
+            // actions.transform.tree.push(OpsTransformNodeParent::ops(_root, root));
+
+            let id_group = commands.spawn_empty_id();
+            // animegroupres.scene_ctxs.create_group(scene).unwrap();
+            // animegroupres.global.record_group(source, id_group);
+            actions.anime.create.push(OpsAnimationGroupCreation::ops(scene, id_group));
+
+            {
+                let key_curve0 = pi_atom::Atom::from("Pos");
+                let key_curve0 = key_curve0.asset_u64();
+                let mut curve = FrameCurve::<LocalPosition>::curve_frame_values(10000);
+                curve.curve_frame_values_frame(0, LocalPosition(Vector3::new(0., 0., 0.)));
+                curve.curve_frame_values_frame(10000, LocalPosition(Vector3::new(2., 0., 0.)));
+                
+                let asset_curve = if let Some(curve) = anime_assets.position.get(&key_curve0) {
+                    curve
+                } else {
+                    match anime_assets.position.insert(key_curve0, TypeFrameCurve(curve)) {
+                        Ok(value) => { value },
+                        Err(_e) => { return; },
+                    }
+                };
+            
+                let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+                actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group, root, animation));
+            }
+            let mut parma = AnimationGroupParam::default();
+            parma.loop_mode = ELoopMode::Not;
+            parma.speed = 0.1;
+            actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, parma, 0., pi_animation::base::EFillMode::NONE));
+        } else {
+            temp.push((item.0, item.1 + 1., item.2, item.3));
+        }
+    });
+    testdatas.exchange(temp);
 }
 
-pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;
+pub type ActionListTestData = ActionList<(ObjectID, f32, ObjectID, f32)>;
 
 pub struct PluginTest;
 impl Plugin for PluginTest {
@@ -209,7 +262,7 @@ pub fn main() {
     #[cfg(not(feature = "use_bevy"))]
     app.add_startup_system(Update, setup.after(base::setup_default_mat));
     
-    app.add_systems(Update, sys_anime_event.in_set(ERunStageChap::Modify));
+    app.add_systems(Update, sys_anime_event.in_set(ERunStageChap::Create));
     
     // app.run()
     crate::base::run_loop(app, window, event_loop)
