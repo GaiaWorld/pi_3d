@@ -66,7 +66,7 @@ impl PluginImageCopy {
             actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(copy_renderer, false));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(copy_renderer, false));
             actions.renderer.connect.push(OpsRendererConnect::ops(pre_renderer, copy_renderer, false));
-            actions.renderer.target.push(OpsRendererTarget::Custom(copy_renderer, KeyCustomRenderTarget::FinalRender));
+            actions.renderer.target.push(OpsRendererTarget::Custom(copy_renderer, KeyCustomRenderTarget::FinalRender, false));
         // }
         (copy_renderer, copycamera)
     }
@@ -126,7 +126,7 @@ impl PluginImageCopy {
             actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(copy_renderer, false));
             actions.renderer.connect.push(OpsRendererConnect::ops(pre_renderer, copy_renderer, false));
             actions.renderer.connect.push(OpsRendererConnect::ops(copy_renderer, next_renderer, false));
-            actions.renderer.target.push(OpsRendererTarget::Custom(copy_renderer, dst_render_target.unwrap()));
+            actions.renderer.target.push(OpsRendererTarget::Custom(copy_renderer, dst_render_target.unwrap(), false));
         // }
         (copy_renderer, copycamera)
     }

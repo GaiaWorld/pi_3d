@@ -3,7 +3,7 @@ use std::sync::Arc;
 use pi_scene_shell::{prelude::*, run_stage::EngineCustomPlugins};
 
 use crate::{
-    geometry::instance::types::ModelInstanceAttributes, object::ActionEntity, pass::*, prelude::{BindModel, ModelMatIdxs, TypeAnimeAssetMgrs, TypeAnimeContexts}
+    geometry::instance::types::ModelInstanceAttributes, object::ActionEntity, pass::*, prelude::{BindModel, ModelMatIdxs, RendererRenderTarget, RendererRenderTargetKey, TypeAnimeAssetMgrs, TypeAnimeContexts}
 };
 
 use super::{
@@ -192,6 +192,7 @@ pub fn sys_act_material_value(
     mut textureparams: Query<(&mut UniformTextureWithSamplerParams, &mut UniformTextureWithSamplerParamsDirty)>,
     mut bindvalues: Query<(&mut BindEffect, &mut UniformAnimated)>,
     targets: Res<CustomRenderTargets>,
+    renderers: Query<&RendererRenderTargetKey>,
     mut command: Commands,
     mut animatorablefloat: ResMut<ActionListAnimatorableFloat>,
     mut animatorablevec2s: ResMut<ActionListAnimatorableVec2>,
@@ -236,6 +237,23 @@ pub fn sys_act_material_value(
                     // log::error!("texture_from_target Error No Material");
                 }
             },
+            OpsUniformValB::TextureFromRenderInput(entity, mut param, idrenderer, tilloffslot) => {
+                if let (Ok((mut textureparams, mut flag)), Ok(key)) = (textureparams.get_mut(entity), renderers.get(idrenderer)) {
+                    if let Some(key) = key.0 {
+                        // log::warn!("EUniformCommand::Texture");
+                        if let Some(target) = targets.get(key) {
+                            let tilloff = target.tilloff((0., 0., 1., 1.));
+                            cmdsval.push(OpsUniformVal::vec4(entity, tilloffslot, tilloff.0, tilloff.1, tilloff.2, tilloff.3));
+                            // log::error!("texture_from_target Target {:?}", key);
+                        }
+                        param.url = EKeyTexture::SRT(key);
+                        textureparams.0.insert(param.slotname.clone(), Arc::new(param));
+                        *flag = UniformTextureWithSamplerParamsDirty;
+                    }
+                } else {
+                    // log::error!("texture_from_target Error No Material");
+                }
+            }
             OpsUniformValB::TargetAnimation(idmat, attr, group, curve) => {
                 if let Ok((mut bindvalue, mut animated)) = bindvalues.get_mut(idmat) {
                     if let Some(bind) = &mut bindvalue.0 {

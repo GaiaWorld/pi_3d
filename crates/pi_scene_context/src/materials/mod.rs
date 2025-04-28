@@ -1,4 +1,5 @@
 
+use pi_bevy_render_plugin::GraphBuild;
 use pi_scene_shell::prelude::*;
 
 
@@ -125,7 +126,7 @@ impl Plugin for PluginMaterial {
 
         app.configure_set(Update, StageMaterial::MatCreate     .in_set(ERunStageChap::Create).after(StageShadowGenerator::_ShadowCreate).after(StageModel::_InitMesh));
         app.configure_set(Update, StageMaterial::_MatCreate    .in_set(ERunStageChap::Create).after(StageMaterial::MatCreate).before(ERunStageChap::Dispose));
-        app.configure_set(Update, StageMaterial::MatCommand    .in_set(ERunStageChap::Modify).before(StageTextureLoad::TextureRequest).before(EStageAnimation::Create).before(EStageAnimation::Running));
+        app.configure_set(Update, StageMaterial::MatCommand    .in_set(ERunStageChap::Modify).before(StageTextureLoad::TextureRequest).before(EStageAnimation::Create).before(EStageAnimation::Running).after(GraphBuild));
         app.configure_set(Update, StageMaterial::MatReady      .in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoaded));
         app.configure_set(Update, StageMaterial::MatDispose     .in_set(ERunStageChap::Dispose).before(StageScene::SceneDispose));
 

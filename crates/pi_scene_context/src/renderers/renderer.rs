@@ -30,17 +30,18 @@ impl RenderViewport {
 }
 
 #[derive(Clone, Copy)]
-pub struct RenderSize(pub(crate) u32, pub(crate) u32);
+pub struct RenderSize(pub(crate) u32, pub(crate) u32, pub(crate) bool);
 impl RenderSize {
-    pub fn new(width: u32, height: u32) -> Self {
-        Self(width, height)
+    pub fn new(width: u32, height: u32, force: bool) -> Self {
+        Self(width, height, force)
     }
     pub fn width(&self) -> u32 { self.0 }
     pub fn height(&self) -> u32 { self.1 }
+    pub fn force_allocate_srt(&self) -> bool { self.2 }
 }
 impl Default for RenderSize {
     fn default() -> Self {
-        Self(300, 200)
+        Self(300, 200, true)
     }
 }
 
@@ -190,6 +191,7 @@ pub struct RendererParam {
     pub mode: RenderTargetMode,
     pub viewport: RenderViewport,
     pub blend: RendererBlend,
+    pub input_as_texture: Option<KeyRenderTarget>,
 }
 impl RendererParam {
     pub fn new(transparent: bool) -> Self {
@@ -207,6 +209,7 @@ impl RendererParam {
             mode: RenderTargetMode::default(),
             viewport: RenderViewport::default(),
             blend: RendererBlend(transparent),
+            input_as_texture: None
         }
     }
 }
@@ -215,12 +218,17 @@ impl RendererParam {
 #[derive(Component, Default)]
 pub struct FlagRendererParamForPipeline;
 
+/// 存储 Renderer 的渲染目标在 CustomRenderTargets 的记录
+#[derive(Clone, Component, Default)]
+pub struct RendererRenderTargetKey(pub Option<KeyRenderTarget>);
+
 /// 存储 Renderer 的渲染目标数据
 #[derive(Clone, Component)]
 pub enum RendererRenderTarget {
     None(Option<Share<SafeTargetView>>),
     FinalRender,
     Custom(Share<SafeTargetView>),
+    CustomAndOut(Share<SafeTargetView>),
 }
 impl Default for RendererRenderTarget {
     fn default() -> Self {
@@ -238,6 +246,10 @@ impl RendererRenderTarget {
             },
             RendererRenderTarget::FinalRender => None,
             RendererRenderTarget::Custom(srt) => {
+                let view: &wgpu::TextureView = srt.target().colors[0].0.as_ref().deref();
+                Some(view)
+            },
+            RendererRenderTarget::CustomAndOut(srt) => {
                 let view: &wgpu::TextureView = srt.target().colors[0].0.as_ref().deref();
                 Some(view)
             },
@@ -260,6 +272,13 @@ impl RendererRenderTarget {
                     None
                 }
             },
+            RendererRenderTarget::CustomAndOut(srt) => {
+                if let Some(view) = srt.target().depth.as_ref() {
+                    Some(view.0.as_ref().deref())
+                } else {
+                    None
+                }
+            },
         }
     }
     pub fn is_active(&self) -> bool {
@@ -267,6 +286,7 @@ impl RendererRenderTarget {
             RendererRenderTarget::None(_) => true,
             RendererRenderTarget::FinalRender => true,
             RendererRenderTarget::Custom(_) => true,
+            RendererRenderTarget::CustomAndOut(_) => true,
         }
     }
 }

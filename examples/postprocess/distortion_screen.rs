@@ -234,7 +234,7 @@ impl Plugin for PluginTest {
             actions.material.create.push(OpsMaterialCreate::ops_with_matarray(distortiommat, distortion_material::ShaderDistortion::KEY));
             actions.material.valb.push(OpsUniformValB::texture(distortiommat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockMainTexture::KEY_TEX), url: EKeyTexture::from("assets/images/eff_wm_trail_fml_001_89_clamp.png"), sample: KeySampler::linear_repeat(), ..Default::default() }));
             // actions.material.val.push(OpsUniformVal::vec2(distortiommat, Atom::from(BlockMainTextureUVOffsetSpeed::KEY_PARAM), 100., 100.));
-            actions.material.valb.push(OpsUniformValB::texture_from_target(distortiommat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockEmissiveTexture::KEY_TEX), ..Default::default() }, opaquetarget.unwrap(), Atom::from(BlockEmissiveTexture::KEY_TILLOFF)));
+            actions.material.valb.push(OpsUniformValB::texture_from_renderer(distortiommat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockEmissiveTexture::KEY_TEX), ..Default::default() }, demopass.skywater_renderer, Atom::from(BlockEmissiveTexture::KEY_TILLOFF)));
             // actions.material.val.push(OpsUniformVal::vec3(distortiommat, Atom::from(BlockMainTexture::KEY_COLOR), 1., 0.5, 0.5));
 
             let node = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node, scene));
@@ -332,9 +332,9 @@ pub fn main() {
     });
     app.add_startup_system(Update, base::setup_demoinit);
 
-    app.add_systems(Update, pi_3d::sys_info_node);
-    app.add_systems(Update, pi_3d::sys_info_resource);
-    app.add_systems(Update, pi_3d::sys_info_draw);
+    // app.add_systems(Update, pi_3d::sys_info_node);
+    // app.add_systems(Update, pi_3d::sys_info_resource);
+    // app.add_systems(Update, pi_3d::sys_info_draw);
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
     #[cfg(feature = "use_bevy")]

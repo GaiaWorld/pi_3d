@@ -516,7 +516,7 @@ use super::{
             if !entities.insert(entity) { return; }
             if let Ok(passids) = models.get(*entity) {
                 passids.0.iter().for_each(|id| {
-                    if let Ok(mut drawdirty) = passes.get_mut(*id) { *drawdirty = PassDrawDirty; }
+                    if let Ok(mut drawdirty) = passes.get_mut(*id) { drawdirty.set_changed(); }
                 });
             }
         });

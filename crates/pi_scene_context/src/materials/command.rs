@@ -34,6 +34,7 @@ pub enum OpsUniformValB{
     Texture(Entity, UniformTextureWithSamplerParam),
     TextureFromRenderTarget(Entity, UniformTextureWithSamplerParam, KeyRenderTarget, Atom),
     TargetAnimation(Entity, EAnimeUniform, Entity, u64),
+    TextureFromRenderInput(Entity, UniformTextureWithSamplerParam, Entity, Atom),
 }
 impl OpsUniformValB {
     pub fn mat4(mat: Entity, uniformname: Atom, value: [f32;16]) -> Self {
@@ -44,6 +45,9 @@ impl OpsUniformValB {
     }
     pub fn texture_from_target(mat: Entity, val: UniformTextureWithSamplerParam, keytarget: KeyRenderTarget, tilloffslot: Atom) -> Self {
         Self::TextureFromRenderTarget(mat, val, keytarget, tilloffslot)
+    }
+    pub fn texture_from_renderer(mat: Entity, val: UniformTextureWithSamplerParam, keytarget: Entity, tilloffslot: Atom) -> Self {
+        Self::TextureFromRenderInput(mat, val, keytarget, tilloffslot)
     }
     pub fn targetanim(target: Entity, tatype: EAnimeUniform, group: Entity, curve: u64) -> Self {
         Self::TargetAnimation(target, tatype, group, curve)

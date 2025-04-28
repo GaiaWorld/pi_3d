@@ -19,12 +19,12 @@ impl OpsRendererConnect {
 pub type ActionListRendererConnect = ActionList<OpsRendererConnect>;
 
 pub enum OpsRendererTarget {
-    Custom(Entity, KeyCustomRenderTarget),
-    Auto(Entity, u16, u16, ColorFormat, DepthStencilFormat),
+    Custom(Entity, KeyCustomRenderTarget, bool),
+    Auto(Entity, u16, u16, ColorFormat, DepthStencilFormat, bool),
 }
 impl OpsRendererTarget {
     pub fn ops(idrenderer: Entity, key: KeyCustomRenderTarget) -> Self {
-        Self::Custom(idrenderer, key)
+        Self::Custom(idrenderer, key, false)
     }
 }
 pub type ActionListRendererTarget = ActionList<OpsRendererTarget>;

@@ -36,7 +36,7 @@ impl DemoShadow {
         actions.renderer.modify.push(OpsRendererCommand::DepthClear(shadow, RenderDepthClear(1.)));
         actions.renderer.modify.push(OpsRendererCommand::ColorClear(shadow, RenderColorClear(0, 0, 0, 0)));
         if let Some(key) = rendertarget {
-            actions.renderer.target.push(OpsRendererTarget::Custom(shadow, KeyCustomRenderTarget::Custom(key)));
+            actions.renderer.target.push(OpsRendererTarget::Custom(shadow, KeyCustomRenderTarget::Custom(key), false));
         }
 
         shadow

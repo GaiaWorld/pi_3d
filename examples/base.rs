@@ -173,14 +173,14 @@ impl DemoScene {
         actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(opaque_renderer, true));
         actions.renderer.modify.push(OpsRendererCommand::DepthClear(opaque_renderer, RenderDepthClear(1.)));
         actions.renderer.modify.push(OpsRendererCommand::ColorClear(opaque_renderer, RenderColorClear(0, 0, 0, 0)));
-        actions.renderer.target.push(OpsRendererTarget::Custom(opaque_renderer, keytarget.clone().unwrap()));
+        actions.renderer.target.push(OpsRendererTarget::Custom(opaque_renderer, keytarget.clone().unwrap(), false));
         // actions.camera.render.push(OpsCameraRendererInit::ops(camera, opaque_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None, RenderTargetMode::Window));
         
         let skywater_renderer = commands.spawn_empty_id(); actions.renderer.create.push(OpsRendererCreate::ops(skywater_renderer, String::from("TestCameraSkyWater"), camera, DemoScene::PASS_SKY_WATER, false));
         actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(skywater_renderer, false));
         actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(skywater_renderer, false));
         actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(skywater_renderer, false));
-        actions.renderer.target.push(OpsRendererTarget::Custom(skywater_renderer, keytarget.clone().unwrap()));
+        actions.renderer.target.push(OpsRendererTarget::Custom(skywater_renderer, keytarget.clone().unwrap(), false));
         actions.renderer.connect.push(OpsRendererConnect::ops(opaque_renderer, skywater_renderer, false));
 
         let transparent_renderer = commands.spawn_empty_id(); actions.renderer.create.push(OpsRendererCreate::ops(transparent_renderer, String::from("TestCameraTransparent"), camera, DemoScene::PASS_TRANSPARENT, true));
@@ -188,7 +188,7 @@ impl DemoScene {
         actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(transparent_renderer, false));
         actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(transparent_renderer, false));
         actions.renderer.connect.push(OpsRendererConnect::ops(skywater_renderer, transparent_renderer, false));
-        actions.renderer.target.push(OpsRendererTarget::Custom(transparent_renderer, keytarget.clone().unwrap()));
+        actions.renderer.target.push(OpsRendererTarget::Custom(transparent_renderer, keytarget.clone().unwrap(), false));
         // actions.camera.render.push(OpsCameraRendererInit::ops(camera, transparent_renderer, desc.curr, desc.passorders, ColorFormat::Rgba8Unorm, DepthStencilFormat::None, RenderTargetMode::Window));
 
         Self { scene, camera, skywater_renderer, opaque_renderer, transparent_renderer, opaque_target: keytarget.clone(), transparent_target: keytarget, shadowtarget }

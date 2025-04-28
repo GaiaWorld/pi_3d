@@ -64,14 +64,18 @@ pub fn sys_act_renderer_modify(
     // performance.systems.push(String::from("sys_act_renderer_modify"));
     cmds.drain().for_each(|cmd| {
         match cmd {
-            OpsRendererTarget::Custom(entity, keytarget) => {
+            OpsRendererTarget::Custom(entity, keytarg, asout) => {
                 if let Ok((mut renderparam, mut rendertarget, nodeid, mut flag)) = renderers.get_mut(entity) {
 
-                    match keytarget {
+                    match keytarg {
                         KeyCustomRenderTarget::Custom(key) => {
                             if let Some(srt) = targets.get(key) {
-                                renderparam.rendersize = RenderSize::new(srt.width, srt.height);
-                                *rendertarget = RendererRenderTarget::Custom(srt.rt.clone());
+                                renderparam.rendersize = RenderSize::new(srt.width, srt.height, true);
+                                if asout {
+                                    *rendertarget = RendererRenderTarget::Custom(srt.rt.clone());
+                                } else {
+                                    *rendertarget = RendererRenderTarget::CustomAndOut(srt.rt.clone());
+                                }
                                 if renderparam.colorformat.0 != srt.color_format || renderparam.depthstencilformat.0 != srt.depth_stencil_format {
                                     renderparam.colorformat = RenderColorFormat(srt.color_format);
                                     renderparam.depthstencilformat = RenderDepthFormat(srt.depth_stencil_format);
@@ -105,9 +109,9 @@ pub fn sys_act_renderer_modify(
                     }
                 };
             },
-            OpsRendererTarget::Auto(entity, width, height, colorformat, depthstencilformat) => {
+            OpsRendererTarget::Auto(entity, width, height, colorformat, depthstencilformat, force) => {
                 if let Ok((mut renderparam, mut rendertarget, _nodeid, mut flag)) = renderers.get_mut(entity) {
-                    renderparam.rendersize = RenderSize::new(width as u32, height as u32);
+                    renderparam.rendersize = RenderSize::new(width as u32, height as u32, force);
                     if renderparam.colorformat.0 != colorformat || renderparam.depthstencilformat.0 != depthstencilformat {
                         renderparam.colorformat = RenderColorFormat(colorformat);
                         renderparam.depthstencilformat = RenderDepthFormat(depthstencilformat);
@@ -205,15 +209,19 @@ pub fn sys_act_renderer_connect(
 }
 pub fn sys_dispose_renderer(
     mut render_graphic: ResMut<PiRenderGraph>,
-    renderers: Query<(Entity, &GraphId, &DisposeCan), Changed<DisposeCan>>,
+    renderers: Query<(Entity, &GraphId, &DisposeCan, &RendererRenderTargetKey), Changed<DisposeCan>>,
     mut error: ResMut<ErrorRecord>,
     mut performance: ResMut<Performance>,
+    mut targets: ResMut<CustomRenderTargets>,
 ) {
     // performance.systems.push(String::from("sys_dispose_renderer"));
-    renderers.iter().for_each(|(entity, nodeid, flag)| {
+    renderers.iter().for_each(|(entity, nodeid, flag, rtkey)| {
         if flag.0 == false { return; }
         if let Err(err) = render_graphic.remove_node(nodeid.0) {
             error.graphic(entity, err);
+        }
+        if let Some(key) = rtkey.0 {
+            targets.delete(key);
         }
     });
 }
@@ -226,6 +234,7 @@ pub type RendererBundle = (
         RendererParam,
         FlagRendererParamForPipeline,
         RendererRenderTarget,
+        RendererRenderTargetKey,
         ViewerID,
         Postprocess,
     )
@@ -246,6 +255,7 @@ impl ActionRenderer {
                 RendererParam::new(transparent),
                 FlagRendererParamForPipeline,
                 RendererRenderTarget::None(None),
+                RendererRenderTargetKey(None),
                 ViewerID(id_viewer),
                 Postprocess::default(),
             )

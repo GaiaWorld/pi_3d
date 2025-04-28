@@ -209,6 +209,7 @@ fn iter_dirty(
                 let tmp = if let Some(parent) = tree.get_up(child) {
                     // if let (Ok((transform, _)), Ok((_, _, penable, _))) = (transforms.get(parent.parent()), nodes.get(parent.parent())) {
                     if let (Ok((_, _, penable, _, transform, _, ))) = nodes.get(parent.parent()) {
+                        // log::error!("{:?}", (parent.parent(), penable.0));
                         calc_world_root_bytree( penable.0, &transform.matrix.clone(), &mut nodes,  child, &matrixpool)
                     }else {
                         calc_world_root_bytree( true, &Matrix::identity(), &mut nodes,  child, &matrixpool)
@@ -256,6 +257,7 @@ fn _calc_world_one(
         let mut resultenable = enable.bool() && tmp.enable;
 
         let dirty = tmp.dirty || lmatrix.is_changed();
+        // log::error!("{:?}", (entity, enable.bool(), tmp.enable));
 
         // log::warn!(">>>>> calc_world_one {:?}", lmatrix.1);
         if dirty {
@@ -324,6 +326,7 @@ fn calc_world_one_bytree(
 
         let dirty = tmp.dirty || lmatrix.is_changed();
 
+        // log::error!("{:?}", (entity, enable.bool(), tmp.enable));
         // log::warn!(">>>>> calc_world_one {:?}", lmatrix.1);
         if dirty {
             let flag = gtransform.calc(tmp.matrix.as_ref(), &lmatrix);
@@ -349,6 +352,7 @@ fn calc_world_root_bytree(
 ) -> TmpCalcWorldMatrix {
     if let Ok((lmatrix, enable, mut globalenable, _parent, mut gtransform, mut absolute)) = nodes.get_mut(entity) {
         let mut resultenable = enable.bool() && penable;
+        // log::error!("{:?}", (entity, enable.bool(), penable));
 
         let dirty = lmatrix.is_changed();
 

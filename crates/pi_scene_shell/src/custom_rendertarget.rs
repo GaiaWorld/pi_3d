@@ -1,8 +1,8 @@
 use crate::{ecs::*, prelude::MemSize};
 
 use pi_bevy_asset::ShareAssetMgr;
-use pi_bevy_render_plugin::{constant::texture_sampler::{ColorFormat, DepthStencilFormat}, PiSafeAtlasAllocator};
-use pi_render::{components::view::target_alloc::{TextureDescriptor, ShareTargetView, TargetDescriptor}, renderer::sampler::{BindDataSampler, KeySampler, SamplerRes}, rhi::device::RenderDevice};
+use pi_bevy_render_plugin::{constant::{render_state::TextureFormat, texture_sampler::{ColorFormat, DepthStencilFormat}}, PiSafeAtlasAllocator};
+use pi_render::{components::view::target_alloc::{SafeTargetView, ShareTargetView, TargetDescriptor, TextureDescriptor}, renderer::sampler::{BindDataSampler, KeySampler, SamplerRes}, rhi::device::RenderDevice};
 use pi_scene_math::Number;
 use pi_share::Share;
 use pi_slotmap::{SlotMap, DefaultKey};
@@ -62,6 +62,39 @@ impl CustomRenderTarget {
         }
     }
 
+    pub fn from_srt(
+        srt: Option<Share<SafeTargetView>>,
+        device: &RenderDevice,
+        asset_samp: &ShareAssetMgr<SamplerRes>
+    ) -> Option<Self> {
+        if let Some(srt) = srt {
+            if let Some(color_format) = ColorFormat::new(srt.target().colors[0].1.format()) {
+                let depth_stencil_format = if let Some(depth) = &srt.target().depth {
+                    depth_format(depth.1.format())
+                } else { Some(DepthStencilFormat::None) };
+
+                if let Some(depth_stencil_format) = depth_stencil_format {
+                    let width = srt.target().width;
+                    let height = srt.target().height;
+                    if let Some(sampler) = BindDataSampler::create(KeySampler::default(), &device, &asset_samp) {
+                        Some(
+                            Self {
+                                rt: srt, sampler, width, height, color_format, depth_stencil_format
+                            }
+                        )
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
     pub fn tilloff(&self, viewport: (Number, Number, Number, Number)) -> (Number, Number, Number, Number) {
         let rect = self.rt.rect();
         let sx = self.width as Number / self.rt.target().width as Number;
@@ -191,6 +224,21 @@ impl CustomRenderTargets {
             }
         });
     }
+    pub fn insert_srt(&mut self, srt: Option<ShareTargetView>, mut key: Option<KeyRenderTarget>,
+        device: &RenderDevice,
+        asset_samp: &ShareAssetMgr<SamplerRes>
+    ) -> Option<KeyRenderTarget> {
+        if let Some(key) = key {
+            if let Some(item) = self.0.get_mut(key) {
+                *item = CustomRenderTarget::from_srt(srt, device, asset_samp);
+            }
+        } else {
+            let id = self.0.insert(CustomRenderTarget::from_srt(srt, device, asset_samp));
+            key = Some(id);
+        }
+
+        return key;
+    }
     pub fn delete(&mut self, key: KeyRenderTarget) {
         self.0.remove(key);
     }
@@ -199,5 +247,17 @@ impl MemSize for CustomRenderTargets {
     fn memsize(&self) -> usize {
         self.0.capacity() * 32
         + self.1.capacity() * 48
+    }
+}
+
+fn depth_format(val: wgpu::TextureFormat) -> Option<DepthStencilFormat> {
+    match val {
+        wgpu::TextureFormat::Stencil8 => Some(DepthStencilFormat::Stencil8),
+        wgpu::TextureFormat::Depth16Unorm => Some(DepthStencilFormat::Depth16Unorm),
+        wgpu::TextureFormat::Depth24Plus => Some(DepthStencilFormat::Depth24Plus),
+        wgpu::TextureFormat::Depth24PlusStencil8 => Some(DepthStencilFormat::Depth24PlusStencil8),
+        wgpu::TextureFormat::Depth32Float => Some(DepthStencilFormat::Depth32Float),
+        wgpu::TextureFormat::Depth32FloatStencil8 => Some(DepthStencilFormat::Depth32FloatStencil8),
+        _ => { None }
     }
 }

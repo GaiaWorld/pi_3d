@@ -6,7 +6,7 @@ use pi_futures::BoxFuture;
 use wgpu::StoreOp;
 use pi_slotmap::Key;
 
-use crate::pass::PassTagOrders;
+use crate::{pass::PassTagOrders, prelude::{ActionListUniformValB, OpsUniformValB}};
 
 use super::super::renderer::*;
 
@@ -56,12 +56,15 @@ pub struct QueryParam0<'w> (
     Query<
         'w,
         (
-            &'static RendererParam, &'static DisposeReady, &'static Renderer,
-            &'static mut RendererRenderTarget,
+            &'static RendererParam, &'static DisposeReady,
+            &'static mut RendererRenderTarget, &'static mut RendererRenderTargetKey, 
         ),
         (),
     >,
     Res<'w, EngineCustomPlugins>,
+    ResMut<'w, CustomRenderTargets>,
+    Res<'w, PiRenderDevice>,
+    Res<'w, ShareAssetMgr<SamplerRes>>,
 );
 
 pub struct RenderNode {
@@ -97,16 +100,17 @@ impl Node for RenderNode {
     ) -> Result<Self::Output, String> {
         
         let mut output = SimpleInOut::default();
-
         // let mut param: QueryParam0 = param.get_mut(world);
-        let (atlas_allocator, query, engineopt) = (&param.0, &mut param.1, &param.2);
+        let (atlas_allocator, query, engineopt, customrendertargets, device, asset_samp) = (&param.0, &mut param.1, &param.2, &mut param.3, &param.4, &param.5);
         if engineopt.active == false {
             return Ok(output);
         }
         if let Ok((
-            param, disposed, _renderer, mut to_final_target
+            param, disposed, mut to_final_target, mut customrendertargetkey
         )) = query.get_mut(self.renderer_id) {
+            // log::error!("GraphicNode: Build {:?}", self.renderer_id);
     
+            // if !param.enable.0 || disposed.0 {
             if disposed.0 {
                 return Ok(output);
             }
@@ -117,18 +121,31 @@ impl Node for RenderNode {
 
             match to_final_target {
                 RendererRenderTarget::FinalRender => {},
-                RendererRenderTarget::Custom(_srt) => {},
+                RendererRenderTarget::Custom(_srt) => {
+                    customrendertargetkey.0 = customrendertargets.insert_srt(Some(_srt.clone()), customrendertargetkey.0, device, asset_samp);
+
+                },
+                RendererRenderTarget::CustomAndOut(_srt) => {
+                    customrendertargetkey.0 = customrendertargets.insert_srt(Some(_srt.clone()), customrendertargetkey.0, device, asset_samp);
+                    output.target = Some(_srt.clone());
+                },
                 RendererRenderTarget::None(_) => {
                     let currlist: Vec<ShareTargetView> = vec![];
                     let srt = if let Some(srt) = input.target.clone() {
-                        match (param.depthstencilformat.0.val(), &srt.target().depth) {
-                            (Some(format), Some(depthview)) => {
-                                if depthview.1.format() == format {
-                                    Some(srt)
-                                } else { None }
-                            },
-                            (None, _) => { Some(srt) },
-                            _ => { None }
+                        if !param.rendersize.force_allocate_srt()
+                            || (srt.target().width == param.rendersize.width() && srt.target().height == param.rendersize.height()
+                        ) {
+                            match (param.depthstencilformat.0.val(), &srt.target().depth) {
+                                (Some(format), Some(depthview)) => {
+                                    if depthview.1.format() == format {
+                                        Some(srt)
+                                    } else { None }
+                                },
+                                (None, _) => { Some(srt) },
+                                _ => { None }
+                            }
+                        } else {
+                            None
                         }
                     } else {
                         None
@@ -164,6 +181,8 @@ impl Node for RenderNode {
                         atlas_allocator.allocate( width, height, target_type.clone(), currlist.iter() )
                     };
 
+                    customrendertargetkey.0 = customrendertargets.insert_srt(Some(srt.clone()), customrendertargetkey.0, device, asset_samp);
+
                     self.auto_srt = Some(srt.clone());
                     output.target = Some(srt.clone());
                 },
@@ -198,13 +217,9 @@ impl Node for RenderNode {
         if let Ok((
             param, disposed, renderer, to_final_target
         )) = query.get(self.renderer_id) {
-            // log::warn!("Draws: Graphic {:?}", (enable.0, depth_clear, auto_clear_depth));
+            // log::error!("Draws: Graphic {:?}", (self.renderer_id, !param.enable.0 || disposed.0));
             if !param.enable.0 || disposed.0 {
-                return Box::pin(
-                    async move {
-                        Ok(())
-                    }
-                );
+                return Box::pin( async move { Ok(()) } );
             }
     
             let (mut x, mut y, mut w, mut h, min_depth, max_depth) = renderer.draws.viewport;
@@ -277,8 +292,25 @@ impl Node for RenderNode {
                     } else {
                         render_depth_view = None;
                     };
-                    
-                    // output.target = Some(srt.clone());
+                },
+                RendererRenderTarget::CustomAndOut(srt) => {
+                    // log::warn!("Graphic: Custom");
+                    let width = param.rendersize.width();
+                    let height = param.rendersize.height();
+                    x = srt.rect().min.x as f32 + width as f32 * x;
+                    y = srt.rect().min.y as f32 + height as f32 * y;
+                    w = width as f32 * w;
+                    h = height as f32 * h;
+                    can_render = need_depth == depth_view.is_some();
+                    let view = srt.target().colors[0].0.as_ref();
+                    render_color_view = view.deref().deref();
+
+                    if let Some(view) = srt.target().depth.as_ref() {
+                        let depth_view = view.0.as_ref();
+                        render_depth_view = Some(depth_view.deref().deref());
+                    } else {
+                        render_depth_view = None;
+                    };
                 },
                 RendererRenderTarget::None(_) => {
                     // log::warn!("Graphic None: {:?}", (self.renderer_id, clear_color_ops));
@@ -325,7 +357,7 @@ impl Node for RenderNode {
                     Some( wgpu::RenderPassColorAttachment { view: render_color_view, resolve_target: None, ops: clear_color_ops, } )
                 ];
                 color_attachments = [
-                    Some( wgpu::RenderPassColorAttachment { resolve_target: None,  ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: StoreOp::Store, }, view: render_color_view, })
+                    Some( wgpu::RenderPassColorAttachment { view: render_color_view, resolve_target: None,  ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: StoreOp::Store, }, })
                 ];
                 if let Some(depth) = render_depth_view {
                     depth_stencil_attachment = Some(

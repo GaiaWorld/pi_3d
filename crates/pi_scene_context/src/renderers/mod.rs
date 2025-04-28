@@ -1,4 +1,5 @@
 
+use pi_bevy_render_plugin::GraphBuild;
 use pi_scene_shell::prelude::*;
 
 
@@ -155,7 +156,7 @@ impl Plugin for PluginRenderer {
         .configure_set(Update, StageRenderer::RenderCreate      .in_set(ERunStageChap::Create).after(StageCamera::_Create).after(StageShadowGenerator::_ShadowCreate))
         .configure_set(Update, StageRenderer::_RenderCreate     .in_set(ERunStageChap::Create).after(StageRenderer::RenderCreate))
         .configure_set(Update, StageRenderer::RenderStateCommand.in_set(ERunStageChap::Modify).in_set(FrameDataPrepare))
-        .configure_set(Update, StageRenderer::RendererCommand   .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare))
+        .configure_set(Update, StageRenderer::RendererCommand   .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).before(GraphBuild))
         .configure_set(Update, StageRenderer::PassBindGroup     .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare))
         .configure_set(Update, StageRenderer::PassBindGroups    .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare).after(StageRenderer::PassBindGroup))
         .configure_set(Update, StageRenderer::PassShader        .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare).after(StageRenderer::PassBindGroups))

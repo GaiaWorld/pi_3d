@@ -252,6 +252,8 @@ impl VertexRenderRange {
             let start = (start + range0.start).min(range0.end);
             let end = (count + start).min(range0.end);
 
+            log::error!("VertexRenderRange: {:?}", (self.0, self.1, start, end));
+
             Range { start, end }
         } else {
             geo.vertex_range()
