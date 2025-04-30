@@ -696,9 +696,11 @@ fn _sys_image_texture_view_load_launch2(
         EKeyTexture::SRT(_key) => {
             // TODO
             if let Some(target) = targets.get(*_key) {
+                // log::error!("EKeyTexture::SRT OK {:?}", _key);
                 state.texview_success += 1;
                 Some(ETextureViewUsage::SRT(target.rt.clone()))
             } else {
+                // log::error!("EKeyTexture::SRT Fail");
                 state.texview_fail += 1;
                 None
             }

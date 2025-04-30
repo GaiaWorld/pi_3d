@@ -245,13 +245,15 @@ pub fn sys_act_material_value(
                             let tilloff = target.tilloff((0., 0., 1., 1.));
                             cmdsval.push(OpsUniformVal::vec4(entity, tilloffslot, tilloff.0, tilloff.1, tilloff.2, tilloff.3));
                             // log::error!("texture_from_target Target {:?}", key);
+                        } else {
+                            // log::error!("texture_from_renderer Error No RT {:?}", key);
                         }
                         param.url = EKeyTexture::SRT(key);
                         textureparams.0.insert(param.slotname.clone(), Arc::new(param));
                         *flag = UniformTextureWithSamplerParamsDirty;
                     }
                 } else {
-                    // log::error!("texture_from_target Error No Material");
+                    // log::error!("texture_from_renderer Error No Material");
                 }
             }
             OpsUniformValB::TargetAnimation(idmat, attr, group, curve) => {

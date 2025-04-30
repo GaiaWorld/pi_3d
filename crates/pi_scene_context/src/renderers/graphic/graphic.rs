@@ -110,8 +110,8 @@ impl Node for RenderNode {
         )) = query.get_mut(self.renderer_id) {
             // log::error!("GraphicNode: Build {:?}", self.renderer_id);
     
-            // if !param.enable.0 || disposed.0 {
-            if disposed.0 {
+            if !param.enable.0 || disposed.0 {
+            // if disposed.0 {
                 return Ok(output);
             }
     
@@ -119,14 +119,17 @@ impl Node for RenderNode {
             let need_depth = param.depthstencilformat.need_depth();
             let to_final_target = to_final_target.deref_mut();
 
+            let tmp = input.target.clone();
+            customrendertargetkey.0 = customrendertargets.insert_srt(tmp, customrendertargetkey.0, device, asset_samp);
+
             match to_final_target {
                 RendererRenderTarget::FinalRender => {},
                 RendererRenderTarget::Custom(_srt) => {
-                    customrendertargetkey.0 = customrendertargets.insert_srt(Some(_srt.clone()), customrendertargetkey.0, device, asset_samp);
-
+                    // customrendertargetkey.0 = customrendertargets.insert_srt(Some(_srt.clone()), customrendertargetkey.0, device, asset_samp);
+                    output.target = Some(_srt.clone());
                 },
                 RendererRenderTarget::CustomAndOut(_srt) => {
-                    customrendertargetkey.0 = customrendertargets.insert_srt(Some(_srt.clone()), customrendertargetkey.0, device, asset_samp);
+                    // customrendertargetkey.0 = customrendertargets.insert_srt(Some(_srt.clone()), customrendertargetkey.0, device, asset_samp);
                     output.target = Some(_srt.clone());
                 },
                 RendererRenderTarget::None(_) => {
@@ -145,6 +148,7 @@ impl Node for RenderNode {
                                 _ => { None }
                             }
                         } else {
+                            // log::error!("customrendertargetkey {:?}", customrendertargetkey.0);
                             None
                         }
                     } else {
@@ -181,7 +185,7 @@ impl Node for RenderNode {
                         atlas_allocator.allocate( width, height, target_type.clone(), currlist.iter() )
                     };
 
-                    customrendertargetkey.0 = customrendertargets.insert_srt(Some(srt.clone()), customrendertargetkey.0, device, asset_samp);
+                    // customrendertargetkey.0 = customrendertargets.insert_srt(Some(srt.clone()), customrendertargetkey.0, device, asset_samp);
 
                     self.auto_srt = Some(srt.clone());
                     output.target = Some(srt.clone());
@@ -393,7 +397,7 @@ impl Node for RenderNode {
                 }
 
                 if renderer.draws.list.len() > 0 && param.enable.0 {
-                    // log::warn!("Draws: {:?}", (renderer.draws.list.len(), (x, y, w, h, min_depth, max_depth)));
+                    // log::warn!("Draws: {:?}", (self.renderer_id, renderer.draws.list.len(), (x, y, w, h, min_depth, max_depth)));
                     let mut renderpass = commands.begin_render_pass(
                         &wgpu::RenderPassDescriptor {
                             label: Some(self.renderer_id.index().to_string().as_str()),

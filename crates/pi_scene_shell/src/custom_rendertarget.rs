@@ -97,8 +97,8 @@ impl CustomRenderTarget {
     }
     pub fn tilloff(&self, viewport: (Number, Number, Number, Number)) -> (Number, Number, Number, Number) {
         let rect = self.rt.rect();
-        let sx = self.width as Number / self.rt.target().width as Number;
-        let sy = self.height as Number / self.rt.target().height as Number;
+        let sx = (rect.max.x - rect.min.x).abs() as Number / self.rt.target().width as Number;
+        let sy = (rect.max.y - rect.min.y).abs() as Number / self.rt.target().height as Number;
         let ox = rect.min.x as Number / self.rt.target().width as Number;
         let oy = rect.min.y as Number / self.rt.target().height as Number;
 
@@ -229,13 +229,10 @@ impl CustomRenderTargets {
         asset_samp: &ShareAssetMgr<SamplerRes>
     ) -> Option<KeyRenderTarget> {
         if let Some(key) = key {
-            if let Some(item) = self.0.get_mut(key) {
-                *item = CustomRenderTarget::from_srt(srt, device, asset_samp);
-            }
-        } else {
-            let id = self.0.insert(CustomRenderTarget::from_srt(srt, device, asset_samp));
-            key = Some(id);
+            self.delete(key);
         }
+        let id = self.0.insert(CustomRenderTarget::from_srt(srt, device, asset_samp));
+        key = Some(id);
 
         return key;
     }
