@@ -125,8 +125,9 @@ pub fn sys_act_renderer_modify(
     cmdmodifys.drain().for_each(|cmd| {
         match cmd {
             OpsRendererCommand::Active(entity, val) => {
-                if let Ok((mut comp, _, _, _)) = renderers.get_mut(entity) {
+                if let Ok((mut comp, _, nodeid, _)) = renderers.get_mut(entity) {
                     comp.enable = RendererEnable(val);
+                    graphic.set_enable(nodeid.0, val);
                 }
                 // else { cmdmodifys.push(cmd) }
             },

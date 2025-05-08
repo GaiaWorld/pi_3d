@@ -97,6 +97,7 @@ impl CustomRenderTarget {
     }
     pub fn tilloff(&self, viewport: (Number, Number, Number, Number)) -> (Number, Number, Number, Number) {
         let rect = self.rt.rect();
+        // log::error!("TillOff {:?}", (rect.min.x, rect.min.y, rect.max.x, rect.max.y));
         let sx = (rect.max.x - rect.min.x).abs() as Number / self.rt.target().width as Number;
         let sy = (rect.max.y - rect.min.y).abs() as Number / self.rt.target().height as Number;
         let ox = rect.min.x as Number / self.rt.target().width as Number;

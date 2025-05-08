@@ -244,7 +244,7 @@ pub fn sys_act_material_value(
                         if let Some(target) = targets.get(key) {
                             let tilloff = target.tilloff((0., 0., 1., 1.));
                             cmdsval.push(OpsUniformVal::vec4(entity, tilloffslot, tilloff.0, tilloff.1, tilloff.2, tilloff.3));
-                            // log::error!("texture_from_target Target {:?}", key);
+                            // log::error!("texture_from_renderer {:?}", (key, tilloff));
                         } else {
                             // log::error!("texture_from_renderer Error No RT {:?}", key);
                         }

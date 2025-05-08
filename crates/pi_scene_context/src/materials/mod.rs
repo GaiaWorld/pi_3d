@@ -37,9 +37,9 @@ impl Plugin for PluginMaterial {
             app.insert_resource(StateTextureLoader::default());
             app.insert_resource(ImageTextureViewLoader2::default());
 
-            app.configure_set(Update, StageTextureLoad::TextureRequest.in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(ERunStageChap::New));
+            app.configure_set(Update, StageTextureLoad::TextureRequest.in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(ERunStageChap::New).after(StageMaterial::MatCommand));
             app.configure_set(Update, StageTextureLoad::TextureLoading.in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageTextureLoad::TextureRequest));
-            app.configure_set(Update, StageTextureLoad::TextureLoaded .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare));
+            app.configure_set(Update, StageTextureLoad::TextureLoaded .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoading));
 
 #[cfg(feature = "use_bevy")]
             app.add_systems(

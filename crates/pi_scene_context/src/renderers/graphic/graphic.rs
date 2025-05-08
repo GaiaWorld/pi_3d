@@ -112,6 +112,7 @@ impl Node for RenderNode {
     
             if !param.enable.0 || disposed.0 {
             // if disposed.0 {
+                output.target = input.target.clone();
                 return Ok(output);
             }
     
@@ -119,25 +120,35 @@ impl Node for RenderNode {
             let need_depth = param.depthstencilformat.need_depth();
             let to_final_target = to_final_target.deref_mut();
 
-            let tmp = input.target.clone();
-            customrendertargetkey.0 = customrendertargets.insert_srt(tmp, customrendertargetkey.0, device, asset_samp);
+            if param.enable.0 && !disposed.0 {
+                let tmp = input.target.clone();
+                customrendertargetkey.0 = customrendertargets.insert_srt(tmp, customrendertargetkey.0, device, asset_samp);
+                // log::error!("customrendertargetkey {:?}", &customrendertargetkey.0);
+            } else {
+                output.target = input.target.clone();
+                return Ok(output);
+            }
 
             match to_final_target {
                 RendererRenderTarget::FinalRender => {},
                 RendererRenderTarget::Custom(_srt) => {
-                    // customrendertargetkey.0 = customrendertargets.insert_srt(Some(_srt.clone()), customrendertargetkey.0, device, asset_samp);
                     output.target = Some(_srt.clone());
                 },
                 RendererRenderTarget::CustomAndOut(_srt) => {
-                    // customrendertargetkey.0 = customrendertargets.insert_srt(Some(_srt.clone()), customrendertargetkey.0, device, asset_samp);
                     output.target = Some(_srt.clone());
                 },
                 RendererRenderTarget::None(_) => {
-                    let currlist: Vec<ShareTargetView> = vec![];
+                    // 未强制声明重新申请 RenderTarget, 且 Input 的 RenderTarget 尺寸和格式与渲染器参数匹配,则使用 Input 的 RenderTarget
+                    let mut currlist: Vec<ShareTargetView> = vec![];
                     let srt = if let Some(srt) = input.target.clone() {
+                        currlist.push(srt.clone());
+                        let rect = srt.rect();
+                        let rtwidth  = (rect.max.x - rect.min.x).abs() as u32;
+                        let rtheight = (rect.max.y - rect.min.y).abs() as u32;
+                        // log::error!(">>>>> {:?}", (param.rendersize.force_allocate_srt(), (rtwidth, param.rendersize.width()) , (rtheight, param.rendersize.height())));
                         if !param.rendersize.force_allocate_srt()
-                            || (srt.target().width == param.rendersize.width() && srt.target().height == param.rendersize.height()
-                        ) {
+                            && (rtwidth == param.rendersize.width() && rtheight == param.rendersize.height())
+                        {
                             match (param.depthstencilformat.0.val(), &srt.target().depth) {
                                 (Some(format), Some(depthview)) => {
                                     if depthview.1.format() == format {
@@ -156,36 +167,33 @@ impl Node for RenderNode {
                     };
                     let srt = match srt {
                         Some(srt) => {
-                            if srt.target().colors[0].1.format() == param.colorformat.0.val() {
-                                Some(srt)
-                            } else {
-                                None
-                            }
+                            if srt.target().colors[0].1.format() == param.colorformat.0.val() { Some(srt) } else { None }
                         },
                         None => { None },
                     };
 
-                    let srt = if let Some(srt) = srt {
-                        // log::warn!("SRT From Input.");
-                        srt
-                    } else {
+                    let srt = if let Some(srt) = srt { srt } else {
                         // log::warn!("SRT Allocate by allocate.");
                         let width = param.rendersize.width();
                         let height = param.rendersize.height();
                         let target_type = atlas_allocator.get_or_create_type(
                             TargetDescriptor {
                                 colors_descriptor: param.colorformat.desc(),
-                                need_depth: need_depth, 
+                                need_depth, 
                                 default_width: 2048,
                                 default_height: 2048,
                                 depth_descriptor: param.depthstencilformat.desc()
                             }
                         );
 
-                        atlas_allocator.allocate( width, height, target_type.clone(), currlist.iter() )
+                        let res = atlas_allocator.allocate_not_hold( width, height, target_type.clone(), currlist.iter() );
+                        // if let Some(old) = currlist.get(0) {
+                        //     if old.target().colors[0].1.global_id().eq(&res.target().colors[0].1.global_id()) {
+                        //         log::error!(">>> Graph Node Build atlas allocate Error, exclude Not Work.")
+                        //     }
+                        // }
+                        res
                     };
-
-                    // customrendertargetkey.0 = customrendertargets.insert_srt(Some(srt.clone()), customrendertargetkey.0, device, asset_samp);
 
                     self.auto_srt = Some(srt.clone());
                     output.target = Some(srt.clone());
