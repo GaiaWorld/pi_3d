@@ -186,7 +186,7 @@ impl Node for RenderNode {
                             }
                         );
 
-                        let res = atlas_allocator.allocate_not_hold( width, height, target_type.clone(), currlist.iter() );
+                        let res = atlas_allocator.allocate( width, height, target_type.clone(), currlist.iter() );
                         // if let Some(old) = currlist.get(0) {
                         //     if old.target().colors[0].1.global_id().eq(&res.target().colors[0].1.global_id()) {
                         //         log::error!(">>> Graph Node Build atlas allocate Error, exclude Not Work.")

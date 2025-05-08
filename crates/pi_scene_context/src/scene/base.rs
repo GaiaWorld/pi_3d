@@ -102,7 +102,7 @@ impl SceneShadowInfos {
         Self(data, None, None, None)
     }
     pub fn binds(&self, target: &CustomRenderTarget) -> (ShaderBindShadowData, ShaderBindShadowTexture, ShaderBindShadowSampler) {
-        let tex = ETextureViewUsage::SRT(target.rt.clone());
+        let tex = ETextureViewUsage::from(&target.rt);
         (
             self.0.as_ref().unwrap().clone(),
             ShaderBindShadowTexture(BindDataTexture2D(tex)),

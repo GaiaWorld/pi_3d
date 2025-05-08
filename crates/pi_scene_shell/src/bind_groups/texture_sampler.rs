@@ -28,7 +28,8 @@ impl EffectTextureSampler {
             ETextureViewUsage::ImageFrame(arc) => {
                 arc.texture().tilloff()
             },
-            ETextureViewUsage::SRT(arc) => ImageTextureFrame::DEFAULT_TILLOFF,
+            ETextureViewUsage::SRT(_) => ImageTextureFrame::DEFAULT_TILLOFF,
+            ETextureViewUsage::FBORect(_, _, _, _) => ImageTextureFrame::DEFAULT_TILLOFF,
         }
     }
     pub fn coord(&self) -> u8 {
@@ -39,7 +40,8 @@ impl EffectTextureSampler {
             ETextureViewUsage::ImageFrame(arc) => {
                 arc.texture().coord()
             },
-            ETextureViewUsage::SRT(arc) => 0,
+            ETextureViewUsage::SRT(_) => 0,
+            ETextureViewUsage::FBORect(_, _, _, _) => 0,
         }
     }
 }

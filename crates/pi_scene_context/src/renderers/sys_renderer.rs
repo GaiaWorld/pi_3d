@@ -575,7 +575,7 @@ use super::{
     /// 遍历 Renderer , 对所属 Viewer 的 ModelListAfterCulling 进行遍历, 获取 与 Renderer 相关 Pass 关联的 物体
     /// 对收集到的物体进行排序、渲染合并
     pub fn sys_renderer_draws_modify(
-        mut renderers: Query< ( ObjectID, &SceneID, &ViewerID, &mut Renderer, &PassTag, &RendererParam ) >,
+        mut renderers: Query< ( ObjectID, &SceneID, &ViewerID, &mut Renderer, &PassTag, &RendererParam, &RendererRenderTargetKey ) >,
         viewers: Query< (&ModelListAfterCulling, &ViewerGlobalPosition, &ViewerDirection, &DisposeReady, &ViewerDistanceCompute), >,
         scenes: Query< (&BatchParamOpaque, &BatchParamTransparent) >,
         models: Query<
@@ -594,6 +594,7 @@ use super::{
         queue: Res<PiRenderQueue>,
         mut combinebuffer: ResMut<CombineBuffer>,
         engineopt: Res<EngineCustomPlugins>,
+        mut rendertargets: ResMut<CustomRenderTargets>,
     ) {
         // performance.systems.push(String::from("sys_renderer_draws_modify"));
         if performance.debug { performance.t_drawobjs = pi_time::Instant::now(); }
@@ -605,7 +606,11 @@ use super::{
         let mut lastdraw: Option<DrawTmpRef> = None;
 
         performance.drawcalls = 0;
-        renderers.iter_mut().for_each(|(_id_renderer, idscene, id_viewer, mut renderer, passtag, param)| {
+        renderers.iter_mut().for_each(|(_id_renderer, idscene, id_viewer, mut renderer, passtag, param, rendertargetkey)| {
+            if let Some(rendertargetkey) = rendertargetkey.0 {
+                rendertargets.delete(rendertargetkey);
+            }
+
             renderer.clear();
             // log::warn!("Renderer: {:?}, Camera {:?}, {:?}", _id_renderer, id_viewer.0, (param.enable.0, passtag));
             if param.enable.0 == false {

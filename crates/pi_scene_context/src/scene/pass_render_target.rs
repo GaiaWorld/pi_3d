@@ -6,7 +6,7 @@ pub struct MainCameraOpaqueTarget(pub Option<CustomRenderTarget>);
 impl MainCameraOpaqueTarget {
     pub fn binds(&self) -> Option<(ShaderBindMainCameraOpaqueTexture, ShaderBindMainCameraOpaqueSampler)> {
         if let Some(target) = &self.0 {
-            let tex = ETextureViewUsage::SRT(target.rt.clone());
+            let tex = ETextureViewUsage::from(&target.rt);
             Some((
                 ShaderBindMainCameraOpaqueTexture(BindDataTexture2D(tex)),
                 ShaderBindMainCameraOpaqueSampler(target.sampler.clone())
@@ -22,7 +22,7 @@ pub struct MainCameraDepthTarget(pub Option<CustomRenderTarget>);
 impl MainCameraDepthTarget {
     pub fn binds(&self) -> Option<(ShaderBindMainCameraDepthTexture, ShaderBindMainCameraDepthSampler)> {
         if let Some(target) = &self.0 {
-            let tex = ETextureViewUsage::SRT(target.rt.clone());
+            let tex = ETextureViewUsage::from(&target.rt);
             Some((
                 ShaderBindMainCameraDepthTexture(BindDataTexture2D(tex)),
                 ShaderBindMainCameraDepthSampler(target.sampler.clone())
