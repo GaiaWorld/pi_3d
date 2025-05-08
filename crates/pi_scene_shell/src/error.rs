@@ -60,6 +60,11 @@ impl ErrorRecord {
     pub const ERROR_MATERIAL_SHADER_NOTFOUND: EError        = 00013;
     pub const ERROR_USE_MATERIAL_NULL_MAT: EError           = 00014;
     pub const ERROR_USE_MATERIAL_NULL_TARGET: EError        = 00015;
+    pub const ERROR_TEXTURE_CACHE_FAIL: EError              = 00016;
+    pub const ERROR_TEXTURE_CANT_LOAD_FROM_DATA: EError     = 00017;
+    pub const ERROR_TEXTURE_LOAD_FAIL: EError               = 00018;
+    pub const ERROR_TEXTURE_COMBINE_FAIL: EError            = 00019;
+    pub const ERROR_TEXTURE_FROM_KTX_FAIL: EError           = 00019;
     
     pub const ERROR_ANIMATION_START_FAIL: EError            = 00100;
     pub const ERROR_ANIMATION_PAUSE_FAIL: EError            = 00101;

@@ -23,22 +23,6 @@ use super::{environment_texture_loader::EnvironmentTextureTools, texture::*};
 pub type IDImageTextureLoad = u64;
 
 #[derive(Clone, Copy)]
-pub enum EErrorImageLoad {
-    LoadFail,
-    CacheFail,
-    CanntLoadDataTexture,
-}
-impl ToString for EErrorImageLoad {
-    fn to_string(&self) -> String {
-        match self {
-            Self::LoadFail => String::from("LoadFail, "),
-            Self::CacheFail => String::from("CacheFail, "),
-            Self::CanntLoadDataTexture => String::from("CanntLoadDataTexture, "),
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
 pub enum ETextureLoaderMode {
     D2,
     Env,
@@ -58,10 +42,10 @@ pub struct ImageTextureLoader {
     pub loading: XHashSet<KeyImageTextureFrame>,
     pub loading_image: Share<SegQueue<(KeyImageTextureFrame, DynamicImage, Receiver<ImageTextureFrame, GarbageEmpty>)>>,
     pub loading_data: Share<SegQueue<(KeyImageTextureFrame, Share<Vec<u8>>, Receiver<ImageTextureFrame, GarbageEmpty>)>>,
-    pub fail_reason: XHashMap<KeyImageTextureFrame, EErrorImageLoad>,
-    pub fail_imgtex: Share<SegQueue<(KeyImageTextureFrame, EErrorImageLoad)>>,
+    pub fail_reason: XHashMap<KeyImageTextureFrame, EError>,
+    pub fail_imgtex: Share<SegQueue<(KeyImageTextureFrame, EError)>>,
     pub success: XHashMap<IDImageTextureLoad, Handle<ImageTextureFrame>>,
-    pub failrecord: XHashMap<IDImageTextureLoad, EErrorImageLoad>,
+    pub failrecord: XHashMap<IDImageTextureLoad, EError>,
     pub query_counter: IDImageTextureLoad,
 }
 impl MemSize for ImageTextureLoader {
@@ -130,9 +114,9 @@ impl ImageTextureLoader {
             Err(self.fail_reason.contains_key(key))
         }
     }
-    pub fn query_failed_reason(&mut self, id: IDImageTextureLoad) -> Option<String> {
+    pub fn query_failed_reason(&mut self, id: IDImageTextureLoad) -> Option<EError> {
         if let Some(key) = self.failrecord.remove(&id) {
-            Some(key.to_string())
+            Some(key)
         } else {
             None
         }
@@ -189,7 +173,7 @@ pub fn sys_image_texture_load_launch(
                                 Ok(_result) => {
 
                                 },
-                                Err(_err) => failquene.push((param.clone(), EErrorImageLoad::CacheFail))
+                                Err(_err) => failquene.push((param.clone(), ErrorRecord::ERROR_TEXTURE_CACHE_FAIL))
                             }
                         })
                         .unwrap();
@@ -204,7 +188,7 @@ pub fn sys_image_texture_load_launch(
                             }
                         } else {
                             match &param.file {
-                                false => loader.fail_imgtex.push((param, EErrorImageLoad::CanntLoadDataTexture)),
+                                false => loader.fail_imgtex.push((param, ErrorRecord::ERROR_TEXTURE_CANT_LOAD_FROM_DATA)),
                                 true => {
                                     if id > 0 {
                                         again.push(info);
@@ -222,14 +206,14 @@ pub fn sys_image_texture_load_launch(
                                                         Ok(data) => {
                                                             loading_data.push((param, data, recv));
                                                         },
-                                                        Err(_) => failquene.push((param.clone(), EErrorImageLoad::LoadFail)),
+                                                        Err(_) => failquene.push((param.clone(), ErrorRecord::ERROR_TEXTURE_LOAD_FAIL)),
                                                     }
                                                 } else {
                                                     match pi_hal::image::load_from_url(&param.url).await {
                                                         Ok(img) => {
                                                             loading_img.push((param, img, recv));
                                                         },
-                                                        Err(_) => failquene.push((param.clone(), EErrorImageLoad::LoadFail)),
+                                                        Err(_) => failquene.push((param.clone(), ErrorRecord::ERROR_TEXTURE_LOAD_FAIL)),
                                                     }
                                                 }
                                             })
@@ -246,11 +230,11 @@ pub fn sys_image_texture_load_launch(
                                                 Ok(data) => {
                                                     match recv.receive(param.clone(), Ok(ImageTextureFrame::new(data))).await {
                                                         Ok(_result) => {},
-                                                        Err(_) => failquene.push((param.clone(), EErrorImageLoad::CacheFail))
+                                                        Err(_) => failquene.push((param.clone(), ErrorRecord::ERROR_TEXTURE_CACHE_FAIL))
                                                     }
                                                 },
                                                 Err(_) => {
-                                                    failquene.push((param.clone(), EErrorImageLoad::LoadFail));
+                                                    failquene.push((param.clone(), ErrorRecord::ERROR_TEXTURE_LOAD_FAIL));
                                                 },
                                             };
                                         })
@@ -276,7 +260,7 @@ pub fn sys_image_texture_load_launch(
                             again.push(info);
                         }
                         if param.file {
-                            loader.fail_imgtex.push((param.clone(), EErrorImageLoad::LoadFail));
+                            loader.fail_imgtex.push((param.clone(), ErrorRecord::ERROR_TEXTURE_LOAD_FAIL));
                         } else {
                             let (failquene, device, queue) = (loader.fail_imgtex.clone(), (device).clone(), (queue).clone());
                             let param = param.clone();
@@ -284,7 +268,7 @@ pub fn sys_image_texture_load_launch(
                                 match EnvironmentTextureTools::async_load(param.clone(), device, queue, imageresult).await {
                                     Ok(_) => {},
                                     Err(_) => {
-                                        failquene.push((param.clone(), EErrorImageLoad::LoadFail))
+                                        failquene.push((param.clone(), ErrorRecord::ERROR_TEXTURE_LOAD_FAIL))
                                     },
                                 }
                             })
@@ -319,7 +303,7 @@ pub fn sys_image_texture_loaded(
                 match receiver.receive(keyimage.clone(), Ok(texture)).await {
                     Ok(_) => {},
                     Err(_) => {
-                        failquene.push((keyimage, EErrorImageLoad::LoadFail));
+                        failquene.push((keyimage, ErrorRecord::ERROR_TEXTURE_COMBINE_FAIL));
                     },
                 }
             })
@@ -329,13 +313,13 @@ pub fn sys_image_texture_loaded(
                 match receiver.receive(keyimage.clone(), Ok(ImageTextureFrame::new(texture))).await {
                     Ok(_) => {},
                     Err(_) => {
-                        failquene.push((keyimage, EErrorImageLoad::LoadFail));
+                        failquene.push((keyimage, ErrorRecord::ERROR_TEXTURE_CREATE_FAIL));
                     },
                 }
             })
             .unwrap();
         } else {
-            failquene.push((keyimage, EErrorImageLoad::LoadFail));
+            failquene.push((keyimage, ErrorRecord::ERROR_TEXTURE_LOAD_FAIL));
         }
     }
     while let Some((keyimage, data, receiver)) = loader.loading_data.pop() {
@@ -346,7 +330,7 @@ pub fn sys_image_texture_loaded(
                 match receiver.receive(keyimage.clone(), Ok(texture)).await {
                     Ok(_) => {},
                     Err(_) => {
-                        failquene.push((keyimage, EErrorImageLoad::LoadFail));
+                        failquene.push((keyimage, ErrorRecord::ERROR_TEXTURE_COMBINE_FAIL));
                     },
                 }
             })
@@ -359,16 +343,16 @@ pub fn sys_image_texture_loaded(
                         match receiver.receive(keyimage.clone(), Ok(ImageTextureFrame::new(texture))).await {
                             Ok(_) => {},
                             Err(_) => {
-                                failquene.push((keyimage, EErrorImageLoad::LoadFail));
+                                failquene.push((keyimage, ErrorRecord::ERROR_TEXTURE_CREATE_FAIL));
                             },
                         }
                     })
                     .unwrap();
                 } else {
-                    loader.fail_imgtex.push((keyimage, EErrorImageLoad::LoadFail));
+                    loader.fail_imgtex.push((keyimage, ErrorRecord::ERROR_TEXTURE_CREATE_FAIL));
                 }
             } else {
-                loader.fail_imgtex.push((keyimage, EErrorImageLoad::LoadFail));
+                loader.fail_imgtex.push((keyimage, ErrorRecord::ERROR_TEXTURE_FROM_KTX_FAIL));
             }
         }
     }
