@@ -24,6 +24,8 @@ pub fn sys_create_pass_object(
                 *comps.3 = PassMaterialID(idmaterial);
                 *comps.4 = PassPipelineStateDirty;
                 *comps.5 = PassBindGroupsDirty;
+            } else {
+                log::error!("Model Pass Components None");
             }
 
             // if let Some(mut cmd) = commands.get_entity(id_pass) {
@@ -32,6 +34,8 @@ pub fn sys_create_pass_object(
                 commands.entity(id_pass).insert(bundle);
                 // alter.alter(id_pass, bundle);
             // }
+        } else {
+            log::error!("Model PassIDs None");
         }
     });
 }

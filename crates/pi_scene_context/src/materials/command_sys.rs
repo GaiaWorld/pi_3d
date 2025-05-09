@@ -148,6 +148,8 @@ pub fn sys_act_material_use(
                                 }
 
                                 renderobjectcmds.push(OpsPassObject::ops(id_mesh, id_mat, pass));
+                            } else {
+                                log::error!("MatID Again!");
                             }
                         } else {
                             errors.record(id_mesh, ErrorRecord::ERROR_USE_MATERIAL_NULL_TARGET);

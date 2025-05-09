@@ -60,8 +60,7 @@ pub fn sys_modify_pass_effect_by_material(
         }
     });
     changes4.iter().for_each(|entity| {
-        // log::error!("PassBindGroupsDirty: EffectTextureSamplersComp");
-        if let Ok((list, dirty)) = materials.get(*entity) {
+        if let Ok((list, dirtys)) = materials.get(*entity) {
             list.iter().for_each(|target| {
                 if !entities.insert(target) { return; }
                 if let Ok(mut dirty) = passes.get_mut(*target) {

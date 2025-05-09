@@ -123,6 +123,10 @@ impl ErrorRecord {
     pub const ERROR_PASS_SHADER_FAIL: EError                = 50017;
     pub const ERROR_PASS_PIPELINE_FAIL: EError              = 50018;
     pub const ERROR_PASS_DRAW_FAIL: EError                  = 50019;
+    pub const ERROR_PASS_BIND_VELOCITY_NONE: EError         = 50020;
+    pub const ERROR_PASS_BIND_MODEL_INV_NONE: EError        = 50021;
+    pub const ERROR_PASS_BIND_MORPH_NONE: EError            = 50022;
+    pub const ERROR_PASS_BIND_SKININS_NONE: EError          = 50023;
 
 }
 

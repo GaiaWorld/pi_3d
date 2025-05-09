@@ -35,10 +35,10 @@ pub fn sys_sets_modify_by_viewer(
             // log::error!("DDD 1 idviewer: {:?}, idrenderer: {:?}, models: {:?}", idviewer, idrenderer, modellist.0.len());
             if let Ok((rendererenable, passtag)) = renderers.get(idrenderer) {
                 // log::error!("DDD 2");
-                if rendererenable.enable.0 == true {
+                // if rendererenable.enable.0 == true {
                     // log::error!("DDD 3 idviewer: {:?}, idrenderer: {:?}, models: {:?}", idviewer, idrenderer, modellist.0.len());
                     _sets_modify_by_viewer(idrenderer, &mut passes, &modelspass, modellist, forcemodels, passtag);
-                }
+                // }
             }
         });
     });
@@ -111,7 +111,7 @@ pub fn sys_passrendererid_pass_reset(
             
                             if let Ok((rendererenable, passtag)) = renderers.get(idrenderer) {
                                 // log::error!("BBB 4 ");
-                                if rendererenable.enable.0 == true && passtag == passpasstag {
+                                if passtag == passpasstag {
                                     // log::error!("BBB 5 ");
                                     if list0.0.contains(&idmodel.0) || list1.0.contains(&idmodel.0) {
                                         // log::warn!("Dirty PassRenderID While Pass Reset {:?}", (idpass, idviewer, passviewer.0 != idviewer));

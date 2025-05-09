@@ -126,6 +126,7 @@ impl Plugin for PluginMaterial {
 
         app.configure_set(Update, StageMaterial::MatCreate     .in_set(ERunStageChap::Create).after(StageShadowGenerator::_ShadowCreate).after(StageModel::_InitMesh));
         app.configure_set(Update, StageMaterial::_MatCreate    .in_set(ERunStageChap::Create).after(StageMaterial::MatCreate).before(ERunStageChap::Dispose));
+        app.configure_set(Update, StageMaterial::MatUse         .in_set(ERunStageChap::Modify).before(StageMaterial::MatCommand));
         app.configure_set(Update, StageMaterial::MatCommand    .in_set(ERunStageChap::Modify).before(StageTextureLoad::TextureRequest).before(EStageAnimation::Create).before(EStageAnimation::Running).after(GraphBuild));
         app.configure_set(Update, StageMaterial::MatReady      .in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoaded));
         app.configure_set(Update, StageMaterial::MatDispose     .in_set(ERunStageChap::Dispose).before(StageScene::SceneDispose));
@@ -158,7 +159,7 @@ impl Plugin for PluginMaterial {
                 .in_set(StageMaterial::MatCreate) )
             .add_systems(Update, sys_act_material_use
                 // .run_if(runif_acts::<OpsMaterialUse>)                               
-                .in_set(StageMaterial::MatCommand) )
+                .in_set(StageMaterial::MatUse) )
             .add_systems(Update, sys_act_material_value                  .after(sys_act_material_use)   .in_set(StageMaterial::MatCommand) )
             .add_systems(Update, sys_material_textures_modify
                 // .run_if(runif_comp::<UniformTextureWithSamplerParamsDirty>)

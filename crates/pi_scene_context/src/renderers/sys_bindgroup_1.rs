@@ -17,6 +17,7 @@ pub fn _set1_modify(
     asset_mgr_bindgroup_layout: &ShareAssetMgr<BindGroupLayout>,
     asset_mgr_bindgroup: &ShareAssetMgr<BindGroup>,
     passindex: usize, matidx: u32,
+    errors: &mut ErrorRecord
 ) -> Option<Arc<BindGroupModel>> {
     let mut result = None;
     let mut bind_skin = None;
@@ -33,32 +34,33 @@ pub fn _set1_modify(
             match (BindDefines::need_model(binddefines), &bind_model.matrix) {
                 (true, Some(bind)) => { matrix = Some(bind.clone()); },
                 (false, _) => { },
-                _ => { return result; }
+                _ => { errors.record(idmodel, ErrorRecord::ERROR_PASS_BIND_MODEL_NONE); return result; }
             };
             match (BindDefines::need_model_matrix_inv(binddefines), &bind_model.matrixinv) {
                 (true, Some(bind)) => { matrixinv = Some(bind.clone()); },
                 (false, _) => { },
-                _ => { return result; }
+                _ => { errors.record(idmodel, ErrorRecord::ERROR_PASS_BIND_MODEL_INV_NONE); return result; }
             };
             match (BindDefines::need_model_morphinfluence(binddefines), &bind_model.morphinfluence) {
                 (true, Some(bind)) => { morphinfluence = Some(bind.clone()); },
                 (false, _) => { },
-                _ => { return result; }
+                _ => { errors.record(idmodel, ErrorRecord::ERROR_PASS_BIND_MORPH_NONE); return result; }
             };
             match (BindDefines::need_model_skin_ins(binddefines), &bind_model.skinoff) {
                 (true, Some(bind)) => { skinoffset = Some(bind.clone()); },
                 (false, _) => { },
-                _ => { return result; }
+                _ => { errors.record(idmodel, ErrorRecord::ERROR_PASS_BIND_SKININS_NONE); return result; }
             };
             match (BindDefines::need_model_velocity(binddefines), &bind_model.velocity) {
                 (true, Some(bind)) => { velocity = Some(bind.clone()); },
                 (false, _) => { },
-                _ => { return result; }
+                _ => { errors.record(idmodel, ErrorRecord::ERROR_PASS_BIND_VELOCITY_NONE); return result; }
             };
             match (&bind_skl.0, id_skl.0) {
                 (Some(bind), Some(_)) => { bind_skin = Some(bind.clone()); },
                 (None, None) => { },
                 _ => {
+                    errors.record(idmodel, ErrorRecord::ERROR_PASS_BIND_SKIN_NONE); 
                     return result;
                 }
             }; 
@@ -67,7 +69,10 @@ pub fn _set1_modify(
                     bind_lingingsidx = Some(lighting.clone());
                 },
                 (false, _) => { },
-                _ => { return result; }
+                _ => { 
+                    errors.record(idmodel, ErrorRecord::ERROR_PASS_BIND_LIGHTING_NONE); 
+                    return result;
+                }
             };
     
             let key = KeyBindGroupModel::new(bindmatidx, matrix, matrixinv, morphinfluence, skinoffset, velocity, bind_skin.clone(), bind_lingingsidx);
@@ -81,6 +86,7 @@ pub fn _set1_modify(
                 // *set0 = PassBindGroupModel(Some(data.clone()));
                 result = Some(data.clone());
             } else {
+                errors.record(idmodel, ErrorRecord::ERROR_PASS_SET1_FAIL); 
                 // log::error!("create_bind_group 0: Error");
             }
         }

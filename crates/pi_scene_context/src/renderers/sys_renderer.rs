@@ -101,7 +101,7 @@ use super::{
                             let temp = _set1_modify(
                                 idmodel, key_meta, meta,
                                 models, device, asset_mgr_bindgroup_layout, asset_mgr_bindgroup,
-                                passidx.index(), matidx
+                                passidx.index(), matidx, errors
                             );
                             if temp.is_none() {
                                 if bindgroups.val().is_some() {
@@ -120,6 +120,7 @@ use super::{
                             if let Some(bind_group) = create_bind_group(&key_bind_group, &device, &asset_mgr_bindgroup_layout, &asset_mgr_bindgroup) {
                                 Some(Arc::new(BindGroupMaterial::new(BindGroupUsage::new(key_bind_group, bind_group), item.clone())))
                             } else {
+                                errors.record(idmodel, ErrorRecord::ERROR_PASS_SET2_FAIL);
                                 // log::error!("Bindgroups Fail set2 {:?}", idmodel);
                                 return;
                             }
@@ -136,6 +137,7 @@ use super::{
                                         *bindgroups = PassBindGroups::new(None);
                                         *flag = PassFlagShader;
                                     }
+                                    errors.record(idmodel, ErrorRecord::ERROR_PASS_SET3_FAIL);
                                     return;
                                 }
                                 temp
