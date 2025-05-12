@@ -101,13 +101,13 @@ impl Plugin for PluginGeometry {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StageGeometry::GeoCreate                 .in_set(ERunStageChap::Create).after(StageModel::_InitMesh))
-        .configure_set(Update, StageGeometry::_GeoCreate                .in_set(ERunStageChap::Create).after(StageGeometry::GeoCreate).before(ERunStageChap::Dispose))
-        .configure_set(Update, StageGeometry::VertexBufferLoaded        .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageGeometry::_GeoCreate))
-        .configure_set(Update, StageGeometry::_VertexBufferLoadedApply  .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageGeometry::VertexBufferLoaded))
-        .configure_set(Update, StageGeometry::GeometryLoaded            .in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageGeometry::_VertexBufferLoadedApply))
-        .configure_set(Update, StageGeometry::GeoUpload                 .in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageGeometry::GeometryLoaded))
-        .configure_set(Update, StageGeometry::GeoDispose                .in_set(ERunStageChap::Dispose).before(StageModel::MeshDispose))
+        .configure_set(StageD3, StageGeometry::GeoCreate                 .in_set(ERunStageChap::Create).after(StageModel::_InitMesh))
+        .configure_set(StageD3, StageGeometry::_GeoCreate                .in_set(ERunStageChap::Create).after(StageGeometry::GeoCreate).before(ERunStageChap::Dispose))
+        .configure_set(StageD3, StageGeometry::VertexBufferLoaded        .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageGeometry::_GeoCreate))
+        .configure_set(StageD3, StageGeometry::_VertexBufferLoadedApply  .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageGeometry::VertexBufferLoaded))
+        .configure_set(StageD3, StageGeometry::GeometryLoaded            .in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageGeometry::_VertexBufferLoadedApply))
+        .configure_set(StageD3, StageGeometry::GeoUpload                 .in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageGeometry::GeometryLoaded))
+        .configure_set(StageD3, StageGeometry::GeoDispose                .in_set(ERunStageChap::Dispose).before(StageModel::MeshDispose))
         ;
 
 #[cfg(not(feature = "use_bevy"))]

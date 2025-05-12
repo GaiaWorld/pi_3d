@@ -45,15 +45,15 @@ impl Plugin for PluginCamera {
             Update,
             (
                 StageCamera::CameraCreate.after(StageScene::_SceneCreate),
-                StageCamera::_Create.after(StageCamera::CameraCreate).before(StageLayerMask::Command).before(StageTransform::TransformCommand).before(StageEnable::Command),
-                StageCamera::CameraCommand.after(StageCamera::_Create).before(StageRenderer::RenderCreate),
+                StageCamera::_CameraCreate.after(StageCamera::CameraCreate).before(StageLayerMask::Command).before(StageTransform::TransformCommand).before(StageEnable::Command),
+                StageCamera::CameraCommand.after(StageCamera::_CameraCreate).before(StageRenderer::RenderCreate),
                 StageCamera::CameraCalcMatrix.in_set(FrameDataPrepare).after(StageCamera::CameraCommand).after(EStageAnimation::Running).after(StageTransform::TransformCalcMatrix).after(StageLayerMask::Command).before(StageViewer::TransformMatrixCalc),
             )
         );
 #[cfg(feature = "use_bevy")]
         app.add_systems(
             Update, (
-                apply_deferred.in_set(StageCamera::_Create),
+                apply_deferred.in_set(StageCamera::_CameraCreate),
                 sys_create_camera.in_set(StageCamera::CameraCreate),
                 (
                     sys_act_camera_mode,
@@ -82,11 +82,11 @@ impl Plugin for PluginCamera {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StageCamera::CameraCreate        .in_set(ERunStageChap::Create).after(StageScene::_SceneCreate))
-        .configure_set(Update, StageCamera::_Create             .in_set(ERunStageChap::Create).after(StageCamera::CameraCreate).before(StageLayerMask::Command).before(StageTransform::TransformCommand).before(StageEnable::Command))
-        .configure_set(Update, StageCamera::CameraCommand       .in_set(ERunStageChap::Modify))
-        .configure_set(Update, StageCamera::CameraCalcMatrix    .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageCamera::CameraCommand).after(EStageAnimation::Running).after(StageTransform::TransformCalcMatrix).after(StageLayerMask::Command).before(StageViewer::TransformMatrixCalc))
-        .configure_set(Update, StageCamera::CameraDispose       .in_set(ERunStageChap::Dispose).before(StageScene::SceneDispose))
+        .configure_set(StageD3, StageCamera::CameraCreate        .in_set(ERunStageChap::Create).after(StageScene::_SceneCreate))
+        .configure_set(StageD3, StageCamera::_CameraCreate             .in_set(ERunStageChap::Create).after(StageCamera::CameraCreate).before(StageLayerMask::Command).before(StageTransform::TransformCommand).before(StageEnable::Command))
+        .configure_set(StageD3, StageCamera::CameraCommand       .in_set(ERunStageChap::Modify))
+        .configure_set(StageD3, StageCamera::CameraCalcMatrix    .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageCamera::CameraCommand).after(EStageAnimation::Running).after(StageTransform::TransformCalcMatrix).after(StageLayerMask::Command).before(StageViewer::TransformMatrixCalc))
+        .configure_set(StageD3, StageCamera::CameraDispose       .in_set(ERunStageChap::Dispose).before(StageScene::SceneDispose))
         ;
 
 #[cfg(not(feature = "use_bevy"))]

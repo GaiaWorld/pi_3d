@@ -90,12 +90,12 @@ impl Plugin for PluginScene {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-            .configure_set(Update, StageScene::SceneCreate           .in_set(ERunStageChap::Create))
-            .configure_set(Update, StageScene::_SceneCreate          .in_set(ERunStageChap::Create).after(StageScene::SceneCreate))
-            .configure_set(Update, StageScene::SceneCommand          .in_set(ERunStageChap::Modify))
-            .configure_set(Update, StageScene::SceneTextureRequest   .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageScene::SceneCommand).after(StageTextureLoad::TextureRequest).before(StageTextureLoad::TextureLoading))
-            .configure_set(Update, StageScene::SceneTextureLoaded    .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoaded))
-            .configure_set(Update, StageScene::SceneDispose           .in_set(ERunStageChap::Dispose))
+            .configure_set(StageD3, StageScene::SceneCreate           .in_set(ERunStageChap::Create))
+            .configure_set(StageD3, StageScene::_SceneCreate          .in_set(ERunStageChap::Create).after(StageScene::SceneCreate))
+            .configure_set(StageD3, StageScene::SceneCommand          .in_set(ERunStageChap::Modify))
+            .configure_set(StageD3, StageScene::SceneTextureRequest   .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageScene::SceneCommand).after(StageTextureLoad::TextureRequest).before(StageTextureLoad::TextureLoading))
+            .configure_set(StageD3, StageScene::SceneTextureLoaded    .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoaded))
+            .configure_set(StageD3, StageScene::SceneDispose           .in_set(ERunStageChap::Dispose))
             ;
 
 #[cfg(not(feature = "use_bevy"))]

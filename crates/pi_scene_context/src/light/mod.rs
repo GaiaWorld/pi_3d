@@ -29,11 +29,11 @@ impl Plugin for PluginLighting {
         app.insert_resource(ActionListLightParam::default());
         app.insert_resource(StateLight::default());
         
-        app.configure_set(Update, StageLighting::LightCreate     .in_set(ERunStageChap::Create).after(StageScene::_SceneCreate));
-        app.configure_set(Update, StageLighting::_LightCreate    .in_set(ERunStageChap::Create).after(StageLighting::LightCreate).before(StageLayerMask::Command).before(StageEnable::Command).before(StageTransform::TransformCommand).before(ERunStageChap::Dispose));
-        app.configure_set(Update, StageLighting::LightingCommand .in_set(ERunStageChap::Modify));
-        app.configure_set(Update, StageLighting::LightingUniform .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare));
-        app.configure_set(Update, StageLighting::LightDispose   .in_set(ERunStageChap::Dispose).before(StageScene::SceneDispose));
+        app.configure_set(StageD3, StageLighting::LightCreate     .in_set(ERunStageChap::Create).after(StageScene::_SceneCreate));
+        app.configure_set(StageD3, StageLighting::_LightCreate    .in_set(ERunStageChap::Create).after(StageLighting::LightCreate).before(StageLayerMask::Command).before(StageEnable::Command).before(StageTransform::TransformCommand).before(ERunStageChap::Dispose));
+        app.configure_set(StageD3, StageLighting::LightingCommand .in_set(ERunStageChap::Modify));
+        app.configure_set(StageD3, StageLighting::LightingUniform .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare));
+        app.configure_set(StageD3, StageLighting::LightDispose   .in_set(ERunStageChap::Dispose).before(StageScene::SceneDispose));
 
         if app.world.get_resource::<SceneLightLimit>().is_none() {
             app.insert_resource(SceneLightLimit(LightLimitInfo { max_direct_light_count: 8, max_point_light_count: 128, max_spot_light_count: 128, max_hemi_light_count: 8 }));

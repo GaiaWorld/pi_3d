@@ -122,6 +122,9 @@ impl Node for RenderNode {
 
             if param.enable.0 && !disposed.0 {
                 let tmp = input.target.clone();
+                // if let Some(target) = &input.target {
+                //     log::error!(">>> Get SRT {:?}", target.target_index());
+                // }
                 customrendertargetkey.0 = customrendertargets.insert_srt(tmp, customrendertargetkey.0, device, asset_samp);
                 // log::error!("customrendertargetkey {:?}", &customrendertargetkey.0);
             } else {

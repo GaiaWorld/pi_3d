@@ -74,11 +74,11 @@ impl Plugin for PluginPassObject {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StagePassObject::PassCreate      .in_set(ERunStageChap::Modify).after(StageMaterial::MatUse).after(StageModel::InstanceCreate))
-        .configure_set(Update, StagePassObject::_PassCreate     .in_set(ERunStageChap::Modify).after(StagePassObject::PassCreate))
-        .configure_set(Update, StagePassObject::PassCommand     .in_set(ERunStageChap::Modify).after(StagePassObject::_PassCreate).before(StageRenderer::RenderStateCommand))
-        .configure_set(Update, StagePassObject::PassReady       .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare).after(StageMaterial::MatReady).before(StageRenderer::PassBindGroup))
-        .configure_set(Update, StagePassObject::PassDispose     .in_set(ERunStageChap::Dispose))
+        .configure_set(StageD3, StagePassObject::PassCreate      .in_set(ERunStageChap::Modify).after(StageMaterial::MatUse).after(StageModel::InstanceCreate))
+        .configure_set(StageD3, StagePassObject::_PassCreate     .in_set(ERunStageChap::Modify).after(StagePassObject::PassCreate))
+        .configure_set(StageD3, StagePassObject::PassCommand     .in_set(ERunStageChap::Modify).after(StagePassObject::_PassCreate).before(StageRenderer::RenderStateCommand))
+        .configure_set(StageD3, StagePassObject::PassReady       .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare).after(StageMaterial::MatReady).before(StageRenderer::PassBindGroup))
+        .configure_set(StageD3, StagePassObject::PassDispose     .in_set(ERunStageChap::Dispose))
         ;
 
 #[cfg(not(feature = "use_bevy"))]

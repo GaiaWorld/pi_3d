@@ -45,7 +45,7 @@ impl crate::Plugin for PluginMesh {
 #[cfg(feature = "use_bevy")]
         app.configure_sets(Update, 
             (
-                StageModel::MeshCreate.after(StageCamera::_Create),
+                StageModel::MeshCreate.after(StageCamera::_CameraCreate),
                 StageModel::_InitMesh.after(StageModel::MeshCreate).before(StageLayerMask::Command).before(StageEnable::Command),
                 StageModel::InstanceCreate.after(StageModel::_InitMesh),
                 StageModel::_InitInstance.after(StageModel::InstanceCreate).before(StageEnable::Command).before(StageTransform::TransformCommand),
@@ -58,16 +58,16 @@ impl crate::Plugin for PluginMesh {
         );
 #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StageModel::MeshCreate            .in_set(ERunStageChap::Create).after(StageCamera::_Create))
-        .configure_set(Update, StageModel::_InitMesh             .in_set(ERunStageChap::Create).after(StageModel::MeshCreate).before(StageLayerMask::Command).before(StageEnable::Command))
-        .configure_set(Update, StageModel::InstanceCreate        .in_set(ERunStageChap::Create).after(StageModel::_InitMesh))
-        .configure_set(Update, StageModel::_InitInstance         .in_set(ERunStageChap::Create).after(StageModel::InstanceCreate))
-        .configure_set(Update, StageModel::AbstructMeshCommand   .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageModel::_InitInstance).before(ERunStageChap::Collect).before(EStageAnimation::Create))
-        .configure_set(Update, StageModel::RenderMatrix          .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageModel::AbstructMeshCommand).after(StageTransform::TransformCalcMatrix))
-        .configure_set(Update, StageModel::InstanceEffectMesh    .in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageModel::RenderMatrix))
-        .configure_set(Update, StageModel::InstanceEffectGeometry.in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageModel::InstanceEffectMesh).before(StageGeometry::GeometryLoaded))
-        .configure_set(Update, StageModel::LightingCollect       .in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageModel::InstanceEffectGeometry))
-        .configure_set(Update, StageModel::MeshDispose           .in_set(ERunStageChap::Dispose).before(StageScene::SceneDispose))
+        .configure_set(StageD3, StageModel::MeshCreate            .in_set(ERunStageChap::Create).after(StageCamera::_CameraCreate))
+        .configure_set(StageD3, StageModel::_InitMesh             .in_set(ERunStageChap::Create).after(StageModel::MeshCreate).before(StageLayerMask::Command).before(StageEnable::Command))
+        .configure_set(StageD3, StageModel::InstanceCreate        .in_set(ERunStageChap::Create).after(StageModel::_InitMesh))
+        .configure_set(StageD3, StageModel::_InitInstance         .in_set(ERunStageChap::Create).after(StageModel::InstanceCreate))
+        .configure_set(StageD3, StageModel::AbstructMeshCommand   .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageModel::_InitInstance).before(ERunStageChap::Collect).before(EStageAnimation::Create))
+        .configure_set(StageD3, StageModel::RenderMatrix          .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageModel::AbstructMeshCommand).after(StageTransform::TransformCalcMatrix))
+        .configure_set(StageD3, StageModel::InstanceEffectMesh    .in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageModel::RenderMatrix))
+        .configure_set(StageD3, StageModel::InstanceEffectGeometry.in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageModel::InstanceEffectMesh).before(StageGeometry::GeometryLoaded))
+        .configure_set(StageD3, StageModel::LightingCollect       .in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageModel::InstanceEffectGeometry))
+        .configure_set(StageD3, StageModel::MeshDispose           .in_set(ERunStageChap::Dispose).before(StageScene::SceneDispose))
         ;
 
 #[cfg(feature = "use_bevy")]

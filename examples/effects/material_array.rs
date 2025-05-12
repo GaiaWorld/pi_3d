@@ -126,7 +126,7 @@ impl Plugin for PluginTest {
     fn build(&self, app: &mut App) {
         log::error!("Okkkk");
         app.insert_resource(ListTestData(SegQueue::default(), None, pi_wy_rng::WyRng::default(), 0));
-        app.configure_set(Update, StageTest::Cmd.before(StageScene::SceneCreate));
+        app.configure_set(StageD3, StageTest::Cmd.before(StageScene::SceneCreate));
         app.add_systems(Update, sys.in_set(StageTest::Cmd));
     }
 }

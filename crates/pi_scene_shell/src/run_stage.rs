@@ -51,19 +51,23 @@ pub enum ERunStageChap {
     StateCheck,
 }
 
+// #[derive(StageLabel)]
+pub use pi_world::schedule::Update as StageD3Create;
+
+pub use pi_world::schedule::PostUpdate as StageD3;
+
 pub struct PluginRunstage;
 impl Plugin for PluginRunstage {
     fn build(&self, app: &mut App) {
-        app.configure_set(Update, ERunStageChap::D3.run_if(runif_3d));
-        app.configure_set(Update, ERunStageChap::New            .in_set(ERunStageChap::D3));
-        app.configure_set(Update, ERunStageChap::Create         .in_set(ERunStageChap::D3).after(ERunStageChap::New));
-        app.configure_set(Update, ERunStageChap::Modify         .in_set(ERunStageChap::D3).after(ERunStageChap::Create));
-        app.configure_set(Update, ERunStageChap::Dispose        .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(ERunStageChap::Modify));
-        app.configure_set(Update, ERunStageChap::_Dispose        .in_set(ERunStageChap::D3).after(ERunStageChap::Dispose));
-        app.configure_set(Update, ERunStageChap::Culling        .in_set(ERunStageChap::D3).after(ERunStageChap::_Dispose));
-        app.configure_set(Update, ERunStageChap::Culled         .in_set(ERunStageChap::D3).after(ERunStageChap::Culling));
-        app.configure_set(Update, ERunStageChap::Collect        .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(ERunStageChap::Culled));
-        app.configure_set(Update, ERunStageChap::StateCheck     .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(ERunStageChap::Collect).before(PiRenderSystemSet));
+        app.configure_set(StageD3, ERunStageChap::D3.run_if(runif_3d));
+        app.configure_set(StageD3, ERunStageChap::Create         .in_set(ERunStageChap::D3));
+        app.configure_set(StageD3, ERunStageChap::Modify         .in_set(ERunStageChap::D3).after(ERunStageChap::Create));
+        app.configure_set(StageD3, ERunStageChap::Dispose        .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(ERunStageChap::Modify));
+        app.configure_set(StageD3, ERunStageChap::_Dispose        .in_set(ERunStageChap::D3).after(ERunStageChap::Dispose));
+        app.configure_set(StageD3, ERunStageChap::Culling        .in_set(ERunStageChap::D3).after(ERunStageChap::Modify));
+        app.configure_set(StageD3, ERunStageChap::Culled         .in_set(ERunStageChap::D3).after(ERunStageChap::Culling).after(ERunStageChap::_Dispose));
+        app.configure_set(StageD3, ERunStageChap::Collect        .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(ERunStageChap::Culled));
+        app.configure_set(StageD3, ERunStageChap::StateCheck     .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(ERunStageChap::Collect).before(PiRenderSystemSet));
 
         app.insert_resource(ErrorRecord(vec![], false));
 
@@ -76,12 +80,12 @@ impl Plugin for PluginRunstage {
 
 #[cfg(feature = "use_bevy")]
 {
-    app.add_systems(Update, apply_deferred.in_set(ERunStageChap::Modify));
-    app.add_systems(Update, apply_deferred.in_set(ERunStageChap::_DisposeApply));
+    app.add_systems(StageD3, apply_deferred.in_set(ERunStageChap::Modify));
+    app.add_systems(StageD3, apply_deferred.in_set(ERunStageChap::_DisposeApply));
 }
 
         app.insert_resource(RunSystemRecord::default());
-        app.add_systems(Update, sys_reset_system_record.in_set(ERunStageChap::StateCheck));
+        app.add_systems(StageD3, sys_reset_system_record.in_set(ERunStageChap::StateCheck));
 
         app.insert_resource(EngineInstant(pi_time::Instant::now()));
     }

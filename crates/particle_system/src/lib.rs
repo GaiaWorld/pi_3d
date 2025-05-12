@@ -67,15 +67,15 @@ impl Plugin for PluginParticleSystem {
         );
         #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StageParticleSystem::ParticleSysCreate    .in_set(ERunStageChap::Create).after(StageTrail::_TrailCreate))
-        .configure_set(Update, StageParticleSystem::_ParticleSysCreate   .in_set(ERunStageChap::Create).after(StageParticleSystem::ParticleSysCreate).before(StageTransform::TransformCommand).before(StageEnable::Command))
-        .configure_set(Update, StageParticleSystem::ParticleSysCommand   .in_set(ERunStageChap::Modify).after(StageParticleSystem::_ParticleSysCreate))
-        .configure_set(Update, StageParticleSystem::ParticleSysEmission  .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysCommand))
-        .configure_set(Update, StageParticleSystem::ParticleSysParamStart.in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysEmission))
-        .configure_set(Update, StageParticleSystem::ParticleSysCalc      .in_set(ERunStageChap::Modify).run_if(runif_particlesystem).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysParamStart))
-        .configure_set(Update, StageParticleSystem::ParticleSysMatrix    .in_set(ERunStageChap::Modify).run_if(runif_particlesystem).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysCalc).after(StageTransform::TransformCalcMatrix))
-        .configure_set(Update, StageParticleSystem::ParticleSysUpdate    .in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysMatrix).after(StageModel::InstanceEffectGeometry).after(StageGeometry::_VertexBufferLoadedApply).before(StageGeometry::GeometryLoaded))
-        .configure_set(Update, StageParticleSystem::ParticleSysDispose    .in_set(ERunStageChap::Dispose).before(StageModel::MeshDispose).before(StageTrail::TrailDispose))
+        .configure_set(StageD3, StageParticleSystem::ParticleSysCreate    .in_set(ERunStageChap::Create).after(StageTrail::_TrailCreate))
+        .configure_set(StageD3, StageParticleSystem::_ParticleSysCreate   .in_set(ERunStageChap::Create).after(StageParticleSystem::ParticleSysCreate).before(StageTransform::TransformCommand).before(StageEnable::Command))
+        .configure_set(StageD3, StageParticleSystem::ParticleSysCommand   .in_set(ERunStageChap::Modify).after(StageParticleSystem::_ParticleSysCreate))
+        .configure_set(StageD3, StageParticleSystem::ParticleSysEmission  .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysCommand))
+        .configure_set(StageD3, StageParticleSystem::ParticleSysParamStart.in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysEmission))
+        .configure_set(StageD3, StageParticleSystem::ParticleSysCalc      .in_set(ERunStageChap::Modify).run_if(runif_particlesystem).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysParamStart))
+        .configure_set(StageD3, StageParticleSystem::ParticleSysMatrix    .in_set(ERunStageChap::Modify).run_if(runif_particlesystem).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysCalc).after(StageTransform::TransformCalcMatrix))
+        .configure_set(StageD3, StageParticleSystem::ParticleSysUpdate    .in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysMatrix).after(StageModel::InstanceEffectGeometry).after(StageGeometry::_VertexBufferLoadedApply).before(StageGeometry::GeometryLoaded))
+        .configure_set(StageD3, StageParticleSystem::ParticleSysDispose    .in_set(ERunStageChap::Dispose).before(StageModel::MeshDispose).before(StageTrail::TrailDispose))
         ;
 
         let enginepugins = app.world.get_resource::<EngineCustomPlugins>().unwrap();

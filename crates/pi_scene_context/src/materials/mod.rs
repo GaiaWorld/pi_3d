@@ -37,9 +37,9 @@ impl Plugin for PluginMaterial {
             app.insert_resource(StateTextureLoader::default());
             app.insert_resource(ImageTextureViewLoader2::default());
 
-            app.configure_set(Update, StageTextureLoad::TextureRequest.in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(ERunStageChap::New).after(StageMaterial::MatCommand));
-            app.configure_set(Update, StageTextureLoad::TextureLoading.in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageTextureLoad::TextureRequest));
-            app.configure_set(Update, StageTextureLoad::TextureLoaded .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoading));
+            app.configure_set(StageD3, StageTextureLoad::TextureRequest.in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageMaterial::MatCommand));
+            app.configure_set(StageD3, StageTextureLoad::TextureLoading.in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageTextureLoad::TextureRequest));
+            app.configure_set(StageD3, StageTextureLoad::TextureLoaded .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoading));
 
 #[cfg(feature = "use_bevy")]
             app.add_systems(
@@ -124,12 +124,12 @@ impl Plugin for PluginMaterial {
         app.insert_resource(ActionListUniformValB::default());
         app.insert_resource(StateMaterial::default());
 
-        app.configure_set(Update, StageMaterial::MatCreate     .in_set(ERunStageChap::Create).after(StageShadowGenerator::_ShadowCreate).after(StageModel::_InitMesh));
-        app.configure_set(Update, StageMaterial::_MatCreate    .in_set(ERunStageChap::Create).after(StageMaterial::MatCreate).before(ERunStageChap::Dispose));
-        app.configure_set(Update, StageMaterial::MatUse         .in_set(ERunStageChap::Modify).before(StageMaterial::MatCommand));
-        app.configure_set(Update, StageMaterial::MatCommand    .in_set(ERunStageChap::Modify).before(StageTextureLoad::TextureRequest).before(EStageAnimation::Create).before(EStageAnimation::Running).after(GraphBuild));
-        app.configure_set(Update, StageMaterial::MatReady      .in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoaded));
-        app.configure_set(Update, StageMaterial::MatDispose     .in_set(ERunStageChap::Dispose).before(StageScene::SceneDispose));
+        app.configure_set(StageD3, StageMaterial::MatCreate     .in_set(ERunStageChap::Create).after(StageShadowGenerator::_ShadowCreate).after(StageModel::_InitMesh));
+        app.configure_set(StageD3, StageMaterial::_MatCreate    .in_set(ERunStageChap::Create).after(StageMaterial::MatCreate).before(ERunStageChap::Dispose));
+        app.configure_set(StageD3, StageMaterial::MatUse         .in_set(ERunStageChap::Modify).before(StageMaterial::MatCommand));
+        app.configure_set(StageD3, StageMaterial::MatCommand    .in_set(ERunStageChap::Modify).before(StageTextureLoad::TextureRequest).before(EStageAnimation::Create).before(EStageAnimation::Running).after(GraphBuild));
+        app.configure_set(StageD3, StageMaterial::MatReady      .in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoaded));
+        app.configure_set(StageD3, StageMaterial::MatDispose     .in_set(ERunStageChap::Dispose).before(StageScene::SceneDispose));
 
 #[cfg(feature = "use_bevy")]
         app.add_systems(

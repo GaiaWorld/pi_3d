@@ -90,7 +90,7 @@ impl Plugin for PluginRenderer {
 #[cfg(feature = "use_bevy")]
         app.configure_sets(Update,
             (
-                StageRenderer::RenderCreate.after(StageCamera::_Create).after(StageShadowGenerator::_ShadowCreate),
+                StageRenderer::RenderCreate.after(StageCamera::_CameraCreate).after(StageShadowGenerator::_ShadowCreate),
                 StageRenderer::_RenderCreate.after(StageRenderer::RenderCreate),
                 StageRenderer::RenderStateCommand.in_set(FrameDataPrepare).before(StageTransform::TransformCalcMatrix).after(StageRenderer::_RenderCreate),
                 StageRenderer::RendererCommand.in_set(FrameDataPrepare).after(StageRenderer::_RenderCreate),
@@ -153,22 +153,22 @@ impl Plugin for PluginRenderer {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StageRenderer::RenderCreate      .in_set(ERunStageChap::Create).after(StageCamera::_Create).after(StageShadowGenerator::_ShadowCreate))
-        .configure_set(Update, StageRenderer::_RenderCreate     .in_set(ERunStageChap::Create).after(StageRenderer::RenderCreate))
-        .configure_set(Update, StageRenderer::RenderStateCommand.in_set(ERunStageChap::Modify).in_set(FrameDataPrepare))
-        .configure_set(Update, StageRenderer::RendererCommand   .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).before(GraphBuild))
-        .configure_set(Update, StageRenderer::PassBindGroup     .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare))
-        .configure_set(Update, StageRenderer::PassBindGroups    .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare).after(StageRenderer::PassBindGroup))
-        .configure_set(Update, StageRenderer::PassShader        .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare).after(StageRenderer::PassBindGroups))
-        .configure_set(Update, StageRenderer::PassPipeline      .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare).after(StageRenderer::PassShader))
-        .configure_set(Update, StageRenderer::PassDraw          .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare).after(StageRenderer::PassPipeline))
-        .configure_set(Update, StageRenderer::DrawList          .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare).after(StageRenderer::PassDraw).before(GraphRun))
-        .configure_set(Update, StageRenderer::RendererDispose   .in_set(ERunStageChap::_Dispose))
+        .configure_set(StageD3, StageRenderer::RenderCreate      .in_set(ERunStageChap::Create).after(StageCamera::_CameraCreate).after(StageShadowGenerator::_ShadowCreate))
+        .configure_set(StageD3, StageRenderer::_RenderCreate     .in_set(ERunStageChap::Create).after(StageRenderer::RenderCreate))
+        .configure_set(StageD3, StageRenderer::RenderStateCommand.in_set(ERunStageChap::Modify).in_set(FrameDataPrepare))
+        .configure_set(StageD3, StageRenderer::RendererCommand   .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).before(GraphBuild))
+        .configure_set(StageD3, StageRenderer::PassBindGroup     .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare))
+        .configure_set(StageD3, StageRenderer::PassBindGroups    .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare).after(StageRenderer::PassBindGroup))
+        .configure_set(StageD3, StageRenderer::PassShader        .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare).after(StageRenderer::PassBindGroups))
+        .configure_set(StageD3, StageRenderer::PassPipeline      .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare).after(StageRenderer::PassShader))
+        .configure_set(StageD3, StageRenderer::PassDraw          .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare).after(StageRenderer::PassPipeline))
+        .configure_set(StageD3, StageRenderer::DrawList          .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare).after(StageRenderer::PassDraw).before(GraphRun))
+        .configure_set(StageD3, StageRenderer::RendererDispose   .in_set(ERunStageChap::_Dispose))
         ;
 
 #[cfg(not(feature = "use_bevy"))]
         app
-            .add_systems(Update, sys_custom_render_target               .in_set(ERunStageChap::New))
+            .add_systems(Update, sys_custom_render_target               .in_set(ERunStageChap::Create))
             .add_systems(Update, sys_create_renderer
                 // .run_if(runif_acts::<OpsRendererCreate>)                 
                 .in_set(StageRenderer::RenderCreate))

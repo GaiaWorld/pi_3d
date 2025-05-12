@@ -26,9 +26,9 @@ pub mod prelude;
 pub struct PluginViewerBase;
 impl Plugin for PluginViewerBase {
     fn build(&self, app: &mut App) {
-        app.configure_set(Update, StageViewer::TransformMatrixCalc  .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare));
-        app.configure_set(Update, StageViewer::ForceInclude         .in_set(ERunStageChap::Culling).in_set(FrameDataPrepare));
-        app.configure_set(Update, StageViewer::Culling              .in_set(ERunStageChap::Culling).in_set(FrameDataPrepare).before(StageViewer::ForceInclude).after(StageCulling::CalcBounding));
+        app.configure_set(StageD3, StageViewer::TransformMatrixCalc  .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare));
+        app.configure_set(StageD3, StageViewer::ForceInclude         .in_set(ERunStageChap::Culling).in_set(FrameDataPrepare));
+        app.configure_set(StageD3, StageViewer::Culling              .in_set(ERunStageChap::Culling).in_set(FrameDataPrepare).before(StageViewer::ForceInclude).after(StageCulling::CalcBounding));
         app.insert_resource(ActionListViewerForceInclude::default());
         app.add_systems(Update, sys_act_viewer_force_include
             // .run_if(runif_acts::<OpsViewerForceInclude>)

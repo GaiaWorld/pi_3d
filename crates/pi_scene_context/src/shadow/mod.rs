@@ -37,7 +37,7 @@ impl Plugin for PluginShadowGenerator {
 #[cfg(feature = "use_bevy")]
         app.configure_sets(Update, 
             (
-                StageShadowGenerator::ShadowCreate.after(StageLighting::_LightCreate).after(StageCamera::_Create),
+                StageShadowGenerator::ShadowCreate.after(StageLighting::_LightCreate).after(StageCamera::_CameraCreate),
                 StageShadowGenerator::_ShadowCreate.after(StageShadowGenerator::ShadowCreate).before(StageRenderer::RenderCreate),
                 StageShadowGenerator::ShadowCommand.in_set(FrameDataPrepare).after(StageShadowGenerator::_ShadowCreate).after(StageLayerMask::Command).before(StageMaterial::MatCommand),
                 StageShadowGenerator::ShadowCalcMatrix.in_set(FrameDataPrepare).after(StageShadowGenerator::ShadowCommand).after(StageTransform::TransformCalcMatrix),
@@ -49,13 +49,13 @@ impl Plugin for PluginShadowGenerator {
 #[cfg(not(feature = "use_bevy"))]
 {
     app
-    .configure_set(Update, StageShadowGenerator::ShadowCreate         .in_set(ERunStageChap::Create).after(StageLighting::_LightCreate).after(StageCamera::_Create))
-    .configure_set(Update, StageShadowGenerator::_ShadowCreate        .in_set(ERunStageChap::Create).after(StageShadowGenerator::ShadowCreate).before(StageRenderer::RenderCreate))
-    .configure_set(Update, StageShadowGenerator::ShadowCommand        .in_set(ERunStageChap::Modify).after(StageShadowGenerator::_ShadowCreate).after(StageLayerMask::Command).before(StageMaterial::MatCommand))
-    .configure_set(Update, StageShadowGenerator::ShadowCalcMatrix     .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageShadowGenerator::ShadowCommand).after(StageTransform::TransformCalcMatrix))
-    .configure_set(Update, StageShadowGenerator::ShadowViewerUpdate   .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageShadowGenerator::ShadowCalcMatrix).before(StageViewer::TransformMatrixCalc))
-    .configure_set(Update, StageShadowGenerator::ShadowBindUpdate     .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare).after(StageShadowGenerator::ShadowViewerUpdate))
-    .configure_set(Update, StageShadowGenerator::ShadowDispose     .in_set(ERunStageChap::Dispose))
+    .configure_set(StageD3, StageShadowGenerator::ShadowCreate         .in_set(ERunStageChap::Create).after(StageLighting::_LightCreate).after(StageCamera::_CameraCreate))
+    .configure_set(StageD3, StageShadowGenerator::_ShadowCreate        .in_set(ERunStageChap::Create).after(StageShadowGenerator::ShadowCreate).before(StageRenderer::RenderCreate))
+    .configure_set(StageD3, StageShadowGenerator::ShadowCommand        .in_set(ERunStageChap::Modify).after(StageShadowGenerator::_ShadowCreate).after(StageLayerMask::Command).before(StageMaterial::MatCommand))
+    .configure_set(StageD3, StageShadowGenerator::ShadowCalcMatrix     .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageShadowGenerator::ShadowCommand).after(StageTransform::TransformCalcMatrix))
+    .configure_set(StageD3, StageShadowGenerator::ShadowViewerUpdate   .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageShadowGenerator::ShadowCalcMatrix).before(StageViewer::TransformMatrixCalc))
+    .configure_set(StageD3, StageShadowGenerator::ShadowBindUpdate     .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare).after(StageShadowGenerator::ShadowViewerUpdate))
+    .configure_set(StageD3, StageShadowGenerator::ShadowDispose     .in_set(ERunStageChap::Dispose))
     ;
 }
 

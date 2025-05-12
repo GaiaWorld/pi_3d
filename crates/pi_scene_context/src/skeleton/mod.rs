@@ -36,11 +36,11 @@ impl Plugin for PluginSkeleton {
 
         #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StageSkeleton::SkinCreate    .in_set(ERunStageChap::Create).after(StageModel::_InitMesh))
-        .configure_set(Update, StageSkeleton::_SkinCreate   .in_set(ERunStageChap::Create).after(StageSkeleton::SkinCreate).before(StageTransform::TransformCommand))
-        .configure_set(Update, StageSkeleton::SkinCommand   .in_set(ERunStageChap::Modify).after(StageSkeleton::_SkinCreate))
-        .configure_set(Update, StageSkeleton::SkinCalc      .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageSkeleton::SkinCommand).after(StageTransform::TransformCalcMatrix))
-        .configure_set(Update, StageSkeleton::SkinDispose   .in_set(ERunStageChap::Dispose).before(StageTransform::TransformDispose))
+        .configure_set(StageD3, StageSkeleton::SkinCreate    .in_set(ERunStageChap::Create).after(StageModel::_InitMesh))
+        .configure_set(StageD3, StageSkeleton::_SkinCreate   .in_set(ERunStageChap::Create).after(StageSkeleton::SkinCreate).before(StageTransform::TransformCommand))
+        .configure_set(StageD3, StageSkeleton::SkinCommand   .in_set(ERunStageChap::Modify).after(StageSkeleton::_SkinCreate))
+        .configure_set(StageD3, StageSkeleton::SkinCalc      .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageSkeleton::SkinCommand).after(StageTransform::TransformCalcMatrix))
+        .configure_set(StageD3, StageSkeleton::SkinDispose   .in_set(ERunStageChap::Dispose).before(StageTransform::TransformDispose))
         ;
 
         let enginepugins = app.world.get_resource::<EngineCustomPlugins>().unwrap();

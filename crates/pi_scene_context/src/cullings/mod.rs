@@ -69,8 +69,8 @@ impl Plugin for PluginCulling {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-        .configure_set(Update, StageCulling::Command        .in_set(ERunStageChap::Modify).after(StageModel::InstanceCreate))
-        .configure_set(Update, StageCulling::CalcBounding   .in_set(ERunStageChap::Culling).in_set(FrameDataPrepare).after(StageCulling::Command))
+        .configure_set(StageD3, StageCulling::Command        .in_set(ERunStageChap::Modify).after(StageModel::InstanceCreate))
+        .configure_set(StageD3, StageCulling::CalcBounding   .in_set(ERunStageChap::Culling).in_set(FrameDataPrepare).after(StageCulling::Command))
         ;
 
 #[cfg(not(feature = "use_bevy"))]

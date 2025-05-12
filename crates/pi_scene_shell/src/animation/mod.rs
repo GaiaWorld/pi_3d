@@ -9,7 +9,7 @@ mod uint;
 mod int;
 mod mat4;
 
-use crate::{ecs::*, object::{sys_dispose, sys_dispose_can}, prelude::runif_3d};
+use crate::{ecs::*, object::{sys_dispose, sys_dispose_can}, prelude::runif_3d, run_stage::StageD3};
 // use bevy_app::{App, Plugin, Update};
 // use bevy_ecs::{schedule::{SystemSet, IntoSystemSetConfig, apply_deferred, IntoSystemConfigs}, entity::Entity};
 
@@ -70,11 +70,11 @@ impl Plugin for PluginGlobalAnimation {
         app.insert_resource(ActionListAnimeGroupDispose::default());
         app.insert_resource(ActionListAnimationGroupAction::default());
 
-        app.configure_set(Update, EStageAnimation::Create       .in_set(ERunStageChap::Modify));
-        app.configure_set(Update, EStageAnimation::_CreateApply .in_set(ERunStageChap::Modify).after(EStageAnimation::Create));
-        app.configure_set(Update, EStageAnimation::Command      .in_set(ERunStageChap::Modify).after(EStageAnimation::_CreateApply));
-        app.configure_set(Update, EStageAnimation::Running      .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(EStageAnimation::Command));
-        app.configure_set(Update, EStageAnimation::Dispose      .in_set(ERunStageChap::Dispose));
+        app.configure_set(StageD3, EStageAnimation::Create       .in_set(ERunStageChap::Modify));
+        app.configure_set(StageD3, EStageAnimation::_CreateApply .in_set(ERunStageChap::Modify).after(EStageAnimation::Create));
+        app.configure_set(StageD3, EStageAnimation::Command      .in_set(ERunStageChap::Modify).after(EStageAnimation::_CreateApply));
+        app.configure_set(StageD3, EStageAnimation::Running      .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(EStageAnimation::Command));
+        app.configure_set(StageD3, EStageAnimation::Dispose      .in_set(ERunStageChap::Dispose));
         
 #[cfg(feature="use_bevy")]
 {
