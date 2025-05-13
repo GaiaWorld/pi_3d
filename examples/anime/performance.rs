@@ -132,7 +132,7 @@ pub fn main() {
     app.add_startup_system(Update, setup.after(base::setup_default_mat));
     
 
-    app.add_systems(Update, sys_anime_event.in_set(ERunStageChap::Modify));
+    app.add_systems(StageD3, sys_anime_event.in_set(ERunStageChap::Modify));
     
     // app.run()
     crate::base::run_loop(app, window, event_loop)

@@ -149,8 +149,8 @@ pub fn main() {
 
     app.add_plugins(PluginTest);
     
-    app.add_systems(Update, pi_3d::sys_info_node);
-    app.add_systems(Update, pi_3d::sys_info_resource);
+    app.add_systems(StageD3, pi_3d::sys_info_node);
+    app.add_systems(StageD3, pi_3d::sys_info_resource);
         #[cfg(feature = "use_bevy")]
     app.add_systems(Startup, setup.after(base::setup_default_mat));
     #[cfg(not(feature = "use_bevy"))]

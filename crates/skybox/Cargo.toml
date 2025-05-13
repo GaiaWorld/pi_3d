@@ -1,6 +1,6 @@
 [package]
 name = "skybox"
-version = "1.1.0"
+version = "1.1.1"
 authors = ["baip0002 <2494156981@qq.com>"]
 edition = "2021"
 description = "3D Framework for Scene."

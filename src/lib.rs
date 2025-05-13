@@ -169,7 +169,7 @@ impl Plugin for PluginStateGlobal {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-        .add_systems(Update, sys_state_resource.in_set(ERunStageChap::StateCheck))
+        .add_systems(StageD3Final, sys_state_resource.in_set(ERunStageChap::StateCheck))
         ;
 
         // let device = app.world.get_resource::<PiRenderDevice>().unwrap().0.clone();

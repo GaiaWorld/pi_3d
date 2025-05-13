@@ -78,7 +78,7 @@ impl Plugin for PluginGlobalAnimation {
         
 #[cfg(feature="use_bevy")]
 {
-    app.add_systems(Update, apply_deferred.in_set(EStageAnimation::_CreateApply));
+    app.add_systems(StageD3, apply_deferred.in_set(EStageAnimation::_CreateApply));
     app.add_systems(
         Update,
         (
@@ -99,13 +99,13 @@ impl Plugin for PluginGlobalAnimation {
 #[cfg(not(feature = "use_bevy"))]
 {
     app
-        .add_systems(Update, sys_create_animation_group                              .in_set(EStageAnimation::Create))
-        .add_systems(Update, sys_create_animatorable_entity                          .in_set(EStageAnimation::Create))
-        .add_systems(Update, sys_act_reset_while_animationgroup_start                                                            .in_set(EStageAnimation::Command))
-        .add_systems(Update, sys_act_animation_group_action          .after(sys_act_reset_while_animationgroup_start)    .in_set(EStageAnimation::Command))
-        .add_systems(Update, sys_act_dispose_animation_group         .after(sys_act_animation_group_action)              .in_set(EStageAnimation::Command))
-        .add_systems(Update, sys_animation_removed_data_clear                                                            .in_set(EStageAnimation::Running))
-        .add_systems(Update, sys_reset_anime_performance             .after(sys_animation_removed_data_clear)    .in_set(EStageAnimation::Running))
+        .add_systems(StageD3, sys_create_animation_group                              .in_set(EStageAnimation::Create))
+        .add_systems(StageD3, sys_create_animatorable_entity                          .in_set(EStageAnimation::Create))
+        .add_systems(StageD3, sys_act_reset_while_animationgroup_start                                                            .in_set(EStageAnimation::Command))
+        .add_systems(StageD3, sys_act_animation_group_action          .after(sys_act_reset_while_animationgroup_start)    .in_set(EStageAnimation::Command))
+        .add_systems(StageD3, sys_act_dispose_animation_group         .after(sys_act_animation_group_action)              .in_set(EStageAnimation::Command))
+        .add_systems(StageD3, sys_animation_removed_data_clear                                                            .in_set(EStageAnimation::Running))
+        .add_systems(StageD3, sys_reset_anime_performance             .after(sys_animation_removed_data_clear)    .in_set(EStageAnimation::Running))
         ;
 }
 
@@ -145,7 +145,7 @@ impl<D: TAnimatableComp> Plugin for PluginTypeAnime<D> {
 
 #[cfg(feature="use_bevy")]
 {
-    app.add_systems(Update, 
+    app.add_systems(StageD3, 
         (
             sys_apply_removed_data::<D>     // .run_if(should_run)
             .before(sys_animation_removed_data_clear)
@@ -162,9 +162,9 @@ impl<D: TAnimatableComp> Plugin for PluginTypeAnime<D> {
 {
     
     app
-        .add_systems(Update, sys_apply_removed_data::<D>     .before(sys_animation_removed_data_clear)    .in_set(EStageAnimation::Running))
-        .add_systems(Update, sys_calc_type_anime::<D>       .before(sys_apply_removed_data::<D>).in_set(EStageAnimation::Running))
-        .add_systems(Update, sys_remove_anime_target_record::<D>       .before(sys_dispose).after(sys_dispose_can).in_set(ERunStageChap::_Dispose))
+        .add_systems(StageD3, sys_apply_removed_data::<D>     .before(sys_animation_removed_data_clear)    .in_set(EStageAnimation::Running))
+        .add_systems(StageD3, sys_calc_type_anime::<D>       .before(sys_apply_removed_data::<D>).in_set(EStageAnimation::Running))
+        .add_systems(StageD3, sys_remove_anime_target_record::<D>       .before(sys_dispose).after(sys_dispose_can).in_set(ERunStageChap::_Dispose))
         ;
 }
     }

@@ -127,7 +127,7 @@ impl Plugin for PluginTest {
         log::error!("Okkkk");
         app.insert_resource(ListTestData(SegQueue::default(), None, pi_wy_rng::WyRng::default(), 0));
         app.configure_set(StageD3, StageTest::Cmd.before(StageScene::SceneCreate));
-        app.add_systems(Update, sys.in_set(StageTest::Cmd));
+        app.add_systems(StageD3, sys.in_set(StageTest::Cmd));
     }
 }
 
@@ -202,9 +202,9 @@ pub fn main() {
     app.add_startup_system(Update, base::setup_demoinit);
     
     app.add_plugins(PluginTest);
-    // app.add_systems(Update, pi_3d::sys_info_node);
-    // app.add_systems(Update, pi_3d::sys_info_resource);
-    // app.add_systems(Update, pi_3d::sys_info_draw);
+    // app.add_systems(StageD3, pi_3d::sys_info_node);
+    // app.add_systems(StageD3, pi_3d::sys_info_resource);
+    // app.add_systems(StageD3, pi_3d::sys_info_draw);
     
     
     //     #[cfg(feature = "use_bevy")]

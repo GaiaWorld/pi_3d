@@ -60,13 +60,13 @@ impl Plugin for PluginMaterial {
 
 #[cfg(not(feature = "use_bevy"))]
             app
-                .add_systems(Update, sys_texture_combine                .in_set(StageTextureLoad::TextureLoading))
-                .add_systems(Update, sys_image_texture_load_launch                                                   .in_set(StageTextureLoad::TextureLoading))
-                .add_systems(Update, sys_image_texture_loaded        .after(sys_image_texture_load_launch)   .in_set(StageTextureLoad::TextureLoading))
-                .add_systems(Update, sys_image_texture_view_load_launch2
+                .add_systems(StageD3, sys_texture_combine                .in_set(StageTextureLoad::TextureLoading))
+                .add_systems(StageD3, sys_image_texture_load_launch                                                   .in_set(StageTextureLoad::TextureLoading))
+                .add_systems(StageD3, sys_image_texture_loaded        .after(sys_image_texture_load_launch)   .in_set(StageTextureLoad::TextureLoading))
+                .add_systems(StageD3, sys_image_texture_view_load_launch2
                     // .run_if(runif_changes::<TextureKeyList>)         
                     .in_set(StageTextureLoad::TextureRequest))
-                .add_systems(Update, sys_image_texture_view_loaded_check2        .in_set(StageTextureLoad::TextureLoaded))
+                .add_systems(StageD3, sys_image_texture_view_loaded_check2        .in_set(StageTextureLoad::TextureLoaded))
                 ;
         }
 
@@ -154,23 +154,23 @@ impl Plugin for PluginMaterial {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-            .add_systems(Update, sys_create_material
+            .add_systems(StageD3, sys_create_material
                 // .run_if(runif_acts::<OpsMaterialCreate>)             
                 .in_set(StageMaterial::MatCreate) )
-            .add_systems(Update, sys_act_material_use
+            .add_systems(StageD3, sys_act_material_use
                 // .run_if(runif_acts::<OpsMaterialUse>)                               
                 .in_set(StageMaterial::MatUse) )
-            .add_systems(Update, sys_act_material_value                  .after(sys_act_material_use)   .in_set(StageMaterial::MatCommand) )
-            .add_systems(Update, sys_material_textures_modify
+            .add_systems(StageD3, sys_act_material_value                  .after(sys_act_material_use)   .in_set(StageMaterial::MatCommand) )
+            .add_systems(StageD3, sys_material_textures_modify
                 // .run_if(runif_comp::<UniformTextureWithSamplerParamsDirty>)
                 .after(sys_act_material_value)                .in_set(StageMaterial::MatCommand) )
-            .add_systems(Update, sys_texture_ready
+            .add_systems(StageD3, sys_texture_ready
                 // .run_if(runif_comp::<EffectBindTexture2DList>)
                 .in_set(StageMaterial::MatReady) )
-            .add_systems(Update, sys_material_uniform_apply
+            .add_systems(StageD3, sys_material_uniform_apply
                 // .run_if(runif_comp::<TargetAnimatorableIsRunning>)
                 .in_set(ERunStageChap::Collect) )
-            .add_systems(Update, sys_dispose_about_material          .after(sys_dispose_ready)   .in_set(StageMaterial::MatDispose) )
+            .add_systems(StageD3, sys_dispose_about_material          .after(sys_dispose_ready)   .in_set(StageMaterial::MatDispose) )
             ;
 
     }

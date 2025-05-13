@@ -91,19 +91,19 @@ impl Plugin for PluginCamera {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-        .add_systems(Update, sys_create_camera
+        .add_systems(StageD3, sys_create_camera
             // .run_if(runif_acts::<OpsCameraCreation>)                            
             .in_set(StageCamera::CameraCreate))
-        .add_systems(Update, sys_act_camera_mode
+        .add_systems(StageD3, sys_act_camera_mode
             // .run_if(runif_acts2::<OpsCameraModify, OpsCameraTarget>)      
             .in_set(StageCamera::CameraCommand))
-        .add_systems(Update, sys_update_camera_param                                                 .after(sys_act_camera_mode).in_set(StageCamera::CameraCommand))
-        .add_systems(Update, sys_update_target_camera_modify                                         .after(sys_act_camera_mode).in_set(StageCamera::CameraCommand))
-        .add_systems(Update, sys_calc_view_matrix_by_viewer::<TargetCameraParam>                     .in_set(StageCamera::CameraCalcMatrix))
-        .add_systems(Update, sys_calc_proj_matrix::<CameraParam>                                     .after(sys_calc_view_matrix_by_viewer::<TargetCameraParam>).in_set(StageCamera::CameraCalcMatrix))
-        .add_systems(Update, sys_update_viewer_model_list_by_viewer::<TargetCameraParam, CameraParam>.in_set(StageViewer::Culling))
-        .add_systems(Update, sys_update_viewer_model_list_by_model::<TargetCameraParam, CameraParam> .after(sys_update_viewer_model_list_by_viewer::<TargetCameraParam, CameraParam>).before(sys_tick_viewer_culling).in_set(StageViewer::Culling))
-        .add_systems(Update, sys_dispose_about_camera                                                .after(sys_dispose_ready).in_set(StageCamera::CameraDispose))
+        .add_systems(StageD3, sys_update_camera_param                                                 .after(sys_act_camera_mode).in_set(StageCamera::CameraCommand))
+        .add_systems(StageD3, sys_update_target_camera_modify                                         .after(sys_act_camera_mode).in_set(StageCamera::CameraCommand))
+        .add_systems(StageD3, sys_calc_view_matrix_by_viewer::<TargetCameraParam>                     .in_set(StageCamera::CameraCalcMatrix))
+        .add_systems(StageD3, sys_calc_proj_matrix::<CameraParam>                                     .after(sys_calc_view_matrix_by_viewer::<TargetCameraParam>).in_set(StageCamera::CameraCalcMatrix))
+        .add_systems(StageD3, sys_update_viewer_model_list_by_viewer::<TargetCameraParam, CameraParam>.in_set(StageViewer::Culling))
+        .add_systems(StageD3, sys_update_viewer_model_list_by_model::<TargetCameraParam, CameraParam> .after(sys_update_viewer_model_list_by_viewer::<TargetCameraParam, CameraParam>).before(sys_tick_viewer_culling).in_set(StageViewer::Culling))
+        .add_systems(StageD3, sys_dispose_about_camera                                                .after(sys_dispose_ready).in_set(StageCamera::CameraDispose))
         ;
     }
 }

@@ -18,9 +18,9 @@ impl Plugin for PluginSceneAnimation {
         app.insert_resource(ActionListAnimationGroupGoto::default());
 
         app
-        .add_systems(Update, sys_scene_anime_ctx.in_set(EStageAnimation::Running))
-        .add_systems(Update, sys_act_add_property_target_animation.before(sys_act_animation_group_action).in_set(EStageAnimation::Command))
+        .add_systems(StageD3, sys_scene_anime_ctx.in_set(EStageAnimation::Running))
+        .add_systems(StageD3, sys_act_add_property_target_animation.before(sys_act_animation_group_action).in_set(EStageAnimation::Command))
         ;
-        // app.add_systems(Update, sys_dispose_about_animationgroup.in_set(ERunStageChap::Dispose));
+        // app.add_systems(StageD3, sys_dispose_about_animationgroup.in_set(ERunStageChap::Dispose));
     }
 }

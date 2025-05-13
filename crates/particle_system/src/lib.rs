@@ -108,45 +108,45 @@ impl Plugin for PluginParticleSystem {
                         sys_update_buffer           ,
                         sys_update_buffer_trail     ,
                     ).chain().in_set(StageParticleSystem::ParticleSysUpdate),
-                    sys_dispose_about_particle_system.after(sys_dispose_ready).in_set(ERunStageChap::StateCheck),
+                    sys_dispose_about_particle_system.after(sys_dispose_ready).in_set(StageParticleSystem::ParticleSysDispose),
                 )
             );
 
             #[cfg(not(feature = "use_bevy"))]
             app
-            .add_systems(Update, sys_create_particle_calculator.in_set(StageScene::SceneCreate))
-            .add_systems(Update, sys_create_cpu_partilce_system
+            .add_systems(StageD3, sys_create_particle_calculator.in_set(StageScene::SceneCreate))
+            .add_systems(StageD3, sys_create_cpu_partilce_system
                 .run_if(runif_acts::<OpsCPUParticleSystem>)
                 .in_set(StageParticleSystem::ParticleSysCreate))
-            .add_systems(Update, sys_act_partilce_system_state
+            .add_systems(StageD3, sys_act_partilce_system_state
                 .run_if(runif_acts2::<OpsCPUParticleSystemState, OpsCPUParticleSystemTrailMaterial>)
                 .in_set(StageParticleSystem::ParticleSysCommand))
-            .add_systems(Update, sys_particle_active .in_set(StageParticleSystem::ParticleSysParamStart))
-            .add_systems(Update, sys_ids
+            .add_systems(StageD3, sys_particle_active .in_set(StageParticleSystem::ParticleSysParamStart))
+            .add_systems(StageD3, sys_ids
                 // .run_if(runif_changes::<ParticleSystemModifyState>)
                 .in_set(StageParticleSystem::ParticleSysEmission))
-            .add_systems(Update, sys_emission.after(sys_ids).in_set(StageParticleSystem::ParticleSysEmission))
-            .add_systems(Update, sys_start
+            .add_systems(StageD3, sys_emission.after(sys_ids).in_set(StageParticleSystem::ParticleSysEmission))
+            .add_systems(StageD3, sys_start
                 // .run_if(runif_changes::<ParticleSystemModifyState>)
                 .after(sys_emission).in_set(StageParticleSystem::ParticleSysCalc))
-            .add_systems(Update, sys_over_lifetime
+            .add_systems(StageD3, sys_over_lifetime
                 // .run_if(runif_changes::<ParticleSystemModifyState>)
                 .after(sys_start).in_set(StageParticleSystem::ParticleSysCalc))
-            .add_systems(Update, sys_direction
+            .add_systems(StageD3, sys_direction
                 // .run_if(runif_changes::<ParticleSystemModifyState>)
                 .after(sys_over_lifetime).in_set(StageParticleSystem::ParticleSysCalc))
-            .add_systems(Update, sys_by_speed
+            .add_systems(StageD3, sys_by_speed
                 // .run_if(runif_changes::<ParticleSystemModifyState>)
                 .after(sys_direction).in_set(StageParticleSystem::ParticleSysCalc))
-            .add_systems(Update, sys_emitmatrix
+            .add_systems(StageD3, sys_emitmatrix
                 // .run_if(runif_changes::<ParticleSystemModifyState>)      
                 .after(sys_particle_active).in_set(StageParticleSystem::ParticleSysMatrix))
-            .add_systems(Update, sys_prewarm
+            .add_systems(StageD3, sys_prewarm
                 // .run_if(runif_changes::<ParticleSystemRunningState>)         
                 .after(sys_emitmatrix).in_set(StageParticleSystem::ParticleSysMatrix))
-            .add_systems(Update, sys_update_buffer           .in_set(StageParticleSystem::ParticleSysUpdate))
-            .add_systems(Update, sys_update_buffer_trail     .after(sys_update_buffer).in_set(StageParticleSystem::ParticleSysUpdate))
-            .add_systems(Update, sys_dispose_about_particle_system.after(sys_dispose_ready).before(sys_dispose_can).in_set(StageParticleSystem::ParticleSysDispose))
+            .add_systems(StageD3, sys_update_buffer           .in_set(StageParticleSystem::ParticleSysUpdate))
+            .add_systems(StageD3, sys_update_buffer_trail     .after(sys_update_buffer).in_set(StageParticleSystem::ParticleSysUpdate))
+            .add_systems(StageD3, sys_dispose_about_particle_system.after(sys_dispose_ready).before(sys_dispose_can).in_set(StageParticleSystem::ParticleSysDispose))
             ;
         }
     }

@@ -78,23 +78,23 @@ impl Plugin for PluginTransformNode {
 #[cfg(not(feature = "use_bevy"))]
 {
     app
-        .add_systems(Update, sys_create_transform_node
+        .add_systems(StageD3, sys_create_transform_node
             // .run_if(runif_acts::<OpsTransformNode>)  
             .in_set(StageTransform::TransformCreate))
-        .add_systems(Update, sys_act_local
+        .add_systems(StageD3, sys_act_local
             // .run_if(runif_acts2::<OpsTransformNodeLocal, OpsTransformNodeParent>)               
             .in_set(StageTransform::TransformCommand))
-        .add_systems(Update, sys_local_euler_calc_rotation                                                           .in_set(StageTransform::TransformCalcMatrix))
-        .add_systems(Update, sys_act_local_rotation              .after(sys_local_euler_calc_rotation)       .in_set(StageTransform::TransformCalcMatrix))
-        .add_systems(Update, sys_local_quaternion_calc_rotation  .after(sys_act_local_rotation)                      .in_set(StageTransform::TransformCalcMatrix))
-        .add_systems(Update, sys_local_matrix_calc
+        .add_systems(StageD3, sys_local_euler_calc_rotation                                                           .in_set(StageTransform::TransformCalcMatrix))
+        .add_systems(StageD3, sys_act_local_rotation              .after(sys_local_euler_calc_rotation)       .in_set(StageTransform::TransformCalcMatrix))
+        .add_systems(StageD3, sys_local_quaternion_calc_rotation  .after(sys_act_local_rotation)                      .in_set(StageTransform::TransformCalcMatrix))
+        .add_systems(StageD3, sys_local_matrix_calc
             // .run_if(runif_changes::<FlagLocalMatrix>)               
             .after(sys_local_quaternion_calc_rotation)          .in_set(StageTransform::TransformCalcMatrix))
-        .add_systems(Update, sys_transform_dirty              .after(sys_local_matrix_calc)                       .in_set(StageTransform::TransformCalcMatrix))
-        .add_systems(Update, sys_world_matrix_calc
+        .add_systems(StageD3, sys_transform_dirty              .after(sys_local_matrix_calc)                       .in_set(StageTransform::TransformCalcMatrix))
+        .add_systems(StageD3, sys_world_matrix_calc
             // .run_if(runif_changes::<TransformNodeDirty>)              
             .after(sys_transform_dirty).in_set(StageTransform::TransformCalcMatrix))
-        .add_systems(Update, sys_dispose_about_transform_node    .in_set(StageTransform::TransformDispose))
+        .add_systems(StageD3, sys_dispose_about_transform_node    .in_set(StageTransform::TransformDispose))
         ;
 }
 

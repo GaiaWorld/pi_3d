@@ -148,7 +148,7 @@ pub fn main() {
     app.add_systems(Startup, setup.after(base::setup_default_mat));
     #[cfg(not(feature = "use_bevy"))]
     app.add_startup_system(Update, setup.after(base::setup_default_mat));
-    app.add_systems(Update, sys_load_check);
+    app.add_systems(StageD3, sys_load_check);
     
     
     // app.run()

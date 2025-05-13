@@ -51,7 +51,7 @@ impl Plugin for PluginLighting {
         let enginepugins = app.world.get_resource::<EngineCustomPlugins>().unwrap();
         if enginepugins.lighting {
             #[cfg(feature = "use_bevy")]
-            app.add_systems(Update,
+            app.add_systems(StageD3,
                 (
                     apply_deferred.in_set(StageLighting::_LightCreate),
                     sys_create_light.in_set(StageLighting::LightCreate),
@@ -63,10 +63,10 @@ impl Plugin for PluginLighting {
 
             #[cfg(not(feature = "use_bevy"))]
             app
-            .add_systems(Update, sys_create_light.in_set(StageLighting::LightCreate))
-            .add_systems(Update, sys_act_light_param            .in_set(StageLighting::LightingCommand))
-            .add_systems(Update, sys_light_update               .in_set(StageLighting::LightingUniform))
-            .add_systems(Update, sys_dispose_about_light.after(sys_dispose_ready).in_set(StageLighting::LightDispose))
+            .add_systems(StageD3, sys_create_light.in_set(StageLighting::LightCreate))
+            .add_systems(StageD3, sys_act_light_param            .in_set(StageLighting::LightingCommand))
+            .add_systems(StageD3, sys_light_update               .in_set(StageLighting::LightingUniform))
+            .add_systems(StageD3, sys_dispose_about_light.after(sys_dispose_ready).in_set(StageLighting::LightDispose))
             ;
         }
 

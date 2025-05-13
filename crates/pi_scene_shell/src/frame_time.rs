@@ -2,6 +2,7 @@ use crate::ecs::*;
 
 use crate::run_stage::ERunStageChap;
 use crate::engine_shell::EnginShell;
+use crate::prelude::StageD3;
 
 #[derive(Resource)]
 pub struct SingleFrameTimeCommand {
@@ -88,6 +89,6 @@ impl Plugin for PluginFrameTime {
         app.world.insert_resource(SingleFrameTimeCommand::default());
 
         #[cfg(not(target_arch = "wasm32"))]
-        app.add_systems(Update, sys_frame_time.in_set(ERunStageChap::Create));
+        app.add_systems(StageD3, sys_frame_time.in_set(ERunStageChap::Create));
     }
 }

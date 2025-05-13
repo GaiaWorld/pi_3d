@@ -55,6 +55,7 @@ pub enum ERunStageChap {
 pub use pi_world::schedule::Update as StageD3Create;
 
 pub use pi_world::schedule::PostUpdate as StageD3;
+pub use pi_world::schedule::End as StageD3Final;
 
 pub struct PluginRunstage;
 impl Plugin for PluginRunstage {
@@ -67,7 +68,7 @@ impl Plugin for PluginRunstage {
         app.configure_set(StageD3, ERunStageChap::Culling        .in_set(ERunStageChap::D3).after(ERunStageChap::Modify));
         app.configure_set(StageD3, ERunStageChap::Culled         .in_set(ERunStageChap::D3).after(ERunStageChap::Culling).after(ERunStageChap::_Dispose));
         app.configure_set(StageD3, ERunStageChap::Collect        .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(ERunStageChap::Culled));
-        app.configure_set(StageD3, ERunStageChap::StateCheck     .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(ERunStageChap::Collect).before(PiRenderSystemSet));
+        app.configure_set(StageD3Final, ERunStageChap::StateCheck     .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(ERunStageChap::Collect).before(PiRenderSystemSet));
 
         app.insert_resource(ErrorRecord(vec![], false));
 
@@ -85,7 +86,7 @@ impl Plugin for PluginRunstage {
 }
 
         app.insert_resource(RunSystemRecord::default());
-        app.add_systems(StageD3, sys_reset_system_record.in_set(ERunStageChap::StateCheck));
+        app.add_systems(StageD3Final, sys_reset_system_record.in_set(ERunStageChap::StateCheck));
 
         app.insert_resource(EngineInstant(pi_time::Instant::now()));
     }

@@ -28,7 +28,7 @@ impl Plugin for PluginGLTF2Res {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-        .add_systems(Update, sys_gltf_analy.in_set(StageScene::SceneCreate))
+        .add_systems(StageD3, sys_gltf_analy.in_set(StageScene::SceneCreate))
         ;
 
     }

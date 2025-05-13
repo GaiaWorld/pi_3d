@@ -310,16 +310,16 @@ pub fn main() {
 
     app.add_plugins(PluginTest);
     
-    // app.add_systems(Update, pi_3d::sys_info_node);
-    // app.add_systems(Update, pi_3d::sys_info_resource);
-    // app.add_systems(Update, pi_3d::sys_info_draw);
+    // app.add_systems(StageD3, pi_3d::sys_info_node);
+    // app.add_systems(StageD3, pi_3d::sys_info_resource);
+    // app.add_systems(StageD3, pi_3d::sys_info_draw);
         #[cfg(feature = "use_bevy")]
     app.add_systems(Startup, setup.after(base::setup_default_mat));
     #[cfg(not(feature = "use_bevy"))]
     app.add_startup_system(Update, setup.after(base::setup_default_mat));
     
-    app.add_systems(Update, sys_anime_event.in_set(ERunStageChap::Modify));
-    app.add_systems(Update, sys_sub_texture.in_set(ERunStageChap::Modify));
+    app.add_systems(StageD3, sys_anime_event.in_set(ERunStageChap::Modify));
+    app.add_systems(StageD3, sys_sub_texture.in_set(ERunStageChap::Modify));
 
     app.world.insert_resource(ResDemoTex { tex: None, counter: 0 });
     

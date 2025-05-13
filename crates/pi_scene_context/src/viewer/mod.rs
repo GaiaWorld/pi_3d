@@ -30,11 +30,11 @@ impl Plugin for PluginViewerBase {
         app.configure_set(StageD3, StageViewer::ForceInclude         .in_set(ERunStageChap::Culling).in_set(FrameDataPrepare));
         app.configure_set(StageD3, StageViewer::Culling              .in_set(ERunStageChap::Culling).in_set(FrameDataPrepare).before(StageViewer::ForceInclude).after(StageCulling::CalcBounding));
         app.insert_resource(ActionListViewerForceInclude::default());
-        app.add_systems(Update, sys_act_viewer_force_include
+        app.add_systems(StageD3, sys_act_viewer_force_include
             // .run_if(runif_acts::<OpsViewerForceInclude>)
             .in_set(StageViewer::ForceInclude));
-        app.add_systems(Update, sys_calc_transform_matrix.in_set(StageViewer::TransformMatrixCalc));
-        app.add_systems(Update, sys_tick_viewer_culling.in_set(StageViewer::Culling));
-        app.add_systems(Update, sys_update_viewer_uniform.in_set(ERunStageChap::Collect));
+        app.add_systems(StageD3, sys_calc_transform_matrix.in_set(StageViewer::TransformMatrixCalc));
+        app.add_systems(StageD3, sys_tick_viewer_culling.in_set(StageViewer::Culling));
+        app.add_systems(StageD3, sys_update_viewer_uniform.in_set(ERunStageChap::Collect));
     }
 }

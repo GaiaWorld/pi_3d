@@ -96,7 +96,7 @@ impl Plugin for PluginTrail {
                 (
                     sys_dispose_about_trail_linked,
                     sys_dispose_about_trail
-                ).chain().after(sys_dispose_ready).in_set(ERunStageChap::StateCheck)
+                ).chain().after(sys_dispose_ready).in_set(StageTrail::TrailDispose)
             )
         );
         
@@ -111,11 +111,11 @@ impl Plugin for PluginTrail {
 
 #[cfg(not(target_feature = "use_bevy"))]
         app
-        .add_systems(Update, sys_create_trail_mesh       .in_set(StageTrail::TrailCreate))
-        .add_systems(Update, sys_act_trail_age           .in_set(StageTrail::TrailCommand))
-        .add_systems(Update, sys_trail_update            .in_set(StageTrail::TrailUpdate))
-        .add_systems(Update, sys_dispose_about_trail_linked      .after(sys_dispose_ready)      .before(sys_dispose_can)         .in_set(StageTrail::TrailDispose))
-        .add_systems(Update, sys_dispose_about_trail             .after(sys_dispose_about_trail_linked).before(sys_dispose_can)  .in_set(StageTrail::TrailDispose))
+        .add_systems(StageD3, sys_create_trail_mesh       .in_set(StageTrail::TrailCreate))
+        .add_systems(StageD3, sys_act_trail_age           .in_set(StageTrail::TrailCommand))
+        .add_systems(StageD3, sys_trail_update            .in_set(StageTrail::TrailUpdate))
+        .add_systems(StageD3, sys_dispose_about_trail_linked      .after(sys_dispose_ready)      .before(sys_dispose_can)         .in_set(StageTrail::TrailDispose))
+        .add_systems(StageD3, sys_dispose_about_trail             .after(sys_dispose_about_trail_linked).before(sys_dispose_can)  .in_set(StageTrail::TrailDispose))
         ;
     }
 }

@@ -562,7 +562,7 @@ pub fn sys_move_ray_collider(
 
 pub fn run_loop<T>(mut app:  App, window: Arc<Window>, event_loop: EventLoop<T>) {
     app.insert_resource(DemoWindowEvent::default());
-    app.add_systems(Update, sys_move_ray_collider);
+    app.add_systems(StageD3, sys_move_ray_collider);
 
     event_loop.run(move |event, elwt, flow| {
         match event {

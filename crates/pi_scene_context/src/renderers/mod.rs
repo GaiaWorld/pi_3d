@@ -163,52 +163,52 @@ impl Plugin for PluginRenderer {
         .configure_set(StageD3, StageRenderer::PassPipeline      .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare).after(StageRenderer::PassShader))
         .configure_set(StageD3, StageRenderer::PassDraw          .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare).after(StageRenderer::PassPipeline))
         .configure_set(StageD3, StageRenderer::DrawList          .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare).after(StageRenderer::PassDraw).before(GraphRun))
-        .configure_set(StageD3, StageRenderer::RendererDispose   .in_set(ERunStageChap::_Dispose))
+        .configure_set(StageD3Final, StageRenderer::RendererDispose   .in_set(ERunStageChap::StateCheck))
         ;
 
 #[cfg(not(feature = "use_bevy"))]
         app
-            .add_systems(Update, sys_custom_render_target               .in_set(ERunStageChap::Create))
-            .add_systems(Update, sys_create_renderer
+            .add_systems(StageD3, sys_custom_render_target               .in_set(ERunStageChap::Create))
+            .add_systems(StageD3, sys_create_renderer
                 // .run_if(runif_acts::<OpsRendererCreate>)                 
                 .in_set(StageRenderer::RenderCreate))
-            // .add_systems(Update, sys_act_model_blend                 .in_set(StageRenderer::RenderStateCommand))
-            // .add_systems(Update, sys_act_mesh_primitive_state        .in_set(StageRenderer::RenderStateCommand))
+            // .add_systems(StageD3, sys_act_model_blend                 .in_set(StageRenderer::RenderStateCommand))
+            // .add_systems(StageD3, sys_act_mesh_primitive_state        .in_set(StageRenderer::RenderStateCommand))
             
-            // .add_systems(Update, sys_act_depth_state                 .in_set(StageRenderer::RenderStateCommand))
+            // .add_systems(StageD3, sys_act_depth_state                 .in_set(StageRenderer::RenderStateCommand))
 
-            .add_systems(Update, sys_act_renderer_connect
+            .add_systems(StageD3, sys_act_renderer_connect
                 // .run_if(runif_acts::<OpsRendererConnect>)           
                 .in_set(StageRenderer::RenderStateCommand))
-            .add_systems(Update, sys_act_renderer_modify
+            .add_systems(StageD3, sys_act_renderer_modify
                 // .run_if(runif_acts2::<OpsRendererTarget, OpsRendererCommand>)    
                 .in_set(StageRenderer::RendererCommand))
-            .add_systems(Update, sys_bind_buffer_apply                  .in_set(StageRenderer::PassBindGroups))
-            .add_systems(Update, sys_sets_modify_by_viewer           .in_set(StageRenderer::PassBindGroup))
-            .add_systems(Update, sys_sets_modify_by_model            .after(sys_sets_modify_by_viewer).in_set(StageRenderer::PassBindGroup))
-            .add_systems(Update, sys_passrendererid_pass_reset
+            .add_systems(StageD3, sys_bind_buffer_apply                  .in_set(StageRenderer::PassBindGroups))
+            .add_systems(StageD3, sys_sets_modify_by_viewer           .in_set(StageRenderer::PassBindGroup))
+            .add_systems(StageD3, sys_sets_modify_by_model            .after(sys_sets_modify_by_viewer).in_set(StageRenderer::PassBindGroup))
+            .add_systems(StageD3, sys_passrendererid_pass_reset
                 // .run_if(runif_changes::<PassReset>)       
                 .after(sys_sets_modify_by_model).in_set(StageRenderer::PassBindGroup))
-            .add_systems(Update, sys_sets_modify_by_scene_extend     .after(sys_passrendererid_pass_reset).in_set(StageRenderer::PassBindGroup))
+            .add_systems(StageD3, sys_sets_modify_by_scene_extend     .after(sys_passrendererid_pass_reset).in_set(StageRenderer::PassBindGroup))
 
-            .add_systems(Update, sys_pass_bind_groups
+            .add_systems(StageD3, sys_pass_bind_groups
                 // .run_if(runif_changes::<PassBindGroupsDirty>)        
                 .in_set(StageRenderer::PassBindGroups))
-            .add_systems(Update, sys_pass_shader_request_by_model    .in_set(StageRenderer::PassShader))
-            .add_systems(Update, sys_pass_shader
+            .add_systems(StageD3, sys_pass_shader_request_by_model    .in_set(StageRenderer::PassShader))
+            .add_systems(StageD3, sys_pass_shader
                 // .run_if(runif_changes::<PassFlagShader>)                     
                 .after(sys_pass_shader_request_by_model).in_set(StageRenderer::PassShader))
-            .add_systems(Update, sys_pass_pipeline_request_by_renderer   .in_set(StageRenderer::PassPipeline))
-            .add_systems(Update, sys_pass_pipeline
+            .add_systems(StageD3, sys_pass_pipeline_request_by_renderer   .in_set(StageRenderer::PassPipeline))
+            .add_systems(StageD3, sys_pass_pipeline
                 // .run_if(runif_changes::<PassPipelineStateDirty>)                       
                 .after(sys_pass_pipeline_request_by_renderer).in_set(StageRenderer::PassPipeline))
-            .add_systems(Update, sys_pass_draw_modify_by_model       .in_set(StageRenderer::PassDraw))
-            .add_systems(Update, sys_pass_draw_modify_by_pass
+            .add_systems(StageD3, sys_pass_draw_modify_by_model       .in_set(StageRenderer::PassDraw))
+            .add_systems(StageD3, sys_pass_draw_modify_by_pass
                 // .run_if(runif_changes::<PassDrawDirty>)   
                 .after(sys_pass_draw_modify_by_model).in_set(StageRenderer::PassDraw))
-            .add_systems(Update, sys_renderer_draws_modify           .in_set(StageRenderer::DrawList))
-            .add_systems(Update, sys_vertice_buffer_apply       .after(sys_renderer_draws_modify).in_set(StageRenderer::DrawList))
-            .add_systems(Update, sys_dispose_renderer                .before(sys_dispose).in_set(StageRenderer::RendererDispose))
+            .add_systems(StageD3, sys_renderer_draws_modify           .in_set(StageRenderer::DrawList))
+            .add_systems(StageD3, sys_vertice_buffer_apply       .after(sys_renderer_draws_modify).in_set(StageRenderer::DrawList))
+            .add_systems(StageD3Final, sys_dispose_renderer                .before(sys_dispose).in_set(StageRenderer::RendererDispose))
             ;
     }
 }

@@ -47,7 +47,7 @@ impl Plugin for PluginSkeleton {
         if enginepugins.skeleton {
 
             #[cfg(feature = "use_bevy")]
-            app.add_systems(Update, 
+            app.add_systems(StageD3, 
                 (
                     apply_deferred.in_set(StageSkeleton::_SkinCreate),
                     (
@@ -70,16 +70,16 @@ impl Plugin for PluginSkeleton {
 
             #[cfg(not(feature = "use_bevy"))]
             app
-            .add_systems(Update, sys_create_bone.after(sys_create_mesh).in_set(StageSkeleton::SkinCreate))
-            .add_systems(Update, sys_create_skin.after(sys_create_bone).in_set(StageSkeleton::SkinCreate))
-            .add_systems(Update, sys_act_skin_use.in_set(StageSkeleton::SkinCommand))
-            // .add_systems(Update, sys_act_bone_pose.after(sys_act_skin_use).in_set(StageSkeleton::Command))
-            .add_systems(Update, sys_bones_absolute.after(sys_act_skin_use).in_set(StageSkeleton::SkinCommand))
-            .add_systems(Update, sys_bones_local_dirty.in_set(StageSkeleton::SkinCalc))
-            .add_systems(Update, sys_bones_worldmatrix.after(sys_bones_local_dirty).in_set(StageSkeleton::SkinCalc))
-            .add_systems(Update, sys_skin_dirty_by_bone.after(sys_bones_worldmatrix).in_set(StageSkeleton::SkinCalc))
-            .add_systems(Update, sys_skin_buffer_update.after(sys_skin_dirty_by_bone).in_set(StageSkeleton::SkinCalc))
-            .add_systems(Update, sys_dispose_about_skeleton.after(sys_dispose_ready).in_set(StageSkeleton::SkinDispose))
+            .add_systems(StageD3, sys_create_bone.after(sys_create_mesh).in_set(StageSkeleton::SkinCreate))
+            .add_systems(StageD3, sys_create_skin.after(sys_create_bone).in_set(StageSkeleton::SkinCreate))
+            .add_systems(StageD3, sys_act_skin_use.in_set(StageSkeleton::SkinCommand))
+            // .add_systems(StageD3, sys_act_bone_pose.after(sys_act_skin_use).in_set(StageSkeleton::Command))
+            .add_systems(StageD3, sys_bones_absolute.after(sys_act_skin_use).in_set(StageSkeleton::SkinCommand))
+            .add_systems(StageD3, sys_bones_local_dirty.in_set(StageSkeleton::SkinCalc))
+            .add_systems(StageD3, sys_bones_worldmatrix.after(sys_bones_local_dirty).in_set(StageSkeleton::SkinCalc))
+            .add_systems(StageD3, sys_skin_dirty_by_bone.after(sys_bones_worldmatrix).in_set(StageSkeleton::SkinCalc))
+            .add_systems(StageD3, sys_skin_buffer_update.after(sys_skin_dirty_by_bone).in_set(StageSkeleton::SkinCalc))
+            .add_systems(StageD3, sys_dispose_about_skeleton.after(sys_dispose_ready).in_set(StageSkeleton::SkinDispose))
             ;
         }
     }

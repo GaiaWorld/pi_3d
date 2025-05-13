@@ -29,7 +29,7 @@ impl crate::Plugin for PluginSprite {
 
 
         #[cfg(feature = "use_bevy")]
-        app.add_systems(Update, 
+        app.add_systems(StageD3, 
             (
                 sys_create_sprite.in_set(StageModel::InstanceCreate),
                 sys_modify_sprite.after(sys_act_instance_attribute).in_set(StageModel::AbstructMeshCommand),
@@ -38,8 +38,8 @@ impl crate::Plugin for PluginSprite {
         
         #[cfg(not(feature = "use_bevy"))]
         app
-        .add_systems(Update, sys_create_sprite.in_set(StageModel::InstanceCreate))
-        .add_systems(Update, sys_modify_sprite.before(sys_act_instance_attribute).in_set(StageModel::AbstructMeshCommand))
+        .add_systems(StageD3, sys_create_sprite.in_set(StageModel::InstanceCreate))
+        .add_systems(StageD3, sys_modify_sprite.before(sys_act_instance_attribute).in_set(StageModel::AbstructMeshCommand))
         ;
     }
 }

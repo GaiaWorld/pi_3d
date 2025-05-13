@@ -100,18 +100,18 @@ impl Plugin for PluginScene {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-            .add_systems(Update, sys_env_texture_load_launch                                         .in_set(StageScene::SceneTextureRequest))
-            .add_systems(Update, sys_image_texture_view_load_launch::<BRDFTextureSlot, BRDFTexture>  .in_set(StageScene::SceneTextureRequest))
-            .add_systems(Update, sys_env_texture_loaded_check                                        .in_set(StageScene::SceneTextureLoaded))
-            .add_systems(Update, sys_image_texture_view_loaded_check::<BRDFTextureSlot, BRDFTexture> .in_set(StageScene::SceneTextureLoaded))
-            .add_systems(Update, sys_create_scene
+            .add_systems(StageD3, sys_env_texture_load_launch                                         .in_set(StageScene::SceneTextureRequest))
+            .add_systems(StageD3, sys_image_texture_view_load_launch::<BRDFTextureSlot, BRDFTexture>  .in_set(StageScene::SceneTextureRequest))
+            .add_systems(StageD3, sys_env_texture_loaded_check                                        .in_set(StageScene::SceneTextureLoaded))
+            .add_systems(StageD3, sys_image_texture_view_loaded_check::<BRDFTextureSlot, BRDFTexture> .in_set(StageScene::SceneTextureLoaded))
+            .add_systems(StageD3, sys_create_scene
                 // .run_if(runif_acts::<OpsSceneCreation>)        
                 .in_set(StageScene::SceneCreate))
-            .add_systems(Update, sys_act_scene_ambient
+            .add_systems(StageD3, sys_act_scene_ambient
                 // .run_if(runif_acts::<OpsSceneOption>)           
                 .in_set(StageScene::SceneCommand))
-            .add_systems(Update, sys_bind_update_scene_ambient   .in_set(ERunStageChap::Collect))
-            .add_systems(Update, sys_dispose_about_scene             .after(sys_dispose_ready)       .in_set(StageScene::SceneDispose))
+            .add_systems(StageD3, sys_bind_update_scene_ambient   .in_set(ERunStageChap::Collect))
+            .add_systems(StageD3, sys_dispose_about_scene             .after(sys_dispose_ready)       .in_set(StageScene::SceneDispose))
             ;
     }
     

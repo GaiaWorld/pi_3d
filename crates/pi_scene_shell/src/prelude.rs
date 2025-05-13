@@ -69,7 +69,7 @@ pub use pi_hal::{runtime::RENDER_RUNTIME, loader::AsyncLoader};
 pub use pi_share::{Share, ThreadSync, ShareRefCell};
 pub use pi_scene_math::{Vector3, Matrix, Rotation3, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolRotation, TToolVector3}, Number, Isometry3};
 
-pub use crate::run_stage::{ERunStageChap, runif_3d, EngineCustomPlugins, StageD3};
+pub use crate::run_stage::{ERunStageChap, runif_3d, EngineCustomPlugins, StageD3, StageD3Final};
 pub use crate::object::ObjectID;
 pub use crate::engine_shell::*;
 pub use crate::assets::texture::*;

@@ -75,15 +75,15 @@ impl Plugin for PluginCulling {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-        .add_systems(Update, sys_act_collider                       .in_set(StageCulling::Command))
-        .add_systems(Update, sys_act_mesh_bounding
+        .add_systems(StageD3, sys_act_collider                       .in_set(StageCulling::Command))
+        .add_systems(StageD3, sys_act_mesh_bounding
             // .run_if(runif_acts2::<OpsMeshBounding, OpsBoundingBoxDisplay>)        
             .in_set(StageModel::AbstructMeshCommand))
-        .add_systems(Update, sys_update_collider_by_matrix                                                                  .in_set(StageCulling::CalcBounding))
-        .add_systems(Update, sys_update_collider.after(sys_update_collider_by_matrix)                               .in_set(StageCulling::CalcBounding))
-        .add_systems(Update, sys_update_culling_by_worldmatrix                                                              .in_set(StageCulling::CalcBounding))
-        .add_systems(Update, sys_update_culling_by_cullinginfo           .after(sys_update_culling_by_worldmatrix)  .in_set(StageCulling::CalcBounding))
-        .add_systems(Update, sys_abstructmesh_culling_flag_reset         .after(sys_update_culling_by_cullinginfo)  .in_set(StageCulling::CalcBounding))
+        .add_systems(StageD3, sys_update_collider_by_matrix                                                                  .in_set(StageCulling::CalcBounding))
+        .add_systems(StageD3, sys_update_collider.after(sys_update_collider_by_matrix)                               .in_set(StageCulling::CalcBounding))
+        .add_systems(StageD3, sys_update_culling_by_worldmatrix                                                              .in_set(StageCulling::CalcBounding))
+        .add_systems(StageD3, sys_update_culling_by_cullinginfo           .after(sys_update_culling_by_worldmatrix)  .in_set(StageCulling::CalcBounding))
+        .add_systems(StageD3, sys_abstructmesh_culling_flag_reset         .after(sys_update_culling_by_cullinginfo)  .in_set(StageCulling::CalcBounding))
         ;
     }
 }

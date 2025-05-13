@@ -548,8 +548,8 @@ impl<K: std::ops::Deref<Target = EKeyTexture> + Component, D: From<ETextureViewU
             
 #[cfg(not(feature="use_pi_ecs"))]
             {
-                app.add_systems(Update, sys_image_texture_load_launch                                                    .in_set(StageTextureLoad::TextureLoading));
-                app.add_systems(Update, sys_image_texture_loaded     .after(sys_image_texture_load_launch)       .in_set(StageTextureLoad::TextureLoading));
+                app.add_systems(StageD3, sys_image_texture_load_launch                                                    .in_set(StageTextureLoad::TextureLoading));
+                app.add_systems(StageD3, sys_image_texture_loaded     .after(sys_image_texture_load_launch)       .in_set(StageTextureLoad::TextureLoading));
             }
         }
         app.insert_resource(ImageTextureViewLoader::<K>::default());
@@ -681,7 +681,7 @@ fn _sys_image_texture_view_load_launch2(
             // TODO
             if let Some(target) = targets.get(*_key) {
                 state.texview_success += 1;
-                // log::error!(">>> Use SRT {:?}", target.rt.target_index());
+                log::error!(">>> Use SRT {:?}", target.rt.target_index());
                 Some(ETextureViewUsage::from(&target.rt))
             } else {
                 // log::error!("EKeyTexture::SRT Fail");

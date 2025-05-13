@@ -18,7 +18,7 @@ fn setup(
 pub struct PluginPerlinNoise;
 impl Plugin for PluginPerlinNoise {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, setup);
+        app.add_systems(StageD3, setup);
     }
     // fn init(
     //     &mut self,

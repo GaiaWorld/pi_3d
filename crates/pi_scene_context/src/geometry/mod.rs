@@ -112,18 +112,18 @@ impl Plugin for PluginGeometry {
 
 #[cfg(not(feature = "use_bevy"))]
         app
-        .add_systems(Update, sys_create_geometry
+        .add_systems(StageD3, sys_create_geometry
             // .run_if(runif_acts::<OpsGeomeryCreate>)     
             .in_set(StageGeometry::GeoCreate))
-        .add_systems(Update, sys_vertex_buffer_loaded    .in_set(StageGeometry::VertexBufferLoaded))
-        .add_systems(Update, sys_vertex_buffer_slots_loaded
+        .add_systems(StageD3, sys_vertex_buffer_loaded    .in_set(StageGeometry::VertexBufferLoaded))
+        .add_systems(StageD3, sys_vertex_buffer_slots_loaded
             // .run_if(runif_comp::<FlagGeometryDirty>)      
             .in_set(StageGeometry::GeometryLoaded))
-        .add_systems(Update, sys_geometry_enable
+        .add_systems(StageD3, sys_geometry_enable
             // .run_if(runif_comp::<RenderGeometryComp>)
             .after(sys_vertex_buffer_slots_loaded).in_set(StageGeometry::GeometryLoaded))
-        .add_systems(Update, sys_instanced_buffer_upload     .in_set(StageGeometry::GeoUpload))
-        .add_systems(Update, sys_dispose_about_geometry      .after(sys_dispose_ready).in_set(StageGeometry::GeoDispose))
+        .add_systems(StageD3, sys_instanced_buffer_upload     .in_set(StageGeometry::GeoUpload))
+        .add_systems(StageD3, sys_dispose_about_geometry      .after(sys_dispose_ready).in_set(StageGeometry::GeoDispose))
         ;
     }
 }

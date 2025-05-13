@@ -36,9 +36,9 @@ pub fn main() {
         pbr_material::PluginPBRMaterial
     );
 
-    app.add_systems(Update, pi_3d::sys_info_node);
-    app.add_systems(Update, pi_3d::sys_info_resource);
-    app.add_systems(Update, pi_3d::sys_info_draw);
+    app.add_systems(StageD3, pi_3d::sys_info_node);
+    app.add_systems(StageD3, pi_3d::sys_info_resource);
+    app.add_systems(StageD3, pi_3d::sys_info_draw);
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
 
     #[cfg(feature = "use_bevy")]
@@ -50,7 +50,7 @@ pub fn main() {
     #[cfg(not(feature = "use_bevy"))]
     app.add_startup_system(Update, base::active_lighting_shadow);
     #[cfg(feature = "use_bevy")]
-    app.add_systems(Update, display_boundingbox);
+    app.add_systems(StageD3, display_boundingbox);
     #[cfg(not(feature = "use_bevy"))]
     app.add_startup_system(Update, display_boundingbox);
     
