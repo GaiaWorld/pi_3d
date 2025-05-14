@@ -56,6 +56,7 @@ impl TKeyBind for BindEffectTextureTilloff {
                     data: self.data.clone(),
                     layout: KeyBindLayoutBuffer {
                         visibility: EShaderStage::VERTEXFRAGMENT,
+                        dynamic: self.data.2,
                         min_binding_size: self.data.size() as u32,
                     }
                 }

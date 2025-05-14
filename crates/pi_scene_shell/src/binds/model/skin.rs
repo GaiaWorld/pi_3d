@@ -112,6 +112,7 @@ impl TKeyBind for ShaderBindModelAboutSkinValue {
                             data: self.data.clone(),
                             layout: KeyBindLayoutBuffer {
                                 visibility: EShaderStage::VERTEXFRAGMENT,
+                                dynamic: self.data.2,
                                 min_binding_size: self.totalsize as u32,
                             }
                         }

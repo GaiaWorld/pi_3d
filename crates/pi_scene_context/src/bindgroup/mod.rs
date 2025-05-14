@@ -215,11 +215,13 @@ impl Plugin for PluginRenderBindGroup {
         let device = app.world.get_resource::<PiRenderDevice>().unwrap();
         if app.world.get_resource::<ResBindBufferAllocator>().is_none() {
             let mut allocator = ResBindBufferAllocator(BindBufferAllocator::new(device));
-            let commonbindmodel = CommonBindModel(BindModel::new(&mut allocator));
-            let bindpassindexs = BindPassIndexPool::new(&mut allocator);
+            let mut allocator2 = ResBindBufferAllocatorStatic(BindBufferAllocator::create(device, false));
+            let commonbindmodel = CommonBindModel(BindModel::new(&mut allocator2));
+            let bindpassindexs = BindPassIndexPool::new(&mut allocator2);
             app.insert_resource(commonbindmodel);
             app.insert_resource(bindpassindexs);
             app.insert_resource(allocator);
+            app.insert_resource(allocator2);
         }
         app.insert_resource(MaterialDataMgr::default());
         app.insert_resource(AssetBindGroupSceneWaits::default());

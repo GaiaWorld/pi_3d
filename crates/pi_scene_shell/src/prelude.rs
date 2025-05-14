@@ -125,6 +125,14 @@ impl MemSize for ResBindBufferAllocator {
     }
 }
 
+#[derive(Resource, DerefMut, Deref)]
+pub struct ResBindBufferAllocatorStatic(pub BindBufferAllocator);
+impl MemSize for ResBindBufferAllocatorStatic {
+    fn memsize(&self) -> usize {
+        self.0.size()
+    }
+}
+
 ////////////////////////////////////// Vertex Buffer
 #[derive(Resource)]
 pub struct ArgVertexBufferAllocator3DSize(pub u32);

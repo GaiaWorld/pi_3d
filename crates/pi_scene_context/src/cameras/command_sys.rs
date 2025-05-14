@@ -15,7 +15,8 @@ use super::{
 pub fn sys_create_camera(
     mut cmds: ResMut<ActionListCameraCreate>,
     mut commands: Commands,
-    mut dynallocator: ResMut<ResBindBufferAllocator>,
+    // mut dynallocator: ResMut<ResBindBufferAllocator>,
+    mut dynallocator: ResMut<ResBindBufferAllocatorStatic>,
     mut errors: ResMut<ErrorRecord>,
     // mut performance: ResMut<Performance>,
 ) {

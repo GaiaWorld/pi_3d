@@ -193,6 +193,7 @@ impl TKeyBind for ShaderBindEffectValueArr {
                     data: self.data.clone(),
                     layout: KeyBindLayoutBuffer {
                         visibility: EShaderStage::VERTEXFRAGMENT,
+                        dynamic: self.data.2,
                         min_binding_size: self.total_size as u32,
                     }
                 }

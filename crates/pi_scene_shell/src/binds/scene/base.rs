@@ -68,6 +68,7 @@ impl TKeyBind for ShaderBindViewer {
                     data: self.data.clone(),
                     layout: KeyBindLayoutBuffer {
                         visibility: EShaderStage::VERTEXFRAGMENT,
+                        dynamic: self.data.2,
                         min_binding_size: Self::TOTAL_SIZE as u32,
                     }
                 }
@@ -127,6 +128,7 @@ impl TKeyBind for ShaderBindPassIndex {
                     data: self.data.clone(),
                     layout: KeyBindLayoutBuffer {
                         visibility: EShaderStage::VERTEXFRAGMENT,
+                        dynamic: self.data.2,
                         min_binding_size: Self::SIZE as u32,
                     }
                 }

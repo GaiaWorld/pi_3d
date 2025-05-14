@@ -149,7 +149,7 @@ pub fn sys_act_material_use(
 
                                 renderobjectcmds.push(OpsPassObject::ops(id_mesh, id_mat, pass));
                             } else {
-                                log::error!("MatID Again!");
+                                // log::error!("MatID Again!");
                             }
                         } else {
                             errors.record(id_mesh, ErrorRecord::ERROR_USE_MATERIAL_NULL_TARGET);
@@ -207,6 +207,7 @@ pub fn sys_act_material_value(
     mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_act_material_value"));
+
     cmdsvalb.drain().for_each(|cmd| {
         match cmd {
             OpsUniformValB::Mat4(entity, slot, val) => {
@@ -248,14 +249,16 @@ pub fn sys_act_material_value(
                             cmdsval.push(OpsUniformVal::vec4(entity, tilloffslot, tilloff.0, tilloff.1, tilloff.2, tilloff.3));
                             // log::error!("texture_from_renderer {:?}", (key, tilloff));
                         } else {
-                            // log::error!("texture_from_renderer Error No RT {:?}", key);
+                            // log::error!("texture_from_renderer Error No RT {:?}", (key, idrenderer));
                         }
                         param.url = EKeyTexture::SRT(key);
                         textureparams.0.insert(param.slotname.clone(), Arc::new(param));
                         *flag = UniformTextureWithSamplerParamsDirty;
+                    } else {
+                        // log::error!("texture_from_renderer Error No Key");
                     }
                 } else {
-                    // log::error!("texture_from_renderer Error No Material");
+                    // log::error!("texture_from_renderer Error No Material {:?}", (entity, idrenderer));
                 }
             }
             OpsUniformValB::TargetAnimation(idmat, attr, group, curve) => {

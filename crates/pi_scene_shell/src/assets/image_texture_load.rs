@@ -681,7 +681,7 @@ fn _sys_image_texture_view_load_launch2(
             // TODO
             if let Some(target) = targets.get(*_key) {
                 state.texview_success += 1;
-                log::error!(">>> Use SRT {:?}", target.rt.target_index());
+                // log::error!(">>> Use SRT {:?}", (target.rt.target_index(), _key));
                 Some(ETextureViewUsage::from(&target.rt))
             } else {
                 // log::error!("EKeyTexture::SRT Fail");

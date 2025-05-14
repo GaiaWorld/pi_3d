@@ -14,7 +14,8 @@ use super::{
 pub fn sys_create_scene(
     mut cmds: ResMut<ActionListSceneCreate>,
     mut commands: Commands,
-    mut dynbuffer: ResMut<ResBindBufferAllocator>,
+    // mut dynbuffer: ResMut<ResBindBufferAllocator>,
+    mut dynbuffer: ResMut<ResBindBufferAllocatorStatic>,
     lightlimit: Res<SceneLightLimit>,
     shadowlimit: Res<SceneShadowLimit>,
     device: Res<PiRenderDevice>,

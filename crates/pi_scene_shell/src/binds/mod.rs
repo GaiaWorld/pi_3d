@@ -25,12 +25,14 @@ pub use effect_texture_info::*;
 pub use effect_texture_tilloff::*;
 
 pub fn keybind_for_buffer(data: BindBufferRange, visibility: EShaderStage, min_binding_size: u32) -> Option<pi_render::renderer::bind::EKeyBind> {
+    let dynamic = data.2;
     Some(
         pi_render::renderer::bind::EKeyBind::Buffer(
             KeyBindBuffer {
                 data,
                 layout: KeyBindLayoutBuffer {
                     visibility,
+                    dynamic,
                     min_binding_size,
                 }
             }

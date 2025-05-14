@@ -195,6 +195,7 @@ pub fn sys_sets_modify_by_model(
 
 pub fn sys_bind_buffer_apply(
     mut allocator: ResMut<ResBindBufferAllocator>,
+    mut allocator2: ResMut<ResBindBufferAllocatorStatic>,
     device: Res<PiRenderDevice>,
     queue: Res<PiRenderQueue>,
     // mut performance: ResMut<Performance>,
@@ -203,6 +204,7 @@ pub fn sys_bind_buffer_apply(
     // let time1 = pi_time::Instant::now();
 
     allocator.write_buffer(&device, &queue);
+    allocator2.write_buffer(&device, &queue);
 
     // log::debug!("SysDynBufferAllocatorUpdate: {:?}", pi_time::Instant::now() - time1);
 }

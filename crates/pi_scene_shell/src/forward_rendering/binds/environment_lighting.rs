@@ -87,6 +87,7 @@ impl TKeyBind for BindEnvIrradiance {
                     data: self.data.clone(),
                     layout: KeyBindLayoutBuffer {
                         visibility: EShaderStage::FRAGMENT,
+                        dynamic: self.data.2,
                         min_binding_size: EnvironmentTextureTools::IRRADIANCE_SIZE as u32,
                     }
                 }
