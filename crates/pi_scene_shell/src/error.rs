@@ -82,6 +82,7 @@ impl ErrorRecord {
     pub const ERROR_GRAPHIC_CUSTOM_RUN_ERR: EError          = 00108;
     pub const ERROR_GRAPHIC_WRONG_NODE_TYPE: EError         = 00109;
     pub const ERROR_GRAPHIC_MISMATCH_PARAM: EError          = 00110;
+    pub const ERROR_SUB_GRAPHIC_ERROR: EError               = 00111;
     
     pub const ERROR_GLTF_BIN_LOAD_FAIL: EError              = 00200;
     pub const ERROR_GLTF_BUFFER: EError                     = 00201;

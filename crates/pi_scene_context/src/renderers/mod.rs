@@ -82,6 +82,7 @@ impl Plugin for PluginRenderer {
         }
 
         app.insert_resource(CustomRenderTargets::default());
+        app.insert_resource(ActionListSubGraphCreate::default());
         app.insert_resource(ActionListRendererCreate::default());
         app.insert_resource(ActionListRendererConnect::default());
         app.insert_resource(ActionListRendererModify::default());
@@ -168,8 +169,10 @@ impl Plugin for PluginRenderer {
 
 #[cfg(not(feature = "use_bevy"))]
         app
+            .add_system(StageD3, sys_create_subgraph.in_set(ERunStageChap::Create))
             .add_systems(StageD3, sys_custom_render_target               .in_set(ERunStageChap::Create))
             .add_systems(StageD3, sys_create_renderer
+                .after(sys_create_subgraph)
                 // .run_if(runif_acts::<OpsRendererCreate>)                 
                 .in_set(StageRenderer::RenderCreate))
             // .add_systems(StageD3, sys_act_model_blend                 .in_set(StageRenderer::RenderStateCommand))

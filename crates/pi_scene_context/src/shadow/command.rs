@@ -4,10 +4,10 @@ use crate::{object::ActionEntity, viewer::prelude::*};
 
 use super::base::*;
 
-pub struct OpsShadowGenerator(pub(crate) Entity, pub(crate) Entity, pub(crate) Entity, pub(crate) PassTag);
+pub struct OpsShadowGenerator(pub(crate) Entity, pub(crate) Entity, pub(crate) Entity, pub(crate) PassTag, pub(crate) Entity);
 impl OpsShadowGenerator {
-    pub fn ops(entity: Entity, scene: Entity, light: Entity, pass: PassTag) -> Self {
-        Self(entity, scene, light, pass)
+    pub fn ops(entity: Entity, scene: Entity, light: Entity, pass: PassTag, in_graph: Entity) -> Self {
+        Self(entity, scene, light, pass, in_graph)
     }
 }
 pub type ActionListShadowGenerator = ActionList<OpsShadowGenerator>;

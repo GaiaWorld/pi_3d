@@ -4,6 +4,8 @@ use pi_scene_shell::prelude::*;
 
 use crate::{cullings::prelude::PiRay, transforms::prelude::*};
 
+#[derive(Clone, Component, Default)]
+pub struct ViewerGraphID(pub NodeId);
 
 #[derive(Clone, Component, Default)]
 pub struct ForceIncludeModelList(pub XHashSet<Entity>);

@@ -34,10 +34,12 @@ pub fn sys_create_shadow_generator(
     empty: Res<SingleEmptyEntity>,
     mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
+    graphs: Query<&GraphId>,
     // mut alterdirect: Alter<(), (), BundleDirectShadow, ()>,
     // mut alterspot: Alter<(), (), BundleSpotShadow, ()>,
 ) {
-    cmds.drain().for_each(|OpsShadowGenerator(entity, scene, light, passtag)| {
+    cmds.drain().for_each(|OpsShadowGenerator(entity, scene, light, passtag, graph)| {
+        let graph = if let Ok(node) = graphs.get(graph) { node.0.clone() } else { NodeId::null() };
         if let (Ok(mut queueshadow), Ok((idscene, enabled, mut linkedshadow, layermask, viewerdistance))) = (scene_shadow.get_mut(scene), lights.get_mut(light)) {
             let mat = commands.spawn(ActionEntity::init()).id();
 
@@ -56,6 +58,7 @@ pub fn sys_create_shadow_generator(
                 let bundle = (
                     ActionShadow::as_shadow_generator(idscene.0, enabled.0),
                     (
+                        ViewerGraphID(graph),
                         LinkedMaterialID(empty.id()),
                         RendererID(entity),
                         ShadowLayerMask(layermask.clone()),
@@ -76,6 +79,7 @@ pub fn sys_create_shadow_generator(
                 let bundle = (
                     ActionShadow::as_shadow_generator(idscene.0, enabled.0),
                     (
+                        ViewerGraphID(graph),
                         LinkedMaterialID(empty.id()),
                         RendererID(entity),
                         ShadowLayerMask(layermask.clone()),

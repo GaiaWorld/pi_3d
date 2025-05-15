@@ -20,6 +20,7 @@ pub struct ActionSetRenderer<'w> {
     pub connect: ResMut<'w, ActionListRendererConnect>,
     pub modify: ResMut<'w, ActionListRendererModify>,
     pub target: ResMut<'w, ActionListRendererTarget>,
+    pub subgraph: ResMut<'w, ActionListSubGraphCreate>,
 }
 impl<'w> MemSize for ActionSetRenderer<'w> {
     fn memsize(&self) -> usize {

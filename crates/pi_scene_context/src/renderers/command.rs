@@ -2,6 +2,14 @@
 use pi_scene_shell::prelude::*;
 use super::renderer::*;
 
+pub struct OpsSubGraphCreate(pub(crate) Entity, pub(crate) String);
+impl OpsSubGraphCreate {
+    pub fn ops(entity: Entity, name: String) -> Self {
+        Self(entity, name)
+    }
+}
+pub type ActionListSubGraphCreate = ActionList<OpsSubGraphCreate>;
+
 pub struct OpsRendererCreate(pub(crate) Entity, pub(crate) String, pub(crate) Entity, pub(crate) PassTag, pub(crate) bool);
 impl OpsRendererCreate {
     pub fn ops(entity: Entity, name: String, idviewer: Entity, passtag: PassTag, transparent: bool) -> Self {

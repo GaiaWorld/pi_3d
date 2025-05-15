@@ -2,11 +2,7 @@
 use pi_scene_shell::{prelude::*, run_stage::EngineCustomPlugins};
 
 use crate::{
-    viewer::prelude::*,
-    transforms::prelude::*,
-    object::sys_dispose_ready,
-    materials::{command_sys::ActionMaterial, prelude::*},
-    light::prelude::StageLighting, prelude::StageRenderer, layer_mask::StageLayerMask, cameras::prelude::StageCamera,
+    cameras::prelude::StageCamera, layer_mask::StageLayerMask, light::prelude::StageLighting, materials::{command_sys::ActionMaterial, prelude::*}, object::sys_dispose_ready, prelude::StageRenderer, renderers::command_sys::sys_create_subgraph, transforms::prelude::*, viewer::prelude::*
     // prelude::{StageTransform, ActionSetMaterial, ActionMaterial},
 };
 
@@ -111,7 +107,7 @@ impl Plugin for PluginShadowGenerator {
             #[cfg(not(feature = "use_bevy"))]
             {
                 app
-                .add_systems(StageD3, sys_create_shadow_generator.in_set(StageShadowGenerator::ShadowCreate))
+                .add_systems(StageD3, sys_create_shadow_generator.after(sys_create_subgraph).in_set(StageShadowGenerator::ShadowCreate))
                 .add_systems(StageD3, sys_light_layermask_to_shadow                                                                           .in_set(StageShadowGenerator::ShadowCommand),)
                 .add_systems(StageD3, sys_act_shadow_generator                        .after(sys_light_layermask_to_shadow)                   .in_set(StageShadowGenerator::ShadowCommand),)
                 .add_systems(StageD3, sys_shadow_param_update                         .after(sys_act_shadow_generator)                        .in_set(StageShadowGenerator::ShadowCommand),)

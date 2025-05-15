@@ -157,7 +157,8 @@ impl DemoScene {
         actions.scene.create.push(OpsSceneCreation::ops(scene, SceneBoundingPool::MODE_LIST, SceneColliderPool::MODE_LIST, [-9999, -9999, -9999, 9999, 9999, 9999, 0, 0, 0]));
 
         let camera = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(camera, scene));
-        actions.camera.create.push(OpsCameraCreation::ops(scene, camera));
+        actions.renderer.subgraph.push(OpsSubGraphCreate::ops(scene, String::from("Demo")));
+        actions.camera.create.push(OpsCameraCreation::ops(scene, camera, camera));
         actions.transform.localsrt.push(OpsTransformNodeLocal::ops(camera, ETransformSRT::Translation(camera_position.0, camera_position.1, camera_position.2)));
         actions.camera.param.push(OpsCameraModify::ops(camera, ECameraModify::FreeMode( freemode ) ));
         actions.camera.param.push(OpsCameraModify::ops( camera, ECameraModify::Active( true )));

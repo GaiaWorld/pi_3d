@@ -19,7 +19,7 @@ impl DemoShadow {
         actions: &mut pi_3d::ActionSets,
     ) -> Entity {
         let shadow = commands.spawn_empty_id(); 
-        actions.shadow.create.push(OpsShadowGenerator::ops(shadow, scene, light, pass));
+        actions.shadow.create.push(OpsShadowGenerator::ops(shadow, scene, light, pass, Entity::null()));
         actions.shadow.param.push(OpsShadowGeneratorParam::Bias(shadow, 20. / 1024. * 0.001));
         actions.shadow.param.push(OpsShadowGeneratorParam::NormalBias(shadow, 20. / 1024. * 0.001));
         actions.shadow.param.push(OpsShadowGeneratorParam::ShadowFrustumSize(shadow, 20.0));

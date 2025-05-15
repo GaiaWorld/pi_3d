@@ -13,20 +13,39 @@ use super::{
     graphic::*,
     command::*,
 };
+
+pub fn sys_create_subgraph(
+    mut cmds: ResMut<ActionListSubGraphCreate>,
+    mut graphic: ResMut<PiRenderGraph>,
+    mut error: ResMut<ErrorRecord>,
+    mut alter: Alter<(), (), (GraphId, BundleEntity), ()>,
+) {
+    cmds.drain().for_each(|OpsSubGraphCreate(entity, name)| {
+        if let Ok(graph) = graphic.add_sub_graph(name.clone()) {
+            let _ = alter.alter(entity, (GraphId(graph), ActionEntity::init()));
+            // log::error!("SubGraph: {:?}", (entity, name));
+        } else {
+            error.record(entity, ErrorRecord::ERROR_SUB_GRAPHIC_ERROR);
+        }
+    });
+}
+
 pub fn sys_create_renderer(
     mut cmds: ResMut<ActionListRendererCreate>,
     mut graphic: ResMut<PiRenderGraph>,
-    mut viewers: Query<(&SceneID, &mut ViewerRenderersInfo, &mut DirtyViewerRenderersInfo)>,
+    mut viewers: Query<(&SceneID, &mut ViewerRenderersInfo, &mut DirtyViewerRenderersInfo, &ViewerGraphID)>,
     mut error: ResMut<ErrorRecord>,
     mut alter: Alter<(), (), (GraphId, SceneID, RendererBundle), ()>,
     // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_create_renderer"));
     cmds.drain().for_each(|OpsRendererCreate(entity, name, id_viewer, passtag, transparent)| {
-        if let Ok((sceneid, mut viewerrenderinfo, mut viewerflag)) = viewers.get_mut(id_viewer) {
+        if let Ok((sceneid, mut viewerrenderinfo, mut viewerflag, graph)) = viewers.get_mut(id_viewer) {
             let render_node = RenderNode::new(entity);
-            match graphic.add_node(name, render_node, NodeId::null()) {
+            
+            match graphic.add_node(name, render_node, graph.0) {
                 Ok(nodeid) => {
+                    // log::error!("Node: {:?} in Graph {:?}", &nodeid, &graph.0);
                     // if let Some(mut cmd) = commands.get_entity(entity) {
                         viewerrenderinfo.add(entity, passtag);
                         *viewerflag = DirtyViewerRenderersInfo;
@@ -127,7 +146,7 @@ pub fn sys_act_renderer_modify(
             OpsRendererCommand::Active(entity, val) => {
                 if let Ok((mut comp, _, nodeid, _)) = renderers.get_mut(entity) {
                     comp.enable = RendererEnable(val);
-                    graphic.set_enable(nodeid.0, val);
+                    // graphic.set_enable(nodeid.0, val);
                 }
                 // else { cmdmodifys.push(cmd) }
             },
@@ -210,19 +229,22 @@ pub fn sys_act_renderer_connect(
 }
 pub fn sys_dispose_renderer(
     mut render_graphic: ResMut<PiRenderGraph>,
-    renderers: Query<(Entity, &GraphId, &DisposeCan, &RendererRenderTargetKey), Changed<DisposeCan>>,
+    graphs: Query<(Entity, &GraphId, &DisposeCan), Changed<DisposeCan>>,
+    renderers: Query<&RendererRenderTargetKey>,
     mut error: ResMut<ErrorRecord>,
     mut performance: ResMut<Performance>,
     mut targets: ResMut<CustomRenderTargets>,
 ) {
     // performance.systems.push(String::from("sys_dispose_renderer"));
-    renderers.iter().for_each(|(entity, nodeid, flag, rtkey)| {
+    graphs.iter().for_each(|(entity, nodeid, flag)| {
         if flag.0 == false { return; }
         if let Err(err) = render_graphic.remove_node(nodeid.0) {
             error.graphic(entity, err);
         }
-        if let Some(key) = rtkey.0 {
-            targets.delete(key);
+        if let Ok(rtkey) = renderers.get(entity) {
+            if let Some(key) = rtkey.0 {
+                targets.delete(key);
+            }
         }
     });
 }
@@ -266,31 +288,5 @@ impl ActionRenderer {
         node: NodeId,
     ) -> GraphId {
         GraphId(node)
-    }
-    pub fn init_graphic_node(
-        render_graphic: &mut PiRenderGraph,
-        error: &mut ErrorRecord,
-        _id_renderer: RendererID,
-        nodeid: NodeId,
-        pre: Option<NodeId>,
-        next: Option<NodeId>,
-    ) {
-        if let Some(key_pre) = pre {
-            // log::warn!("Add Node {:?} > {:?}", key_pre, nodeid);
-            if let Err(err) = render_graphic.add_depend(key_pre, nodeid) {
-                error.graphic(_id_renderer.0, err);
-            }
-        }
-        if let Some(key_next) = next {
-            // log::warn!("Add Node {:?} > {:?}", nodeid, key_next);
-            if let Err(err) = render_graphic.add_depend(nodeid, key_next) {
-                error.graphic(_id_renderer.0, err);
-            }
-        } else {
-            // if let Err(e) = render_graphic.set_finish(nodeid, true) {
-            //     log::debug!("{:?}", e);
-            // }
-        }
-        // render_graphic.dump_graphviz();
     }
 }

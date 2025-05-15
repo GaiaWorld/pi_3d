@@ -4,10 +4,10 @@ use pi_scene_math::{Number, Vector3};
 
 use super::camera::*;
 
-pub struct OpsCameraCreation(pub(crate) Entity, pub(crate) Entity);
+pub struct OpsCameraCreation(pub(crate) Entity, pub(crate) Entity, pub(crate) Entity);
 impl OpsCameraCreation {
-    pub fn ops(scene: Entity, entity: Entity) -> Self {
-        Self(scene, entity)
+    pub fn ops(scene: Entity, entity: Entity, name: Entity) -> Self {
+        Self(scene, entity, name)
     }
 }
 pub type ActionListCameraCreate = ActionList<OpsCameraCreation>;

@@ -17,15 +17,16 @@ pub fn sys_create_camera(
     mut commands: Commands,
     // mut dynallocator: ResMut<ResBindBufferAllocator>,
     mut dynallocator: ResMut<ResBindBufferAllocatorStatic>,
-    mut errors: ResMut<ErrorRecord>,
-    // mut performance: ResMut<Performance>,
+    graphs: Query<&GraphId>,
 ) {
     // performance.systems.push(String::from("sys_create_camera"));
-    cmds.drain().for_each(|OpsCameraCreation(scene, entity)| {
+    cmds.drain().for_each(|OpsCameraCreation(scene, entity, graph)| {
         if let Some(mut commands) = commands.get_entity(entity) {
-
+            let graph = if let Ok(node) = graphs.get(graph) { node.0.clone() } else { NodeId::null() };
             let bindviewer = BindViewer::new(&mut dynallocator);
-            let bundle = (bindviewer, ActionCamera::init(scene));
+            
+            // log::error!("Camera SubGraph: {:?}", (entity, graph));
+            let bundle = (ViewerGraphID(graph), bindviewer, ActionCamera::init(scene));
             commands.insert(bundle);
         }
     })
