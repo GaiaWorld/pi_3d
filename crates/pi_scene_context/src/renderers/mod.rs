@@ -156,7 +156,7 @@ impl Plugin for PluginRenderer {
         app
         .configure_set(StageD3, StageRenderer::RenderCreate      .in_set(ERunStageChap::Create).after(StageCamera::_CameraCreate).after(StageShadowGenerator::_ShadowCreate))
         .configure_set(StageD3, StageRenderer::_RenderCreate     .in_set(ERunStageChap::Create).after(StageRenderer::RenderCreate))
-        .configure_set(StageD3, StageRenderer::RenderStateCommand.in_set(ERunStageChap::Modify).in_set(FrameDataPrepare))
+        .configure_set(StageD3, StageRenderer::RenderStateCommand.in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).before(GraphBuild))
         .configure_set(StageD3, StageRenderer::RendererCommand   .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).before(GraphBuild))
         .configure_set(StageD3, StageRenderer::PassBindGroup     .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare))
         .configure_set(StageD3, StageRenderer::PassBindGroups    .in_set(ERunStageChap::Collect).in_set(FrameDataPrepare).after(StageRenderer::PassBindGroup))

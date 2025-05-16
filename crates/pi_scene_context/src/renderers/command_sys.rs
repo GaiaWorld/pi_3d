@@ -146,57 +146,48 @@ pub fn sys_act_renderer_modify(
             OpsRendererCommand::Active(entity, val) => {
                 if let Ok((mut comp, _, nodeid, _)) = renderers.get_mut(entity) {
                     comp.enable = RendererEnable(val);
-                    // graphic.set_enable(nodeid.0, val);
+                    graphic.set_enable(nodeid.0, val);
                 }
-                // else { cmdmodifys.push(cmd) }
             },
             OpsRendererCommand::Blend(entity, val) => {
                 if let Ok((mut comp, _, _, _)) = renderers.get_mut(entity) {
                     comp.blend = RendererBlend(val);
                 }
-                // else { cmdmodifys.push(cmd) }
             },
             OpsRendererCommand::ColorClear(entity, val) => {
                 if let Ok((mut comp, _, _, _)) = renderers.get_mut(entity) {
                     comp.color_clear = val;
                 }
-                // else { cmdmodifys.push(cmd) }
             },
             OpsRendererCommand::DepthClear(entity, val) => {
                 if let Ok((mut comp, _, _, _)) = renderers.get_mut(entity) {
                     comp.depth_clear = val;
                 }
-                // else { cmdmodifys.push(cmd) }
             },
             OpsRendererCommand::StencilClear(entity, val) => {
                 if let Ok((mut comp, _, _, _)) = renderers.get_mut(entity) {
                     comp.stencil_clear = val;
                 }
-                // else { cmdmodifys.push(cmd) }
             },
             OpsRendererCommand::AutoClearColor(entity, val) => {
                 if let Ok((mut comp, _, _, _)) = renderers.get_mut(entity) {
                     comp.auto_clear_color = RenderAutoClearColor(val);
                 }
-                // else { cmdmodifys.push(cmd) }
             },
             OpsRendererCommand::AutoClearDepth(entity, val) => {
                 if let Ok((mut comp, _, _, _)) = renderers.get_mut(entity) {
                     comp.auto_clear_depth = RenderAutoClearDepth(val);
                 }
-                // else { cmdmodifys.push(cmd) }
             },
             OpsRendererCommand::AutoClearStencil(entity, val) => {
                 if let Ok((mut comp, _, _, _)) = renderers.get_mut(entity) {
                     comp.auto_clear_stencil = RenderAutoClearStencil(val);
                 }
-                // else { cmdmodifys.push(cmd) }
             },
             OpsRendererCommand::Viewport(entity, x, y, z, w, mind, maxd) => {
                 if let Ok((mut comp, _, _, _)) = renderers.get_mut(entity) {
                     comp.viewport = RenderViewport(x, y, z, w, mind, maxd);
                 }
-                // else { cmdmodifys.push(cmd) }
             }
         }
     });
@@ -207,7 +198,7 @@ pub fn sys_act_renderer_connect(
     mut render_graphic: ResMut<PiRenderGraph>,
     renderers: Query<&GraphId>,
     mut error: ResMut<ErrorRecord>,
-    mut performance: ResMut<Performance>,
+    // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_act_renderer_connect"));
     cmds.drain().for_each(|OpsRendererConnect(before, after, isdisconnect)| {
@@ -232,8 +223,8 @@ pub fn sys_dispose_renderer(
     graphs: Query<(Entity, &GraphId, &DisposeCan), Changed<DisposeCan>>,
     renderers: Query<&RendererRenderTargetKey>,
     mut error: ResMut<ErrorRecord>,
-    mut performance: ResMut<Performance>,
     mut targets: ResMut<CustomRenderTargets>,
+    // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_dispose_renderer"));
     graphs.iter().for_each(|(entity, nodeid, flag)| {
