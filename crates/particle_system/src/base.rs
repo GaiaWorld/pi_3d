@@ -810,7 +810,7 @@ impl ParticleSystemEmission {
                     let busrt_interval = (burst[3] * 1000.) as usize;
     
                     if busrt_time < duration as usize {
-                        let needloopcount = (duration as usize - busrt_time) / busrt_interval;
+                        let needloopcount = (duration as usize - busrt_time + busrt_interval - 1) / busrt_interval;
                         if needloopcount > self.burst_loop_count_record[idx] {
                             newcount += (needloopcount - self.burst_loop_count_record[idx]) * busrt_count;
                         }
@@ -830,7 +830,7 @@ impl ParticleSystemEmission {
                 let busrt_interval = (burst[3] * 1000.) as usize;
     
                 if busrt_time < loop_progress_time as usize {
-                    let needloopcount = (loop_progress_time as usize - busrt_time) / busrt_interval;
+                    let needloopcount = (loop_progress_time as usize - busrt_time + busrt_interval - 1) / busrt_interval;
                     if needloopcount > self.burst_loop_count_record[idx] {
                         newcount += (needloopcount - self.burst_loop_count_record[idx]) * busrt_count;
                     }
@@ -852,6 +852,8 @@ impl ParticleSystemEmission {
                 }
             }
         }
+        
+        // log::error!("{:?}", (isloop, time.total_running_ms, duration, newcount));
         ids.create_new(newcount);
     }
 }
