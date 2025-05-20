@@ -149,9 +149,10 @@ impl Node for RenderNode {
                         let rtwidth  = (rect.max.x - rect.min.x).abs() as u32;
                         let rtheight = (rect.max.y - rect.min.y).abs() as u32;
                         // log::error!(">>>>> {:?}", (param.rendersize.force_allocate_srt(), (rtwidth, param.rendersize.width()) , (rtheight, param.rendersize.height())));
-                        if !param.rendersize.force_allocate_srt()
-                            && (rtwidth == param.rendersize.width() && rtheight == param.rendersize.height())
-                        {
+                        let deltaw = rtwidth as i32 - param.rendersize.width() as i32;
+                        let deltah = rtheight as i32 - param.rendersize.height() as i32;
+                        let sizeok = 0 <= deltaw && deltaw <= 1 && 0 <= deltah && deltah <= 1;
+                        if !param.rendersize.force_allocate_srt() && sizeok {
                             match (param.depthstencilformat.0.val(), &srt.target().depth) {
                                 (Some(format), Some(depthview)) => {
                                     if depthview.1.format() == format {

@@ -622,6 +622,7 @@ use super::{
 
             let mut count_vertex = 0;
             let mut countmesh = 0;
+            let mut clear_draw: Option<DrawObj> = None;
             opaque_list.clear();
             transparent_list.clear();
             if let (Ok((list_model, viewposition, viewdirection, disposed, distancecomp)), Ok((batchopaque, batchtransparent))) = (viewers.get(id_viewer.0), scenes.get(idscene.0)) {
@@ -637,7 +638,7 @@ use super::{
                     if let Ok(
                         (
                             globalenable, nodeposition, rendersort, instancessortinfo,
-                            passids, idgeometry, indicerange, vertexrenage, geoenable
+                            passids, idgeometry, indicerange, vertexrange, geoenable
                         )
                     ) = models.get(id_obj.clone()) {
                         let passids = &passids.0;
@@ -661,10 +662,28 @@ use super::{
                                             }
                                         }
 
-                                        collect_draw(
-                                            is_transparent, index, rendergeo, bindgroups, pipeline, indicerange, vertexrenage, distance,
-                                            rendersort, &mut opaque_list, &mut transparent_list, &instancessortinfo, distancecomp, &viewposition, &viewdirection
-                                        );
+                                        if *id_obj != renderer.mesh_as_clear {
+                                            collect_draw(
+                                                is_transparent, index, rendergeo, bindgroups, pipeline, indicerange, vertexrange, distance,
+                                                rendersort, &mut opaque_list, &mut transparent_list, &instancessortinfo, distancecomp, &viewposition, &viewdirection
+                                            );
+                                        } else {
+                                            let vertex = vertexrange.apply(rendergeo);
+                                            let indices = indicerange.apply(rendergeo);
+                                            let vertexcount = if let Some(indices) = &indices {
+                                                indices.value_range().end - indices.value_range().start
+                                            } else { vertex.end - vertex.start };
+                                            if vertexcount == 0 { } else {
+                                                clear_draw = Some(DrawObj {
+                                                    pipeline: Some(pipeline.clone()),
+                                                    bindgroups: bindgroups.groups(),
+                                                    vertices: rendergeo.vertices(),
+                                                    instances: rendergeo.instances(),
+                                                    vertex: vertexrange.apply(rendergeo),
+                                                    indices,
+                                                });
+                                            }
+                                        }
                                     } else {
                                         // log::error!("PassDraw Renderer Error {:?}", (passtag));
                                     }
@@ -685,6 +704,10 @@ use super::{
                     }
                 }
 
+                if let Some(draw) = clear_draw {
+                    renderer.draws.list.push(Arc::new(draw));
+                }
+
                 opaque_list.sort_by(|a, b| DrawTmpRef::cmp_opaque(a, b));
                 transparent_list.sort_by(|a, b| DrawTmpRef::cmp_transparent(a, b));
 
@@ -694,6 +717,7 @@ use super::{
                 // log::error!("Transparent: {:?}", transparent_list.len());
                 lastinsdata.reset();
                 lastdraw = None;
+                
                 opaque_list.drain(..).for_each(|drawinfo| {
                     // log::warn!("{:?}", tmp);
                     if let Some(tempdraw) = lastdraw.take() {

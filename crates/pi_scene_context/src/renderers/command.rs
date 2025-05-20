@@ -49,6 +49,7 @@ pub enum OpsRendererCommand {
     AutoClearDepth(Entity, bool),
     AutoClearStencil(Entity, bool),
     Viewport(Entity, f32, f32, f32, f32, f32, f32),
+    ClearLinkMesh(Entity, Entity),
 }
 
 pub type ActionListRendererModify = ActionList<OpsRendererCommand>;

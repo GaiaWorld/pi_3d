@@ -295,12 +295,14 @@ impl RendererRenderTarget {
 #[derive(Component, Default)]
 pub struct Renderer {
     pub ready: bool,
+    pub mesh_as_clear: Entity,
     pub draws: DrawList3D,
     pub vertexs: usize,
 }
 impl Renderer {
     pub fn new() -> Self {
         Self {
+            mesh_as_clear: Entity::null(),
             draws: DrawList3D { list: vec![], viewport: (0., 0., 1., 1., 0., 1.) },
             ready: false,
             vertexs: 0,
