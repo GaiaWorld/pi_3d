@@ -714,7 +714,7 @@ pub fn sys_update_buffer(
             entity, _attributes, mut state, _time, ids, particlelocal, directions, emitmatrixs
         )| {
             let particle_count = ids.actives.len();
-            log::warn!("sys_update_buffer A {:?}", particle_count);
+            // log::warn!("sys_update_buffer A {:?}", particle_count);
 
             // if time.running_delta_ms <= 0 { return; }
             if let Ok((enable, idgeo, _instanceattributes, mut instancesort, gmatrix, matidxs)) = meshes.get_mut(entity) {
@@ -856,7 +856,7 @@ pub fn sys_update_buffer(
                                 index += 1;
                             });
 
-                            log::error!("Particel: {:?}", (ids.actives.len(), index));
+                            // log::error!("Particel: {:?}", (ids.actives.len(), index));
                             // bytemuck::cast_slice(&collect_float.as_slice()[0..(index * stripe)]).iter().for_each(|v| { instancesort.data.push(*v); });
                             instancesort.ranges.push((0, Range { start: 0, end: index as u32 }, gmatrix.xyz()));
                             instancesort.count = index;
