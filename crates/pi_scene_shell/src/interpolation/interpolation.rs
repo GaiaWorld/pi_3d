@@ -261,7 +261,7 @@ pub fn interpolation_gradient(amount: f32, gradient: &Vec<IGradient>) -> f32 {
 /**
  * 一维曲线插值
  */
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct FloatInterpolation {
     pub constant0: Option<InterpolationData1>,
     pub constant1: Option<InterpolationData1>,

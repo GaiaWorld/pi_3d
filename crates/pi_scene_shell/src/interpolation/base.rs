@@ -59,7 +59,7 @@ impl Default for BaseRandom {
 /**
  * 曲线插值模式
  */
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Debug)]
 pub enum EInterpolationCurveMode {
     /**
      * 静态数值
@@ -206,7 +206,7 @@ pub type ThreeParamCurve = [ICurve; 3];
 pub type FourParamCurve = [ICurve; 4];
 pub type FourGradient = [Vec<IGradient>; 4];
 
-
+#[derive(Clone, Debug)]
 pub enum ParamInfo {
     OneParamInfo(OneParamInfo),
     ThreeParamInfo(ThreeParamInfo),
@@ -218,7 +218,7 @@ impl Default for ParamInfo {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum OneParamInfo {
     TInterpolateConstant(OneParam),
     TInterpolateTwoConstants(OneParam, OneParam),
@@ -232,6 +232,7 @@ impl Default for OneParamInfo {
     }
 }
     
+#[derive(Clone, Debug)]
 pub enum ThreeParamInfo {
     TInterpolateConstant(ThreeParam),
     TInterpolateTwoConstants(ThreeParam, ThreeParam),

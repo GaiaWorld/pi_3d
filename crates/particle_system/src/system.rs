@@ -700,6 +700,7 @@ pub fn sys_update_buffer(
     // let mut l_rotation = Rotation3::identity();
     let mut l_quaternion = SQuaternion::<Number>::identity();
     let v3zero = Vector3::zeros();
+    let v3one = Vector3::new(1., 1., 1.);
     let mut h = Vector4::zeros();
     let mut hh = Vector4::zeros();
     let mut emitposition = Vector3::zeros();
@@ -819,8 +820,9 @@ pub fn sys_update_buffer(
                                     );
 
                                     if f_lc {
-                                        calc_local_strentched_call(&g_velocity, calculator.stretched_length_scale, calculator.stretched_velocity_scale * vlen, &mut refwmatrix, &mut reflmatrix, &mut localmatrix);
+                                        calc_local_strentched_call(&scaling, &g_velocity, calculator.stretched_length_scale, calculator.stretched_velocity_scale * vlen, &mut refwmatrix, &mut reflmatrix, &mut localmatrix);
                                         CoordinateSytem3::mul_to(&resultmatrix, &localmatrix, &mut refwmatrix);
+                                        // refwmatrix.copy_from(&resultmatrix);
                                         &refwmatrix
                                     } else {
                                         &resultmatrix

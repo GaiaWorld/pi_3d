@@ -1,6 +1,6 @@
 use pi_scene_shell::prelude::*;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct SizeOverLifetime {
     pub scaling_interpolate: ScalingInterpolate,
 }

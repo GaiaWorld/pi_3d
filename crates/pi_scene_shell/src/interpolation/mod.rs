@@ -68,7 +68,7 @@ pub fn interpolate_four(
     *result = Color4::new(r, g, b, a);
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Vector3Interpolate {
     pub x: FloatInterpolation,
     pub y: FloatInterpolation,
@@ -200,6 +200,8 @@ impl TranslationInterpolate {
 
     pub fn format(config: &ParamInfo, target: &mut TranslationInterpolate) {
         if let ParamInfo::OneParamInfo(_info) = &config {
+            target.is_axis = false;
+        } else {
             target.is_axis = true;
         }
 
@@ -243,6 +245,8 @@ impl RotationInterpolate {
 
     pub fn format(config: &ParamInfo, target: &mut RotationInterpolate) {
         if let ParamInfo::OneParamInfo(_) = &config {
+            target.is_axis = false;
+        } else {
             target.is_axis = true;
         }
 
@@ -250,7 +254,7 @@ impl RotationInterpolate {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ScalingInterpolate {
     pub(crate) is_axis: bool,
     pub(crate) vector3_interpolate: Vector3Interpolate,
@@ -281,6 +285,8 @@ impl ScalingInterpolate {
 
     pub fn format(config: &ParamInfo, target: &mut ScalingInterpolate) {
         if let ParamInfo::OneParamInfo(_) = &config {
+            target.is_axis = false;
+        } else {
             target.is_axis = true;
         }
 
