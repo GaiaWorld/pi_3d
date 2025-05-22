@@ -1,5 +1,5 @@
 
-use std::{ops::{Deref, DerefMut}, sync::Arc};
+use std::{ops::{Deref, DerefMut}, ptr::replace, sync::Arc};
 
 use pi_scene_shell::prelude::*;
 use pi_futures::BoxFuture;
@@ -69,7 +69,7 @@ pub struct QueryParam0<'w> (
 
 pub struct RenderNode {
     pub renderer_id: ObjectID,
-    pub auto_srt: Option<Share<SafeTargetView>>
+    pub auto_srt: Option<(Share<Fbo>, f32, f32, f32, f32)>
 }
 impl RenderNode {
     pub fn new(renderer_id: ObjectID) -> Self {
@@ -109,13 +109,6 @@ impl Node for RenderNode {
             param, disposed, mut to_final_target, mut customrendertargetkey
         )) = query.get_mut(self.renderer_id) {
             // log::error!("GraphicNode: Build {:?}", self.renderer_id);
-    
-            if !param.enable.0 || disposed.0 {
-            // if disposed.0 {
-                output.target = input.target.clone();
-                return Ok(output);
-            }
-    
             // let (mut x, mut y, mut w, mut h, min_depth, max_depth) = renderer.draws.viewport;
             let need_depth = param.depthstencilformat.need_depth();
             let to_final_target = to_final_target.deref_mut();
@@ -148,11 +141,16 @@ impl Node for RenderNode {
                         let rect = srt.rect();
                         let rtwidth  = (rect.max.x - rect.min.x).abs() as u32;
                         let rtheight = (rect.max.y - rect.min.y).abs() as u32;
-                        // log::error!(">>>>> {:?}", (param.rendersize.force_allocate_srt(), (rtwidth, param.rendersize.width()) , (rtheight, param.rendersize.height())));
-                        let deltaw = rtwidth as i32 - param.rendersize.width() as i32;
-                        let deltah = rtheight as i32 - param.rendersize.height() as i32;
+                        let forcenew = param.rendersize.force_allocate_srt();
+                        let rw = param.rendersize.width();
+                        let rh = param.rendersize.height();
+                        let deltaw = (rtwidth as i32 - rw as i32).abs();
+                        let deltah = (rtheight as i32 - rh as i32).abs();
                         let sizeok = 0 <= deltaw && deltaw <= 1 && 0 <= deltah && deltah <= 1;
-                        if !param.rendersize.force_allocate_srt() && sizeok {
+                        if !forcenew && !sizeok {
+                            log::error!(">>>>> {:?}", (forcenew, (rtwidth, rw) , (rtheight, rh)));  
+                        }
+                        if !forcenew && sizeok {
                             match (param.depthstencilformat.0.val(), &srt.target().depth) {
                                 (Some(format), Some(depthview)) => {
                                     if depthview.1.format() == format {
@@ -199,7 +197,13 @@ impl Node for RenderNode {
                         res
                     };
 
-                    self.auto_srt = Some(srt.clone());
+                    let width = srt.rect().max.x - srt.rect().min.x;
+                    let height = srt.rect().max.y - srt.rect().min.y;
+                    let x = srt.rect().min.x as f32;
+                    let y = srt.rect().min.y as f32;
+                    let w = width as f32;
+                    let h = height as f32;
+                    self.auto_srt = Some((srt.target().clone(), x, y, w, h));
                     output.target = Some(srt.clone());
                 },
             };
@@ -221,7 +225,7 @@ impl Node for RenderNode {
     ) -> BoxFuture<'a, Result<(), String>> {
         // let time = pi_time::Instant::now();
 
-        let mut output = SimpleInOut::default();
+        let auto_srt = self.auto_srt.take();
 
         // let param: QueryParam = param.get(world);
         let (screen, _atlas_allocator, query, engineopt) = (&param.0, &param.1, &param.2, &param.3);
@@ -330,10 +334,14 @@ impl Node for RenderNode {
                 },
                 RendererRenderTarget::None(_) => {
                     // log::warn!("Graphic None: {:?}", (self.renderer_id, clear_color_ops));
-                    let srt = match &self.auto_srt {
-                        Some(srt) => {
-                            if srt.target().colors[0].1.format() == param.colorformat.0.val() {
-                                srt
+                    let target = match &auto_srt {
+                        Some((target, _x, _y, _w, _h)) => {
+                            if target.colors[0].1.format() == param.colorformat.0.val() {
+                                x = _x + _w * x;
+                                y = _y + _h * y;
+                                w = _w * w;
+                                h = _h * h;
+                                target
                             } else {
                                 return Box::pin( async move { Ok(()) } );
                             }
@@ -342,20 +350,12 @@ impl Node for RenderNode {
                             return Box::pin( async move { Ok(()) } );
                         },
                     };
-                    let width = srt.rect().max.x - srt.rect().min.x;
-                    let height = srt.rect().max.y - srt.rect().min.y;
-                    x = srt.rect().min.x as f32 + width as f32 * x;
-                    y = srt.rect().min.y as f32 + height as f32 * y;
-                    w = width as f32 * w;
-                    h = height as f32 * h;
                     // can_render = true;
 
-                    output.target = Some(srt.clone());
-
-                    let view = output.target.as_ref().unwrap().target().colors[0].0.as_ref();
+                    let view = target.colors[0].0.as_ref();
                     render_color_view = view.deref().deref();
 
-                    if let Some(view) = output.target.as_ref().unwrap().target().depth.as_ref() {
+                    if let Some(view) = target.depth.as_ref() {
                         let depth_view = view.0.as_ref();
                         render_depth_view = Some(depth_view.deref().deref());
                     } else {
@@ -426,8 +426,6 @@ impl Node for RenderNode {
                 }
             }
         }
-        
-        self.auto_srt = None;
 
         return Box::pin( async move { Ok(()) } );
     }
