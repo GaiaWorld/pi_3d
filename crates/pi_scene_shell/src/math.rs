@@ -366,12 +366,12 @@ pub fn calc_local_strentched<'a>(_g_velocity: &'a Vector3, length_scale: Number,
 /// 速度方向为x轴正方向,
 /// 速度向量长度为
 #[inline(always)]
-pub fn calc_local_strentched_call<'a>(_scale: &'a Vector3, _g_velocity: &'a Vector3, length_scale: Number, length_modify: Number, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
+pub fn calc_local_strentched_call<'a>(_scale: &'a Vector3, _l_velocity: &'a Vector3, length_scale: Number, length_modify: Number, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
     result.fill_with_identity();
     refwmatrix.fill_with_identity();
     reflmatrix.fill_with_identity();
 
-    let vlen = CoordinateSytem3::length(_g_velocity);
+    let vlen = CoordinateSytem3::length(_l_velocity);
     let dlen = length_scale + length_modify * vlen;
     // // 通过 Speed Scale 与 Length Scale 计算沿X轴的缩放
     let scaling = Vector3::new(dlen * _scale.y, 1. * _scale.x, 1. * _scale.z);

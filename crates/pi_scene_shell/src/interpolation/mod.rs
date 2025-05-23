@@ -239,7 +239,7 @@ impl RotationInterpolate {
         if self.is_axis {
             interpolate_three(&self.vector3_interpolate.x, &self.vector3_interpolate.y, &self.vector3_interpolate.z, amount, randoms, result);
         } else {
-            interpolate_translation_no_axis(&self.vector3_interpolate.x, &self.vector3_interpolate.y, &self.vector3_interpolate.z, amount, randoms, result);
+            interpolate_rotation_no_axis(&self.vector3_interpolate.x, &self.vector3_interpolate.y, &self.vector3_interpolate.z, amount, randoms, result);
         }
     }
 
@@ -279,7 +279,7 @@ impl ScalingInterpolate {
         if self.is_axis {
             interpolate_three(&self.vector3_interpolate.x, &self.vector3_interpolate.y, &self.vector3_interpolate.z, amount, randoms, result);
         } else {
-            interpolate_translation_no_axis(&self.vector3_interpolate.x, &self.vector3_interpolate.y, &self.vector3_interpolate.z, amount, randoms, result);
+            interpolate_scaling_no_axis(&self.vector3_interpolate.x, &self.vector3_interpolate.y, &self.vector3_interpolate.z, amount, randoms, result);
         }
     }
 

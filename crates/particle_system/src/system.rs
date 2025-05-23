@@ -705,6 +705,7 @@ pub fn sys_update_buffer(
     let mut hh = Vector4::zeros();
     let mut emitposition = Vector3::zeros();
     let mut g_velocity = Vector3::zeros();
+    let mut l_velocity = Vector3::zeros();
     let mut f_v = false;
     let mut f_lc = false;
 
@@ -791,6 +792,7 @@ pub fn sys_update_buffer(
                                 let direction = directions.get(*idx).unwrap();
                                 let emitmatrix = emitmatrixs.get(*idx).unwrap();
     
+                                l_velocity.copy_from(&direction.value);
                                 if f_v {
                                     h.x = direction.value.x; h.y = direction.value.y; h.z = direction.value.z; h.w = 0.;
                                     CoordinateSytem3::matrix4_mul_vector4(&emitmatrix.matrix, &h, &mut hh);
@@ -820,7 +822,7 @@ pub fn sys_update_buffer(
                                     );
 
                                     if f_lc {
-                                        calc_local_strentched_call(&scaling, &g_velocity, calculator.stretched_length_scale, calculator.stretched_velocity_scale * vlen, &mut refwmatrix, &mut reflmatrix, &mut localmatrix);
+                                        calc_local_strentched_call(&scaling, &l_velocity, calculator.stretched_length_scale, calculator.stretched_velocity_scale * vlen, &mut refwmatrix, &mut reflmatrix, &mut localmatrix);
                                         CoordinateSytem3::mul_to(&resultmatrix, &localmatrix, &mut refwmatrix);
                                         // refwmatrix.copy_from(&resultmatrix);
                                         &refwmatrix

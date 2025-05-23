@@ -108,7 +108,6 @@ impl Node for RenderNode {
         if let Ok((
             param, disposed, mut to_final_target, mut customrendertargetkey
         )) = query.get_mut(self.renderer_id) {
-            // log::error!("GraphicNode: Build {:?}", self.renderer_id);
             // let (mut x, mut y, mut w, mut h, min_depth, max_depth) = renderer.draws.viewport;
             let need_depth = param.depthstencilformat.need_depth();
             let to_final_target = to_final_target.deref_mut();
@@ -188,13 +187,7 @@ impl Node for RenderNode {
                             }
                         );
 
-                        let res = atlas_allocator.allocate( width, height, target_type.clone(), currlist.iter() );
-                        // if let Some(old) = currlist.get(0) {
-                        //     if old.target().colors[0].1.global_id().eq(&res.target().colors[0].1.global_id()) {
-                        //         log::error!(">>> Graph Node Build atlas allocate Error, exclude Not Work.")
-                        //     }
-                        // }
-                        res
+                        atlas_allocator.allocate( width, height, target_type.clone(), currlist.iter() )
                     };
 
                     let width = srt.rect().max.x - srt.rect().min.x;
