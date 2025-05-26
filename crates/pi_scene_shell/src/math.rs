@@ -293,23 +293,26 @@ pub fn calc_matrix_velocity<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g
 #[inline(always)]
 pub fn calc_matrix_strentched<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rotation: &'a SQuaternion<Number>, _g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, _l_rotation: &'a SQuaternion<Number>, _l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
 
-    matrix4_compose_no_rotation(g_scale, g_positon, refwmatrix);
+    // matrix4_compose_no_rotation(g_scale, g_positon, refwmatrix);
     
-    let vlen = CoordinateSytem3::length(_g_velocity);
-    let mut temp = if vlen > f32::EPSILON {
-        _g_velocity.scale(-1.0 / vlen)
-    } else {
-        Vector3::new(-1., 0., 0.)
-    };
-    let mut quat = SQuaternion::<Number>::identity();
-    quaternion_from_unit_vector(&Vector3::x_axis(), &temp, &mut quat);
-    temp.x = 1.;
-    temp.y = 1.;
-    temp.z = 1.;
+    // let vlen = CoordinateSytem3::length(_g_velocity);
+    // let mut temp = if vlen > f32::EPSILON {
+    //     _g_velocity.scale(-1.0 / vlen)
+    // } else {
+    //     Vector3::new(-1., 0., 0.)
+    // };
+    // let mut quat = SQuaternion::<Number>::identity();
+    // // quaternion_from_unit_vector(&Vector3::x_axis(), &temp, &mut quat);
+    // temp.x = 1.;
+    // temp.y = 1.;
+    // temp.z = 1.;
+    // log::error!("{:?}", (g_positon, l_positon));
 
-    matrix4_compose_quaternion(&temp, &quat, l_positon, reflmatrix);
+    matrix4_compose_quaternion(&g_scale, &_g_rotation, g_positon, reflmatrix);
 
-    CoordinateSytem3::mul_to(&refwmatrix, &reflmatrix, result);
+    // CoordinateSytem3::mul_to(&refwmatrix, &reflmatrix, result);
+
+    // result.copy_from(&refwmatrix);
 }
 #[inline(always)]
 pub fn calc_matrix_horizontal<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rotation: &'a SQuaternion<Number>, _g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, _l_rotation: &'a SQuaternion<Number>, l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
@@ -373,14 +376,29 @@ pub fn calc_local_strentched_call<'a>(_scale: &'a Vector3, _l_velocity: &'a Vect
 
     let vlen = CoordinateSytem3::length(_l_velocity);
     let dlen = length_scale + length_modify * vlen;
+
+    let mut temp = if vlen > f32::EPSILON {
+        _l_velocity.scale(-1.0 / vlen)
+    } else {
+        Vector3::new(-1., 0., 0.)
+    };
+    let mut quat = SQuaternion::<Number>::identity();
+    quaternion_from_unit_vector(&Vector3::x_axis(), &temp, &mut quat);
+    temp.x = 1.; temp.y = 1.; temp.z = 1.;
+    matrix4_compose_quaternion(&temp, &quat, &Vector3::zeros(), result);
+    // log::error!("{:?}", (dlen, &_scale));
+
     // // 通过 Speed Scale 与 Length Scale 计算沿X轴的缩放
     let scaling = Vector3::new(dlen * _scale.y, 1. * _scale.x, 1. * _scale.z);
     // // 局部坐标系中向x正方向移动半个单位,使面片左侧对齐坐标系原点
     let translation = Vector3::new(0.5, 0., 0.);
     // // 计算缩放位移操作矩阵
     reflmatrix.append_nonuniform_scaling_mut(&scaling);
-    refwmatrix.append_translation_mut(&translation);
-    CoordinateSytem3::mul_to(&reflmatrix, &refwmatrix, result);
+    CoordinateSytem3::mul_to(&result, &reflmatrix, refwmatrix);
+    
+    reflmatrix.fill_with_identity();
+    reflmatrix.append_translation_mut(&translation);
+    CoordinateSytem3::mul_to(&refwmatrix, &reflmatrix, result);
 }
 
 #[inline(always)]
