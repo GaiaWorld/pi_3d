@@ -308,7 +308,7 @@ pub fn calc_matrix_strentched<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, 
     // temp.z = 1.;
     // log::error!("{:?}", (g_positon, l_positon));
 
-    matrix4_compose_quaternion(&g_scale, &_g_rotation, g_positon, reflmatrix);
+    matrix4_compose_quaternion(&g_scale, &_g_rotation, g_positon, result);
 
     // CoordinateSytem3::mul_to(&refwmatrix, &reflmatrix, result);
 
