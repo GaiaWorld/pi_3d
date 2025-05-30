@@ -814,6 +814,7 @@ pub fn sys_update_buffer(
                                 let matrix = if updatebuffer {
                                     // CoordinateSytem3::rotation_matrix_from_euler_angles_toref(eulers.x, eulers.y, eulers.z, &mut l_rotation);
                                     pi_scene_shell::prelude::quaternion_from_euler_angles(eulers.x, eulers.y, eulers.z, &mut l_quaternion);
+                                    l_quaternion.normalize_mut();
                                     refwmatrix.copy_from(&emitmatrix.matrix);
                                     calc_matrix(
                                         &emitposition, &emitmatrix.scaling, &emitmatrix.rotation, &g_velocity,
@@ -835,6 +836,7 @@ pub fn sys_update_buffer(
                                     // let mut local = Matrix::identity();
                                     // CoordinateSytem3::rotation_matrix_from_euler_angles_toref(eulers.x, eulers.y, eulers.z, &mut l_rotation);
                                     pi_scene_shell::prelude::quaternion_from_euler_angles(eulers.x, eulers.y, eulers.z, &mut l_quaternion);
+                                    l_quaternion.normalize_mut();
                                     pi_scene_shell::prelude::matrix4_compose_quaternion(scaling, &l_quaternion, translation, &mut reflmatrix);
                                     // log::warn!("MAREIX: {:?}", matrix);
                                     // log::warn!("LOCAL: {:?}", local);

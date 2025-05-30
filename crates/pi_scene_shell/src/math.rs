@@ -321,6 +321,7 @@ pub fn calc_matrix_horizontal<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, 
 
     let mut l_rotation = SQuaternion::identity();
     quaternion_from_euler_angles((-90_f32).to_radians(), 0., l_euler.z, &mut l_rotation);
+    l_rotation.normalize_mut();
     matrix4_compose_quaternion(l_scale, &l_rotation, l_positon, reflmatrix);
 
     CoordinateSytem3::mul_to(&refwmatrix, &reflmatrix, result);
@@ -332,6 +333,7 @@ pub fn calc_matrix_vertical<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g
 
     let mut l_rotation = SQuaternion::identity();
     quaternion_from_euler_angles(0., l_euler.y, l_euler.z, &mut l_rotation);
+    l_rotation.normalize_mut();
     matrix4_compose_quaternion(l_scale, &l_rotation, l_positon, reflmatrix);
 
     CoordinateSytem3::mul_to(&refwmatrix, &reflmatrix, result);
@@ -384,15 +386,21 @@ pub fn calc_local_strentched_call<'a>(_scale: &'a Vector3, _l_velocity: &'a Vect
     };
     let mut quat = SQuaternion::<Number>::identity();
     quaternion_from_unit_vector(&Vector3::x_axis(), &temp, &mut quat);
+    quat.normalize_mut();
     temp.x = 1.; temp.y = 1.; temp.z = 1.;
     matrix4_compose_quaternion(&temp, &quat, &Vector3::zeros(), result);
     // log::error!("{:?}", (dlen, &_scale));
+    
+    // quaternion_from_euler_angles(0., 0., (-90_f32).to_radians(), &mut quat);
+    // matrix4_compose_quaternion(&temp, &quat, &Vector3::zeros(), reflmatrix);
+    // CoordinateSytem3::mul_to(&reflmatrix, &refwmatrix, result);
 
     // // 通过 Speed Scale 与 Length Scale 计算沿X轴的缩放
     let scaling = Vector3::new(dlen * _scale.y, 1. * _scale.x, 1. * _scale.z);
     // // 局部坐标系中向x正方向移动半个单位,使面片左侧对齐坐标系原点
     let translation = Vector3::new(0.5, 0., 0.);
     // // 计算缩放位移操作矩阵
+    reflmatrix.fill_with_identity();
     reflmatrix.append_nonuniform_scaling_mut(&scaling);
     CoordinateSytem3::mul_to(&result, &reflmatrix, refwmatrix);
     
@@ -486,12 +494,18 @@ pub fn quaternion_from_unit_vector(axis: &nalgebra::Unit<Vector3>, vec_to: &Vect
             // nalgebra::Quaternion::new(0., 0.0, -1.0 * axis.z, axis.y)
         }
     } else {
+        let x = axis.y * vec_to.z - axis.z * vec_to.y;
+        let y = axis.z * vec_to.x - axis.x * vec_to.z;
+        let z = axis.x * vec_to.y - axis.y * vec_to.x;
         let temp = Vector3::cross(axis, vec_to);
         // nalgebra::Quaternion::new(r, temp.x, temp.y, temp.z)
         quat.w = r;
-        quat.i = temp.x;
-        quat.j = temp.y;
-        quat.k = temp.z;
+        // quat.i = temp.x;
+        // quat.j = temp.y;
+        // quat.k = temp.z;
+        quat.i = x;
+        quat.j = y;
+        quat.k = z;
     };
     // quat
 }
