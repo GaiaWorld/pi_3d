@@ -14,7 +14,7 @@ use pi_render::{
 
 use crate::{prelude::{BindDefines, TBindDefine}, run_stage::EngineCustomPlugins, shader::*};
 
-use super::BindEffectTextureInfo;
+use super::BindEffectTextureInfoAndTilloff;
 
 #[derive(Clone)]
 pub struct ShaderBindEffectValueArr {
@@ -116,7 +116,7 @@ impl ShaderBindEffectValueArr {
         } else {
             let step = 4 * 4;
             let item_size = (total_size + step - 1) / step * step;
-            let maxcount = maxlen_material_array.min(limit.max_uniform_buffer_binding_size / item_size).min(limit.max_uniform_buffer_binding_size / BindEffectTextureInfo::ITEM_SIZE as u32);
+            let maxcount = maxlen_material_array.min(limit.max_uniform_buffer_binding_size / item_size).min(limit.max_uniform_buffer_binding_size / BindEffectTextureInfoAndTilloff::ITEM_SIZE as u32);
             // let maxcount = 1;
             total_size = item_size * maxcount;
             match allocator.allocate(total_size ) {

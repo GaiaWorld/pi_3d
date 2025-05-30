@@ -11,7 +11,7 @@ use pi_render::{
     rhi::sampler::EAddressMode
 };
 
-use crate::{binds::{BindEffectTextureInfo, BindEffectTextureTilloff}, prelude::EngineCustomPlugins};
+use crate::{binds::{BindEffectTextureInfoAndTilloff, BindEffectTextureTilloff}, prelude::EngineCustomPlugins};
 
 use super::{UniformPropertyName, ShaderSetBind, TUnifromShaderProperty};
 
@@ -250,7 +250,7 @@ fn texture_code(slotname: &str, bindname: &str, tex_sampler_type: &wgpu::Texture
     // }
     uv += ",";
     uv += slotname;
-    uv += BindEffectTextureInfo::SUFFIX_ADDRESS;
+    uv += BindEffectTextureInfoAndTilloff::SUFFIX_ADDRESS;
     // if engineopt.disenable_material_array == false {
         uv += "[vMatIdx]";
     // }
@@ -258,7 +258,7 @@ fn texture_code(slotname: &str, bindname: &str, tex_sampler_type: &wgpu::Texture
     
     let mut coord = String::from("");
     coord += slotname;
-    coord += BindEffectTextureInfo::SUFFIX_ADDRESS;
+    coord += BindEffectTextureInfoAndTilloff::SUFFIX_ADDRESS;
     // if engineopt.disenable_material_array == false {
         coord += "[vMatIdx]";
     // };

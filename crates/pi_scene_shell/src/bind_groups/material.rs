@@ -58,6 +58,7 @@ pub struct MaterialData {
     pub effect_value: Option<Arc<ShaderBindEffectValueArr>>,
     pub texture_info: Vec<Arc<BindEffectTextureInfo>>,
     pub texture_till: Vec<Arc<BindEffectTextureTilloff>>,
+    pub texture_infoandtilloff: Vec<Arc<BindEffectTextureInfoAndTilloff>>,
     key_bindgroup: KeyBindGroup,
     pub hash: u64,
     pub maxcount: usize,
@@ -65,8 +66,9 @@ pub struct MaterialData {
 impl MaterialData {
     pub fn new(device: &RenderDevice, key_meta: &KeyShaderMeta, meta: &Handle<ShaderEffectMeta>, allocator: &mut BindBufferAllocator, engineopt: &EngineCustomPlugins, val: Option<Arc<BindEffectTextureInfo>>, matarray: bool) -> Option<Self> {
         let mut result = None;
-        let mut texture_info = vec![];
-        let mut texture_till = vec![];
+        let mut texture_info: Vec<Arc<BindEffectTextureInfo>> = vec![];
+        let mut texture_till: Vec<Arc<BindEffectTextureTilloff>> = vec![];
+        let mut texture_infoandtilloff = vec![];
         let mut effect_value = None;
 
         let disenable_material_array = engineopt.disenable_material_array || !matarray;
@@ -77,7 +79,7 @@ impl MaterialData {
             maxcount
         } else {
             let limit = device.limits();
-            maxlen_material_array.min(limit.max_uniform_buffer_binding_size / BindEffectTextureInfo::ITEM_SIZE as u32)
+            maxlen_material_array.min(limit.max_uniform_buffer_binding_size / BindEffectTextureInfoAndTilloff::ITEM_SIZE as u32)
         };
 
         let texlen = meta.textures.len();
@@ -89,13 +91,18 @@ impl MaterialData {
             // if let Some(val) = val.clone() {
             //     texture_info.push(val);
             // } else
-            if let Some(bind) = BindEffectTextureInfo::new(maxcount, allocator, engineopt) {
-                texture_info.push(Arc::new(bind));
-            } else {
-                return result;
-            }
-            if let Some(bind) = BindEffectTextureTilloff::new(maxcount, allocator, engineopt) {
-                texture_till.push(Arc::new(bind));
+            // if let Some(bind) = BindEffectTextureInfo::new(maxcount, allocator, engineopt) {
+            //     texture_info.push(Arc::new(bind));
+            // } else {
+            //     return result;
+            // }
+            // if let Some(bind) = BindEffectTextureTilloff::new(maxcount, allocator, engineopt) {
+            //     texture_till.push(Arc::new(bind));
+            // } else {
+            //     return result;
+            // }
+            if let Some(bind) = BindEffectTextureInfoAndTilloff::new(maxcount, allocator, engineopt) {
+                texture_infoandtilloff.push(Arc::new(bind));
             } else {
                 return result;
             }
@@ -114,8 +121,12 @@ impl MaterialData {
                 key_binds.push(key);
             }
         }
-        
         for bind in texture_till.iter() {
+            if let Some(key) = bind.key_bind() {
+                key_binds.push(key);
+            }
+        }
+        for bind in texture_infoandtilloff.iter() {
             if let Some(key) = bind.key_bind() {
                 key_binds.push(key);
             }
@@ -125,6 +136,7 @@ impl MaterialData {
         effect_value.hash(&mut hasher);
         texture_info.hash(&mut hasher);
         texture_till.hash(&mut hasher);
+        texture_infoandtilloff.hash(&mut hasher);
         let hash = hasher.finish();
 
         // log::error!("{:?}", (&seq, seq.len()));
@@ -134,6 +146,7 @@ impl MaterialData {
             effect_value,
             texture_info,
             texture_till,
+            texture_infoandtilloff,
             hash,
             key_bindgroup: KeyBindGroup::new(key_binds),
             maxcount: maxcount as usize
@@ -151,6 +164,7 @@ impl MaterialData {
                 effect_value: self.effect_value.clone(),
                 texture_info: self.texture_info.clone(),
                 texture_till: self.texture_till.clone(),
+                texture_infoandtilloff: self.texture_infoandtilloff.clone(),
                 key_bindgroup: self.key_bindgroup.clone()
             })
         } else {
@@ -164,6 +178,7 @@ pub struct RefBindGroupMaterial {
     pub effect_value: Option<Arc<ShaderBindEffectValueArr>>,
     pub texture_info: Vec<Arc<BindEffectTextureInfo>>,
     pub texture_till: Vec<Arc<BindEffectTextureTilloff>>,
+    pub texture_infoandtilloff: Vec<Arc<BindEffectTextureInfoAndTilloff>>,
     matidx: u32,
     key_bindgroup: KeyBindGroup,
     pub hash: u64,
@@ -181,6 +196,9 @@ impl RefBindGroupMaterial {
         }
         if let Some(bind) = self.texture_till.get(texidx) {
             bind.update(self.matidx as usize, tilloff);
+        }
+        if let Some(bind) = self.texture_infoandtilloff.get(texidx) {
+            bind.update(self.matidx as usize, tilloff, wrap_u.to_u8(), wrap_v.to_u8(), wrap_w.to_u8(), coord);
         }
     }
     pub fn key_bind_group(&self) -> KeyBindGroup {
@@ -218,6 +236,13 @@ impl RefBindGroupMaterial {
             bind += 1;
             texidx += 1;
         }
+        texidx = 0;
+        for item in self.texture_infoandtilloff.iter() {
+            let key = &meta.textures[texidx];
+            result += item.vs_define_code(set, bind, &key.slotname).as_str();
+            bind += 1;
+            texidx += 1;
+        }
 
         result
     }
@@ -239,6 +264,13 @@ impl RefBindGroupMaterial {
         }
         texidx = 0;
         for item in self.texture_till.iter() {
+            let key = &meta.textures[texidx];
+            result += item.vs_define_code(set, bind, &key.slotname).as_str();
+            bind += 1;
+            texidx += 1;
+        }
+        texidx = 0;
+        for item in self.texture_infoandtilloff.iter() {
             let key = &meta.textures[texidx];
             result += item.vs_define_code(set, bind, &key.slotname).as_str();
             bind += 1;

@@ -212,12 +212,7 @@ impl BindEffectValues {
         self.bind.update_data(updateoffset, value);
     }
     pub fn update_texture(&self, texidx: usize, tilloff: &[f32;4], wrap_u: EAddressMode, wrap_v: EAddressMode, wrap_w: EAddressMode, coord: u8) {
-        if let Some(bind) = self.bind.texture_info.get(texidx) {
-            bind.update(self.bind.matidx() as usize, wrap_u.to_u8(), wrap_v.to_u8(), wrap_w.to_u8(), coord);
-        }
-        if let Some(bind) = self.bind.texture_till.get(texidx) {
-            bind.update(self.bind.matidx() as usize, bytemuck::cast_slice(tilloff));
-        }
+        self.bind.update_texture(texidx, bytemuck::cast_slice(tilloff), wrap_u, wrap_v, wrap_w, coord);
     }
     pub fn write_data(&self, offset: usize, value: &[u8]) {
         self.bind.update_data(offset, value);
