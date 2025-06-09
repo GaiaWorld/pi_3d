@@ -379,16 +379,16 @@ pub fn calc_local_strentched_call<'a>(_scale: &'a Vector3, _l_velocity: &'a Vect
     let vlen = CoordinateSytem3::length(_l_velocity);
     let dlen = length_scale + length_modify * vlen;
 
-    let mut temp = if vlen > f32::EPSILON {
+    let mut tempvec3 = if vlen > f32::EPSILON {
         _l_velocity.scale(-1.0 / vlen)
     } else {
         Vector3::new(-1., 0., 0.)
     };
     let mut quat = SQuaternion::<Number>::identity();
-    quaternion_from_unit_vector(&Vector3::x_axis(), &temp, &mut quat);
+    quaternion_from_unit_vector(&Vector3::x_axis(), &tempvec3, &mut quat);
     quat.normalize_mut();
-    temp.x = 1.; temp.y = 1.; temp.z = 1.;
-    matrix4_compose_quaternion(&temp, &quat, &Vector3::zeros(), result);
+    tempvec3.x = 1.; tempvec3.y = 1.; tempvec3.z = 1.;
+    matrix4_compose_quaternion(&tempvec3, &quat, &Vector3::zeros(), result);
     // log::error!("{:?}", (dlen, &_scale));
     
     // quaternion_from_euler_angles(0., 0., (-90_f32).to_radians(), &mut quat);
@@ -396,16 +396,16 @@ pub fn calc_local_strentched_call<'a>(_scale: &'a Vector3, _l_velocity: &'a Vect
     // CoordinateSytem3::mul_to(&reflmatrix, &refwmatrix, result);
 
     // // 通过 Speed Scale 与 Length Scale 计算沿X轴的缩放
-    let scaling = Vector3::new(dlen * _scale.y, 1. * _scale.x, 1. * _scale.z);
-    // // 局部坐标系中向x正方向移动半个单位,使面片左侧对齐坐标系原点
-    let translation = Vector3::new(0.5, 0., 0.);
+    tempvec3.x = dlen * _scale.y;tempvec3.y = _scale.x;tempvec3.z = _scale.z;
     // // 计算缩放位移操作矩阵
     reflmatrix.fill_with_identity();
-    reflmatrix.append_nonuniform_scaling_mut(&scaling);
+    reflmatrix.append_nonuniform_scaling_mut(&tempvec3);
     CoordinateSytem3::mul_to(&result, &reflmatrix, refwmatrix);
     
     reflmatrix.fill_with_identity();
-    reflmatrix.append_translation_mut(&translation);
+    // // 局部坐标系中向x正方向移动半个单位,使面片左侧对齐坐标系原点
+    tempvec3.x = 0.5;tempvec3.y = 0.;tempvec3.z = 0.;
+    reflmatrix.append_translation_mut(&tempvec3);
     CoordinateSytem3::mul_to(&refwmatrix, &reflmatrix, result);
 }
 

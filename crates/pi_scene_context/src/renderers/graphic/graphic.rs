@@ -113,12 +113,10 @@ impl Node for RenderNode {
             let to_final_target = to_final_target.deref_mut();
 
             if param.enable.0 && !disposed.0 {
-                let tmp = input.target.clone();
-                customrendertargetkey.0 = customrendertargets.insert_srt(tmp, customrendertargetkey.0, device, asset_samp);
-                // if let Some(target) = &input.target {
-                //     log::error!(">>> Get SRT {:?} > {:?} , {:?} RT: {:?}", _from, _id, self.renderer_id, customrendertargetkey.0);
-                // }
-                // log::error!("customrendertargetkey {:?}", &customrendertargetkey.0);
+                if customrendertargetkey.1 {
+                    let tmp = input.target.clone();
+                    customrendertargetkey.0 = customrendertargets.insert_srt(tmp, customrendertargetkey.0, device, asset_samp);
+                }
             } else {
                 output.target = input.target.clone();
                 return Ok(output);

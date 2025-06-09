@@ -10,10 +10,10 @@ impl OpsSubGraphCreate {
 }
 pub type ActionListSubGraphCreate = ActionList<OpsSubGraphCreate>;
 
-pub struct OpsRendererCreate(pub(crate) Entity, pub(crate) String, pub(crate) Entity, pub(crate) PassTag, pub(crate) bool);
+pub struct OpsRendererCreate(pub(crate) Entity, pub(crate) String, pub(crate) Entity, pub(crate) PassTag, pub(crate) bool, pub(crate) bool);
 impl OpsRendererCreate {
-    pub fn ops(entity: Entity, name: String, idviewer: Entity, passtag: PassTag, transparent: bool) -> Self {
-        Self(entity, name, idviewer, passtag, transparent)
+    pub fn ops(entity: Entity, name: String, idviewer: Entity, passtag: PassTag, transparent: bool, recordinput: bool) -> Self {
+        Self(entity, name, idviewer, passtag, transparent, recordinput)
     }
 }
 pub type ActionListRendererCreate = ActionList<OpsRendererCreate>;

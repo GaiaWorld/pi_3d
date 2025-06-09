@@ -27,6 +27,7 @@ pub struct DirtyMaterialRefs(pub SegQueue<Entity>);
 
 /// 材质被哪些实体使用
 pub type MaterialRefs = EntityRefInfo<DirtyMaterialRefs>;
+// pub type MaterialRefID = EntityConnectInfo<DirtyMaterialRefs>;
 
 #[derive(Debug, Clone, Copy)]
 pub enum UniformModifier {

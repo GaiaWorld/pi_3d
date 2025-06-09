@@ -220,7 +220,7 @@ pub struct FlagRendererParamForPipeline;
 
 /// 存储 Renderer 的渲染目标在 CustomRenderTargets 的记录
 #[derive(Clone, Component, Default)]
-pub struct RendererRenderTargetKey(pub Option<KeyRenderTarget>);
+pub struct RendererRenderTargetKey(pub Option<KeyRenderTarget>, pub bool);
 
 /// 存储 Renderer 的渲染目标数据
 #[derive(Clone, Component)]

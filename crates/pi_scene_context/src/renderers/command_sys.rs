@@ -39,7 +39,7 @@ pub fn sys_create_renderer(
     // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_create_renderer"));
-    cmds.drain().for_each(|OpsRendererCreate(entity, name, id_viewer, passtag, transparent)| {
+    cmds.drain().for_each(|OpsRendererCreate(entity, name, id_viewer, passtag, transparent, recordinput)| {
         if let Ok((sceneid, mut viewerrenderinfo, mut viewerflag, graph)) = viewers.get_mut(id_viewer) {
             let render_node = RenderNode::new(entity);
             
@@ -53,7 +53,7 @@ pub fn sys_create_renderer(
 
                         let bundle = (
                             GraphId(nodeid), sceneid.clone(),
-                            ActionRenderer::init(id_viewer, passtag, transparent)
+                            ActionRenderer::init(id_viewer, passtag, transparent, recordinput)
                         );
                         // commands.entity(entity).insert(bundle);
                         let _ = alter.alter(entity, bundle);
@@ -266,6 +266,7 @@ impl ActionRenderer {
         id_viewer: Entity,
         passtag: PassTag,
         transparent: bool,
+        recordinput: bool,
     ) -> RendererBundle {
         (
             ActionEntity::init(),
@@ -275,7 +276,7 @@ impl ActionRenderer {
                 RendererParam::new(transparent),
                 FlagRendererParamForPipeline,
                 RendererRenderTarget::None(None),
-                RendererRenderTargetKey(None),
+                RendererRenderTargetKey(None, recordinput),
                 ViewerID(id_viewer),
                 Postprocess::default(),
             )
