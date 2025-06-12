@@ -10,8 +10,6 @@ mod int;
 mod mat4;
 
 use crate::{ecs::*, object::{sys_dispose, sys_dispose_can}, prelude::runif_3d, run_stage::StageD3};
-// use bevy_app::{App, Plugin, Update};
-// use bevy_ecs::{schedule::{SystemSet, IntoSystemSetConfig, apply_deferred, IntoSystemConfigs}, entity::Entity};
 
 use std::marker::PhantomData;
 

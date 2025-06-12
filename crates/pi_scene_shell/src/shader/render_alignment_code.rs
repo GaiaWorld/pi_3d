@@ -58,84 +58,21 @@ impl ERenderAlignmentForShader {
             ERenderAlignmentForShader::VerticalBillboard => Self::vertical_define_code(),
         }
     }
+    const COMMON_DEFINE : &'static str  = include_str!("./renderalignment/common.hlsl");
+    const COMMON_RUNNING: &'static str  = include_str!("./renderalignment/running.hlsl");
     fn _running_code() -> String {
-        return String::from("
-        if (uAlignment == ALIGNMENT_VIEW) {
-            PI_ObjectToWorld = PI_ObjectToWorld * PI_MATRIX_V_R_INV;
-        }
-        if (uAlignment == ALIGNMENT_FACING) {
-            PI_ObjectToWorld = rotMatrixFromForward(PI_ObjectToWorld, PI_MATRIX_V_R_INV, (PI_ObjectToWorld * vec4(0., 0., 0., 1.)).xyz, PI_CAMERA_POSITION.xyz);
-        }
-        if (uAlignment == ALIGNMENT_STRETCHED) {
-            PI_ObjectToWorld = rotMatrixStretched( PI_ObjectToWorld, PI_VIEW_DIRECTION.xyz );
-        }
-        if (uAlignment == ALIGNMENT_VERTICAL) {
-            PI_ObjectToWorld = matrixVertical( PI_ObjectToWorld, PI_VIEW_DIRECTION.xyz );
-        }
-        ");
+        return String::from(Self::COMMON_RUNNING);
     }
     fn _define_code() -> String {
-        return  String::from("
-const int ALIGNMENT_VIEW = 0;
-const int ALIGNMENT_FACING = 3;
-const int ALIGNMENT_STRETCHED = 5;
-const int ALIGNMENT_VERTICAL = 7;
-mat4 rotMatrixFromForward(mat4 m, mat4 vr, vec3 position, vec3 viewpos) {
-    vec3 forward = normalize(position - viewpos);
-    vec3 up = normalize(vec3(vr * vec4(0., 1., 0., 1.)));
-    vec3 left = cross(up, forward);
-    up = cross(forward, left);
-    return m * mat4(vec4(left, 0.), vec4(up, 0.), vec4(forward, 0.), vec4(0., 0.,0., 1.));
-}
-mat4 axisMatrix(vec3 xAxis, vec3 yAxis, vec3 zAxis) {
-    return mat4(vec4(xAxis, 0.),vec4(yAxis, 0.),vec4(zAxis, 0.),vec4(0., 0., 0., 1.));
-}
-mat4 lookat(vec3 eye, vec3 target, vec3 up) {
-    target = target - eye;
-    vec3 zAxis = normalize(target);
-    vec3 xAxis = cross(up, zAxis);
-    float xSquareLength = length(xAxis);
-    if (xSquareLength < 0.000001) {
-        xAxis.x = 1.0;
-    } else {
-        xAxis = normalize(xAxis);
+        return String::from(Self::COMMON_DEFINE);
     }
-    vec3 yAxis = normalize(cross(zAxis, xAxis));
-    return axisMatrix(xAxis, yAxis, zAxis);
-}
-mat4 rotMatrixStretched(mat4 m, vec3 viewDirection) {
-    mat4 invm = inverse(m);
-    vec3 xAxis = vec3(1., 0., 0.);
-    vec3 zAxis = normalize((invm * vec4(viewDirection, 0.)).xyz);
-    vec3 yAxis = normalize(cross(zAxis, xAxis));
-    zAxis = normalize(cross(xAxis, yAxis));
-    mat4 lm = axisMatrix(xAxis, yAxis, zAxis);
-    return m * lm;
-}
-mat4 matrixVertical(mat4 m, vec3 viewDirection) {
-    mat4 invm = inverse(m);
-    vec3 yAxis = normalize((invm * vec4(vec3(0., 1., 0.), 0.)).xyz);
-    vec3 zAxis = normalize((invm * vec4(viewDirection, 0.)).xyz);
-    vec3 xAxis = normalize(cross(yAxis, zAxis));
-    zAxis = normalize(cross(xAxis, yAxis));
-    mat4 lm = axisMatrix(xAxis, yAxis, zAxis);
-    return m * lm;
-}
-        ");
-    }
+    const VIEW_RUNNING: &'static str  = include_str!("./renderalignment/view_running.hlsl");
     /// Mesh 自身CPU逻辑中移除节点树上旋转信息, shader 中应用相机的节点旋转(视口旋转的逆)
     fn view_running_code() -> String {
-        String::from(
-"
-PI_ObjectToWorld = PI_ObjectToWorld * PI_MATRIX_V_R_INV;
-"            
-        )
+        String::from(Self::VIEW_RUNNING)
     }
     fn view_define_code() -> String {
-        String::from(
-"
-"            
-        )
+        String::from("")
     }
 //     ///
 //     /// Mesh 自身CPU逻辑中移除节点树上旋转信息, shader 中无特殊处理
@@ -164,26 +101,14 @@ PI_ObjectToWorld = PI_ObjectToWorld * PI_MATRIX_V_R_INV;
 // "            
 //         )
 //     }
+    const FACING_DEFINE: &'static str  = include_str!("./renderalignment/facing_define.hlsl");
+    const FACING_RUNNING: &'static str = include_str!("./renderalignment/facing_running.hlsl");
     /// Mesh 自身CPU逻辑中移除节点树上旋转信息, shader 应用粒子指向相机的方向 (与直接使用相机旋转不同)
     fn facing_running_code() -> String {
-        String::from(
-"
-PI_ObjectToWorld = rotMatrixFromForward(PI_ObjectToWorld, PI_MATRIX_V_R_INV, (PI_ObjectToWorld * vec4(0., 0., 0., 1.)).xyz, PI_CAMERA_POSITION.xyz);
-"            
-        )
+        String::from(Self::FACING_RUNNING)
     }
     fn facing_define_code() -> String {
-        String::from(
-"
-mat4 rotMatrixFromForward(mat4 m, mat4 vr, vec3 position, vec3 viewpos) {
-    vec3 forward = normalize(position - viewpos);
-    vec3 up = normalize(vec3(vr * vec4(0., 1., 0., 1.)));
-    vec3 left = cross(up, forward);
-    up = cross(forward, left);
-    return m * mat4(vec4(left, 0.), vec4(up, 0.), vec4(forward, 0.), vec4(0., 0.,0., 1.));
-}
-"            
-        )
+        String::from(Self::FACING_DEFINE)
     }
 //     /// 
 //     fn velocity_running_code() -> String {
@@ -199,75 +124,22 @@ mat4 rotMatrixFromForward(mat4 m, mat4 vr, vec3 position, vec3 viewpos) {
 //         )
 //     }
     /// 
+    const STRENTCHED_DEFINE: &'static str = include_str!("./renderalignment/vertical_define.hlsl");
+    const STRENTCHED_RUNNING: &'static str = include_str!("./renderalignment/vertical_running.hlsl");
     fn stretched_running_code() -> String {
-        String::from(
-"
-PI_ObjectToWorld = rotMatrixStretched(
-    PI_ObjectToWorld, 
-    PI_VIEW_DIRECTION.xyz
-);
-"            
-        )
+        String::from(Self::STRENTCHED_RUNNING)
     }
     /// 全局X方向与看向相机方向 求出全局Y方向, 转换到局部空间, 求出局部旋转
     fn stretched_define_code() -> String {
-        String::from(
-"
-mat4 axisMatrix(vec3 xAxis, vec3 yAxis, vec3 zAxis) {
-    return mat4(vec4(xAxis, 0.),vec4(yAxis, 0.),vec4(zAxis, 0.),vec4(0., 0., 0., 1.));
-}
-mat4 lookat(vec3 eye, vec3 target, vec3 up) {
-    target = target - eye;
-    vec3 zAxis = normalize(target);
-    vec3 xAxis = cross(up, zAxis);
-    float xSquareLength = length(xAxis);
-    if (xSquareLength < 0.000001) {
-        xAxis.x = 1.0;
-    } else {
-        xAxis = normalize(xAxis);
+        String::from(Self::STRENTCHED_DEFINE)
     }
-    vec3 yAxis = normalize(cross(zAxis, xAxis));
-    return axisMatrix(xAxis, yAxis, zAxis);
-}
-mat4 rotMatrixStretched(mat4 m, vec3 viewDirection) {
-    mat4 invm = inverse(m);
-    vec3 xAxis = vec3(1., 0., 0.);
-    vec3 zAxis = normalize((invm * vec4(viewDirection, 0.)).xyz);
-    vec3 yAxis = normalize(cross(zAxis, xAxis));
-    zAxis = normalize(cross(xAxis, yAxis));
-    mat4 lm = axisMatrix(xAxis, yAxis, zAxis);
-    return m * lm;
-}
-"            
-        )
-    }
+    const VERTICAL_RUNNING: &'static str = include_str!("./renderalignment/vertical_running.hlsl");
+    const VERTICAL_DEFINE: &'static str = include_str!("./renderalignment/vertical_define.hlsl");
     fn vertical_running_code() -> String {
-        String::from(
-"
-PI_ObjectToWorld = matrixVertical(
-    PI_ObjectToWorld,
-    PI_VIEW_DIRECTION.xyz
-);
-"            
-        )
+        String::from(Self::VERTICAL_RUNNING)
     }
     fn vertical_define_code() -> String {
-        String::from(
-"
-mat4 axisMatrix(vec3 xAxis, vec3 yAxis, vec3 zAxis) {
-    return mat4(vec4(xAxis, 0.),vec4(yAxis, 0.),vec4(zAxis, 0.),vec4(0., 0., 0., 1.));
-}
-mat4 matrixVertical(mat4 m, vec3 viewDirection) {
-    mat4 invm = inverse(m);
-    vec3 yAxis = normalize((invm * vec4(vec3(0., 1., 0.), 0.)).xyz);
-    vec3 zAxis = normalize((invm * vec4(viewDirection, 0.)).xyz);
-    vec3 xAxis = normalize(cross(yAxis, zAxis));
-    zAxis = normalize(cross(xAxis, yAxis));
-    mat4 lm = axisMatrix(xAxis, yAxis, zAxis);
-    return m * lm;
-}
-"            
-        )
+        String::from(Self::VERTICAL_DEFINE)
     }
 //     fn horizontal_running_code() -> String {
 //         String::from(

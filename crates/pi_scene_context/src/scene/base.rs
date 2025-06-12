@@ -1,5 +1,5 @@
 
-use std::sync::Arc;
+use std::{collections::BTreeSet, sync::Arc};
 
 use pi_scene_shell::prelude::*;
 
@@ -40,16 +40,16 @@ pub struct SceneItemsQueue {
     max_count: u32,
     idxs: Vec<u32>,
     idxcounter: u32,
-    items: XHashSet<Entity>,
+    items: BTreeSet<Entity>,
 }
 impl SceneItemsQueue {
     pub fn new(max_count: u32) -> Self {
-        Self { max_count, idxs: vec![], idxcounter: 0, items: XHashSet::default() }
+        Self { max_count, idxs: vec![], idxcounter: 0, items: BTreeSet::default() }
     }
     pub fn max_count(&self) -> u32 {
         self.max_count
     }
-    pub fn items(&self) -> std::collections::hash_set::Iter<'_, pi_scene_shell::prelude::Entity> {
+    pub fn items(&self) -> std::collections::btree_set::Iter<'_, pi_scene_shell::prelude::Entity> {
         self.items.iter()
     }
     pub fn add(&mut self, entity: Entity) -> SceneItemIndex {

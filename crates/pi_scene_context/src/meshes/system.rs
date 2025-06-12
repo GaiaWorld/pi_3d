@@ -4,11 +4,8 @@ use pi_scene_math::{Matrix, SQuaternion, Vector3};
 
 use crate::{
     geometry::{
-        prelude::*,
-        instance::types::{ModelInstanceAttributes, InstanceAttributeAnimated}
-    },
-    transforms::prelude::*,
-    prelude::*,
+        instance::{types::{InstanceAttributeAnimated, ModelInstanceAttributes}, InstanceSourceRefID}, prelude::*
+    }, prelude::*, transforms::prelude::*
 };
 
 use super::{
@@ -84,7 +81,7 @@ pub fn sys_instance_matidxs(
     changes.iter().for_each(|entity| {
         if let Ok((mut flag, matidxs)) = meshes.get_mut(*entity) {
             flag.set_changed();
-            flag.iter().for_each(|entity| {
+            flag.iter().for_each(|(_k, entity)| {
                 if let Ok(mut instanceattributes) = instances.get_mut(*entity) {
                     instanceattributes.update_matidxs(&matidxs.0);
                 }
@@ -339,7 +336,7 @@ pub fn sys_animator_update_instance_attribute(
 pub fn sys_dispose_about_mesh(
     items: Query<
         (
-            Entity, &DisposeReady, &PassIDs, &SceneID, 
+            Entity, &DisposeReady, &PassIDs, &SceneID, &InstanceSourceRefID,
             &GeometryID, &InstanceSourceRefs, &Mesh, &SkeletonID, &ModelInstanceAttributes
         ),
         Changed<DisposeReady>,
@@ -355,7 +352,7 @@ pub fn sys_dispose_about_mesh(
     // performance.systems.push(String::from("sys_dispose_about_mesh"));
 
     items.iter().for_each(|(
-        entity, state, passids, sceneid,
+        entity, state, passids, sceneid, refid,
         idgeo, instancerefs, _, idskin, animators
     )| {
         if state.0 == false { return; }
@@ -375,7 +372,7 @@ pub fn sys_dispose_about_mesh(
                 }
             }
         });
-        instancerefs.iter().for_each(|entity| {
+        instancerefs.iter().for_each(|(_k, entity)| {
             if let Ok(mut dispose) = disposecan.get_mut(*entity) { dispose.0 = true; }
         });
 
@@ -408,8 +405,8 @@ pub fn sys_dispose_about_pass(
 
 pub fn sys_dispose_about_instance(
     changes: ComponentChanged<DisposeReady>,
-    items: Query<(Entity, &SceneID, &DisposeReady, &InstanceMesh, &ModelInstanceAttributes)>,
-    mut viewers: Query<(&mut ModelList, &mut ForceIncludeModelList)>,
+    items: Query<(Entity, &SceneID, &DisposeReady, &InstanceMesh, &ModelInstanceAttributes, &InstanceSourceRefID)>,
+    mut viewers: Query<(&SceneID, &mut ModelList, &mut ForceIncludeModelList)>,
     mut scenes: Query<(&mut SceneColliderPool, &mut SceneBoundingPool)>,
     mut instancesources: Query<(&mut InstanceSourceRefs, &mut FlagMeshNeedRecheckForView)>,
     mut disposecan: Query<&mut DisposeCan>,
@@ -417,7 +414,7 @@ pub fn sys_dispose_about_instance(
 ) {
     // performance.systems.push(String::from("sys_dispose_about_instance"));
     changes.iter().for_each(|entity| {
-        if let Ok((entity, sceneid, state, sourceid, animators)) = items.get(*entity) {
+        if let Ok((entity, sceneid, state, sourceid, animators, refid)) = items.get(*entity) {
             if state.0 == false { return; }
 
             if let Ok(mut dispose) = disposecan.get_mut(entity) {
@@ -433,13 +430,15 @@ pub fn sys_dispose_about_instance(
 
             if let Ok((mut refs, mut flagview)) = instancesources.get_mut(sourceid.0) {
                 // log::warn!("Remove Instance");
-                refs.remove(&entity);
+                refs.remove(&entity, refid);
                 *flagview = FlagMeshNeedRecheckForView;
             }
 
-            viewers.iter_mut().for_each(|(mut list0, mut list1)| {
-                list0.0.remove(&entity);
-                list1.0.remove(&entity);
+            viewers.iter_mut().for_each(|(vsceneid, mut list0, mut list1)| {
+                if vsceneid.0 == sceneid.0 {
+                    list0.0.remove(&entity);
+                    list1.0.remove(&entity);
+                }
             });
 
             if let Ok((mut pool1, mut pool2)) = scenes.get_mut(sceneid.0) {

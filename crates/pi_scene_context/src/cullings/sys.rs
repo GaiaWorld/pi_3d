@@ -101,9 +101,11 @@ pub fn sys_update_culling_by_cullinginfo(
     boundings: Query<(&SceneID, &GeometryBounding, &GeometryCullingMode, &InstanceSourceRefs, &ModelInstanceAttributes)>,
     instances: Query<&InstanceMesh>,
     entitysets: Res<EntityFilterForComponentChanged>,
+    mut viewers: Query<(&SceneID, &mut ViewerCullingDirty)>,
 ) {
     // log::error!("sys_update_culling_by_cullinginfo");
     let mut entities = entitysets.pop();
+    let mut dirtyscenes = entitysets.pop();
     // addeds.iter().for_each(|entity| {
     //     entities.insert(*entity);
     // });
@@ -116,6 +118,7 @@ pub fn sys_update_culling_by_cullinginfo(
             if let Ok((idscene, info, mode, _instances, _)) = boundings.get(instance.0) {
                 if let Ok(mut pool) = scenes.get_mut(idscene.0) {
                     if let Ok((worldmatrix, disposed)) = items.get(*entity) {
+                        dirtyscenes.insert(&idscene.0);
                         if disposed.0 == true {
                             pool.remove(*entity);
                         } else {
@@ -127,6 +130,7 @@ pub fn sys_update_culling_by_cullinginfo(
         } else if let Ok((idscene, info, mode, instancerefs, insattr)) = boundings.get(*entity) {
             if let Ok(mut pool) = scenes.get_mut(idscene.0) {
                 if let Ok((meshworldmatrix, disposed)) = items.get(*entity) {
+                    dirtyscenes.insert(&idscene.0);
                     if disposed.0 == true {
                         pool.remove(*entity);
                     } else {
@@ -136,7 +140,7 @@ pub fn sys_update_culling_by_cullinginfo(
                             pool.set(*entity, info, mode, &meshworldmatrix.0);
                         }
 
-                        instancerefs.iter().for_each(|instance| {
+                        instancerefs.iter().for_each(|(_k, instance)| {
                             if !entities.insert(instance) { return; }
                             let instance = *instance;
                             // if let Some(instance) = &instance { *instance } else { return; }
@@ -151,6 +155,11 @@ pub fn sys_update_culling_by_cullinginfo(
                     }
                 }
             }
+        }
+    });
+    viewers.iter_mut().for_each(|(idscene, mut flag)| {
+        if dirtyscenes.contains(&idscene.0) {
+            flag.set_changed();
         }
     });
     entitysets.push(entities);

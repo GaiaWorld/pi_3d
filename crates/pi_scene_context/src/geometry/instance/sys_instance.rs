@@ -228,7 +228,7 @@ fn collect_instance_info(
     let mut alphaindexarr: Vec<(i32, usize)> = vec![];
     let mut infoarr: Vec<(Vec<Number>, Vec<(Entity, (Number, Number, Number))>)> = vec![];
 
-    instances.iter().for_each(|id| {
+    instances.iter().for_each(|(_k, id)| {
         if let (Ok((enable, instancelayer, culling, gtransform, localpos)), Ok(disposed)) = (actives.get(*id), dispoeds.get(*id)) {
             if enable.0 == true && disposed.0 == false && culling.0 {
                 let sortparam = if isglobal  {

@@ -1,8 +1,5 @@
 use crate::ecs::*;
 
-// use bevy_app::{Update, App, Plugin};
-// use bevy_ecs::{component::Component, entity::{self, Entity}, query::Changed, schedule::{IntoSystemConfigs, IntoSystemSetConfig, SystemSet}, system::{Query, Res, ResMut, Resource}};
-
 use std::{marker::PhantomData, ops::Deref, sync::Arc};
 use crossbeam::queue::SegQueue;
 use ktx::KtxInfo;

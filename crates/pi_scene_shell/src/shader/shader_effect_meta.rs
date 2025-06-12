@@ -484,7 +484,7 @@ vec2 uvAtlas(vec2 uv, vec4 atlas, vec4 mode) {
             source: ShaderSource::Glsl {
                 shader: std::borrow::Cow::Borrowed(vs.as_str()),
                 stage: naga::ShaderStage::Vertex,
-                defines: naga::FastHashMap::default(),
+                defines: &[],
             },
         });
 
@@ -493,7 +493,7 @@ vec2 uvAtlas(vec2 uv, vec4 atlas, vec4 mode) {
             source: ShaderSource::Glsl {
                 shader: std::borrow::Cow::Borrowed(fs.as_str()),
                 stage: naga::ShaderStage::Fragment,
-                defines: naga::FastHashMap::default(),
+                defines: &[],
             },
         });
 

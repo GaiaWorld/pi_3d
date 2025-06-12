@@ -3,12 +3,15 @@ use pi_scene_shell::prelude::*;
 
 use crate::{
     cullings::prelude::*, geometry::{
-        instance::{types::{InstanceAttributeAnimated, ModelInstanceAttributes}, DirtyInstanceSourceForSingleBuffer, EInstanceSortMode}, prelude::*
+        instance::{types::{InstanceAttributeAnimated, ModelInstanceAttributes}, DirtyInstanceSourceForSingleBuffer, EInstanceSortMode, InstanceSourceRefID}, prelude::*
     },
     layer_mask::prelude::*,
     object::ActionEntity,
     pass::*,
-    prelude::{TypeAnimeAssetMgrs, TypeAnimeContexts},
+    prelude::{
+        // MaterialRefID,
+        TypeAnimeAssetMgrs, TypeAnimeContexts
+    },
     renderers::prelude::*,
     skeleton::prelude::*,
     transforms::command_sys::{ActionTransformNode, TransformNodeBundle}
@@ -32,6 +35,8 @@ pub type BundleModel = (
 pub type BundleMesh = (
     (
         AbstructMesh,
+        // MaterialRefID,
+        InstanceSourceRefID,
         FlagMeshNeedRecheckForView,
         Mesh,
         GeometryID,
@@ -68,6 +73,7 @@ pub type BundleInstanceSource = (
 
 pub type BundleInstance = (
     AbstructMesh,
+    InstanceSourceRefID,
     FlagMeshNeedRecheckForView,
     AbstructMeshCullingFlag,
     RenderQueueSortParam,
@@ -127,19 +133,21 @@ pub fn sys_create_instanced_mesh(
     cmds.drain().for_each(|OpsInstanceMeshCreation(source, instance, count)| {
         if let Ok((id_scene, mut instancelist, instanceattrs, mut flagview)) = meshes.get_mut(source) {
 
-            let instanceattrs = instanceattrs.clone();
+            if let Some(refid) = instancelist.insert(instance) {
+                let instanceattrs = instanceattrs.clone();
 
-            let bundle = (
-                instanceattrs,
-                TargetAnimatorableIsRunning,
-                InstanceAttributeAnimated::default(),
-                ActionInstanceMesh::init(source, id_scene.0),
-            );
-            // commands.get_entity(instance).unwrap().insert(bundle);
-            let _ = alter.alter(instance, bundle);
+                let bundle = (
+                    instanceattrs,
+                    TargetAnimatorableIsRunning,
+                    InstanceAttributeAnimated::default(),
+                    ActionInstanceMesh::init(source, id_scene.0, refid),
+                );
+                // commands.get_entity(instance).unwrap().insert(bundle);
+                let _ = alter.alter(instance, bundle);
 
-            instancelist.insert(instance);
-            *flagview = FlagMeshNeedRecheckForView;
+                *flagview = FlagMeshNeedRecheckForView;
+            }
+
             // 
         }
     });
@@ -460,7 +468,7 @@ impl ActionMesh {
         );
         let bundle: BundleModel = (
             ActionTransformNode::init(scene),
-            ActionMesh::as_mesh(empty.id()),
+            ActionMesh::as_mesh(empty.id(), InstanceSourceRefID::default()),
             ActionMesh::as_instance_source(),
             TargetAnimatorableIsRunning,
             InstanceAttributeAnimated::default(),
@@ -485,6 +493,7 @@ impl ActionMesh {
     }
     pub(crate) fn as_mesh(
         geometry: Entity,
+        refid: InstanceSourceRefID,
     ) -> BundleMesh {
         // let mut unclipdepth = false;
         // #[cfg(not(target_arch = "wasm32"))]
@@ -494,6 +503,8 @@ impl ActionMesh {
         let unclipdepth = false;
         ((
             AbstructMesh,
+            // MaterialRefID::default(),
+            refid,
             FlagMeshNeedRecheckForView,
             Mesh,
             GeometryID(geometry),
@@ -540,17 +551,20 @@ impl ActionInstanceMesh {
     pub fn init(
         source: Entity,
         scene: Entity,
+        refid: InstanceSourceRefID,
     ) -> (TransformNodeBundle, BundleInstance) {
         (
             ActionTransformNode::init(scene),
-            ActionInstanceMesh::as_instance(source)
+            ActionInstanceMesh::as_instance(source, refid)
         )
     }
     pub(crate) fn as_instance(
         source: Entity,
+        refid: InstanceSourceRefID,
     ) -> BundleInstance {
         (
             AbstructMesh,
+            refid,
             FlagMeshNeedRecheckForView,
             AbstructMeshCullingFlag(false),
             RenderQueueSortParam::default(),

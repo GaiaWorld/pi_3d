@@ -1,6 +1,6 @@
 [package]
 name = "pi_pbr"
-version = "1.1.0"
+version = "1.3.0"
 authors = ["baip0002 <2494156981@qq.com>"]
 edition = "2021"
 description = "3D Framework for Scene."
@@ -9,17 +9,16 @@ license = "MIT OR Apache-2.0"
 keywords = ["3d scene"]
 
 [dependencies]
-pi_share                = "0.5"
-pi_slotmap          = "0.2"
+pi_share        = "0.5"
+pi_slotmap      = "0.2"
 pi_hash         = "0.1"
-pi_assets               = "0.15"
-pi_atom                 = { version = "0.6", features = ["serde"] }
+pi_assets       = "0.15"
+pi_atom         = { version = "0.6", features = ["serde"] }
 
-bevy_ecs        = "0.11"
 pi_world        = { version = "0.2" }
 
-wgpu            = { version = "0.2", registry = "yn", package = "pi_wgpu" }
-naga            = { version = "0.19", features = [ "glsl-in", ] }
+wgpu            = { version = "0.3", registry = "yn", package = "pi_wgpu" }
+naga            = { version = "25.0.*", features = [ "glsl-in", ] }
 log             = "0.4"
 
 smallvec        = "1.9"
@@ -27,11 +26,11 @@ crossbeam       = "0.8"
 futures         = "0.3"
 derive_deref    = "1.1"
 
-pi_scene_context    = { version = "1.2", registry = "yn", path = "../pi_scene_context" }
-pi_scene_shell      = { version = "1.1", registry = "yn", path = "../pi_scene_shell" }
-pi_node_materials   = { version = "1.1", registry = "yn", path = "../node_materials" }
+pi_scene_context    = { version = "1.3", registry = "yn", path = "../pi_scene_context" }
+pi_scene_shell      = { version = "1.3", registry = "yn", path = "../pi_scene_shell" }
+pi_node_materials   = { version = "1.3", registry = "yn", path = "../node_materials" }
 
-pi_render           = { version = "0.2", registry = "yn" }
+pi_render           = { version = "0.3", registry = "yn" }
 render_utils        = { version = "0.2", registry = "yn" }
 render_derive       = { version = "0.2", registry = "yn" }
 pi_scene_math       = { version = "0.0.*", registry = "yn" }

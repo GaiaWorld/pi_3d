@@ -1,6 +1,6 @@
 use crate::ecs::*;
 
-use std::marker::PhantomData;
+use std::{collections::BTreeSet, marker::PhantomData};
 use pi_hash::XHashSet;
 
 use crate::{ecs::*, object::EntityRepeatCheck};
@@ -13,20 +13,20 @@ pub trait TEntityRef {
 #[derive(Component)]
 pub struct EntityRefInfo<F: Default + Component> {
     // refs: Vec<Entity>,
-    refs: XHashSet<Entity>,
+    refs: BTreeSet<Entity>,
     p: PhantomData<F>,
 }
 impl<F: Default + Component> Default for EntityRefInfo<F> {
     fn default() -> Self {
         Self {
             // refs: Vec::default(),
-            refs: XHashSet::default(),
+            refs: BTreeSet::default(),
             p: PhantomData::default(),
         }
     }
 }
 impl<F: Default + Component> EntityRefInfo<F> {
-    pub fn iter(&self) -> std::collections::hash_set::Iter<Entity> {
+    pub fn iter(&self) -> std::collections::btree_set::Iter<Entity> {
     // pub fn iter(&self) -> std::slice::Iter<Entity> {
         self.refs.iter()
     }
@@ -34,7 +34,7 @@ impl<F: Default + Component> EntityRefInfo<F> {
         self.refs.len()
     }
     pub fn capacity(&self) -> usize {
-        self.refs.capacity()
+        self.refs.len()
     }
     pub fn insert(&mut self, entity: Entity) -> bool {
         // let idx = match self.refs.binary_search(&entity) {

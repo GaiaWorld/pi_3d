@@ -217,7 +217,7 @@ impl Plugin for PluginTest {
             let (targets, device, asset_samp, atlas_allocator) = (&mut assets.0, &assets.1, &assets.2, &assets.3);
             let depthtarget = targets.create( KeySampler::linear_repeat(), ColorFormat::R16Float, DepthStencilFormat::Depth32Float, 256, 256 );
 
-            let depth_renderer = commands.spawn_empty_id(); actions.renderer.create.push(OpsRendererCreate::ops(depth_renderer, String::from("PreDepth") + depth_renderer.index().to_string().as_str(), camera01, DemoScene::PASS_PRE_DEPTH, false));
+            let depth_renderer = commands.spawn_empty_id(); actions.renderer.create.push(OpsRendererCreate::ops(depth_renderer, String::from("PreDepth") + depth_renderer.index().to_string().as_str(), camera01, DemoScene::PASS_PRE_DEPTH, false, false));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(depth_renderer, true));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(depth_renderer, true));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(depth_renderer, true));

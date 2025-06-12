@@ -26,6 +26,7 @@ pub fn sys_act_viewer_force_include(
 }
 
 pub type ViewerBundle = (
+    ViewerCullingDirty,
     ViewerAspect,
     ViewerViewMatrix,
     ViewerProjectionMatrix,
@@ -48,6 +49,7 @@ impl ActionViewer {
         active: bool,
     ) -> ViewerBundle {
         (
+            ViewerCullingDirty,
             // .insert(ViewerSize::default()) // 由具体视口设置 - 相机\阴影生成器
             ViewerAspect::default(),
             ViewerViewMatrix::default(),

@@ -3,10 +3,10 @@
 #define GammaEncodePowerApprox 1.0 / 2.2
 
 // ------------------------------------------------
-float toLinearSpace(float v) {
+float toLinearSpace(const float v) {
 	return pow(v, LinearEncodePowerApprox);
 }
-vec3 toLinearSpace(vec3 v) {
+vec3 toLinearSpace(const vec3 v) {
 	return vec3(
 		pow(v.r, LinearEncodePowerApprox),
 		pow(v.g, LinearEncodePowerApprox),
@@ -16,7 +16,7 @@ vec3 toLinearSpace(vec3 v) {
 		// pow(v.b, 2.2)
 	);
 }
-vec4 toLinearSpace(vec4 v) {
+vec4 toLinearSpace(const vec4 v) {
 	return vec4(
 		pow(v.r, LinearEncodePowerApprox),
 		pow(v.g, LinearEncodePowerApprox),
@@ -28,10 +28,10 @@ vec4 toLinearSpace(vec4 v) {
 	);
 }
 
-float toGammaSpace(float v) {
+float toGammaSpace(const float v) {
 	return pow(v, GammaEncodePowerApprox);
 }
-vec3 toGammaSpace(vec3 v) {
+vec3 toGammaSpace(const vec3 v) {
 	return vec3(
 		pow(v.r, GammaEncodePowerApprox),
 		pow(v.g, GammaEncodePowerApprox),
@@ -41,7 +41,7 @@ vec3 toGammaSpace(vec3 v) {
 		// pow(v.b, 1.0/2.2)
 	);
 }
-vec4 toGammaSpace(vec4 v) {
+vec4 toGammaSpace(const vec4 v) {
 	return vec4(
 		pow(v.r, GammaEncodePowerApprox),
 		pow(v.g, GammaEncodePowerApprox),

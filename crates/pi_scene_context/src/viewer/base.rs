@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{collections::BTreeSet, sync::Arc};
 
 use pi_scene_shell::prelude::*;
 
@@ -8,19 +8,22 @@ use crate::{cullings::prelude::PiRay, transforms::prelude::*};
 pub struct ViewerGraphID(pub NodeId);
 
 #[derive(Clone, Component, Default)]
-pub struct ForceIncludeModelList(pub XHashSet<Entity>);
+pub struct ForceIncludeModelList(pub BTreeSet<Entity>);
 
 #[derive(Clone, Component, Default)]
 pub struct FlagForceIncludeModelList;
 
 #[derive(Clone, Component, Default)]
-pub struct ModelList(pub XHashSet<Entity>);
+pub struct ModelList(pub BTreeSet<Entity>);
 
 #[derive(Clone, Component, Default)]
 pub struct FlagModelList(pub bool);
 
 #[derive(Component, Default)]
 pub struct ModelListAfterCulling(pub Vec<Entity>);
+
+#[derive(Component, Default)]
+pub struct ViewerCullingDirty;
 
 /// 视口ID - 可能是 相机、灯光
 #[derive(Component, Default)]

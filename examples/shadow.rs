@@ -26,7 +26,7 @@ impl DemoShadow {
         actions.shadow.param.push(OpsShadowGeneratorParam::ShadowMinz(shadow, 1.0));
         actions.shadow.param.push(OpsShadowGeneratorParam::ShadowMaxz(shadow, 101.));
 
-        actions.renderer.create.push(OpsRendererCreate::ops(shadow, String::from("Shadow01"), shadow, pass, false));
+        actions.renderer.create.push(OpsRendererCreate::ops(shadow, String::from("Shadow01"), shadow, pass, false, false));
         if let Some(pre_renderer) = pre_renderer {
             actions.renderer.connect.push(OpsRendererConnect::ops(pre_renderer, shadow, false));
         }

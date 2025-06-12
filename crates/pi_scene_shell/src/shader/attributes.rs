@@ -47,6 +47,7 @@ impl TVertexFormatShaderCode for wgpu::VertexFormat {
             wgpu::VertexFormat::Float64x2   => String::from(""),
             wgpu::VertexFormat::Float64x3   => String::from(""),
             wgpu::VertexFormat::Float64x4   => String::from(""),
+            _ => todo!()
         }
     }
 }
@@ -685,28 +686,13 @@ impl EVertexAttribute {
         result
     }
 
+    const TRAIL: &'static str = include_str!("./trail/trail.hlsl");
+    const TRAIL_BILLBOARD: &'static str = include_str!("./trail/trail_billboard.hlsl");
     pub fn trail() -> String {
-        String::from("
-    A_UV = vec2(TRAIL_INFO.y, step(0., TRAIL_INFO.x));
-
-    vec3 zaxis = normalize(TRAIL_AXIS_Z);
-    vec3 xaxis = normalize(TRAIL_AXIS_X);
-    A_POSITION += xaxis * TRAIL_INFO.x;
-
-    A_NORMAL = normalize(cross(zaxis, xaxis));
-        ")
+        String::from(Self::TRAIL)
     }
     pub fn trail_billboard() -> String {
-        String::from("
-    A_UV = vec2(TRAIL_INFO.y, step(0., TRAIL_INFO.x));
-
-    vec3 zaxis = normalize(TRAIL_AXIS_Z);
-    vec3 yaxis = normalize(PI_CAMERA_POSITION.xyz - A_POSITION.xyz);
-    vec3 xaxis = normalize(cross(yaxis, zaxis)) * TRAIL_INFO.x;
-    A_POSITION += xaxis;
-
-    A_NORMAL = yaxis;
-        ")
+        String::from(Self::TRAIL_BILLBOARD)
     }
 }
 

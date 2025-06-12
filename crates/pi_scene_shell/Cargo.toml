@@ -1,6 +1,6 @@
 [package]
 name = "pi_scene_shell"
-version = "1.1.19"
+version = "1.3.0"
 authors = ["baip0002 <2494156981@qq.com>"]
 edition = "2021"
 description = "Framework."
@@ -15,20 +15,10 @@ use_pi_ecs = []
 
 [dependencies]
 log                 = "0.4"
-wgpu                = { version = "0.2", registry = "yn", package = "pi_wgpu" }
-naga                = { version = "0.19", features = [ "glsl-in", ] }
+wgpu                = { version = "0.3", registry = "yn", package = "pi_wgpu" }
+naga                = { version = "25.0.*", features = [ "glsl-in", ] }
 nalgebra            = "0.32"
 simba               = "0.8"
-bevy_ecs            = "0.11"
-bevy_app            = { version = "0.11", default_features = false }
-bevy_a11y           = "0.11"
-bevy_hierarchy      = "0.11"
-bevy_input          = "0.11"
-bevy_log            = "0.11"
-bevy_math           = "0.11"
-bevy_reflect        = "0.11"
-bevy_time           = "0.11"
-bevy_utils          = "0.11"
 
 smallvec            = "1.9"
 crossbeam           = "0.8"
@@ -67,14 +57,14 @@ pi_futures              = "0.1"
 
 pi-async-rt             = "0.2"
 pi_slotmap_tree         = "0.4"
-pi_hal                  = { version = "0.2", registry = "yn" }
+pi_hal                  = { version = "0.3", registry = "yn" }
 
-pi_bevy_ecs_extend      = { version = "0.2", registry = "yn" }
-pi_bevy_winit_window    = { version = "0.2", registry = "yn" }
-pi_bevy_render_plugin   = { version = "0.2", registry = "yn" }
-pi_bevy_asset           = { version = "0.2", registry = "yn" }
+pi_bevy_ecs_extend      = { version = "0.3", registry = "yn" }
+pi_bevy_winit_window    = { version = "0.3", registry = "yn" }
+pi_bevy_render_plugin   = { version = "0.3", registry = "yn" }
+pi_bevy_asset           = { version = "0.3", registry = "yn" }
 
-pi_render               = { version = "0.2", registry = "yn" }
+pi_render               = { version = "0.3", registry = "yn" }
 render_utils            = { version = "0.2", registry = "yn" }
 render_derive           = { version = "0.2", registry = "yn" }
 

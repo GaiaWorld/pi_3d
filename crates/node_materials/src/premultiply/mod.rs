@@ -8,7 +8,7 @@ impl BlockPremultiplyResult {
 impl TNodeMaterialBlock for BlockPremultiplyResult {
     const KEY: &'static str = "PremultiplyResult";
     const FS_DEFINED: &'static str = "
-vec4 PremultiplyResult(vec4 finalColor, MatParam matParam) {
+vec4 PremultiplyResult(const vec4 finalColor, const MatParam matParam) {
     finalColor.rgb = mix(1., finalColor.a, step(0.5, matParam.uPremultiplyResult));
     return finalColor;
 }

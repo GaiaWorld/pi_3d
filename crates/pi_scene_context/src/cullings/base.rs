@@ -148,7 +148,7 @@ impl GeometryBounding {
 pub trait TFilter {
     fn filter(&self, entity: Entity) -> bool;
     fn query(&self, entity: Entity) -> bool;
-    fn iter(&self) -> std::collections::hash_set::Iter<Entity>;
+    fn iter(&self) -> std::collections::btree_set::Iter<Entity>;
 }
 
 /// 标识 Mesh 的网格剔除信息是否需要更新

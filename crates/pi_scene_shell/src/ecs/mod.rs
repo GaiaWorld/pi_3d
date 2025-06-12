@@ -1,5 +1,6 @@
 
 mod ecs;
+#[cfg(feature = "use_bevy")]
 mod ecs_bevy;
 
 #[cfg(feature = "use_bevy")]

@@ -85,7 +85,8 @@ impl EInstanceSortMode {
 pub struct DirtyInstanceSourceRefs;
 
 /// 记录实例的源Mesh派生的所有实例
-pub type InstanceSourceRefs = EntityRefInfo<DirtyInstanceSourceRefs>;
+pub type InstanceSourceRefs = EntityConnectInfo<DirtyInstanceSourceRefs>;
+pub type InstanceSourceRefID = EntityRefID<DirtyInstanceSourceRefs>;
 
 /// 标识实例对应的 源Mesh 的顶点Buffer是否脏 - 针对大量实例的Mesh会使用单独的Buffer,一般情况使用共用的Buffer
 #[derive(Debug, Clone, Component, Default)]

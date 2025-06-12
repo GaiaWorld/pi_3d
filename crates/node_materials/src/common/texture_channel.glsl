@@ -4,7 +4,7 @@ const uint CHANNEL_B = 4;
 const uint CHANNEL_A = 8;
 const uint CHANNEL_GRAY = 0;
 
-float valueByChannel(vec4 rgba, uint channel) {
+float valueByChannel(const vec4 rgba, const uint channel) {
     float a = step(CHANNEL_A, channel);
     float b = step(CHANNEL_B, channel) * (1. - a);
     float g = step(CHANNEL_G, channel) * (1. - b) * (1. - a);

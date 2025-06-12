@@ -7,10 +7,10 @@
 
 // 普通雾
 vec3 applyFog(
-    in vec3 rgb,      // 像素颜色
-    in vec3 fogColor, // 雾颜色
-    in float distance,  // 相机坐标到像素点坐标距离
-    float b             // b 控制雾气强度随距离增强的速度
+    const in vec3 rgb,      // 像素颜色
+    const in vec3 fogColor, // 雾颜色
+    const in float distance,  // 相机坐标到像素点坐标距离
+    const float b             // b 控制雾气强度随距离增强的速度
 ) {
     float fogAmount = 1.0 - exp( -distance * b );
     return mix(rgb, fogColor, fogAmount);
@@ -18,13 +18,13 @@ vec3 applyFog(
 
 // 受太阳光照影响的雾
 vec3 applyFog(
-    in vec3 rgb,
-    in vec3 fogColor,
-    in float distance,
-    in vec3 rayDir,   // 相机坐标到像素点坐标的向量
-    in vec3 sunDir,   // 太阳光照方向向量
-    in vec3 sunColor, // 太阳光颜色
-    float b
+    const in vec3 rgb,
+    const in vec3 fogColor,
+    const in float distance,
+    const in vec3 rayDir,   // 相机坐标到像素点坐标的向量
+    const in vec3 sunDir,   // 太阳光照方向向量
+    const in vec3 sunColor, // 太阳光颜色
+    const float b
 ) {
     
     float fogAmount = 1.0 - exp( -distance * b );
@@ -35,21 +35,21 @@ vec3 applyFog(
 
 // 基于高度积分的雾
 vec3 applyFog(
-    in vec3 rgb,
-    in vec3 fogColor,
-    in float distance,
-    in vec3 rayOri,       // Camera Porition
-    in vec3 rayDir,
-    float baseH,            // 最大浓度时的高度(伪)
-    float a,                //
-    float b                 // 衰减系数 - Fallof
+    const in vec3 rgb,
+    const in vec3 fogColor,
+    const in float distance,
+    const in vec3 rayOri,       // Camera Porition
+    const in vec3 rayDir,
+    const float baseH,            // 最大浓度时的高度(伪)
+    const float a,                //
+    const float b                 // 衰减系数 - Fallof
 ) {
     // baseFunction : d(y) = a * exp(-b * y) - https://www.iquilezles.org/www/articles/fog/fog.htm
     float fogAmount = (a / b) * exp(-b * (rayOri.y - baseH)) * (1.0 - exp(-b * distance * (rayDir.y)) ) / (rayDir.y);
     return mix(rgb, fogColor, clamp(fogAmount, 0.0, 1.0));
 }
 
-float CalcFogFactor(vec3 vFogDistance) {
+float CalcFogFactor(const vec3 vFogDistance) {
     vec4 vFogInfos    = PI_FogParam;
 
     float fogCoeff      = 1.0;
@@ -73,7 +73,7 @@ float CalcFogFactor(vec3 vFogDistance) {
     return clamp(fogCoeff, 0.0, 1.0);
 }
 
-float CalcFogFactor(float fogDistance) {
+float CalcFogFactor(const float fogDistance) {
     vec4 vFogInfos    = _FogInfo;
 
     float fogCoeff      = 1.0;
@@ -94,11 +94,11 @@ float CalcFogFactor(float fogDistance) {
 }
 
 vec3 applyFog(
-    vec3 vFogDistance,
-    vec3 finalColor,
-    vec3 vFogColor,
-    vec3 rayOri,
-    vec3 rayDir
+    const vec3 vFogDistance,
+    const vec3 finalColor,
+    const vec3 vFogColor,
+    const vec3 rayOri,
+    const vec3 rayDir
 ) {
     float fogDistance   = length(vFogDistance);
     if (FOGMODE_HIGHT_BASE == PI_FogParam.x) {

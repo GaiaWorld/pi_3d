@@ -128,11 +128,19 @@ impl BindModel {
 pub struct ModelBindDefines(pub u32);
 
 
-#[derive(Component, Clone)]
-pub struct ModelMatIdxs(pub [u16; PassTag::PASS_COUNT]);
+#[derive(Component)]
+pub struct ModelMatIdxs(
+    pub [u16; PassTag::PASS_COUNT]
+    // , pub [MaterialRefID; PassTag::PASS_COUNT]
+);
 impl Default for ModelMatIdxs {
     fn default() -> Self {
-        Self([0, 0, 0, 0, 0, 0, 0, 0])
+        Self([0, 0, 0, 0, 0, 0, 0, 0],
+            // [
+            //     MaterialRefID::default(), MaterialRefID::default(), MaterialRefID::default(), MaterialRefID::default(),
+            //     MaterialRefID::default(), MaterialRefID::default(), MaterialRefID::default(), MaterialRefID::default()
+            // ]
+        )
     }
 }
 

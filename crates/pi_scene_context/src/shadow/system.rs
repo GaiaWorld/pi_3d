@@ -261,13 +261,13 @@ fn _sys_update_shadow_viewer_model_list_by_viewer(
                     list_model.0.insert(id_obj);
                     *flag_list_model = FlagModelList::default();
                 }
-                instances.iter().for_each(|entity| {
+                instances.iter().for_each(|(_k, entity)| {
                     list_model.0.insert(*entity);
                 });
                 *flag_list_model = FlagModelList::default();
             } else {
                 list_model.0.remove(&id_obj);
-                instances.iter().for_each(|entity| {
+                instances.iter().for_each(|(_k, entity)| {
                     list_model.0.remove(entity);
                 });
                 // log::warn!("{:?}", (iscene, scene, layer, ilayer));
@@ -313,12 +313,12 @@ fn _sys_update_shadow_viewer_model_list_by_model(
                 if layer.include(ilayer.0) && castshadow.0 {
                     list_model.0.insert(id_obj);
                     *flag_list_model = FlagModelList::default();
-                    instances.iter().for_each(|entity| {
+                    instances.iter().for_each(|(_k, entity)| {
                         list_model.0.insert(*entity);
                     });
                 } else {
                     list_model.0.remove(&id_obj);
-                    instances.iter().for_each(|entity| {
+                    instances.iter().for_each(|(_k, entity)| {
                         list_model.0.remove(entity);
                     });
                 }

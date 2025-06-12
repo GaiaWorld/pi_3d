@@ -1,4 +1,7 @@
 
+#[cfg(not(feature = "use_bevy"))]
+use std::collections::BTreeSet;
+
 use pi_scene_shell::prelude::*;
 
 use crate::{
@@ -38,7 +41,7 @@ impl<'a, 'w, 's> TFilter for SceneBoundingFilter<'a, 'w, 's> {
 #[cfg(not(feature = "use_bevy"))]
 struct SceneBoundingFilter<'a, 'w>(
     pub &'a Query<'w, (&'static GlobalEnable, Option<&'static MeshInstanceState>), With<AbstructMesh>>,
-    pub &'a XHashSet<Entity>
+    pub &'a BTreeSet<Entity>
 );
 #[cfg(not(feature = "use_bevy"))]
 impl<'a, 'w> TFilter for SceneBoundingFilter<'a, 'w> {
@@ -64,7 +67,7 @@ impl<'a, 'w> TFilter for SceneBoundingFilter<'a, 'w> {
             false
         }
     }
-    fn iter(&self) -> std::collections::hash_set::Iter<Entity> {
+    fn iter(&self) -> std::collections::btree_set::Iter<Entity> {
         self.1.iter()
     }
 }
@@ -115,7 +118,7 @@ fn _sys_update_viewer_model_list_by_viewer(
                     list_model.0.insert(id_obj);
                     *flag_list_model = FlagModelList::default();
                 }
-                instances.iter().for_each(|instance| {
+                instances.iter().for_each(|(_k, instance)| {
                     list_model.0.insert(*instance);
                 });
                 *flag_list_model = FlagModelList::default();
@@ -155,12 +158,12 @@ fn _sys_update_viewer_model_list_by_model(
             if layer.include(ilayer.0) {
                 list_model.0.insert(id_obj);
                 *flag_list_model = FlagModelList::default();
-                instances.iter().for_each(|instance| {
+                instances.iter().for_each(|(_k, instance)| {
                     list_model.0.insert(*instance);
                 });
             } else {
                 list_model.0.remove(&id_obj);
-                instances.iter().for_each(|instance| {
+                instances.iter().for_each(|(_k, instance)| {
                     list_model.0.remove(instance);
                 });
             }
@@ -172,7 +175,8 @@ fn _sys_update_viewer_model_list_by_model(
 
 pub fn sys_tick_viewer_culling(
     mut viewers: Query<
-        (&SceneID, &ViewerActive, &ModelList, &ViewerTransformMatrix, &ViewerViewMatrix, &ForceIncludeModelList, &mut ModelListAfterCulling)
+        (&SceneID, &ViewerActive, &ModelList, &ViewerTransformMatrix, &ViewerViewMatrix, &ForceIncludeModelList, &mut ModelListAfterCulling),
+        Or<(Changed<ModelList>, Changed<ViewerTransformMatrix>, Changed<ViewerViewMatrix>, Changed<ForceIncludeModelList>, Changed<ViewerCullingDirty>)>
     >,
     items: Query< (& GlobalEnable, Option<& MeshInstanceState>), With<AbstructMesh> >,
     mut flags: Query<&mut AbstructMeshCullingFlag>,

@@ -61,7 +61,7 @@ impl PluginImageCopy {
             actions.camera.forceinclude.push(OpsViewerForceInclude::ops(copycamera, plane, true));
             actions.camera.param.push(OpsCameraModify::ops( copycamera, ECameraModify::Active( true )));
             
-            let copy_renderer = commands.spawn_empty_id(); actions.renderer.create.push(OpsRendererCreate::ops(copy_renderer, String::from("ImageCopy") + copy_renderer.index().to_string().as_str(), copycamera, PassTag::PASS_TAG_01, false));
+            let copy_renderer = commands.spawn_empty_id(); actions.renderer.create.push(OpsRendererCreate::ops(copy_renderer, String::from("ImageCopy") + copy_renderer.index().to_string().as_str(), copycamera, PassTag::PASS_TAG_01, false, false));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(copy_renderer, false));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(copy_renderer, false));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(copy_renderer, false));
@@ -120,7 +120,7 @@ impl PluginImageCopy {
             actions.camera.forceinclude.push(OpsViewerForceInclude::ops(copycamera, plane, true));
             actions.camera.param.push(OpsCameraModify::ops( copycamera, ECameraModify::Active( true )));
             
-            let copy_renderer = commands.spawn_empty_id(); actions.renderer.create.push(OpsRendererCreate::ops(copy_renderer, String::from("ImageCopy") + copy_renderer.index().to_string().as_str(), copycamera, PassTag::PASS_TAG_01, false));
+            let copy_renderer = commands.spawn_empty_id(); actions.renderer.create.push(OpsRendererCreate::ops(copy_renderer, String::from("ImageCopy") + copy_renderer.index().to_string().as_str(), copycamera, PassTag::PASS_TAG_01, false, false));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(copy_renderer, false));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(copy_renderer, false));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(copy_renderer, false));

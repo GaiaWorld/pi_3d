@@ -143,3 +143,31 @@ scene.onBeforeRenderObservable.add(() => {
     window.displaylastTime = now;
     window.displayActiveMesh.innerHTML = textContent;
   });
+
+|git库|git分支|
+|-|-|
+|pi_wgpu|v3|
+|pi_hal|v3|
+|pi_render|wgpu25|
+|pi_postprocess|master|
+|pi_bevy|wgpu25(已修改但未更新版本)|
+|pi_3d|master|
+|crate名|crate版本|
+|pi_wgpu|0.3|
+|pi_hal|0.3|
+|pi_render|0.3|
+|render_crevice|0.3|
+|render_core|0.3|
+|render_compile|0.3|
+|pi_postprocess|0.3|
+
+已推送git, 无权限更新版本
+|crate名|crate版本|
+|pi_bevy_render_plugin|0.3|
+|pi_bevy_winit_window|0.3|
+|pi_bevy_ecs_extend|0.3|
+|pi_bevy_asset|0.3|
+|pi_bevy_winit_window|0.3|
+|pi_bevy_window|0.3|
+|pi_bevy_post_process|0.3|
+|pi_bevy_plugin|0.3|

@@ -7,7 +7,7 @@ struct lightingInfo
     float NdotL;
 };
 
-lightingInfo computeLighting(vec3 viewDirectionW, vec3 vPositionW, vec3 vNormal, vec4 lightData, vec3 diffuseColor, vec3 specularColor, float range, float glossiness) {
+lightingInfo computeLighting(const vec3 viewDirectionW, const vec3 vPositionW, const vec3 vNormal, const vec4 lightData, const vec3 diffuseColor, const vec3 specularColor, const float range, const float glossiness) {
     lightingInfo result;
 
     vec3 direction = mix(lightData.xyz - vPositionW, -lightData.xyz, lightData.w);
