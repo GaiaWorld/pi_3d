@@ -8,7 +8,7 @@ impl BlockOpacity {
 impl TNodeMaterialBlock for BlockOpacity {
     const KEY: &'static str = "OPACITY";
     const FS_DEFINED: &'static str = "
-float opacity(MatParam matParam) {
+float opacity(const MatParam matParam) {
     return matParam.uOpacity;
 }
     ";

@@ -10,14 +10,13 @@ impl OpacityClipShader {
     pub fn create(infos: &NodeMaterialBlocks, engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
 
         let mut nodemat = NodeMaterialBuilder::new();
-        nodemat.fs_define = String::from("\r\nlayout(location = 0) out vec4 gl_FragColor; \r\n");
 
         nodemat.vs = String::from(include_str!("../base.vert"));
         nodemat.fs = String::from(include_str!("./opacity_clip.frag"));
 
         nodemat.varyings = Varyings(
             vec![
-                Varying { 
+                Varying {
                     format: Atom::from(pi_scene_shell::prelude::S_VEC3),
                     name: Atom::from(pi_scene_shell::prelude::S_V_NORMAL),
                 },
@@ -48,6 +47,8 @@ impl OpacityClipShader {
         nodemat.include(&Atom::from(BlockOpacityTextureUVOffsetSpeed::KEY), infos);
         nodemat.include(&Atom::from(BlockEmissiveTexture::KEY), infos);
         nodemat.include(&Atom::from(BlockEmissiveTextureUVOffsetSpeed::KEY), infos);
+
+        nodemat.fs_define += include_str!("./define.hlsl");
 
         nodemat.meta(engineopt)
     }

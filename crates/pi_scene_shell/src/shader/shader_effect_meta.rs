@@ -373,24 +373,7 @@ impl ShaderEffectMeta {
         // Shader Name
         code += "#define SHADER_NAME fragment:"; code += name; code += crate::prelude::S_BREAK;
 
-        code += "
-const float ATLAS_MODE_SCALE = 0.1;
-const float ATLAS_MODE_SCALE2 = 10.;
-const float ADDRESS_CLAMP = 0.0;
-const float ADDRESS_REPEAT = 1.0;
-const float ADDRESS_MIRROR_REPEAT = 2.0;
-const vec2 M_ONE = vec2(1.);
-const vec2 M_ZERO = vec2(0.);
-vec2 uvAtlas(vec2 uv, vec4 atlas, vec4 mode) {
-    vec2 f = floor(uv);
-    vec2 temp = max(M_ZERO, M_ONE - mode.xy) * min(M_ONE, max(M_ZERO, uv)) 
-              + min(M_ONE,          mode.xy) * abs(
-                    uv - f 
-              + max(M_ZERO, mode.xy - M_ONE) * (3. * f - 2. * (uv + floor(0.5 * uv)))
-            );
-    return temp * atlas.xy + atlas.zw;
-}
-";
+        code += include_str!("./atlas_define.hlsl");
         // Shader 定义 Varying 代码
         code += &VaryingCode::fs_code(&self.varyings);
         code += fs_extend_varying;
@@ -462,7 +445,7 @@ vec2 uvAtlas(vec2 uv, vec4 atlas, vec4 mode) {
         let vs = self.vs_blocks_2(key_meta.as_str(), vs_extend_varying, vs_running_attribute_snippets, vs_running_model_snippets, vs_defined_snippets, vs_running_before_effect_snippets, vs_running_after_effect_snippets, engineopt);
         let fs = self.fs_blocks_2(key_meta.as_str(), fs_defined_snippets, fs_extend_varying, fs_running_before_effect_snippets, fs_running_after_effect_snippets, engineopt);
 
-        #[cfg(not(target_arch = "wasm32"))]
+        #[cfg(feature = "record_shader")]
         {
             // log::warn!("Shader: {:?}", key_meta);
             let temp = String::from("temp/");

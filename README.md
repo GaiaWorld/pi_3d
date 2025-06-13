@@ -152,7 +152,9 @@ scene.onBeforeRenderObservable.add(() => {
 |pi_postprocess|master|
 |pi_bevy|wgpu25(已修改但未更新版本)|
 |pi_3d|master|
+
 |crate名|crate版本|
+|-|-|
 |pi_wgpu|0.3|
 |pi_hal|0.3|
 |pi_render|0.3|
@@ -163,6 +165,7 @@ scene.onBeforeRenderObservable.add(() => {
 
 已推送git, 无权限更新版本
 |crate名|crate版本|
+|-|-|
 |pi_bevy_render_plugin|0.3|
 |pi_bevy_winit_window|0.3|
 |pi_bevy_ecs_extend|0.3|
