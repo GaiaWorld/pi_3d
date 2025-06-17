@@ -15,7 +15,7 @@ use super::{
             (ObjectID, &PassModelID, &PassMaterialID, &PassRendererID, &mut PassBindGroups, &mut PassFlagShader, &PassTag)
         >,
         renderers: Query<(&SceneID, &ViewerID)>,
-        materials: Query<( &AssetKeyShaderEffect, &AssetResShaderEffectMeta, &BindEffect, &EffectTextureSamplersComp, &TextureKeyList )>,
+        materials: Query<( &AssetKeyShaderEffect, &AssetResShaderEffectMeta, &BindEffect, &EffectTextureSamplersComp, &TextureKeyList, &EffectBindSampler2DList )>,
         models: Query<( &BindModel, &BindSkinValue, &SkeletonID, &ModelLightingIndexs, &ModelBindDefines )>,
         targets: Res<CustomRenderTargets>,
         viewers: Query<&BindViewer>,
@@ -64,9 +64,9 @@ use super::{
                 let viewers = &viewers;
                 let models = &models;
     
-                if let Ok((effect_key, meta, bind, textures, texkeys)) = materials.get(idmat.0) {
+                if let Ok((effect_key, meta, bind, textures, texkeys, samplers)) = materials.get(idmat.0) {
                     let (_bindvalue, bindtextures, effect) = _pass_effect_ready(
-                        effect_key, textures, texkeys, meta, bind
+                        effect_key, textures, samplers, texkeys, meta, bind
                     );
     
                     if let Some((key_meta, meta)) = &effect {

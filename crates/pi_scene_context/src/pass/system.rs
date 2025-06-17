@@ -74,6 +74,7 @@ pub fn sys_modify_pass_effect_by_material(
 pub fn _pass_effect_ready<'a>(
     effect_key: &'a AssetKeyShaderEffect,
     textures: &'a EffectTextureSamplersComp,
+    samplers: &'a EffectBindSampler2DList,
     texturekeys: &'a TextureKeyList,
     meta: &'a AssetResShaderEffectMeta,
     bind: &'a BindEffect,
@@ -87,7 +88,12 @@ pub fn _pass_effect_ready<'a>(
                     for texidx in 0..len {
                         let tex = &textures.textures[texidx];
                         let desc = &texturekeys.0[texidx];
-                        bindval.update_texture(texidx, &tex.tilloff(), desc.wrapu, desc.wrapv, desc.wrapw, tex.coord());
+
+                        if samplers.is_custom_address(texidx) {
+                            bindval.update_texture(texidx, &tex.tilloff(), desc.wrapu.to_u8(), desc.wrapv.to_u8(), desc.wrapw.to_u8(), tex.coord());
+                        } else {
+                            bindval.update_texture(texidx, &tex.tilloff(), 255, 255, 255, tex.coord());
+                        }
                     }
                 }
                 (bind.0.as_ref(), Some(textures), Some((effect_key.0.clone(), meta.clone())))

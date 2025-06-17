@@ -25,6 +25,7 @@ float opacity(const MatParam matParam) {
 
 pub struct BlockOpacityTexture;
 impl BlockOpacityTexture {
+    pub const KEY_FLAG: &'static str = "useOpacity";
     pub const KEY_LEVEL: &'static str = "uOpacityLevel";
     pub const KEY_TILLOFF: &'static str = "uOpacityTilloff";
     pub const KEY_CHANNEL: &'static str = "uOpacityChannel";
@@ -51,7 +52,8 @@ impl TNodeMaterialBlock for BlockOpacityTexture {
 
     fn uint() -> Vec<UniformPropertyUint> {
         vec![
-            UniformPropertyUint(Atom::from(Self::KEY_CHANNEL), BlockTextureChannel::CHANNEL_A, false)
+            UniformPropertyUint(Atom::from(Self::KEY_CHANNEL), BlockTextureChannel::CHANNEL_A, false),
+            UniformPropertyUint(Atom::from(Self::KEY_FLAG), 1, false)
         ]
     }
 
@@ -95,6 +97,7 @@ impl TNodeMaterialBlock for BlockOpacityTextureUVOffsetSpeed {
 
 pub struct BlockOpacity2Texture;
 impl BlockOpacity2Texture {
+    pub const KEY_FLAG: &'static str = "useOpacity2";
     pub const KEY_LEVEL: &'static str = "uOpacity2Level";
     pub const KEY_TILLOFF: &'static str = "uOpacity2Tilloff";
     pub const KEY_CHANNEL: &'static str = "uOpacity2Channel";
@@ -121,7 +124,8 @@ impl TNodeMaterialBlock for BlockOpacity2Texture {
 
     fn uint() -> Vec<UniformPropertyUint> {
         vec![
-            UniformPropertyUint(Atom::from(Self::KEY_CHANNEL), BlockTextureChannel::CHANNEL_A, false)
+            UniformPropertyUint(Atom::from(Self::KEY_CHANNEL), BlockTextureChannel::CHANNEL_A, false),
+            UniformPropertyUint(Atom::from(Self::KEY_FLAG), 1, false)
         ]
     }
 

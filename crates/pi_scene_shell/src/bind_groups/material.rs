@@ -190,15 +190,15 @@ impl RefBindGroupMaterial {
             buffer.data().write_data(offset, data);
         }
     }
-    pub fn update_texture(&self, texidx: usize, tilloff: &[u8], wrap_u: EAddressMode, wrap_v: EAddressMode, wrap_w: EAddressMode, coord: u8) {
+    pub fn update_texture(&self, texidx: usize, tilloff: &[u8], wrap_u: u8, wrap_v: u8, wrap_w: u8, coord: u8) {
         if let Some(bind) = self.texture_info.get(texidx) {
-            bind.update(self.matidx as usize, wrap_u.to_u8(), wrap_v.to_u8(), wrap_w.to_u8(), coord);
+            bind.update(self.matidx as usize, wrap_u, wrap_v, wrap_w, coord);
         }
         if let Some(bind) = self.texture_till.get(texidx) {
             bind.update(self.matidx as usize, tilloff);
         }
         if let Some(bind) = self.texture_infoandtilloff.get(texidx) {
-            bind.update(self.matidx as usize, tilloff, wrap_u.to_u8(), wrap_v.to_u8(), wrap_w.to_u8(), coord);
+            bind.update(self.matidx as usize, tilloff, wrap_u, wrap_v, wrap_w, coord);
         }
     }
     pub fn key_bind_group(&self) -> KeyBindGroup {

@@ -14,7 +14,6 @@ pub fn sys_material_textures_modify(
         (
             &AssetResShaderEffectMeta, &mut UniformTextureWithSamplerParams,
             &mut TextureKeyList,
-            &mut EffectBindSampler2DList
         )
     >,
     device: Res<PiRenderDevice>,
@@ -33,8 +32,7 @@ pub fn sys_material_textures_modify(
         if !entities.insert(entity) { return; }
         if let Ok((
             effect, mut texparams,
-            mut slots,
-            mut samplers
+            mut slots
         )) = materials.get_mut(*entity) {
             let effect = effect.0.as_ref().unwrap().as_ref();
             if effect.textures.len() > 0 {
@@ -48,13 +46,8 @@ pub fn sys_material_textures_modify(
                             std::sync::Arc::new(
                                 UniformTextureWithSamplerParam {
                                     slotname: item.slotname.clone(),
-                                    sample: KeySampler::default(),
                                     url: EKeyTexture::Tex(Atom::from(DefaultTexture::path(item.initial, wgpu::TextureDimension::D2))),
-                                    wrapu: EAddressMode::ClampToEdge,
-                                    wrapv: EAddressMode::ClampToEdge,
-                                    wrapw: EAddressMode::ClampToEdge,
-                                    texture_sample: wgpu::TextureSampleType::Float { filterable: true },
-                                    sampler_bind_type: wgpu::SamplerBindingType::Filtering,
+                                    ..Default::default()
                                 }
                             )
                         );
@@ -66,11 +59,11 @@ pub fn sys_material_textures_modify(
                         if !slots.query(index).eq(&param) {
                             slots.modify(index, param.clone());
                         }
-                        if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
-                            samplers.0[index] = Some(samp);
-                        } else {
-                            // log::error!("Sampler Fail: {:?}", (item.initial, &param.sample));
-                        }
+                        // if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
+                        //     samplers.0[index] = Some(samp);
+                        // } else {
+                        //     // log::error!("Sampler Fail: {:?}", (item.initial, &param.sample));
+                        // }
                     }
                 }
             }
@@ -156,11 +149,13 @@ pub fn sys_texture_ready(
         (
             ObjectID,
             &AssetResShaderEffectMeta, &TextureKeyList
-            , &EffectBindTexture2DList, &EffectBindSampler2DList
+            , &EffectBindTexture2DList, &mut EffectBindSampler2DList
             , &mut EffectTextureSamplersComp
         )
     >,
     entitysets: Res<EntityFilterForComponentChanged>,
+    device: Res<PiRenderDevice>,
+    asset_samp: Res<ShareAssetMgr<SamplerRes>>,
     // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_texture_ready"));
@@ -172,7 +167,7 @@ pub fn sys_texture_ready(
         if !entities.insert(entity) { return; }
         if let Ok((
             _entity, binddesc, keys
-            , textures, samplers
+            , textures, mut samplers
             , mut comp
         )) = items.get_mut(*entity) {
             let binddesc = binddesc.0.as_ref().unwrap();
@@ -181,14 +176,40 @@ pub fn sys_texture_ready(
     
             for idx in 0..TEXTURE_SLOT_COUNT {
                 let key = &keys.0[idx];
-                if let (Some((v1, k1)), Some(v2)) = (&textures.data[idx], &samplers.0[idx]) {
-                    texsamplerarr.textures.push(EffectTextureSampler(v1.clone(), v2.clone(), EShaderStage::FRAGMENT, key.texture_sample, v1.view_dimension(), key.sampler_bind_type));
-                    
-                    // log::error!("{:?}", (&key.url, k1));
-                    if idx + 1 == need && k1 == &key.url {
-                        *comp = EffectTextureSamplersComp( Some( texsamplerarr ) );
-                        return;
+
+
+                if let Some((v1, k1)) = &textures.data[idx] {
+                    let mut sample = key.sample.clone();
+                    let is_custom_address = match v1 {
+                        ETextureViewUsage::ImageFrame(droper) => {
+                            if droper.texture().frame().is_some() {
+                                true
+                            } else {
+                                sample.address_mode_u = key.wrapu;
+                                sample.address_mode_v = key.wrapv;
+                                sample.address_mode_w = key.wrapw;
+                                false
+                            }
+                        },
+                        _ => { 
+                            sample.address_mode_u = key.wrapu;
+                            sample.address_mode_v = key.wrapv;
+                            sample.address_mode_w = key.wrapw;
+                            false
+                        },
+                    };
+                    samplers.custom_address(idx, is_custom_address);
+
+                    if let Some(v2) = BindDataSampler::create(sample, &device, &asset_samp) {
+                        texsamplerarr.textures.push(EffectTextureSampler(v1.clone(), v2, EShaderStage::FRAGMENT, key.texture_sample, v1.view_dimension(), key.sampler_bind_type));
+
+                        // log::error!("{:?}", (&key.url, k1));
+                        if idx + 1 == need && k1 == &key.url {
+                            *comp = EffectTextureSamplersComp( Some( texsamplerarr ) );
+                            return;
+                        }
                     }
+
                 } else {
                     comp.0 = None; 
                     // log::error!("{:?}", (textures.data[idx].is_some(), samplers.0[idx].is_some()));
