@@ -1,4 +1,4 @@
-use std::{hash::Hasher, sync::Arc};
+// use std::{hash::Hasher, sync::Arc};
 
 use pi_scene_shell::prelude::*;
 use pi_scene_context::{geometry::instance::instanced_buffer::InstancedInfoComp, prelude::*};
@@ -36,7 +36,7 @@ pub type ParticleBundle = (
 pub fn sys_create_particle_calculator(
     mut cmds: ResMut<ActionListCPUParticleCalculator>,
     mut commands: Commands,
-    mut performance: ResMut<Performance>,
+    // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_create_particle_calculator"));
     cmds.drain().for_each(|OpsCPUParticleCalculator(entity, cfg)| {
@@ -70,7 +70,7 @@ pub fn sys_create_cpu_partilce_system(
     mut passinsert: Insert<(BundleEntity, PassObjInitBundle, PassTag)>,
     mut altergeo: Alter<(), (), BundleGeometry, ()>,
     engineopt: Res<EngineCustomPlugins>,
-    mut performance: ResMut<Performance>,
+    // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_create_cpu_partilce_system"));
     cmds.drain().for_each(|OpsCPUParticleSystem(id_scene, entity, trailmesh, trailgeo, calculator, attributes, update_buffer_interval_frame)| {
@@ -214,7 +214,7 @@ pub fn sys_act_partilce_system_state(
     mut trail_cmds: ResMut<ActionListCPUParticleSystemTrailMaterial>,
     trail_items: Query<&ParticleTrailMesh>,
     mut actions: ResMut<ActionListMaterialUse>,
-    mut performance: ResMut<Performance>,
+    // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_act_partilce_system_state"));
     trail_cmds.drain().for_each(|OpsCPUParticleSystemTrailMaterial(entity, idmat, pass)| {

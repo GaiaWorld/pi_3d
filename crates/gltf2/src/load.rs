@@ -1,4 +1,4 @@
-use std::{hash::{Hash, Hasher}, sync::Arc};
+use std::hash::{Hash, Hasher};
 
 use crossbeam::queue::SegQueue;
 use pi_scene_shell::prelude::*;
@@ -41,8 +41,8 @@ impl GLTFBaseLoader {
         .spawn(async move {
             match pi_hal::file::load_from_url(&key).await {
                 Ok(gltffile) => {
-                    let time0 = pi_time::Instant::now();
-                    let url = key.clone();
+                    // let time0 = pi_time::Instant::now();
+                    // let url = key.clone();
                     match Gltf::from_slice(&gltffile) {
                         Ok(gltf) => {
                             let mut buffers = vec![];
@@ -289,7 +289,7 @@ impl GLTFTempLoaded {
         particlesys_cmds: &mut ActionSetParticleSystem,
         particlesys_res: &mut ResourceParticleSystem,
     ) -> GLTF {
-        let time0 = pi_time::Instant::now();
+        // let time0 = pi_time::Instant::now();
         let mut result = GLTF::new(base_url.to_string());
         // let basekey = self.id.base_url.to_string() + "#";
 

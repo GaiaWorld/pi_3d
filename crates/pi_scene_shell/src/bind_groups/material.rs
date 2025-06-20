@@ -6,12 +6,12 @@ use pi_atom::Atom;
 use pi_hash::{DefaultHasher, XHashMap};
 use pi_render::{
     asset::TAssetKeyU64, renderer::{
-        bind::*, bind_buffer::{BindBufferAllocator, BindBufferRange}, bind_group::*, shader::{TShaderBindCode, TShaderSetBlock}
-    }, rhi::{device::RenderDevice, sampler::EAddressMode, RenderQueue}
+        bind::*, bind_buffer::BindBufferAllocator, bind_group::*
+    }, rhi::device::RenderDevice
 };
 use pi_share::Share;
 use pi_world_macros::Resource;
-use crate::{binds::*, prelude::{BindModelLightIndexs, EqAsResource, HashAsResource, KeyShaderMeta}, run_stage::EngineCustomPlugins, shader::* };
+use crate::{binds::*, prelude::{EqAsResource, HashAsResource, KeyShaderMeta}, run_stage::EngineCustomPlugins, shader::* };
 
 #[derive(Resource, Default)]
 pub struct MaterialDataMgr {
@@ -28,7 +28,7 @@ impl MaterialDataMgr {
                     return Some(Arc::new(result));
                 }
             }
-            if let Some(mut item) = MaterialData::new(device, key_meta, meta, allocator, engineopt, None, matarray) {
+            if let Some(mut item) = MaterialData::new(device, key_meta, meta, allocator, engineopt, matarray) {
                 if let Some(result) = item.allocate() {
                     arr.push(item);
                     return Some(Arc::new(result));
@@ -56,19 +56,18 @@ impl MaterialDataMgr {
 pub struct MaterialData {
     pub seq: Share<SegQueue<u32>>,
     pub effect_value: Option<Arc<ShaderBindEffectValueArr>>,
-    pub texture_info: Vec<Arc<BindEffectTextureInfo>>,
-    pub texture_till: Vec<Arc<BindEffectTextureTilloff>>,
-    pub texture_infoandtilloff: Vec<Arc<BindEffectTextureInfoAndTilloff>>,
+    // pub texture_info: Vec<Arc<BindEffectTextureInfo>>,
+    // pub texture_till: Vec<Arc<BindEffectTextureTilloff>>,
+    // pub texture_infoandtilloff: Vec<Arc<BindEffectTextureInfoAndTilloff>>,
     key_bindgroup: KeyBindGroup,
     pub hash: u64,
     pub maxcount: usize,
 }
 impl MaterialData {
-    pub fn new(device: &RenderDevice, key_meta: &KeyShaderMeta, meta: &Handle<ShaderEffectMeta>, allocator: &mut BindBufferAllocator, engineopt: &EngineCustomPlugins, val: Option<Arc<BindEffectTextureInfo>>, matarray: bool) -> Option<Self> {
-        let mut result = None;
-        let mut texture_info: Vec<Arc<BindEffectTextureInfo>> = vec![];
-        let mut texture_till: Vec<Arc<BindEffectTextureTilloff>> = vec![];
-        let mut texture_infoandtilloff = vec![];
+    pub fn new(device: &RenderDevice, key_meta: &KeyShaderMeta, meta: &Handle<ShaderEffectMeta>, allocator: &mut BindBufferAllocator, engineopt: &EngineCustomPlugins, matarray: bool) -> Option<Self> {
+        // let mut texture_info: Vec<Arc<BindEffectTextureInfo>> = vec![];
+        // let mut texture_till: Vec<Arc<BindEffectTextureTilloff>> = vec![];
+        // let mut texture_infoandtilloff: Vec<Arc<BindEffectTextureInfoAndTilloff>> = vec![];
         let mut effect_value = None;
 
         let disenable_material_array = engineopt.disenable_material_array || !matarray;
@@ -82,31 +81,31 @@ impl MaterialData {
             maxlen_material_array.min(limit.max_uniform_buffer_binding_size / BindEffectTextureInfoAndTilloff::ITEM_SIZE as u32)
         };
 
-        let texlen = meta.textures.len();
+        // let texlen = meta.textures.len();
         let seq = Share::new(SegQueue::default());
         for i in 0..maxcount {
             seq.push(i as u32);
         }
-        for i in 0..texlen {
-            // if let Some(val) = val.clone() {
-            //     texture_info.push(val);
-            // } else
-            // if let Some(bind) = BindEffectTextureInfo::new(maxcount, allocator, engineopt) {
-            //     texture_info.push(Arc::new(bind));
-            // } else {
-            //     return result;
-            // }
-            // if let Some(bind) = BindEffectTextureTilloff::new(maxcount, allocator, engineopt) {
-            //     texture_till.push(Arc::new(bind));
-            // } else {
-            //     return result;
-            // }
-            if let Some(bind) = BindEffectTextureInfoAndTilloff::new(maxcount, allocator, engineopt) {
-                texture_infoandtilloff.push(Arc::new(bind));
-            } else {
-                return result;
-            }
-        }
+        // for i in 0..texlen {
+        //     // if let Some(val) = val.clone() {
+        //     //     texture_info.push(val);
+        //     // } else
+        //     // if let Some(bind) = BindEffectTextureInfo::new(maxcount, allocator, engineopt) {
+        //     //     texture_info.push(Arc::new(bind));
+        //     // } else {
+        //     //     return result;
+        //     // }
+        //     // if let Some(bind) = BindEffectTextureTilloff::new(maxcount, allocator, engineopt) {
+        //     //     texture_till.push(Arc::new(bind));
+        //     // } else {
+        //     //     return result;
+        //     // }
+        //     if let Some(bind) = BindEffectTextureInfoAndTilloff::new(maxcount, allocator, engineopt) {
+        //         texture_infoandtilloff.push(Arc::new(bind));
+        //     } else {
+        //         return result;
+        //     }
+        // }
         
         let mut key_binds = Vec::with_capacity(4);
 
@@ -116,43 +115,41 @@ impl MaterialData {
             }
         }
 
-        for bind in texture_info.iter() {
-            if let Some(key) = bind.key_bind() {
-                key_binds.push(key);
-            }
-        }
-        for bind in texture_till.iter() {
-            if let Some(key) = bind.key_bind() {
-                key_binds.push(key);
-            }
-        }
-        for bind in texture_infoandtilloff.iter() {
-            if let Some(key) = bind.key_bind() {
-                key_binds.push(key);
-            }
-        }
+        // for bind in texture_info.iter() {
+        //     if let Some(key) = bind.key_bind() {
+        //         key_binds.push(key);
+        //     }
+        // }
+        // for bind in texture_till.iter() {
+        //     if let Some(key) = bind.key_bind() {
+        //         key_binds.push(key);
+        //     }
+        // }
+        // for bind in texture_infoandtilloff.iter() {
+        //     if let Some(key) = bind.key_bind() {
+        //         key_binds.push(key);
+        //     }
+        // }
 
         let mut hasher = DefaultHasher::default();
         effect_value.hash(&mut hasher);
-        texture_info.hash(&mut hasher);
-        texture_till.hash(&mut hasher);
-        texture_infoandtilloff.hash(&mut hasher);
+        // texture_info.hash(&mut hasher);
+        // texture_till.hash(&mut hasher);
+        // texture_infoandtilloff.hash(&mut hasher);
         let hash = hasher.finish();
 
         // log::error!("{:?}", (&seq, seq.len()));
 
-        result = Some(Self {
+        return Some(Self {
             seq,
             effect_value,
-            texture_info,
-            texture_till,
-            texture_infoandtilloff,
+            // texture_info,
+            // texture_till,
+            // texture_infoandtilloff,
             hash,
             key_bindgroup: KeyBindGroup::new(key_binds),
             maxcount: maxcount as usize
         });
-
-        return result;
     }
     pub fn allocate(&mut self, ) -> Option<RefBindGroupMaterial> {
         // log::error!("Alloce: {:?}", self.seq.len());
@@ -162,9 +159,9 @@ impl MaterialData {
                 hash: self.hash,
                 seq: self.seq.clone(),
                 effect_value: self.effect_value.clone(),
-                texture_info: self.texture_info.clone(),
-                texture_till: self.texture_till.clone(),
-                texture_infoandtilloff: self.texture_infoandtilloff.clone(),
+                // texture_info: self.texture_info.clone(),
+                // texture_till: self.texture_till.clone(),
+                // texture_infoandtilloff: self.texture_infoandtilloff.clone(),
                 key_bindgroup: self.key_bindgroup.clone()
             })
         } else {
@@ -176,9 +173,9 @@ impl MaterialData {
 pub struct RefBindGroupMaterial {
     pub seq: Share<SegQueue<u32>>,
     pub effect_value: Option<Arc<ShaderBindEffectValueArr>>,
-    pub texture_info: Vec<Arc<BindEffectTextureInfo>>,
-    pub texture_till: Vec<Arc<BindEffectTextureTilloff>>,
-    pub texture_infoandtilloff: Vec<Arc<BindEffectTextureInfoAndTilloff>>,
+    // pub texture_info: Vec<Arc<BindEffectTextureInfo>>,
+    // pub texture_till: Vec<Arc<BindEffectTextureTilloff>>,
+    // pub texture_infoandtilloff: Vec<Arc<BindEffectTextureInfoAndTilloff>>,
     matidx: u32,
     key_bindgroup: KeyBindGroup,
     pub hash: u64,
@@ -190,17 +187,17 @@ impl RefBindGroupMaterial {
             buffer.data().write_data(offset, data);
         }
     }
-    pub fn update_texture(&self, texidx: usize, tilloff: &[u8], wrap_u: u8, wrap_v: u8, wrap_w: u8, coord: u8) {
-        if let Some(bind) = self.texture_info.get(texidx) {
-            bind.update(self.matidx as usize, wrap_u, wrap_v, wrap_w, coord);
-        }
-        if let Some(bind) = self.texture_till.get(texidx) {
-            bind.update(self.matidx as usize, tilloff);
-        }
-        if let Some(bind) = self.texture_infoandtilloff.get(texidx) {
-            bind.update(self.matidx as usize, tilloff, wrap_u, wrap_v, wrap_w, coord);
-        }
-    }
+    // pub fn update_texture(&self, texidx: usize, tilloff: &[u8], wrap_u: u8, wrap_v: u8, wrap_w: u8, coord: u8) {
+    //     if let Some(bind) = self.texture_info.get(texidx) {
+    //         bind.update(self.matidx as usize, wrap_u, wrap_v, wrap_w, coord);
+    //     }
+    //     if let Some(bind) = self.texture_till.get(texidx) {
+    //         bind.update(self.matidx as usize, tilloff);
+    //     }
+    //     if let Some(bind) = self.texture_infoandtilloff.get(texidx) {
+    //         bind.update(self.matidx as usize, tilloff, wrap_u, wrap_v, wrap_w, coord);
+    //     }
+    // }
     pub fn key_bind_group(&self) -> KeyBindGroup {
         self.key_bindgroup.clone()
     }
@@ -212,70 +209,70 @@ impl RefBindGroupMaterial {
     }
 }
 impl RefBindGroupMaterial {
-    pub fn vs_define_code(&self, set: u32, meta: &ShaderEffectMeta, engineopt: &EngineCustomPlugins) -> String {
+    pub fn vs_define_code(&self, set: u32, _meta: &ShaderEffectMeta, engineopt: &EngineCustomPlugins) -> String {
 
         let mut result = String::from("");
-        let mut bind = 0;
-        let mut texidx = 0;
+        let bind = 0;
+        // let texidx = 0;
 
         if let Some(item) = &self.effect_value {
             result += item.vs_define_code(set, bind, engineopt).as_str();
-            bind += 1;
+            // bind += 1;
         }
 
-        for item in self.texture_info.iter() {
-            let key = &meta.textures[texidx];
-            result += item.vs_define_code(set, bind, &key.slotname).as_str();
-            bind += 1;
-            texidx += 1;
-        }
-        texidx = 0;
-        for item in self.texture_till.iter() {
-            let key = &meta.textures[texidx];
-            result += item.vs_define_code(set, bind, &key.slotname).as_str();
-            bind += 1;
-            texidx += 1;
-        }
-        texidx = 0;
-        for item in self.texture_infoandtilloff.iter() {
-            let key = &meta.textures[texidx];
-            result += item.vs_define_code(set, bind, &key.slotname).as_str();
-            bind += 1;
-            texidx += 1;
-        }
+        // for item in self.texture_info.iter() {
+        //     let key = &meta.textures[texidx];
+        //     result += item.vs_define_code(set, bind, &key.slotname).as_str();
+        //     bind += 1;
+        //     texidx += 1;
+        // }
+        // texidx = 0;
+        // for item in self.texture_till.iter() {
+        //     let key = &meta.textures[texidx];
+        //     result += item.vs_define_code(set, bind, &key.slotname).as_str();
+        //     bind += 1;
+        //     texidx += 1;
+        // }
+        // texidx = 0;
+        // for item in self.texture_infoandtilloff.iter() {
+        //     let key = &meta.textures[texidx];
+        //     result += item.vs_define_code(set, bind, &key.slotname).as_str();
+        //     bind += 1;
+        //     texidx += 1;
+        // }
 
         result
     }
 
-    pub fn fs_define_code(&self, set: u32, meta: &ShaderEffectMeta, engineopt: &EngineCustomPlugins) -> String {
+    pub fn fs_define_code(&self, set: u32, _meta: &ShaderEffectMeta, engineopt: &EngineCustomPlugins) -> String {
         let mut result = String::from("");
-        let mut bind = 0;
-        let mut texidx = 0;
+        let bind = 0;
+        // let mut texidx = 0;
 
         if let Some(item) = &self.effect_value {
             result += item.fs_define_code(set, bind, engineopt).as_str();
-            bind += 1;
+            // bind += 1;
         }
-        for item in self.texture_info.iter() {
-            let key = &meta.textures[texidx];
-            result += item.vs_define_code(set, bind, &key.slotname).as_str();
-            bind += 1;
-            texidx += 1;
-        }
-        texidx = 0;
-        for item in self.texture_till.iter() {
-            let key = &meta.textures[texidx];
-            result += item.vs_define_code(set, bind, &key.slotname).as_str();
-            bind += 1;
-            texidx += 1;
-        }
-        texidx = 0;
-        for item in self.texture_infoandtilloff.iter() {
-            let key = &meta.textures[texidx];
-            result += item.vs_define_code(set, bind, &key.slotname).as_str();
-            bind += 1;
-            texidx += 1;
-        }
+        // for item in self.texture_info.iter() {
+        //     let key = &meta.textures[texidx];
+        //     result += item.vs_define_code(set, bind, &key.slotname).as_str();
+        //     bind += 1;
+        //     texidx += 1;
+        // }
+        // texidx = 0;
+        // for item in self.texture_till.iter() {
+        //     let key = &meta.textures[texidx];
+        //     result += item.vs_define_code(set, bind, &key.slotname).as_str();
+        //     bind += 1;
+        //     texidx += 1;
+        // }
+        // texidx = 0;
+        // for item in self.texture_infoandtilloff.iter() {
+        //     let key = &meta.textures[texidx];
+        //     result += item.vs_define_code(set, bind, &key.slotname).as_str();
+        //     bind += 1;
+        //     texidx += 1;
+        // }
 
         result
     }
@@ -341,7 +338,7 @@ impl HashAsResource for BindGroupMaterial {
     }
 }
 impl TBindGroupHashForShader for BindGroupMaterial {
-    fn hash_for_shader<H: std::hash::Hasher>(&self, state: &mut H) {
+    fn hash_for_shader<H: std::hash::Hasher>(&self, _state: &mut H) {
         // todo!()
     }
 }

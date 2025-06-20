@@ -1,10 +1,9 @@
-use std::result;
 
 use pi_atom::Atom;
 
-use crate::prelude::{S_BREAK, S_V_MAT_IDX};
+use crate::prelude::S_BREAK;
 
-use super::{ShaderEffectMeta, ShaderVarUniform, ShaderVarVertices, VertexBufferDesc};
+use super::{ShaderEffectMeta, ShaderVarUniform, ShaderVarVertices};
 
 pub trait TVertexFormatShaderCode {
     fn shader_code(&self) -> String;
@@ -502,7 +501,7 @@ pub enum EVertexAttribute {
 impl TAsWgpuVertexAtribute for EVertexAttribute {
     fn as_attribute(&self, offset: wgpu::BufferAddress, shader_location: u32) -> wgpu::VertexAttribute {
         match self {
-            EVertexAttribute::Buildin(val, format) => wgpu::VertexAttribute { format: *format, offset, shader_location, },
+            EVertexAttribute::Buildin(_val, format) => wgpu::VertexAttribute { format: *format, offset, shader_location, },
             EVertexAttribute::Custom(val) => wgpu::VertexAttribute { format: val.format(), offset, shader_location, },
         }
     }
@@ -522,7 +521,7 @@ impl EVertexAttribute {
     }
     pub fn format(&self) -> wgpu::VertexFormat {
         match self {
-            EVertexAttribute::Buildin(val, format) => *format,
+            EVertexAttribute::Buildin(_val, format) => *format,
             EVertexAttribute::Custom(val) => val.format(),
         }
     }
@@ -636,7 +635,7 @@ impl EVertexAttribute {
                     },
                 }
             },
-            EVertexAttribute::Custom(val) => {
+            EVertexAttribute::Custom(_val) => {
             },
         }
 
@@ -645,7 +644,7 @@ impl EVertexAttribute {
     pub fn fs_running_code(&self, meta: &ShaderEffectMeta) -> String {
         let mut result = String::from("");
         match self {
-            EVertexAttribute::Buildin(val, format) => {},
+            EVertexAttribute::Buildin(_val, _format) => {},
             EVertexAttribute::Custom(val) => match &val.foruniform {
                 Some(key) => {
                     if meta.uniforms.query_instance(key) {

@@ -1,10 +1,9 @@
 
-use std::{ops::Range, sync::Arc};
+use std::ops::Range;
 
-use pi_render::rhi::std140::Std140;
 use pi_scene_shell::{prelude::*, run_stage::EngineCustomPlugins};
 use pi_scene_context::{geometry::instance::{instanced_buffer::*, types::ModelInstanceAttributes}, prelude::*};
-use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolRotation, TToolVector3}, Quaternion, SQuaternion, Vector4};
+use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::TToolMatrix, SQuaternion, Vector4};
 
 use crate::{base::*, ActionListCPUParticleSystemState, OpsCPUParticleSystemState};
 
@@ -22,7 +21,7 @@ pub fn runif_particlesystem(
 }
 
 pub fn sys_particle_active(
-    mut items: Query<(Entity, &GlobalEnable, &SceneID, &ParticleSystemActive, &mut ParticleSystemRunningState, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission, &MeshInstanceState), Or<(Changed<GlobalEnable>, Changed<ParticleSystemActive>)>>,
+    mut items: Query<(Entity, &GlobalEnable, &SceneID, &ParticleSystemActive, &mut ParticleSystemRunningState, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission), Or<(Changed<GlobalEnable>, Changed<ParticleSystemActive>)>>,
     psperformance: Res<ParticleSystemPerformance>,
     calculators: Query<&ParticleCalculatorBase>,
     scenes: Query<&SceneTime>,
@@ -31,7 +30,7 @@ pub fn sys_particle_active(
 ) {
     // performance.systems.push(String::from("sys_particle_active"));
     // let time0 = pi_time::Instant::now();
-    items.iter_mut().for_each(|(entity, enable, idscene, active, mut state, mut ids, mut time, mut emission, instancestate)| {
+    items.iter_mut().for_each(|(entity, enable, idscene, active, mut state, mut ids, mut time, mut emission)| {
         if enable.0 == true && active.0 == true {
             if state.isrunning == false {
                 if let (Ok(calculator), Ok(scenetime)) = (calculators.get(ids.calculator.as_ref().unwrap().0), scenes.get(idscene.0)) {
@@ -77,7 +76,7 @@ pub fn sys_prewarm(
     )>,
     calculators_trail:  Query<&ParticleCalculatorTrail>,
     mut psperformance: ResMut<ParticleSystemPerformance>,
-    mut performance: ResMut<Performance>,
+    // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_prewarm"));
     if psperformance.debug { psperformance.time = pi_time::Instant::now(); }
@@ -176,7 +175,7 @@ pub fn sys_prewarm(
 pub fn sys_ids(
     mut particle_sys: Query<(&mut ParticleIDs, &ParticleStart, &ParticleSystemTime, &ParticleDieWaitTime), Changed<ParticleSystemModifyState>>,
     mut psperformance: ResMut<ParticleSystemPerformance>,
-    mut performance: ResMut<Performance>,
+    // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_ids"));
     if psperformance.debug { psperformance.time = pi_time::Instant::now(); }
@@ -217,7 +216,7 @@ pub fn sys_emission(
     calculators: Query<(&ParticleCalculatorBase, &ParticleCalculatorStartModifiers)>,
     mut particle_sys: Query<(&SceneID, &DisposeReady, &ParticleSystemRunningState, &mut ParticleRandom, &mut ParticleIDs, &mut ParticleSystemTime, &mut ParticleSystemEmission, &mut ParticleBaseRandom, &mut ParticleSystemModifyState)>,
     mut psperformance: ResMut<ParticleSystemPerformance>,
-    mut performance: ResMut<Performance>,
+    // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_emission"));
     if psperformance.debug { psperformance.time = pi_time::Instant::now(); }
@@ -275,7 +274,7 @@ fn fn_emission(
 pub fn sys_emitmatrix(
     mut particle_sys: Query<(&LocalScaling, &GlobalMatrix, &ParticleIDs, &ParticleSystemTime, &mut ParticleEmitMatrix, &mut AbsoluteTransform), Changed<ParticleSystemModifyState>>,
     mut psperformance: ResMut<ParticleSystemPerformance>,
-    mut performance: ResMut<Performance>,
+    // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_emitmatrix"));
     if psperformance.debug { psperformance.time = pi_time::Instant::now(); }
@@ -700,7 +699,7 @@ pub fn sys_update_buffer(
     // let mut l_rotation = Rotation3::identity();
     let mut l_quaternion = SQuaternion::<Number>::identity();
     let v3zero = Vector3::zeros();
-    let v3one = Vector3::new(1., 1., 1.);
+    // let v3one = Vector3::new(1., 1., 1.);
     let mut h = Vector4::zeros();
     let mut hh = Vector4::zeros();
     let mut emitposition = Vector3::zeros();
@@ -709,7 +708,7 @@ pub fn sys_update_buffer(
     let mut f_v = false;
     let mut f_lc = false;
 
-    let stripe = 16 + 4 + 4;
+    // let stripe = 16 + 4 + 4;
     let mut temp: [u8; 112] = [0; 112];
     particle_sys.iter_mut().for_each(
         |(

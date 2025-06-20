@@ -4,7 +4,7 @@ use pi_scene_shell::prelude::*;
 
 
 use crate::{
-    bindgroup::*, cameras::prelude::*, object::*, pass::*, prelude::*, shadow::prelude::*, transforms::prelude::*
+    bindgroup::*, cameras::prelude::*, shadow::prelude::*,
 };
 
 use self::{
@@ -54,7 +54,7 @@ impl Plugin for PluginRenderer {
     fn build(&self, app: &mut App) {
         app.insert_resource(RendererHasher::default());
 
-        let device = app.world.get_resource::<PiRenderDevice>().unwrap().0.clone();
+        // let device = app.world.get_resource::<PiRenderDevice>().unwrap().0.clone();
         // if app.world.get_resource::<PiSafeAtlasAllocator>().is_none() {
         //     let cfg = asset_capacity::<AssetCfgRenderResTextureView>(app);
         //     let texture_assets_mgr = if let Some(texture_assets_mgr) = app.world.get_resource::<ShareAssetMgr<RenderRes<wgpu::TextureView>>>() {

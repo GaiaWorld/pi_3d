@@ -2,7 +2,6 @@ use crossbeam::queue::ArrayQueue;
 use pi_scene_math::{Vector3, Matrix, Rotation3, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolRotation, TToolVector3}, Number, Isometry3, Quaternion, SQuaternion};
 use pi_share::Share;
 use pi_world_macros::Resource;
-use simba::simd::{SimdBool, SimdComplexField, SimdPartialOrd, SimdRealField};
 
 use crate::shader::ERenderAlignment;
 
@@ -291,7 +290,7 @@ pub fn calc_matrix_velocity<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g
     }
 }
 #[inline(always)]
-pub fn calc_matrix_strentched<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rotation: &'a SQuaternion<Number>, _g_velocity: &'a Vector3, l_positon: &'a Vector3, l_scale: &'a Vector3, _l_rotation: &'a SQuaternion<Number>, _l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
+pub fn calc_matrix_strentched<'a>(g_positon: &'a Vector3, g_scale: &'a Vector3, _g_rotation: &'a SQuaternion<Number>, _g_velocity: &'a Vector3, _l_positon: &'a Vector3, l_scale: &'a Vector3, _l_rotation: &'a SQuaternion<Number>, _l_euler: &'a Vector3, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
 
     // matrix4_compose_no_rotation(g_scale, g_positon, refwmatrix);
     
@@ -497,7 +496,7 @@ pub fn quaternion_from_unit_vector(axis: &nalgebra::Unit<Vector3>, vec_to: &Vect
         let x = axis.y * vec_to.z - axis.z * vec_to.y;
         let y = axis.z * vec_to.x - axis.x * vec_to.z;
         let z = axis.x * vec_to.y - axis.y * vec_to.x;
-        let temp = Vector3::cross(axis, vec_to);
+        // let temp = Vector3::cross(axis, vec_to);
         // nalgebra::Quaternion::new(r, temp.x, temp.y, temp.z)
         quat.w = r;
         // quat.i = temp.x;

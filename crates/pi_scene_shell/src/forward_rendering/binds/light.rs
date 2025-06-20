@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use pi_render::renderer::{
     bind_buffer::{BindBufferRange, BindBufferAllocator},
@@ -34,7 +33,7 @@ impl ShaderBindSceneLightInfos {
             let direct_offset = 0;
             let point_offset    = direct_offset + self.direct_count as u32 * Self::SIZE_DIRECT_LIGHT   ;
             let spot_offset     = point_offset  + self.point_count  as u32 * Self::SIZE_POINT_LIGHT    ;
-            let hemi_offset     = spot_offset   + self.spot_count   as u32 * Self::SIZE_SPOT_LIGHT     ;
+            let _hemi_offset     = spot_offset   + self.spot_count   as u32 * Self::SIZE_SPOT_LIGHT     ;
 
             let enabled = if enabled { 1.0 } else { -1.0 };
             let data = [dx, dy, dz, enabled];
@@ -49,7 +48,7 @@ impl ShaderBindSceneLightInfos {
             let direct_offset = 0;
             let point_offset    = direct_offset + self.direct_count as u32 * Self::SIZE_DIRECT_LIGHT   ;
             let spot_offset     = point_offset  + self.point_count  as u32 * Self::SIZE_POINT_LIGHT    ;
-            let hemi_offset     = spot_offset   + self.spot_count   as u32 * Self::SIZE_SPOT_LIGHT     ;
+            let _hemi_offset     = spot_offset   + self.spot_count   as u32 * Self::SIZE_SPOT_LIGHT     ;
 
             let enabled = if enabled { 1.0 } else { -1.0 };
             let data = [x, y, z, enabled];
@@ -66,7 +65,7 @@ impl ShaderBindSceneLightInfos {
             let direct_offset = 0;
             let point_offset    = direct_offset + self.direct_count as u32 * Self::SIZE_DIRECT_LIGHT   ;
             let spot_offset     = point_offset  + self.point_count  as u32 * Self::SIZE_POINT_LIGHT    ;
-            let hemi_offset     = spot_offset   + self.spot_count   as u32 * Self::SIZE_SPOT_LIGHT     ;
+            let _hemi_offset     = spot_offset   + self.spot_count   as u32 * Self::SIZE_SPOT_LIGHT     ;
 
             let enabled = if enabled { 1.0 } else { -1.0 };
             let data = [x, y, z, enabled];

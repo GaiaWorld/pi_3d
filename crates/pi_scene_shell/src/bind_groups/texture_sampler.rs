@@ -2,8 +2,7 @@ use std::hash::Hash;
 
 use pi_render::{
     asset::TAssetKeyU64, renderer::{
-        bind::TKeyBind,
-        bind_group::*, sampler::BindDataSampler, shader::TShaderSetBlock, 
+        bind_group::*, sampler::BindDataSampler,
         shader_stage::EShaderStage,
         texture::{BindDataTexture2D, ETextureViewUsage, ImageTextureFrame}
     }
@@ -18,9 +17,9 @@ pub struct EffectTextureSampler(pub ETextureViewUsage, pub BindDataSampler, pub 
 impl EffectTextureSampler {
     pub fn tilloff(&self) -> [f32;4] {
         match &self.0 {
-            ETextureViewUsage::Tex(arc) => ImageTextureFrame::DEFAULT_TILLOFF,
-            ETextureViewUsage::TexWithId(arc) => ImageTextureFrame::DEFAULT_TILLOFF,
-            ETextureViewUsage::Image(arc) => ImageTextureFrame::DEFAULT_TILLOFF,
+            ETextureViewUsage::Tex(_arc) => ImageTextureFrame::DEFAULT_TILLOFF,
+            ETextureViewUsage::TexWithId(_arc) => ImageTextureFrame::DEFAULT_TILLOFF,
+            ETextureViewUsage::Image(_arc) => ImageTextureFrame::DEFAULT_TILLOFF,
             ETextureViewUsage::ImageFrame(arc) => {
                 arc.texture().tilloff()
             },
@@ -30,9 +29,9 @@ impl EffectTextureSampler {
     }
     pub fn coord(&self) -> u8 {
         match &self.0 {
-            ETextureViewUsage::Tex(arc) => 0,
-            ETextureViewUsage::TexWithId(arc) => 0,
-            ETextureViewUsage::Image(arc) => 0,
+            ETextureViewUsage::Tex(_arc) => 0,
+            ETextureViewUsage::TexWithId(_arc) => 0,
+            ETextureViewUsage::Image(_arc) => 0,
             ETextureViewUsage::ImageFrame(arc) => {
                 arc.texture().coord()
             },
@@ -126,7 +125,7 @@ impl BindGroupTextureSamplers {
             let slotname = key.slotname.as_str();
             if  item.2.mode() & wgpu::ShaderStages::VERTEX == wgpu::ShaderStages::VERTEX {
                 result += sampler_bind_code(slotname, item.5, set, binding).as_str(); binding += 1;
-                result += texture_bind_code_mat(&engineopt, &item.3, item.4, slotname, slotname, set, binding).as_str(); binding += 1;
+                result += texture_bind_code_mat(&engineopt, &item.3, item.4, slotname, slotname, set, binding, idx).as_str(); binding += 1;
             }
         }
 
@@ -145,7 +144,7 @@ impl BindGroupTextureSamplers {
             let slotname = key.slotname.as_str();
             if  item.2.mode() & wgpu::ShaderStages::FRAGMENT == wgpu::ShaderStages::FRAGMENT {
                 result += sampler_bind_code(slotname, item.5, set, binding).as_str(); binding += 1;
-                result += texture_bind_code_mat(&engineopt, &item.3, item.4, slotname, slotname, set, binding).as_str(); binding += 1;
+                result += texture_bind_code_mat(&engineopt, &item.3, item.4, slotname, slotname, set, binding, idx).as_str(); binding += 1;
             }
         }
 

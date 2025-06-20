@@ -4,7 +4,7 @@ use pi_scene_math::{
     Number, Point3, Vector3,
 };
 
-use crate::{flags::GlobalEnable, prelude::RenderQueueSortParam};
+use crate::flags::GlobalEnable;
 
 use super::{base::{PiRay, PickResult, TBoundingInfoCalc, TFilter}, bounding_sphere::intersects_sphere};
 

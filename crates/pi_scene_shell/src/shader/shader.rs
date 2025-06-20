@@ -4,7 +4,7 @@ use pi_bevy_asset::{AssetCapacity, TAssetCapacity};
 use pi_render::{renderer::shader::*, asset::ASSET_SIZE_FOR_UNKOWN};
 use crate::bind_groups::*;
 
-use super::{BindDefine, EBuildinVertexAtribute, ERenderAlignment, ERenderAlignmentForShader, EVertexAttribute, KeyShaderFromAttributes, ShaderEffectMeta};
+use super::{BindDefine, ERenderAlignmentForShader, KeyShaderFromAttributes, ShaderEffectMeta};
 
 pub trait TShaderAttributesCode {
     fn define_code(&self, location: u32) -> String;

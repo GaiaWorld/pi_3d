@@ -1,4 +1,4 @@
-use std::{ops::Range, sync::Arc, u32};
+use std::{ops::Range, u32};
 
 use derive_deref::{Deref, DerefMut};
 use pi_scene_shell::prelude::*;
@@ -102,24 +102,24 @@ impl ModelStatic {
 /// 包含 Mesh 的渲染矩阵, 骨骼绑定, 关联灯光等等信息
 #[derive(Component, Default, Clone)]
 pub struct BindModel {
-    pub matrix: Option<ShaderBindModelAboutMatrix>,
-    pub matrixinv: Option<ShaderBindModelMatrixInv>,
-    pub skinoff: Option<ShaderBindModelSkinOffset>,
-    pub velocity: Option<ShaderBindModelVelocity>,
-    pub morphinfluence: Option<ShaderBindModelMorphinfluence>,
-    pub matidx: Option<ShaderBindModelMatIdx>,
+    pub matrix: Option<ShaderBindModelAbout>,
+    // pub matrixinv: Option<ShaderBindModelMatrixInv>,
+    // pub skinoff: Option<ShaderBindModelSkinOffset>,
+    // pub velocity: Option<ShaderBindModelVelocity>,
+    // pub morphinfluence: Option<ShaderBindModelMorphinfluence>,
+    // pub matidx: Option<ShaderBindModelMatIdx>,
 }
 impl BindModel {
     pub fn new(
         allocator: &mut BindBufferAllocator,
     ) -> Self {
         Self {
-            matrix: ShaderBindModelAboutMatrix::new(allocator),
-            matrixinv: ShaderBindModelMatrixInv::new(allocator),
-            skinoff: ShaderBindModelSkinOffset::new(allocator),
-            velocity: ShaderBindModelVelocity::new(allocator),
-            morphinfluence: ShaderBindModelMorphinfluence::new(allocator),
-            matidx: ShaderBindModelMatIdx::new(allocator),
+            matrix: ShaderBindModelAbout::new(allocator),
+            // matrixinv: ShaderBindModelMatrixInv::new(allocator),
+            // skinoff: ShaderBindModelSkinOffset::new(allocator),
+            // velocity: ShaderBindModelVelocity::new(allocator),
+            // morphinfluence: ShaderBindModelMorphinfluence::new(allocator),
+            // matidx: ShaderBindModelMatIdx::new(allocator),
         }
     }
 }

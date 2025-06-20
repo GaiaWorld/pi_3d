@@ -51,21 +51,6 @@ impl Plugin for PluginParticleSystem {
         app.insert_resource(temp);
         app.insert_resource(ResParticleTrailBuffer(trailbuffer));
 
-#[cfg(feature = "use_bevy")]
-        app.configure_sets(
-            Update, 
-            (
-                StageParticleSystem::ParticleSysCreate.after(StageTrail::_TrailCreate),
-                StageParticleSystem::_ParticleSysCreate.after(StageParticleSystem::ParticleSysCreate).before(StageTransform::TransformCommand).before(StageEnable::Command),
-                StageParticleSystem::ParticleSysCommand.after(StageParticleSystem::_ParticleSysCreate),
-                StageParticleSystem::ParticleSysEmission.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysCommand),
-                StageParticleSystem::ParticleSysParamStart.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysEmission),
-                StageParticleSystem::ParticleSysCalc.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysParamStart),
-                StageParticleSystem::ParticleSysMatrix.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysCalc).after(StageTransform::TransformCalcMatrix),
-                StageParticleSystem::ParticleSysUpdate.in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysMatrix).after(StageModel::InstanceEffectGeometry).after(StageGeometry::_VertexBufferLoadedApply).before(StageGeometry::GeometryLoaded).before(ERunStageChap::Collect),
-            )
-        );
-        #[cfg(not(feature = "use_bevy"))]
         app
         .configure_set(StageD3, StageParticleSystem::ParticleSysCreate    .in_set(ERunStageChap::Create).after(StageTrail::_TrailCreate))
         .configure_set(StageD3, StageParticleSystem::_ParticleSysCreate   .in_set(ERunStageChap::Create).after(StageParticleSystem::ParticleSysCreate).before(StageTransform::TransformCommand).before(StageEnable::Command))
@@ -80,39 +65,6 @@ impl Plugin for PluginParticleSystem {
 
         let enginepugins = app.world.get_resource::<EngineCustomPlugins>().unwrap();
         if enginepugins.particle_system {
-
-            #[cfg(feature = "use_bevy")]
-            app.add_systems(
-                Update,
-                (
-                    apply_deferred.in_set(StageParticleSystem::_ParticleSysCreate),
-                    sys_create_particle_calculator.in_set(StageScene::SceneCreate),
-                    sys_create_cpu_partilce_system.in_set(StageParticleSystem::ParticleSysCreate),
-                    sys_act_partilce_system_state.in_set(StageParticleSystem::ParticleSysCommand),
-                    sys_particle_active.in_set(StageParticleSystem::ParticleSysParamStart),
-                    (
-                        sys_ids                 ,
-                        sys_emission            ,
-                    ).chain().in_set(StageParticleSystem::ParticleSysEmission),
-                    (
-                        sys_start,
-                        sys_over_lifetime,
-                        sys_direction,
-                        sys_by_speed,
-                    ).chain().in_set(StageParticleSystem::ParticleSysCalc),
-                    (
-                        sys_emitmatrix      ,
-                        sys_prewarm         ,
-                    ).chain().in_set(StageParticleSystem::ParticleSysMatrix),
-                    (
-                        sys_update_buffer           ,
-                        sys_update_buffer_trail     ,
-                    ).chain().in_set(StageParticleSystem::ParticleSysUpdate),
-                    sys_dispose_about_particle_system.after(sys_dispose_ready).in_set(StageParticleSystem::ParticleSysDispose),
-                )
-            );
-
-            #[cfg(not(feature = "use_bevy"))]
             app
             .add_systems(StageD3, sys_create_particle_calculator.in_set(StageScene::SceneCreate))
             .add_systems(StageD3, sys_create_cpu_partilce_system

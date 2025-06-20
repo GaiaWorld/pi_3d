@@ -1,6 +1,5 @@
 
 use crossbeam::queue::ArrayQueue;
-use crossbeam::queue::SegQueue;
 use pi_slotmap::Key;
 
 use crate::ecs::*;

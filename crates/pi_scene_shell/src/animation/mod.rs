@@ -9,7 +9,7 @@ mod uint;
 mod int;
 mod mat4;
 
-use crate::{ecs::*, object::{sys_dispose, sys_dispose_can}, prelude::runif_3d, run_stage::StageD3};
+use crate::{ecs::*, object::{sys_dispose, sys_dispose_can}, run_stage::StageD3};
 
 use std::marker::PhantomData;
 

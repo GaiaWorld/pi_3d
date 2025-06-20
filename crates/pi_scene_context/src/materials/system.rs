@@ -16,8 +16,8 @@ pub fn sys_material_textures_modify(
             &mut TextureKeyList,
         )
     >,
-    device: Res<PiRenderDevice>,
-    asset_samp: Res<ShareAssetMgr<SamplerRes>>,
+    // device: Res<PiRenderDevice>,
+    // asset_samp: Res<ShareAssetMgr<SamplerRes>>,
     entitysets: Res<EntityFilterForComponentChanged>,
 ) {
     // log::debug!("SysMaterialMetaChange: ");
@@ -151,6 +151,7 @@ pub fn sys_texture_ready(
             &AssetResShaderEffectMeta, &TextureKeyList
             , &EffectBindTexture2DList, &mut EffectBindSampler2DList
             , &mut EffectTextureSamplersComp
+            , &mut BindEffect
         )
     >,
     entitysets: Res<EntityFilterForComponentChanged>,
@@ -168,7 +169,7 @@ pub fn sys_texture_ready(
         if let Ok((
             _entity, binddesc, keys
             , textures, mut samplers
-            , mut comp
+            , mut comp, mut bindval
         )) = items.get_mut(*entity) {
             let binddesc = binddesc.0.as_ref().unwrap();
             let need = binddesc.textures.len();
@@ -199,6 +200,14 @@ pub fn sys_texture_ready(
                         },
                     };
                     samplers.custom_address(idx, is_custom_address);
+
+                    if let Some(bindval) = &mut bindval.0 {
+                        if is_custom_address {
+                            bindval.update_texture(idx, &v1.tilloff(), key.wrapu.to_u8(), key.wrapv.to_u8(), key.wrapw.to_u8(), v1.coord());
+                        } else {
+                            bindval.update_texture(idx, &v1.tilloff(), 255, 255, 255, v1.coord());
+                        }
+                    }
 
                     if let Some(v2) = BindDataSampler::create(sample, &device, &asset_samp) {
                         texsamplerarr.textures.push(EffectTextureSampler(v1.clone(), v2, EShaderStage::FRAGMENT, key.texture_sample, v1.view_dimension(), key.sampler_bind_type));

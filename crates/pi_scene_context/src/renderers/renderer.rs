@@ -1,5 +1,5 @@
 
-use std::{sync::Arc, ops::Deref, slice::Iter};
+use std::{ops::Deref, slice::Iter};
 
 use pi_scene_shell::prelude::*;
 use smallvec::SmallVec;

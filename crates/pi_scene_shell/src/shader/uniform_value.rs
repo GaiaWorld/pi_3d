@@ -4,7 +4,7 @@ use pi_atom::Atom;
 
 use crate::run_stage::EngineCustomPlugins;
 
-use super::{TUnifromShaderProperty, UniformPropertyName, TBindDescToShaderCode};
+use super::{TUnifromShaderProperty, UniformPropertyName};
 
 #[derive(Clone)]
 pub struct UniformPropertyMat4(pub UniformPropertyName, pub [f32;16], pub bool);
@@ -387,7 +387,7 @@ impl MaterialValueBindDesc {
     }
     fn _code(&self, set: u32, index: u32, arrlen: u32, engineopt: &EngineCustomPlugins) -> String {
         let mut result = String::from("");
-        let mut definecode = String::from("");
+        let definecode = String::from("");
 
         if self.size() == 0 {
 
@@ -477,7 +477,7 @@ impl MaterialValueBindDesc {
         definecode + &result
     }
     pub fn vs_running_code(&self) -> String {
-        let mut result = String::from("");
+        let result = String::from("");
 
         // self.vec4_list.iter().for_each(|name| {
         //     if name.2 { 

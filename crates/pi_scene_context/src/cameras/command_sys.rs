@@ -3,7 +3,7 @@ use pi_scene_shell::prelude::*;
 use pi_scene_math::{Vector3, coordiante_system::CoordinateSytem3, vector::TToolVector3};
 
 use crate::{
-    layer_mask::prelude::*, prelude::SceneID, transforms::command_sys::{ActionTransformNode, TransformNodeBundle}, viewer::{command_sys::ActionViewer, prelude::*}
+    layer_mask::prelude::*, transforms::command_sys::{ActionTransformNode, TransformNodeBundle}, viewer::{command_sys::ActionViewer, prelude::*}
 };
 
 use super::{
@@ -35,7 +35,7 @@ pub fn sys_create_camera(
 
 pub fn sys_act_camera_mode(
     mut cmds: ResMut<ActionListCameraModify>,
-    mut active_cameras: Query<(&SceneID, &mut Camera, &mut ViewerActive)>,
+    mut active_cameras: Query<(&mut Camera, &mut ViewerActive)>,
     mut cameras: Query<(&mut CameraParam, &mut ViewerDistanceCompute)>,
     mut fov_cameras: Query<&mut CameraFov>,
     mut orth_cameras: Query<&mut CameraOrthSize>,
@@ -58,7 +58,7 @@ pub fn sys_act_camera_mode(
                     EFreeCameraMode::Orthograhic => *distance = ViewerDistanceCompute::new(EViewerDistanceCompute::Direction),
                 }
             },
-            ECameraModify::Active(val) => if let Ok((idscene, mut camera, mut viewer)) = active_cameras.get_mut(entity) {
+            ECameraModify::Active(val) => if let Ok((mut camera, mut viewer)) = active_cameras.get_mut(entity) {
                 // log::warn!("CameraActive {:?}, New {:?}", viewer, mode);
                 if camera.0 != val {
                     *camera = Camera(val);

@@ -1,6 +1,6 @@
 
 use core::f32;
-use std::{sync::Arc, ops::Range};
+use std::ops::Range;
 
 use pi_scene_shell::prelude::*;
 
@@ -64,8 +64,8 @@ impl Ord for TmpInstanceSort {
         device: Res<PiRenderDevice>,
         queue: Res<PiRenderQueue>,
         mut temp: ResMut<TmpCommonVec>,
-        mut combinedata: ResMut<CombineDataCommon>,
-        engineopt: Res<EngineCustomPlugins>,
+        // mut combinedata: ResMut<CombineDataCommon>,
+        // engineopt: Res<EngineCustomPlugins>,
         entitysets: Res<EntityFilterForComponentChanged>,
         // mut performance: ResMut<Performance>,
     ) {
@@ -89,7 +89,7 @@ impl Ord for TmpInstanceSort {
                         temp.clear();
                         
                         if collect_instance_info(sortmode, instances, &mut instancessortinfos, &actives, &dispoeds, &instanceattributes, &mut temp, u32::MAX) {
-                            let collected = combinedata.data(&Range { start: 0, end: combinedata.usedsize() });
+                            let collected = instancessortinfos.data.as_slice();
                             let instancedinfo = buffer;
                             if let Ok((desclist, mut buffer, mut keys, mut flag)) = slots.get_mut(idgeo.0) {
                                 let buffer = match instancedinfo.slot() {
@@ -225,8 +225,8 @@ fn collect_instance_info(
 ) -> bool {
     
     let (isglobal, vidx, scl) = sortmode.arg_for_sortparam();
-    let mut alphaindexarr: Vec<(i32, usize)> = vec![];
-    let mut infoarr: Vec<(Vec<Number>, Vec<(Entity, (Number, Number, Number))>)> = vec![];
+    // let mut alphaindexarr: Vec<(i32, usize)> = vec![];
+    // let mut infoarr: Vec<(Vec<Number>, Vec<(Entity, (Number, Number, Number))>)> = vec![];
 
     instances.iter().for_each(|(_k, id)| {
         if let (Ok((enable, instancelayer, culling, gtransform, localpos)), Ok(disposed)) = (actives.get(*id), dispoeds.get(*id)) {

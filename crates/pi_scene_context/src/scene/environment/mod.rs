@@ -1,4 +1,4 @@
-use std::sync::Arc;
+
 use pi_scene_shell::prelude::*;
 
 pub mod fog;

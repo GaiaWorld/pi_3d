@@ -3,7 +3,7 @@
 use pi_scene_shell::prelude::*;
 use pi_scene_math::Vector3;
 
-use crate::{materials::prelude::StageMaterial, prelude::{sys_tick_viewer_culling, StageModel}, scene::StageScene, viewer::prelude::sys_abstructmesh_culling_flag_reset};
+use crate::{prelude::{sys_tick_viewer_culling, StageModel}, viewer::prelude::sys_abstructmesh_culling_flag_reset};
 
 use self::{bounding_box::BoundingBox, bounding_sphere::BoundingSphere, sys::*, command::*, command_sys::*};
 

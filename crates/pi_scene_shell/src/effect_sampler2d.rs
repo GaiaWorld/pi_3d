@@ -3,10 +3,6 @@ use crate::ecs::*;
 
 use derive_deref::Deref;
 
-use pi_render::renderer::sampler::*;
-
-use crate::assets::texture::TEXTURE_SLOT_COUNT;
-
 #[derive(Clone, Deref, Hash, PartialEq, Eq, Component)]
 pub struct EffectBindSampler2DList(pub u32);
 impl Default for EffectBindSampler2DList {

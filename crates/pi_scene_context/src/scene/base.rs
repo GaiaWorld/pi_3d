@@ -1,5 +1,5 @@
 
-use std::{collections::BTreeSet, sync::Arc};
+use std::collections::BTreeSet;
 
 use pi_scene_shell::prelude::*;
 

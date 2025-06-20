@@ -97,7 +97,7 @@ impl BindGroups3D {
 
         if let Some(set) = &self.textures {
             bind_group_layouts[setidx] = Some(set.bind_group().layout());
-            setidx += 1;
+            // setidx += 1;
         }
 
         bind_group_layouts
@@ -121,7 +121,7 @@ impl BindGroups3D {
         }
         if let Some(set_2) = &self.textures {
             key_bindgroup_layouts[setidx] = Some(*set_2.bind_group().layout().key());
-            setidx += 1;
+            // setidx += 1;
         }
 
         key_bindgroup_layouts
@@ -175,7 +175,7 @@ impl BindGroups3D {
 
                 if let Some(set) = &self.textures {
                     groups.insert_group(setidx, DrawBindGroup::GroupUsage(set.bind_group().clone()));
-                    setidx += 1;
+                    // setidx += 1;
                 }
                 groups
             },
@@ -214,7 +214,7 @@ impl Plugin for PluginRenderBindGroup {
     fn build(&self, app: &mut App) {
         let device = app.world.get_resource::<PiRenderDevice>().unwrap();
         if app.world.get_resource::<ResBindBufferAllocator>().is_none() {
-            let mut allocator = ResBindBufferAllocator(BindBufferAllocator::new(device));
+            let allocator = ResBindBufferAllocator(BindBufferAllocator::new(device));
             let mut allocator2 = ResBindBufferAllocatorStatic(BindBufferAllocator::create(device, false));
             let commonbindmodel = CommonBindModel(BindModel::new(&mut allocator2));
             let bindpassindexs = BindPassIndexPool::new(&mut allocator2);

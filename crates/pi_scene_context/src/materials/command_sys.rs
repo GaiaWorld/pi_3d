@@ -3,7 +3,7 @@ use std::sync::Arc;
 use pi_scene_shell::{prelude::*, run_stage::EngineCustomPlugins};
 
 use crate::{
-    geometry::instance::types::ModelInstanceAttributes, object::ActionEntity, pass::*, prelude::{BindModel, ModelMatIdxs, RendererRenderTarget, RendererRenderTargetKey, TypeAnimeAssetMgrs, TypeAnimeContexts}
+    geometry::instance::types::ModelInstanceAttributes, object::ActionEntity, pass::*, prelude::{BindModel, ModelMatIdxs, RendererRenderTargetKey, TypeAnimeAssetMgrs, TypeAnimeContexts}
 };
 
 use super::{
@@ -13,7 +13,6 @@ use super::{
         texture::*,
         uniform::*,
     },
-    value::*,
     command::*,
 };
 
@@ -103,7 +102,7 @@ pub fn sys_act_material_use(
     passes: Query<&PassMaterialID>,
     empty: Res<SingleEmptyEntity>,
     mut errors: ResMut<ErrorRecord>,
-    mut performance: ResMut<Performance>,
+    // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_act_material_use"));
     cmds.drain().for_each(|cmd| {
@@ -127,7 +126,7 @@ pub fn sys_act_material_use(
                     } else if let Ok((passid, matidxs, mut instancedata, mut matidxrecord)) = meshes.get_mut(id_mesh) {
                         let passindex = pass.index();
                         let id_pass = passid.0[passindex];
-                        if let (Some(matidxs), Some(bindeff)) = (&matidxs.matidx, &bindeffect.0) {
+                        if let (Some(matidxs), Some(bindeff)) = (&matidxs.matrix, &bindeffect.0) {
                             matidxs.update_matidxs(passindex, bindeff.bind.matidx());
                             matidxrecord.0[passindex] = bindeff.bind.matidx() as u16;
                             instancedata.update_matidx(passindex, bindeff.bind.matidx() as u16);
@@ -204,7 +203,7 @@ pub fn sys_act_material_value(
     anime_assets: TypeAnimeAssetMgrs,
     mut anime_contexts: TypeAnimeContexts,
     mut targetanimations: ResMut<ActionListAnimationGroupAction>,
-    mut performance: ResMut<Performance>,
+    // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_act_material_value"));
 
@@ -218,7 +217,7 @@ pub fn sys_act_material_value(
                     }
                 }
             },
-            OpsUniformValB::Texture(entity, mut param) => {
+            OpsUniformValB::Texture(entity, param) => {
                 if let Ok((mut textureparams, mut flag)) = textureparams.get_mut(entity) {
                     textureparams.0.insert(param.slotname.clone(), Arc::new(param));
                     *flag = UniformTextureWithSamplerParamsDirty;

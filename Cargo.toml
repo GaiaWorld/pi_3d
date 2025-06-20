@@ -1,6 +1,6 @@
 [package]
 name = "pi_3d"
-version = "1.3.1"
+version = "1.3.2"
 authors = ["baip0002 <2494156981@qq.com>"]
 edition = "2021"
 description = "3D Framework for Scene."
@@ -100,7 +100,7 @@ pi_map                  = { path = "../pi_map" }
 pi_key_alloter          = { path = "../pi_key_alloter" }
 # wgpu                    = { path = "../wgpu/wgpu" }
 # wgpu-hal                = { path = "../wgpu/wgpu-hal" }
-# naga                    = { path = "../wgpu/naga" }
+naga                    = { path = "../wgpu/naga" }
 fixedbitset             = { path = "../fixedbitset"}
 
 [dev-dependencies]

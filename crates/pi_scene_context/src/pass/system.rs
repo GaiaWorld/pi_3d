@@ -74,38 +74,22 @@ pub fn sys_modify_pass_effect_by_material(
 pub fn _pass_effect_ready<'a>(
     effect_key: &'a AssetKeyShaderEffect,
     textures: &'a EffectTextureSamplersComp,
-    samplers: &'a EffectBindSampler2DList,
-    texturekeys: &'a TextureKeyList,
     meta: &'a AssetResShaderEffectMeta,
-    bind: &'a BindEffect,
-) -> (Option<&'a BindEffectValues>, Option<&'a EffectTextureSamplers>, Option<(Atom, Handle<ShaderEffectMeta>)>) {
+) -> (Option<&'a EffectTextureSamplers>, Option<(Atom, Handle<ShaderEffectMeta>)>) {
     let meta = meta.0.as_ref().unwrap();
     match (0 < meta.textures.len(), &textures.0) {
         (true, Some(textures)) => {
             if textures.textures.len() == meta.textures.len() {
-                let len = textures.textures.len();
-                if let Some(bindval) = bind.0.as_ref() {
-                    for texidx in 0..len {
-                        let tex = &textures.textures[texidx];
-                        let desc = &texturekeys.0[texidx];
-
-                        if samplers.is_custom_address(texidx) {
-                            bindval.update_texture(texidx, &tex.tilloff(), desc.wrapu.to_u8(), desc.wrapv.to_u8(), desc.wrapw.to_u8(), tex.coord());
-                        } else {
-                            bindval.update_texture(texidx, &tex.tilloff(), 255, 255, 255, tex.coord());
-                        }
-                    }
-                }
-                (bind.0.as_ref(), Some(textures), Some((effect_key.0.clone(), meta.clone())))
+                (Some(textures), Some((effect_key.0.clone(), meta.clone())))
             } else {
                 // log::error!("textures not ready");
-                (None, None, None)
+                (None, None)
             }
         },
-        (false, _) => (bind.0.as_ref(), None, Some((effect_key.0.clone(), meta.clone()))),
+        (false, _) => ( None, Some((effect_key.0.clone(), meta.clone()))),
         _ => {
             // log::error!("texturesamplers not ready");
-            (None, None, None)
+            (None, None)
         }
     }
 }

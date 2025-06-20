@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use derive_deref::Deref;
 use pi_bevy_asset::ShareAssetMgr;

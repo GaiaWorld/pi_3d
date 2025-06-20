@@ -81,7 +81,7 @@ impl BindDefines {
     pub fn need_bind_group_set0(val: u32) -> bool {
         Self::need_viewer(val) || Self::need_scene_effect(val)
     }
-    pub fn need_bind_group_set1(val: u32) -> bool {
+    pub fn need_bind_group_set1(_val: u32) -> bool {
         true
         // Self::need_model(val) || Self::need_model_matrix_inv(val) || Self::need_model_skin_ins(val) || Self::need_model_matpass(val) || Self::need_model_morphinfluence(val)
     }

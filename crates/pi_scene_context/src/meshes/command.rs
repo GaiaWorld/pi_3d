@@ -13,10 +13,10 @@ impl OpsMeshCreation {
 }
 pub type ActionListMeshCreate = ActionList<OpsMeshCreation>;
 
-pub struct OpsInstanceMeshCreation(pub(crate) Entity, pub(crate) Entity, pub u8);
+pub struct OpsInstanceMeshCreation(pub(crate) Entity, pub(crate) Entity);
 impl OpsInstanceMeshCreation {
     pub fn ops(source: Entity, instance: Entity) -> Self {
-        Self(source, instance, 0)
+        Self(source, instance)
     }
 }
 pub type ActionListInstanceMeshCreate = ActionList<OpsInstanceMeshCreation>;

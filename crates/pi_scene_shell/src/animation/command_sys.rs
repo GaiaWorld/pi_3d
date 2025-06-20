@@ -175,7 +175,7 @@ pub fn sys_create_animation_group(
 
                 let bundle = (AnimationGroupKey(id_group), AnimationGroupScene(scene));
                 // commands.insert(bundle);
-                alter.alter(entity, bundle);
+                let _ = alter.alter(entity, bundle);
 
                 globals.record_group(id_group, entity);
             // }
@@ -233,7 +233,7 @@ pub fn sys_act_animation_group_action(
             OpsAnimationGroupAction::ListenStart(entity) => { if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_start_listen(groupkey.0); } },
             OpsAnimationGroupAction::ListenLoop(entity) => { if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_loop_listen(groupkey.0); } },
             OpsAnimationGroupAction::ListenEnd(entity) => { if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_end_listen(groupkey.0); } },
-            OpsAnimationGroupAction::Weight(entity, weight) => {
+            OpsAnimationGroupAction::Weight(_entity, _weight) => {
                 // todo!()
             },
         }

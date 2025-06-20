@@ -102,11 +102,11 @@ impl TextureCombineAtlas2DMgr {
         // log::error!("query_desc {}", self.map.contains_key(desc));
         self.map.contains_key(desc)
     }
-    pub fn combine_ktx(&mut self, keyimage: &KeyImageTextureFrame, data: &[u8], device: &RenderDevice, queue: &RenderQueue) -> Option<ImageTextureFrame> {
+    pub fn combine_ktx(&mut self, _keyimage: &KeyImageTextureFrame, data: &[u8], device: &RenderDevice, queue: &RenderQueue) -> Option<ImageTextureFrame> {
         let ktx = ktx::Ktx::new(data);
         if let Some(format) = compressed_texture_format(ktx.gl_internal_format()) {
             let key = KeyAtlasDesc { format };
-            let mipmaps = ktx.mipmap_levels();
+            let _mipmaps = ktx.mipmap_levels();
             
             if ktx.textures().count() == 0 || ktx.textures().count() > 1 || ktx.faces() > 1 || ktx.pixel_depth() > 1 {
                 return None;
@@ -124,7 +124,7 @@ impl TextureCombineAtlas2DMgr {
         }
         return None;
     }
-    pub fn combine_image(&mut self, keyimage: &KeyImageTextureFrame, data: &DynamicImage, device: &RenderDevice, queue: &RenderQueue) -> Option<ImageTextureFrame> {
+    pub fn combine_image(&mut self, _keyimage: &KeyImageTextureFrame, data: &DynamicImage, device: &RenderDevice, queue: &RenderQueue) -> Option<ImageTextureFrame> {
 
         match &data {
             pi_hal::image::DynamicImage::ImageLuma8(image_buffer) => {
@@ -162,12 +162,12 @@ impl TextureCombineAtlas2DMgr {
                     }
                 }
             },
-            pi_hal::image::DynamicImage::ImageLuma16(image_buffer) => {},
-            pi_hal::image::DynamicImage::ImageLumaA16(image_buffer) => {},
-            pi_hal::image::DynamicImage::ImageRgb16(image_buffer) => {},
-            pi_hal::image::DynamicImage::ImageRgba16(image_buffer) => {},
-            pi_hal::image::DynamicImage::ImageRgb32F(image_buffer) => {},
-            pi_hal::image::DynamicImage::ImageRgba32F(image_buffer) => {},
+            pi_hal::image::DynamicImage::ImageLuma16(_image_buffer) => {},
+            pi_hal::image::DynamicImage::ImageLumaA16(_image_buffer) => {},
+            pi_hal::image::DynamicImage::ImageRgb16(_image_buffer) => {},
+            pi_hal::image::DynamicImage::ImageRgba16(_image_buffer) => {},
+            pi_hal::image::DynamicImage::ImageRgb32F(_image_buffer) => {},
+            pi_hal::image::DynamicImage::ImageRgba32F(_image_buffer) => {},
             _ => {},
         }
         return None;

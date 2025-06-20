@@ -2,7 +2,7 @@
 use pi_scene_shell::prelude::*;
 
 use crate::{
-    flags::StageEnable, layer_mask::*, object::sys_dispose_ready, prelude::StageRenderer, renderers::command_sys::sys_create_subgraph, scene::StageScene, transforms::prelude::*, viewer::prelude::*
+    flags::StageEnable, layer_mask::*, object::sys_dispose_ready, renderers::command_sys::sys_create_subgraph, scene::StageScene, transforms::prelude::*, viewer::prelude::*
 };
 
 use self::{

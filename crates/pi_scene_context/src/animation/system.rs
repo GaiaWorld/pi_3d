@@ -10,7 +10,7 @@ use crate::{
 };
 
 pub fn sys_scene_anime_ctx(
-    mut scenes: Query<(Entity, &SceneTime, &SceneAnimationEnable, &mut SceneAnimationContext, &mut SceneAnimationGroupGoto)>,
+    mut scenes: Query<(&SceneTime, &SceneAnimationEnable, &mut SceneAnimationContext, &mut SceneAnimationGroupGoto)>,
     mut animeglobal: ResMut<GlobalAnimeAbout>,
     mut animeevents: ResMut<GlobalAnimeEvents>,
     mut performance: ResMut<Performance>,
@@ -19,7 +19,7 @@ pub fn sys_scene_anime_ctx(
     if performance.debug { performance.t_animationgroup = pi_time::Instant::now(); }
 
     animeglobal.runtimeinfos.reset();
-    scenes.iter_mut().for_each(|(id_scene, scene_time, enable, mut ctx, mut animegoto)| {
+    scenes.iter_mut().for_each(|(scene_time, enable, mut ctx, mut animegoto)| {
 
         if enable.0 == false { return; }
 

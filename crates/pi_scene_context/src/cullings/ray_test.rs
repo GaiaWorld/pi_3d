@@ -1,6 +1,6 @@
 use pi_scene_shell::prelude::*;
 
-use crate::{flags::GlobalEnable, prelude::RenderQueueSortParam};
+use crate::flags::GlobalEnable;
 
 use super::base::{PiRay, PickResult, SceneColliderPool, SceneBoundingPool};
 

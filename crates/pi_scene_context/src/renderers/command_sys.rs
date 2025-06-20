@@ -1,4 +1,3 @@
-use std::ops::Deref;
 
 use pi_scene_shell::prelude::*;
 
@@ -9,7 +8,6 @@ use crate::{
 
 use super::{
     renderer::*,
-    render_object::RendererID,
     graphic::*,
     command::*,
 };
@@ -79,7 +77,7 @@ pub fn sys_act_renderer_modify(
     mut graphic: ResMut<PiRenderGraph>,
     mut error: ResMut<ErrorRecord>,
     mut cmdmodifys: ResMut<ActionListRendererModify>,
-    mut performance: ResMut<Performance>,
+    // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_act_renderer_modify"));
     cmds.drain().for_each(|cmd| {
@@ -147,7 +145,7 @@ pub fn sys_act_renderer_modify(
             OpsRendererCommand::Active(entity, val) => {
                         if let Ok((mut comp, _, nodeid, _)) = renderers.get_mut(entity) {
                             comp.enable = RendererEnable(val);
-                            graphic.set_enable(nodeid.0, val);
+                            let _ = graphic.set_enable(nodeid.0, val);
                         }
                     },
             OpsRendererCommand::Blend(entity, val) => {
@@ -191,7 +189,7 @@ pub fn sys_act_renderer_modify(
                         }
                     }
             OpsRendererCommand::ClearLinkMesh(entity, entity1) => {
-                    if let Ok((mut comp)) = rendererslink.get_mut(entity) {
+                    if let Ok(mut comp) = rendererslink.get_mut(entity) {
                         comp.mesh_as_clear = entity1;
                     }
             },

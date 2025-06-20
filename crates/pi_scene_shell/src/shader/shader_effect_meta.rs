@@ -8,8 +8,6 @@ use wgpu::ShaderSource;
 use pi_render::{
     renderer::{
         shader::*,
-        buildin_data::EDefaultTexture,
-        shader_stage::EShaderStage,
         attributes::*,
     },
     rhi::device::RenderDevice
@@ -18,12 +16,12 @@ use pi_render::{
 use crate::{prelude::BindDefines, run_stage::EngineCustomPlugins};
 
 use super::{
-    block_code::{BlockCode, BlockCodeAtom, TToBlockCodeAtom},
+    block_code::{BlockCode, BlockCodeAtom},
     varying_code::{VaryingCode, Varyings},
     shader_defines::ShaderDefinesSet,
-    uniform_value::{MaterialValueBindDesc, UniformPropertyVec4, UniformPropertyVec2, UniformPropertyFloat,  UniformPropertyUint}, 
+    uniform_value::{MaterialValueBindDesc, UniformPropertyVec4}, 
     uniform_texture::{UniformTexture2DDesc, EffectUniformTexture2DDescs},
-    shader::*, Varying, TUnifromShaderProperty,
+    shader::*, Varying,
     buildin_var::*
 };
 
@@ -195,7 +193,7 @@ impl ShaderEffectMeta {
         vs: BlockCodeAtom,
         fs: BlockCodeAtom,
         defines: ShaderDefinesSet,
-        engineopt: &EngineCustomPlugins,
+        _engineopt: &EngineCustomPlugins,
     ) -> Self {
         let mut arc_textures = vec![];
         textures.drain(..).for_each(|item| {
@@ -206,8 +204,6 @@ impl ShaderEffectMeta {
         // for idx in 0..len {
         //     uniforms.vec4_list.push(UniformPropertyVec4(Atom::from(String::from("uTexST") + &idx.to_string()), [1., 1., 0., 0.], false));
         // }
-
-        uniforms.sort();
 
         // varyings.0.push(Varying { format: Atom::from(EBuildinVertexAtribute::TextureIDs.kind()), name: Atom::from(ShaderVarVarying::TEXTURE_IDS) });
         // uniforms.vec4_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from(crate::static_string::S_VEC4), name: item.tag().clone() }) } });
@@ -221,6 +217,14 @@ impl ShaderEffectMeta {
         // }
 
         let size = varyings.size() + vs.size() + fs.size();
+
+        let len = arc_textures.len();
+        for i in 0..len {
+            uniforms.vec4_list.push(UniformPropertyVec4(Atom::from(String::from("Atlas") + &i.to_string()), [1., 1., 0., 0.], false));
+            uniforms.vec4_list.push(UniformPropertyVec4(Atom::from(String::from("Address") + &i.to_string()), [255., 255., 255., 0.], false));
+        }
+
+        uniforms.sort();
 
         Self {
             uniforms: Arc::new(uniforms),

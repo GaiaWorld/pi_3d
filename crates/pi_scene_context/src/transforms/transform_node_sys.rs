@@ -1,6 +1,6 @@
 
 use pi_scene_shell::prelude::*;
-use pi_scene_math::{Matrix, Rotation3, Quaternion};
+use pi_scene_math::{Matrix, Quaternion};
 
 use crate::{
     scene::coordinate_system::SceneCoordinateSytem3D,
@@ -111,7 +111,7 @@ pub fn sys_transform_dirty(
     changes1: ComponentChanged<Enable>,
     changes2: ComponentChanged<LocalMatrix>,
 
-    mut layers: Query<(&mut TransformNodeDirty)>,
+    mut layers: Query<&mut TransformNodeDirty>,
     tree: EntityTree,
     entitysets: Res<EntityFilterForComponentChanged>,
     // mut performance: ResMut<Performance>,
@@ -208,7 +208,7 @@ fn iter_dirty(
 
                 let tmp = if let Some(parent) = tree.get_up(child) {
                     // if let (Ok((transform, _)), Ok((_, _, penable, _))) = (transforms.get(parent.parent()), nodes.get(parent.parent())) {
-                    if let (Ok((_, _, penable, _, transform, _, ))) = nodes.get(parent.parent()) {
+                    if let Ok((_, _, penable, _, transform, _, )) = nodes.get(parent.parent()) {
                         // log::error!("{:?}", (parent.parent(), penable.0));
                         calc_world_root_bytree( penable.0, &transform.matrix.clone(), &mut nodes,  child, &matrixpool)
                     }else {

@@ -1,7 +1,7 @@
 
 use pi_assets::{asset::{Garbageer, Handle}, mgr::{Receiver, LoadResult}};
 use pi_futures::BoxFuture;
-use pi_render::{renderer::texture::{ErrorImageTexture, ImageTexture2DDesc, ImageTextureFrame, KeyImageTextureFrame, ResImageTexture}, rhi::{device::RenderDevice, RenderQueue}};
+use pi_render::{renderer::texture::{ErrorImageTexture, ImageTextureFrame, KeyImageTextureFrame}, rhi::{device::RenderDevice, RenderQueue}};
 use serde::Deserialize;
 
 use crate::prelude::{EError, ErrorRecord};

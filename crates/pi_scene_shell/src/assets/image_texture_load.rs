@@ -1,6 +1,6 @@
 use crate::ecs::*;
 
-use std::{marker::PhantomData, ops::Deref, sync::Arc};
+use std::{marker::PhantomData, ops::Deref};
 use crossbeam::queue::SegQueue;
 use ktx::KtxInfo;
 use pi_assets::{
@@ -164,7 +164,7 @@ pub fn sys_image_texture_load_launch(
                         if id > 0 {
                             again.push(info);
                         }
-                        let (failquene, device, queue) = (loader.fail_imgtex.clone(), (device).clone(), (queue).clone());
+                        let (failquene, _device, _queue) = (loader.fail_imgtex.clone(), (device).clone(), (queue).clone());
                         RENDER_RUNTIME.spawn(async move {
                             match f.await {
                                 Ok(_result) => {
@@ -385,7 +385,7 @@ pub fn sys_image_texture_view_load_launch<K: std::ops::Deref<Target = EKeyTextur
     device: Res<PiRenderDevice>,
     mut state: ResMut<StateTextureLoader>,
     targets: Res<CustomRenderTargets>,
-    mut combinemgr: ResMut<TextureCombineAtlas2DMgr>,
+    // mut combinemgr: ResMut<TextureCombineAtlas2DMgr>,
 ) {
     items.iter_mut().for_each(|(entity, param, mut cmd)| {
         state.texview_count += 1;
@@ -711,7 +711,7 @@ pub fn sys_image_texture_view_loaded_check2(
     texres_assets_mgr: Res<ShareAssetMgr<TextureRes>>,
     mut image_loader: ResMut<ImageTextureLoader>,
     mut state: ResMut<StateTextureLoader>,
-    mut combinemgr: ResMut<TextureCombineAtlas2DMgr>,
+    // mut combinemgr: ResMut<TextureCombineAtlas2DMgr>,
 ) {
     _sys_image_texture_view_loaded_check2(
         &loader.wait, &loader.success, &loader.fail,

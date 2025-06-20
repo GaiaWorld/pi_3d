@@ -213,15 +213,15 @@ pub fn sys_model_for_uniform(
         if let Ok((worldmatrix, bind_model, meshstatic)) = meshes.get(*entity) {
         // log::warn!("SysModelUniformUpdate: {:?}", worldmatrix.0.as_slice());
             if meshstatic.0 { return; }
-            bind_model.matrix.as_ref().unwrap().data().write_data(0, bytemuck::cast_slice(worldmatrix.0.as_slice()));
-            bind_model.matrixinv.as_ref().unwrap().data().write_data(0, bytemuck::cast_slice(matrix.as_slice()));
+            bind_model.matrix.as_ref().unwrap().update_matrix(bytemuck::cast_slice(worldmatrix.0.as_slice()));
+            bind_model.matrix.as_ref().unwrap().update_matrix_inv(bytemuck::cast_slice(matrix.as_slice()));
         }
     });
     velocitychanges.iter().for_each(|entity| {
         if let Ok((velocity, bind_model, meshstatic)) = velocitymeshes.get(*entity) {
             if meshstatic.0 { return; }
             let len = (velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z).sqrt();
-            bind_model.velocity.as_ref().unwrap().data().write_data(0, bytemuck::cast_slice(&[velocity.x, velocity.y, velocity.z, len]));
+            bind_model.matrix.as_ref().unwrap().update_velocity(bytemuck::cast_slice(&[velocity.x, velocity.y, velocity.z, len]));
         }
     });
 }
@@ -271,7 +271,7 @@ pub fn sys_animator_update_instance_attribute(
     entitysets: Res<EntityFilterForComponentChanged>,
 ) {
     let mut entities = entitysets.pop();
-    let mut sources = entitysets.pop();
+    // let mut sources = entitysets.pop();
     // changes.iter().for_each(|entity| {
     //     entities.insert(*entity);
     // });
@@ -280,7 +280,7 @@ pub fn sys_animator_update_instance_attribute(
         if let Ok((mut attributes, animators)) = items.get_mut(*entity) {
             animators.0.iter().for_each(|key| {
                 if let Some(offset) = attributes.offset(key) {
-                    let mut idx = offset.offset() as usize;
+                    let idx = offset.offset() as usize;
                     if let Some(entity) = offset.entity() {
                         if let Some(atype) = offset.atype() {
                             match atype {
@@ -336,7 +336,7 @@ pub fn sys_animator_update_instance_attribute(
 pub fn sys_dispose_about_mesh(
     items: Query<
         (
-            Entity, &DisposeReady, &PassIDs, &SceneID, &InstanceSourceRefID,
+            Entity, &DisposeReady, &PassIDs, &SceneID,
             &GeometryID, &InstanceSourceRefs, &Mesh, &SkeletonID, &ModelInstanceAttributes
         ),
         Changed<DisposeReady>,
@@ -352,7 +352,7 @@ pub fn sys_dispose_about_mesh(
     // performance.systems.push(String::from("sys_dispose_about_mesh"));
 
     items.iter().for_each(|(
-        entity, state, passids, sceneid, refid,
+        entity, state, passids, sceneid,
         idgeo, instancerefs, _, idskin, animators
     )| {
         if state.0 == false { return; }
@@ -410,7 +410,7 @@ pub fn sys_dispose_about_instance(
     mut scenes: Query<(&mut SceneColliderPool, &mut SceneBoundingPool)>,
     mut instancesources: Query<(&mut InstanceSourceRefs, &mut FlagMeshNeedRecheckForView)>,
     mut disposecan: Query<&mut DisposeCan>,
-    mut performance: ResMut<Performance>,
+    // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_dispose_about_instance"));
     changes.iter().for_each(|entity| {

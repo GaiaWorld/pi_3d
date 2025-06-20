@@ -106,7 +106,7 @@ impl ModelInstanceAttributes {
 
         insances.iter().for_each(|attr| {
             // let entity = command.spawn_empty_id();
-            let atype = animatorable_type(&attr.vtype());
+            // let atype = animatorable_type(&attr.vtype());
             attributes.push((Atom::from(attr.var_code()), InstanceAttributeOffset::new(attr.vtype(), offset, None)));
             match attr.vtype() {
                 ECustomVertexType::Vec4     => {
@@ -206,7 +206,7 @@ impl ModelInstanceAttributes {
     }
     pub fn update_matidxs(&mut self, data: &[u16]) {
         if self.matarray == false || self.bytes.len() == 0 { return }
-        let mut idx = if self.worldmatrix { 64 } else { 0 };
+        let idx = if self.worldmatrix { 64 } else { 0 };
         self.bytes.as_mut_slice()[idx..(idx+16)].copy_from_slice(bytemuck::cast_slice(data));
         // bytemuck::cast_slice(data).iter().for_each(|v| {
         //     self.bytes[idx] = *v;

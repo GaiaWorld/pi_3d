@@ -11,7 +11,7 @@ use pi_render::{
     rhi::sampler::EAddressMode
 };
 
-use crate::{binds::{BindEffectTextureInfoAndTilloff, BindEffectTextureTilloff}, prelude::EngineCustomPlugins};
+use crate::prelude::EngineCustomPlugins;
 
 use super::{UniformPropertyName, ShaderSetBind, TUnifromShaderProperty};
 
@@ -229,39 +229,48 @@ pub fn texture_bind_code(tex_sampler_type: &wgpu::TextureSampleType, dimision: w
     result
 }
 
-pub fn texture_bind_code_mat(engineopt: &EngineCustomPlugins, tex_sampler_type: &wgpu::TextureSampleType, dimension: wgpu::TextureViewDimension, name: &str, bindname: &str, set: u32, bind: u32) -> String {
+pub fn texture_bind_code_mat(engineopt: &EngineCustomPlugins, tex_sampler_type: &wgpu::TextureSampleType, dimension: wgpu::TextureViewDimension, name: &str, bindname: &str, set: u32, bind: u32, texidx: usize) -> String {
 
     // layout(set = 2, binding = 0) uniform texture2D _MainTex;
     let mut result = ShaderSetBind::code_set_bind_head(set, bind);
     result += texture_type_code(tex_sampler_type, dimension).as_str();
     result += name;
     result += ";"; result += crate::prelude::S_BREAK;
-    result += texture_code(name, bindname, tex_sampler_type, dimension, engineopt).as_str();
+    result += texture_code(name, bindname, tex_sampler_type, dimension, texidx, engineopt).as_str();
 
     result
 }
 
-fn texture_code(slotname: &str, bindname: &str, tex_sampler_type: &wgpu::TextureSampleType, dimension: wgpu::TextureViewDimension, engineopt: &EngineCustomPlugins) -> String {
+fn texture_code(slotname: &str, bindname: &str, tex_sampler_type: &wgpu::TextureSampleType, dimension: wgpu::TextureViewDimension, texidx: usize, _engineopt: &EngineCustomPlugins) -> String {
     let mut uv = String::from("uvAtlas(uv * tilloff.xy + tilloff.zw + os, ");
-    uv += slotname;
-    uv += BindEffectTextureTilloff::SUFFIX_TILLOFF;
-    // if engineopt.disenable_material_array == false {
-        uv += "[vMatIdx]";
-    // }
+    uv += "Mat[vMatIdx]";
+    uv += ".Atlas";
+    uv += &texidx.to_string();
+    // uv += slotname;
+    // uv += BindEffectTextureTilloff::SUFFIX_TILLOFF;
+    // // if engineopt.disenable_material_array == false {
+    //     uv += "[vMatIdx]";
+    // // }
     uv += ",";
-    uv += slotname;
-    uv += BindEffectTextureInfoAndTilloff::SUFFIX_ADDRESS;
-    // if engineopt.disenable_material_array == false {
-        uv += "[vMatIdx]";
-    // }
+    uv += "Mat[vMatIdx]";
+    uv += ".Address";
+    uv += &texidx.to_string();
+    // uv += slotname;
+    // uv += BindEffectTextureInfoAndTilloff::SUFFIX_ADDRESS;
+    // // if engineopt.disenable_material_array == false {
+    //     uv += "[vMatIdx]";
+    // // }
     uv += ")";
     
     let mut coord = String::from("");
-    coord += slotname;
-    coord += BindEffectTextureInfoAndTilloff::SUFFIX_ADDRESS;
-    // if engineopt.disenable_material_array == false {
-        coord += "[vMatIdx]";
-    // };
+    coord += "Mat[vMatIdx]";
+    coord += ".Address";
+    coord += &texidx.to_string();
+    // coord += slotname;
+    // coord += BindEffectTextureInfoAndTilloff::SUFFIX_ADDRESS;
+    // // if engineopt.disenable_material_array == false {
+    //     coord += "[vMatIdx]";
+    // // };
     coord += ".w * 1.";
 
     // let uv = String::from("uv * tilloff.xy + tilloff.zw + os");

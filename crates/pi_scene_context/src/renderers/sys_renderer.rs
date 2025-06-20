@@ -2,7 +2,7 @@ use std::{hash::Hasher, ops::Range, sync::Arc};
 
 use pi_scene_shell::{prelude::*, run_stage::EngineCustomPlugins};
 use crate::{
-    bindgroup::*, flags::*, geometry::{instance::instanced_buffer::*, prelude::*}, materials::prelude::*, meshes::prelude::*, object::{TmpSortDrawOpaqueVec, TmpSortDrawTransparentVec}, pass::*, scene::prelude::*, skeleton::prelude::*, transforms::prelude::*, viewer::prelude::*
+    bindgroup::*, flags::*, geometry::{instance::instanced_buffer::*, prelude::*}, materials::prelude::*, meshes::prelude::*, pass::*, scene::prelude::*, skeleton::prelude::*, transforms::prelude::*, viewer::prelude::*
 };
 
 use super::{
@@ -15,7 +15,7 @@ use super::{
             (ObjectID, &PassModelID, &PassMaterialID, &PassRendererID, &mut PassBindGroups, &mut PassFlagShader, &PassTag)
         >,
         renderers: Query<(&SceneID, &ViewerID)>,
-        materials: Query<( &AssetKeyShaderEffect, &AssetResShaderEffectMeta, &BindEffect, &EffectTextureSamplersComp, &TextureKeyList, &EffectBindSampler2DList )>,
+        materials: Query<( &AssetKeyShaderEffect, &AssetResShaderEffectMeta, &BindEffect, &EffectTextureSamplersComp)>,
         models: Query<( &BindModel, &BindSkinValue, &SkeletonID, &ModelLightingIndexs, &ModelBindDefines )>,
         targets: Res<CustomRenderTargets>,
         viewers: Query<&BindViewer>,
@@ -64,9 +64,9 @@ use super::{
                 let viewers = &viewers;
                 let models = &models;
     
-                if let Ok((effect_key, meta, bind, textures, texkeys, samplers)) = materials.get(idmat.0) {
-                    let (_bindvalue, bindtextures, effect) = _pass_effect_ready(
-                        effect_key, textures, samplers, texkeys, meta, bind
+                if let Ok((effect_key, meta, bind, textures)) = materials.get(idmat.0) {
+                    let (bindtextures, effect) = _pass_effect_ready(
+                        effect_key, textures, meta
                     );
     
                     if let Some((key_meta, meta)) = &effect {
@@ -74,9 +74,10 @@ use super::{
                         let need_set1 = BindDefines::need_bind_group_set1(meta.binddefines);
                         let need_set2 = bind.0.is_some();
                         let need_set3 = meta.textures.len() > 0;
-                        let matidx = if let Some(temp) = &bind.0 {
-                            temp.bind.matidx()
-                        } else { 0 };
+                        // let matidx = if let Some(temp) = &bind.0 {
+                        //     temp.bind.matidx()
+                        // } else { 0 };
+
 
                         let set0 = { 
                             let temp = _set0_modify(
@@ -101,7 +102,7 @@ use super::{
                             let temp = _set1_modify(
                                 idmodel, key_meta, meta,
                                 models, device, asset_mgr_bindgroup_layout, asset_mgr_bindgroup,
-                                passidx.index(), matidx, errors
+                                errors
                             );
                             if temp.is_none() {
                                 if bindgroups.val().is_some() {
@@ -837,7 +838,7 @@ fn shader(
         let mut vs_running_model_snippets = vec![];
         let mut vs_running_attribute_snippets = vec![];
         let vs_running_after_effect_snippets = vec![];
-        let mut vs_running_before_effect_snippets = vec![];
+        let vs_running_before_effect_snippets = vec![];
         let mut fs_running_before_effect_snippets = vec![];
         let fs_running_after_effect_snippets = vec![];
     
@@ -883,6 +884,7 @@ fn shader(
             setidx += 1;
         }
 
+        // log::error!("Shader {:?}", key_meta);
         let shader = meta.build_2(
             &device,
             &key_meta,

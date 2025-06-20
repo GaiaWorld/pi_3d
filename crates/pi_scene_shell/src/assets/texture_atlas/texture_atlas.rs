@@ -1,6 +1,6 @@
 use std::{mem::size_of, sync::Arc};
 
-use ktx::KtxInfo;
+// use ktx::KtxInfo;
 use pi_async_rt::prelude::AsyncRuntime;
 use pi_hal::runtime::RENDER_RUNTIME;
 use crossbeam::queue::SegQueue;
@@ -9,7 +9,7 @@ use pi_atom::Atom;
 use pi_bevy_asset::ShareAssetMgr;
 use pi_bevy_render_plugin::PiRenderQueue;
 use pi_hash::{XHashMap, XHashSet};
-use pi_render::{asset::TAssetKeyU64, renderer::texture::{ImageTextureFrame, KeyImageTexture, KeyImageTextureFrame, ResImageTexture}};
+use pi_render::{asset::TAssetKeyU64, renderer::texture::{ImageTextureFrame, KeyImageTextureFrame}};
 use pi_world::single_res::{SingleRes, SingleResMut};
 use pi_world_macros::Resource;
 use pi_share::Share;
@@ -302,7 +302,7 @@ pub fn sys_texture_combine(
         if let Some(atlas) = cmds.records.get(&key) {
             if let Some((requestid, _, _, xoffset, yoffset, width, height)) = atlas.get(&file) {
                 let dataoffset = 0;
-                let depth_or_array_layers = 1;
+                // let depth_or_array_layers = 1;
                 let aspect = None;
                 // log::warn!("Success: {:?}", (&key, &file));
                 let requestid = *requestid;
@@ -319,9 +319,9 @@ pub fn sys_texture_combine(
                             let (blockw, blockh) = format.block_dimensions();
                             let blocksize = format.block_copy_size(None).unwrap() as usize;
                             let tw = tex.width() / blockw;
-                            let th = tex.height() / blockh;
-                            let mut xx = xoffset / blockw;
-                            let mut yy = yoffset / blockh;
+                            let _th = tex.height() / blockh;
+                            let xx = xoffset / blockw;
+                            let yy = yoffset / blockh;
                             let dw = width / blockw;
                             let dh = height / blockh;
 
@@ -383,16 +383,17 @@ pub fn sys_texture_combine(
     while let Some((key, file, data)) = cmds.loaded_quene2.pop() {
         idcounter = idcounter + 1;
         if idcounter >= 1024 {
-            log::error!("sys_image_texture_loaded");
+            // log::error!("sys_image_texture_loaded");
+            break;
         }
         if let Some(atlas) = cmds.records.get(&key) {
             if let Some((requestid, _, _, xoffset, yoffset, width, height)) = atlas.get(&file) {
                 let dataoffset = 0;
-                let depth_or_array_layers = 1;
+                // let depth_or_array_layers = 1;
                 let aspect = None;
                 if let Some(tex) = cmds.textures.get(&key) {
                     match &data {
-                        pi_hal::image::DynamicImage::ImageRgb8(image_buffer) => {
+                        pi_hal::image::DynamicImage::ImageRgb8(_image_buffer) => {
                             let (blockw, blockh) = wgpu::TextureFormat::Rgba8Unorm.block_dimensions();
                             ImageTextureFrame::update_sub(&tex.texture().texture, &queue, Origin3d { x: *xoffset, y: *yoffset, z: 0 },
                                 (*width as u32 + blockw - 1) / blockw, (*height as u32 + blockh - 1) / blockh,
@@ -425,7 +426,7 @@ pub fn sys_texture_combine(
         cmds.success.insert(requestid);
         cmds.check_loaded.remove(&requestid);
     });
-    while let Some((key, file, idx, requestid)) = cmds.failed_quene.pop() {
+    while let Some((_key, _file, _idx, requestid)) = cmds.failed_quene.pop() {
         cmds.faileds.insert(requestid);
         cmds.check_loaded.remove(&requestid);
     }

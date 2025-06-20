@@ -95,8 +95,8 @@ pub struct BindEffectValues {
 }
 impl BindEffectValues {
     pub fn new(
-        device: &PiRenderDevice,
-        key_meta: KeyShaderMeta,
+        _device: &PiRenderDevice,
+        _key_meta: KeyShaderMeta,
         meta: Handle<ShaderEffectMeta>,
         matdata: Option<Arc<RefBindGroupMaterial>>,
     ) -> Option<Self> {
@@ -206,13 +206,29 @@ impl BindEffectValues {
             Err(_) => { None },
         }
     }
+    pub fn update_with_name(&mut self, slot: &Atom, value: &[u8]) -> Option<Entity> {
+        match self.offset(&slot) {
+            Some(offset) => {
+                let (strip, offset, _entity) = offset.strip_offset();
+                if strip <= value.len() {
+                    self.update(offset, &value[0..strip]);
+                }
+                _entity
+            },
+            None => {
+                None
+            },
+        }
+    }
     pub fn update(&mut self, mut offset: usize, value: &[u8]) {
         let updateoffset = offset;
         value.iter().for_each(|v| { self.bytes[offset] = *v; offset += 1; });
         self.bind.update_data(updateoffset, value);
     }
-    pub fn update_texture(&self, texidx: usize, tilloff: &[f32;4], wrap_u: u8, wrap_v: u8, wrap_w: u8, coord: u8) {
-        self.bind.update_texture(texidx, bytemuck::cast_slice(tilloff), wrap_u, wrap_v, wrap_w, coord);
+    pub fn update_texture(&mut self, texidx: usize, tilloff: &[f32;4], wrap_u: u8, wrap_v: u8, wrap_w: u8, coord: u8) {
+        self.update_with_name(&Atom::from(String::from("Atlas") + &texidx.to_string()), bytemuck::cast_slice(tilloff));
+        self.update_with_name(&Atom::from(String::from("Address") + &texidx.to_string()), bytemuck::cast_slice(&[wrap_u as f32, wrap_v as f32, wrap_w as f32, coord as f32]));
+        // self.bind.update_texture(texidx, bytemuck::cast_slice(tilloff), wrap_u, wrap_v, wrap_w, coord);
     }
     pub fn write_data(&self, offset: usize, value: &[u8]) {
         self.bind.update_data(offset, value);

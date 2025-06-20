@@ -2,9 +2,7 @@ use std::{fmt::Debug, hash::Hash, ops::Range};
 
 use pi_render::renderer::{vertex_buffer::KeyVertexBuffer, vertex_format::TVertexFormatByteSize};
 
-use crate::prelude::S_BREAK;
-
-use super::{EVertexAttribute, ShaderEffectMeta, TShaderAttributesCode};
+use super::{EVertexAttribute, ShaderEffectMeta};
 
 
 #[derive(Debug, Clone, Copy, Default)]

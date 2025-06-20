@@ -13,7 +13,7 @@ impl MemSize for ErrorRecord {
     }
 }
 impl ErrorRecord {
-    pub fn record(&mut self, entity: Entity, error: EError) {
+    pub fn record(&mut self, _entity: Entity, error: EError) {
         if self.1 { 
             // self.0.push(entity::index());
             self.0.push(error);

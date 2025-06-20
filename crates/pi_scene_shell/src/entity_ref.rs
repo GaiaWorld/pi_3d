@@ -1,10 +1,9 @@
 use crate::ecs::*;
 
 use std::{collections::BTreeSet, marker::PhantomData};
-use pi_hash::XHashSet;
 
-use crate::{ecs::*, object::EntityRepeatCheck};
-use pi_slotmap::{DefaultKey, Key, SlotMap};
+use crate::object::EntityRepeatCheck;
+use pi_slotmap::{DefaultKey, SlotMap};
 
 pub trait TEntityRef {
     fn id(&self) -> Entity;

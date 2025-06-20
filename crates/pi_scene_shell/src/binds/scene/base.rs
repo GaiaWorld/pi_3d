@@ -1,10 +1,11 @@
-use std::sync::Arc;
 
-use pi_render::{renderer::{
-    bind::{KeyBindBuffer, KeyBindLayoutBuffer, TKeyBind}, bind_buffer::{BindBufferAllocator, BindBufferRange}, shader::TShaderBindCode, shader_stage::EShaderStage
-}, rhi::device::RenderDevice};
+use pi_render::{
+    renderer::{
+        bind::{KeyBindBuffer, KeyBindLayoutBuffer, TKeyBind}, bind_buffer::{BindBufferAllocator, BindBufferRange}, shader::TShaderBindCode, shader_stage::EShaderStage
+    }
+};
 use pi_world_macros::Resource;
-use crate::{pass, prelude::{BindDefines, TBindDefine}, shader::*};
+use crate::{prelude::{BindDefines, TBindDefine}, shader::*};
 
 
 #[derive(Clone, Hash, PartialEq, Eq)]

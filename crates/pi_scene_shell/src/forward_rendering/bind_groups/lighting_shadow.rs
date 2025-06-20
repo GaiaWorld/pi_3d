@@ -1,5 +1,5 @@
 
-use std::{hash::Hash, sync::Arc};
+use std::hash::Hash;
 
 use pi_render::{
     renderer::{

@@ -18,15 +18,6 @@ impl Plugin for PluginGLTF2Res {
 
         app.insert_resource(GLTFResLoader::new());
 
-#[cfg(feature = "use_bevy")]
-        app.add_systems(
-			Update,
-            (
-                sys_gltf_analy
-            ).chain().in_set(StageScene::SceneCreate)
-        );
-
-#[cfg(not(feature = "use_bevy"))]
         app
         .add_systems(StageD3, sys_gltf_analy.in_set(StageScene::SceneCreate))
         ;

@@ -97,7 +97,7 @@ pub fn sys_create_mesh(
     mut allocator: ResMut<ResBindBufferAllocator>,
     empty: Res<SingleEmptyEntity>,
     mut commands: Commands,
-    mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
+    // mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
     lightlimit: Res<ModelLightLimit>,
     commonbindmodel: Res<CommonBindModel>,
@@ -130,7 +130,7 @@ pub fn sys_create_instanced_mesh(
     // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_create_instanced_mesh"));
-    cmds.drain().for_each(|OpsInstanceMeshCreation(source, instance, count)| {
+    cmds.drain().for_each(|OpsInstanceMeshCreation(source, instance)| {
         if let Ok((id_scene, mut instancelist, instanceattrs, mut flagview)) = meshes.get_mut(source) {
 
             if let Some(refid) = instancelist.insert(instance) {
@@ -298,7 +298,7 @@ pub fn sys_act_mesh_modify(
     value_cmds.drain().for_each(|OpsAbstructMeshValueStateModify(entity, val)| {
         match val {
             EMeshValueStateModify::BoneOffset(val) => if let Ok((bind, mut binddefines)) = bindmodels.get_mut(entity) {
-                bind.skinoff.as_ref().unwrap().data().write_data(0, bytemuck::cast_slice(&[val]));
+                bind.matrix.as_ref().unwrap().update_skinoffset(bytemuck::cast_slice(&[val]));
                 if binddefines.0 & BindDefines::MODEL_SKIN_INS != BindDefines::MODEL_SKIN_INS {
                     binddefines.0 = binddefines.0 | BindDefines::MODEL_SKIN_INS;
                 }
@@ -318,7 +318,7 @@ pub fn sys_act_mesh_modify(
                 }
             },
             EMeshValueStateModify::MorphInfluence(val0, val1, val2, val3) => if let Ok((bind, mut binddefines)) = bindmodels.get_mut(entity) {
-                bind.morphinfluence.as_ref().unwrap().data().write_data(0, bytemuck::cast_slice(&[val0, val1, val2, val3]));
+                bind.matrix.as_ref().unwrap().update_morphinfluence(bytemuck::cast_slice(&[val0, val1, val2, val3]));
                 if binddefines.0 & BindDefines::MODEL_MORPHINFLUENCE != BindDefines::MODEL_MORPHINFLUENCE {
                     binddefines.0 = binddefines.0 | BindDefines::MODEL_MORPHINFLUENCE;
                 }
@@ -342,7 +342,7 @@ pub fn sys_act_instance_attribute(
     mut light_items: Query<&mut ModelForceLightings>,
     mut meshes: Query<&mut InstanceSourceRefs>,
 
-    mut performance: ResMut<Performance>,
+    // mut performance: ResMut<Performance>,
     entitysets: Res<EntityFilterForComponentChanged>,
 ) {
     // performance.systems.push(String::from("sys_act_instance_attribute"));
@@ -351,7 +351,7 @@ pub fn sys_act_instance_attribute(
     cmdsfloat.drain().for_each(|OpsInstanceAttr(instance, val, attr)| {
         if let Ok((inssource, mut attributes)) = instances.get_mut(instance) {
             if let Some(info) = attributes.offset(&attr) {
-                let mut offset = info.offset() as usize;
+                let offset = info.offset() as usize;
                 if let Some(target) = info.entity() {
                     // log::error!("Push 。。。。");
                     match val {
@@ -426,12 +426,12 @@ impl ActionMesh {
         scene: Entity,
         allocator: &mut ResBindBufferAllocator,
         empty: &SingleEmptyEntity,
-        mut state: MeshInstanceState,
+        state: MeshInstanceState,
         lightlimit: &LightLimitInfo,
         commonbindmodel: &CommonBindModel,
         altermodel: &mut Alter<(), (), (BundleModel, BindModel, ModelBindDefines, ModelMatIdxs, PassIDs, ModelStatic), ()>,
         passinsert: &mut Insert<(BundleEntity, PassObjInitBundle, PassTag)>,
-        engineopt: &EngineCustomPlugins,
+        _engineopt: &EngineCustomPlugins,
     ) -> bool {
         // state.instance_matrix = true;
         // state.instances.push(
@@ -500,7 +500,7 @@ impl ActionMesh {
         // {
         //     unclipdepth = true;
         // }
-        let unclipdepth = false;
+        // let unclipdepth = false;
         ((
             AbstructMesh,
             // MaterialRefID::default(),

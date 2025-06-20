@@ -37,20 +37,20 @@ impl EMeshState {
             EMeshState::Null                => 000,
         }
     }
-    fn val(v: u8, pass: PassTag) -> EMeshState {
-        match v {
-            001 => EMeshState::Init                ,
-            002 => EMeshState::GeomtryReady        ,
-            003 => EMeshState::Set0Ready(pass)           ,
-            004 => EMeshState::Set1Ready(pass)           ,
-            005 => EMeshState::Set2Ready(pass)           ,
-            006 => EMeshState::BindGroupsReady(pass)     ,
-            007 => EMeshState::ShaderReady(pass)         ,
-            008 => EMeshState::PipelineReady(pass)       ,
-            009 => EMeshState::DrawReady(pass)           ,
-            _   => EMeshState::Null                ,
-        }
-    }
+    // fn val(v: u8, pass: PassTag) -> EMeshState {
+    //     match v {
+    //         001 => EMeshState::Init                ,
+    //         002 => EMeshState::GeomtryReady        ,
+    //         003 => EMeshState::Set0Ready(pass)           ,
+    //         004 => EMeshState::Set1Ready(pass)           ,
+    //         005 => EMeshState::Set2Ready(pass)           ,
+    //         006 => EMeshState::BindGroupsReady(pass)     ,
+    //         007 => EMeshState::ShaderReady(pass)         ,
+    //         008 => EMeshState::PipelineReady(pass)       ,
+    //         009 => EMeshState::DrawReady(pass)           ,
+    //         _   => EMeshState::Null                ,
+    //     }
+    // }
 }
 
 pub trait TMeshState {

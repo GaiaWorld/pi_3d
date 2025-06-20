@@ -6,15 +6,7 @@ pub use super::shader_effect::*;
 pub use super::command::*;
 pub use super::uniforms::{
     uniform::*,
-    float::*,
-    // int::*,
-    uint::*,
-    vec2::*,
-    vec4::*,
-    // mat2::*,
-    mat4::*,
-    texture::*,
-    // sys_uniform::*,
+    texture::*
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet, PartialOrd, Ord)]
@@ -71,7 +63,7 @@ pub type StateMaterialQuery = QueryState<(&'static AssetResShaderEffectMeta, &'s
 pub fn sys_state_material(
     mut state: ResMut<StateMaterial>,
     materials: Query<(&AssetResShaderEffectMeta, &EffectTextureSamplersComp)>,
-    mut performance: ResMut<Performance>,
+    // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_state_material"));
     state.count = 0;

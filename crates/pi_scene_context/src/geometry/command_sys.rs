@@ -1,4 +1,3 @@
-use std::hash::{Hash, Hasher};
 
 use pi_scene_shell::prelude::*;
 
@@ -26,7 +25,7 @@ pub fn sys_create_geometry(
     asset_mgr: Res<ShareAssetMgr<EVertexBufferRange>>,
     mut _disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut disposecanlist: ResMut<ActionListDisposeCan>,
-    engineopt: Res<EngineCustomPlugins>,
+    // engineopt: Res<EngineCustomPlugins>,
     // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_create_geometry"));

@@ -1,7 +1,7 @@
 use pi_scene_math::{frustum::FrustumPlanes, Matrix, Number, Vector3};
 use pi_scene_shell::prelude::*;
 
-use crate::{flags::GlobalEnable, prelude::RenderQueueSortParam};
+use crate::flags::GlobalEnable;
 
 use super::{
     base::{BoundingKey, PiRay, PickResult, TBoundingInfoCalc, TFilter},
