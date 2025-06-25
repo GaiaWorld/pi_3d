@@ -615,6 +615,9 @@ use super::{
             }
 
             renderer.clear();
+            if let Some(crossdraws) = &mut crossdraws {
+                crossdraws.draw_list.list.clear();
+            }
             // log::warn!("Renderer: {:?}, Camera {:?}, {:?}", _id_renderer, id_viewer.0, (param.enable.0, passtag));
             if param.enable.0 == false {
                 // log::warn!("Renderer Disable: {:?}, Camera {:?}, {:?}", _id_renderer, id_viewer.0, (param.enable.0, passtag));
