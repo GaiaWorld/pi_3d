@@ -144,9 +144,9 @@ impl Node for RenderNode {
                         let deltaw = (rtwidth as i32 - rw as i32).abs();
                         let deltah = (rtheight as i32 - rh as i32).abs();
                         let sizeok = 0 <= deltaw && deltaw <= 1 && 0 <= deltah && deltah <= 1;
-                        if !forcenew && !sizeok {
-                            log::error!(">>>>> {:?}", (forcenew, (rtwidth, rw) , (rtheight, rh)));  
-                        }
+                        // if !forcenew && !sizeok {
+                        //     log::error!(">>>>> {:?}", (forcenew, (rtwidth, rw) , (rtheight, rh)));  
+                        // }
                         if !forcenew && sizeok {
                             match (param.depthstencilformat.0.val(), &srt.target().depth) {
                                 (Some(format), Some(depthview)) => {

@@ -578,7 +578,7 @@ use super::{
     /// 遍历 Renderer , 对所属 Viewer 的 ModelListAfterCulling 进行遍历, 获取 与 Renderer 相关 Pass 关联的 物体
     /// 对收集到的物体进行排序、渲染合并
     pub fn sys_renderer_draws_modify(
-        mut renderers: Query< ( ObjectID, &SceneID, &ViewerID, &mut Renderer, &PassTag, &RendererParam, &RendererRenderTargetKey ) >,
+        mut renderers: Query< ( ObjectID, &SceneID, &ViewerID, &mut Renderer, &PassTag, &RendererParam, &RendererRenderTargetKey, Option<&mut CrossDrawList> ) >,
         viewers: Query< (&ModelListAfterCulling, &ViewerGlobalPosition, &ViewerDirection, &DisposeReady, &ViewerDistanceCompute), >,
         scenes: Query< (&BatchParamOpaque, &BatchParamTransparent) >,
         models: Query<
@@ -609,7 +609,7 @@ use super::{
         let mut lastdraw: Option<DrawTmpRef> = None;
 
         performance.drawcalls = 0;
-        renderers.iter_mut().for_each(|(_id_renderer, idscene, id_viewer, mut renderer, passtag, param, rendertargetkey)| {
+        renderers.iter_mut().for_each(|(_id_renderer, idscene, id_viewer, mut renderer, passtag, param, rendertargetkey, mut crossdraws)| {
             if let Some(rendertargetkey) = rendertargetkey.0 {
                 rendertargets.delete(rendertargetkey);
             }
@@ -705,8 +705,13 @@ use super::{
                     }
                 }
 
+                let draws = if let Some(crossdraws) = &mut crossdraws {
+                    &mut crossdraws.draw_list
+                } else {
+                    &mut renderer.draws
+                };
                 if let Some(draw) = clear_draw {
-                    renderer.draws.list.push(Arc::new(draw));
+                    draws.list.push(Arc::new(draw));
                 }
 
                 opaque_list.sort_by(|a, b| DrawTmpRef::cmp_opaque(a, b));
@@ -731,7 +736,7 @@ use super::{
                             lastdraw = Some(tempdraw);
                         } else {
                             // lastdraw 转 DrawObj
-                            collect_draw_batch(&mut combinebuffer, tempdraw, &lastinsdata, &mut renderer, &mut allocator, &device, &queue, &mut count_vertex);
+                            collect_draw_batch(&mut combinebuffer, tempdraw, &lastinsdata, draws, &mut allocator, &device, &queue, &mut count_vertex);
                             lastinsdata.reset();
                             lastinsdata.data.start = combinebuffer.usedsize();
                             _combine_instance(&mut combinebuffer, &mut lastinsdata, &drawinfo);
@@ -747,7 +752,7 @@ use super::{
 
                 // lastdraw 转 DrawObj
                 if let Some(tempdraw) = lastdraw.take() {
-                    collect_draw_batch(&mut combinebuffer, tempdraw, &lastinsdata, &mut renderer, &mut allocator, &device, &queue, &mut count_vertex);
+                    collect_draw_batch(&mut combinebuffer, tempdraw, &lastinsdata, draws, &mut allocator, &device, &queue, &mut count_vertex);
                     lastinsdata.reset();
                     lastinsdata.data.start = combinebuffer.usedsize();
                     lastdraw = None;
@@ -763,7 +768,7 @@ use super::{
                             lastdraw = Some(tempdraw);
                         } else {
                             // lastdraw 转 DrawObj
-                            collect_draw_batch(&mut combinebuffer, tempdraw, &lastinsdata, &mut renderer, &mut allocator, &device, &queue, &mut count_vertex);
+                            collect_draw_batch(&mut combinebuffer, tempdraw, &lastinsdata, draws, &mut allocator, &device, &queue, &mut count_vertex);
                             lastinsdata.reset();
                             lastinsdata.data.start = combinebuffer.usedsize();
                             _combine_instance(&mut combinebuffer, &mut lastinsdata, &drawinfo);
@@ -778,16 +783,17 @@ use super::{
                 });
                 // lastdraw 转 DrawObj
                 if let Some(tempdraw) = lastdraw.take() {
-                    collect_draw_batch(&mut combinebuffer, tempdraw, &lastinsdata, &mut renderer, &mut allocator, &device, &queue, &mut count_vertex);
+                    collect_draw_batch(&mut combinebuffer, tempdraw, &lastinsdata, draws, &mut allocator, &device, &queue, &mut count_vertex);
                     lastinsdata.reset();
                     lastinsdata.data.start = combinebuffer.usedsize();
                     // lastdraw = None;
                 }
+
+                performance.drawcalls += draws.list.len() as u32;
             } else {
                 // log::warn!("Renderer Viewer Not Found: {:?}, Camera {:?}, {:?}", _id_renderer, id_viewer.0, (param.enable.0, passtag));
             }
 
-            performance.drawcalls += renderer.draws.list.len() as u32;
             // log::warn!("Renderer {:?},", (renderer.draws.list.len(), count_vertex, passtag));
             renderer.vertexs = count_vertex;
         });
@@ -1079,7 +1085,7 @@ fn collect_draw_batch(
     combinebuffer: &mut CombineBuffer,
     tempdraw: DrawTmpRef,
     instancedata: &EVerteicesInstance,
-    renderer: &mut Renderer,
+    draws: &mut DrawList3D,
     allocator: &mut VertexBufferAllocator3D,
     device: &PiRenderDevice,
     queue: &PiRenderQueue,
@@ -1137,7 +1143,7 @@ fn collect_draw_batch(
                 return;
             }
             *count_vertex += (vertex * (draw.instances.end - draw.instances.start)) as usize;
-            renderer.draws.list.push(Arc::new(draw));
+            draws.list.push(Arc::new(draw));
         } else {
             // log::error!("create_not_updatable_buffer fail {:?}", bytelen);
             // let data = instancedcache.instance_initial_buffer();
@@ -1162,6 +1168,6 @@ fn collect_draw_batch(
         };
 
         *count_vertex += (vertexcount * (draw.instances.end - draw.instances.start)) as usize;
-        renderer.draws.list.push(Arc::new(draw));
+        draws.list.push(Arc::new(draw));
     }
 }

@@ -2,8 +2,7 @@
 use pi_scene_shell::prelude::*;
 
 use crate::{
-    viewer::prelude::*,
-    postprocess::*,
+    postprocess::*, prelude::CrossDrawList, viewer::prelude::*
 };
 
 use super::{
@@ -34,10 +33,11 @@ pub fn sys_create_renderer(
     mut viewers: Query<(&SceneID, &mut ViewerRenderersInfo, &mut DirtyViewerRenderersInfo, &ViewerGraphID)>,
     mut error: ResMut<ErrorRecord>,
     mut alter: Alter<(), (), (GraphId, SceneID, RendererBundle), ()>,
+    mut alter2: Alter<(), (), (GraphId, SceneID, CrossDrawList, RendererBundle), ()>,
     // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_create_renderer"));
-    cmds.drain().for_each(|OpsRendererCreate(entity, name, id_viewer, passtag, transparent, recordinput)| {
+    cmds.drain().for_each(|OpsRendererCreate(entity, name, id_viewer, passtag, transparent, recordinput, crossrender)| {
         if let Ok((sceneid, mut viewerrenderinfo, mut viewerflag, graph)) = viewers.get_mut(id_viewer) {
             let render_node = RenderNode::new(entity);
             
@@ -48,13 +48,22 @@ pub fn sys_create_renderer(
                         viewerrenderinfo.add(entity, passtag);
                         *viewerflag = DirtyViewerRenderersInfo;
                         // log::error!("CreateRenderer {:?}", (nodeid, id_viewer, entity, viewerrenderinfo.len()));
-
+                        if crossrender {
+                        let crosslist = CrossDrawList::default();
+                        let bundle = (
+                            GraphId(nodeid), sceneid.clone(), crosslist,
+                            ActionRenderer::init(id_viewer, passtag, transparent, recordinput)
+                        );
+                        // commands.entity(entity).insert(bundle);
+                        let _ = alter2.alter(entity, bundle);
+                        } else {
                         let bundle = (
                             GraphId(nodeid), sceneid.clone(),
                             ActionRenderer::init(id_viewer, passtag, transparent, recordinput)
                         );
                         // commands.entity(entity).insert(bundle);
                         let _ = alter.alter(entity, bundle);
+                        }
 
                     // }
                 },

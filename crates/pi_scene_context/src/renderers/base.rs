@@ -6,6 +6,8 @@ use super::render_sort::RenderQueueSortParam;
 // pub type DrawObj3D = DrawObj;
 pub type DrawList3D = DrawList;
 
+pub type CrossDrawList = pi_bevy_render_plugin::render_cross::DrawList;
+
 pub struct TmpSortDrawOpaque {
     pub idx: u16,
     pub pass: u8,
