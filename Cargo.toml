@@ -100,13 +100,13 @@ pi_map                  = { path = "../pi_map" }
 pi_key_alloter          = { path = "../pi_key_alloter" }
 # wgpu                    = { path = "../wgpu/wgpu" }
 # wgpu-hal                = { path = "../wgpu/wgpu-hal" }
-naga                    = { path = "../wgpu/naga" }
+# naga                    = { path = "../wgpu/naga" }
 fixedbitset             = { path = "../fixedbitset"}
 
 [dev-dependencies]
 # winit           = { version = "0.28", registry = "yn", path = "../winit"}
-wgpu            = { version = "0.3", registry = "yn", package = "pi_wgpu" }
-# wgpu            = { version = "0.3", registry = "yn", package = "pi_wgpu", features = ["use_wgpu"] }
+# wgpu            = { version = "0.3", registry = "yn", package = "pi_wgpu" }
+wgpu            = { version = "0.3", registry = "yn", package = "pi_wgpu", features = ["use_wgpu"] }
 pi_winit        = {version = "0.28", registry="yn", package="winit"}
 rand            = "0.8"
 ktx             = "0.3"

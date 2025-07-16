@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use pi_scene_shell::prelude::*;
+use pi_slotmap::Key;
 
 use crate::{
     scene::{prelude::*, environment::{brdf::{BRDFTexture, BRDFSampler}, environment_texture::{EnvTexture, EnvIrradiance, EnvSampler}}},
@@ -49,7 +50,7 @@ pub fn _set0_modify(
                 None
             },
             _ => {
-                errors.record(idmodel, ErrorRecord::ERROR_PASS_BIND_VIEWER_NONE);
+                errors.record(idmodel.index(), ErrorRecord::ERROR_PASS_BIND_VIEWER_NONE);
                 return result;
             }
         };
@@ -62,13 +63,13 @@ pub fn _set0_modify(
                 if let Some(shadowtarget) = targets.get(shadowtarget.clone()) {
                     Some( scene_shadow.binds(&shadowtarget))
                 } else { 
-                    errors.record(idmodel, ErrorRecord::ERROR_PASS_BIND_SHADOW_NONE); 
+                    errors.record(idmodel.index(), ErrorRecord::ERROR_PASS_BIND_SHADOW_NONE); 
                     return result;
                 }
             },
             (false, _, _) => None,
             (true, _, _) => {
-                errors.record(idmodel, ErrorRecord::ERROR_PASS_BIND_SHADOW_NONE); 
+                errors.record(idmodel.index(), ErrorRecord::ERROR_PASS_BIND_SHADOW_NONE); 
                 return result;
             }
         };
@@ -76,7 +77,7 @@ pub fn _set0_modify(
             (true, Some(v0), Some(v1)) => { Some((v0.clone(), v1.clone())) },
             (false, _, _) => None,
             _ => {
-                errors.record(idmodel, ErrorRecord::ERROR_PASS_BIND_BRDF_NONE);
+                errors.record(idmodel.index(), ErrorRecord::ERROR_PASS_BIND_BRDF_NONE);
                 return result;
             },
         };
@@ -84,7 +85,7 @@ pub fn _set0_modify(
             (true, Some(v0)) => { Some(v0) },
             (false, _) => None,
             _ => {
-                errors.record(idmodel, ErrorRecord::ERROR_PASS_BIND_CAMERA_OPAQUE_NONE);
+                errors.record(idmodel.index(), ErrorRecord::ERROR_PASS_BIND_CAMERA_OPAQUE_NONE);
                 return result;
             },
         };
@@ -92,7 +93,7 @@ pub fn _set0_modify(
             (true, Some(v0)) => { Some(v0) },
             (false, _) => None,
             _ => {
-                errors.record(idmodel, ErrorRecord::ERROR_PASS_BIND_CAMERA_DEPTH_NONE);
+                errors.record(idmodel.index(), ErrorRecord::ERROR_PASS_BIND_CAMERA_DEPTH_NONE);
                 return result;
             },
         };
@@ -102,7 +103,7 @@ pub fn _set0_modify(
             (false, _, _, _) => None,
             _ => {
                 // log::error!("Env: {:?}", (env_irradiance.0.is_some(), env_texture.0.is_some(), env_sampler.0.is_some()));
-                errors.record(idmodel, ErrorRecord::ERROR_PASS_BIND_ENV_NONE);
+                errors.record(idmodel.index(), ErrorRecord::ERROR_PASS_BIND_ENV_NONE);
                 return result;
             },
         };
@@ -126,12 +127,12 @@ pub fn _set0_modify(
 
             result = Some(data.clone());
         } else {
-            errors.record(idmodel, ErrorRecord::ERROR_PASS_SET0_FAIL);
+            errors.record(idmodel.index(), ErrorRecord::ERROR_PASS_SET0_FAIL);
             // log::error!("create_bind_group 0: Error");
             result = None;
         }
     } else {
-        errors.record(idmodel, ErrorRecord::ERROR_PASS_BIND_SCENE_NONE);
+        errors.record(idmodel.index(), ErrorRecord::ERROR_PASS_BIND_SCENE_NONE);
     }
 
     return result;

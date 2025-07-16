@@ -226,7 +226,7 @@ pub struct RendererRenderTargetKey(pub Option<KeyRenderTarget>, pub bool);
 #[derive(Clone, Component)]
 pub enum RendererRenderTarget {
     None(Option<Share<SafeTargetView>>),
-    FinalRender,
+    FinalRender(bool),
     Custom(Share<SafeTargetView>),
     CustomAndOut(Share<SafeTargetView>),
 }
@@ -244,7 +244,7 @@ impl RendererRenderTarget {
             } else {
                 None
             },
-            RendererRenderTarget::FinalRender => None,
+            RendererRenderTarget::FinalRender(realscreen) => None,
             RendererRenderTarget::Custom(srt) => {
                 let view: &wgpu::TextureView = srt.target().colors[0].0.as_ref().deref();
                 Some(view)
@@ -264,7 +264,7 @@ impl RendererRenderTarget {
                     None
                 }
             } else { None },
-            RendererRenderTarget::FinalRender => None,
+            RendererRenderTarget::FinalRender(_) => None,
             RendererRenderTarget::Custom(srt) => {
                 if let Some(view) = srt.target().depth.as_ref() {
                     Some(view.0.as_ref().deref())
@@ -284,7 +284,7 @@ impl RendererRenderTarget {
     pub fn is_active(&self) -> bool {
         match self {
             RendererRenderTarget::None(_) => true,
-            RendererRenderTarget::FinalRender => true,
+            RendererRenderTarget::FinalRender(_) => true,
             RendererRenderTarget::Custom(_) => true,
             RendererRenderTarget::CustomAndOut(_) => true,
         }

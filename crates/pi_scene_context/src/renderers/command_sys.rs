@@ -1,5 +1,6 @@
 
 use pi_scene_shell::prelude::*;
+use pi_slotmap::Key;
 
 use crate::{
     postprocess::*, prelude::CrossDrawList, viewer::prelude::*
@@ -14,7 +15,7 @@ use super::{
 pub fn sys_create_subgraph(
     mut cmds: ResMut<ActionListSubGraphCreate>,
     mut graphic: ResMut<PiRenderGraph>,
-    mut error: ResMut<ErrorRecord>,
+    mut error: ResMut<ResErrorRecord>,
     mut alter: Alter<(), (), (GraphId, BundleEntity), ()>,
 ) {
     cmds.drain().for_each(|OpsSubGraphCreate(entity, name)| {
@@ -22,7 +23,7 @@ pub fn sys_create_subgraph(
             let _ = alter.alter(entity, (GraphId(graph), ActionEntity::init()));
             // log::error!("SubGraph: {:?}", (entity, name));
         } else {
-            error.record(entity, ErrorRecord::ERROR_SUB_GRAPHIC_ERROR);
+            error.record(entity.index(), ErrorRecord::ERROR_SUB_GRAPHIC_ERROR);
         }
     });
 }
@@ -31,7 +32,7 @@ pub fn sys_create_renderer(
     mut cmds: ResMut<ActionListRendererCreate>,
     mut graphic: ResMut<PiRenderGraph>,
     mut viewers: Query<(&SceneID, &mut ViewerRenderersInfo, &mut DirtyViewerRenderersInfo, &ViewerGraphID)>,
-    mut error: ResMut<ErrorRecord>,
+    mut error: ResMut<ResErrorRecord>,
     mut alter: Alter<(), (), (GraphId, SceneID, RendererBundle), ()>,
     mut alter2: Alter<(), (), (GraphId, SceneID, CrossDrawList, RendererBundle), ()>,
     // mut performance: ResMut<Performance>,
@@ -69,7 +70,7 @@ pub fn sys_create_renderer(
                 },
                 Err(err) => {
                     // log::error!("CreateRenderer Fail Graphic Error");
-                    error.graphic(entity, err);
+                    error.graphic(entity.index(), err);
                 },
             }
         } else {
@@ -84,7 +85,7 @@ pub fn sys_act_renderer_modify(
     mut rendererslink: Query<&mut Renderer>,
     targets: Res<CustomRenderTargets>,
     mut graphic: ResMut<PiRenderGraph>,
-    mut error: ResMut<ErrorRecord>,
+    mut error: ResMut<ResErrorRecord>,
     mut cmdmodifys: ResMut<ActionListRendererModify>,
     // mut performance: ResMut<Performance>,
 ) {
@@ -113,10 +114,10 @@ pub fn sys_act_renderer_modify(
                                 *rendertarget = RendererRenderTarget::None(None);
                             }
                             if let Err(err) = graphic.set_finish(nodeid.0, false) {
-                                error.graphic(entity, err);
+                                error.graphic(entity.index(), err);
                             }
                         },
-                        KeyCustomRenderTarget::FinalRender => {
+                        KeyCustomRenderTarget::FinalRender(realscreen) => {
                             let format = match ColorFormat::new(wgpu::TextureFormat::pi_render_default()) {
                                 Some(format) => format,
                                 _ => ColorFormat::Rgba8Unorm
@@ -127,10 +128,10 @@ pub fn sys_act_renderer_modify(
                                 renderparam.depthstencilformat = RenderDepthFormat(DepthStencilFormat::None);
                                 *flag = FlagRendererParamForPipeline;
                             }
-                            *rendertarget = RendererRenderTarget::FinalRender;
+                            *rendertarget = RendererRenderTarget::FinalRender(realscreen);
     
                             if let Err(err) = graphic.set_finish(nodeid.0, true) {
-                                error.graphic(entity, err);
+                                error.graphic(entity.index(), err);
                             }
                         },
                     }
@@ -210,7 +211,7 @@ pub fn sys_act_renderer_connect(
     mut cmds: ResMut<ActionListRendererConnect>,
     mut render_graphic: ResMut<PiRenderGraph>,
     renderers: Query<&GraphId>,
-    mut error: ResMut<ErrorRecord>,
+    mut error: ResMut<ResErrorRecord>,
     // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_act_renderer_connect"));
@@ -219,12 +220,12 @@ pub fn sys_act_renderer_connect(
             if isdisconnect {
                 if let Err(err) = render_graphic.remove_depend(nbefore.0, nafter.0) {
                     // log::error!("3D Disconnect: {:?}", (nbefore.0, nafter.0));
-                    error.graphic(before, err);
+                    error.graphic(before.index(), err);
                 }
             } else {
                 if let Err(err) = render_graphic.add_depend(nbefore.0, nafter.0) {
                     // log::error!("3D Connect: {:?}", (nbefore.0, nafter.0));
-                    error.graphic(before, err);
+                    error.graphic(before.index(), err);
                 }
             }
             // render_graphic.dump_graphviz();
@@ -235,7 +236,7 @@ pub fn sys_dispose_renderer(
     mut render_graphic: ResMut<PiRenderGraph>,
     graphs: Query<(Entity, &GraphId, &DisposeCan), Changed<DisposeCan>>,
     renderers: Query<&RendererRenderTargetKey>,
-    mut error: ResMut<ErrorRecord>,
+    mut error: ResMut<ResErrorRecord>,
     mut targets: ResMut<CustomRenderTargets>,
     // mut performance: ResMut<Performance>,
 ) {
@@ -243,7 +244,7 @@ pub fn sys_dispose_renderer(
     graphs.iter().for_each(|(entity, nodeid, flag)| {
         if flag.0 == false { return; }
         if let Err(err) = render_graphic.remove_node(nodeid.0) {
-            error.graphic(entity, err);
+            error.graphic(entity.index(), err);
         }
         if let Ok(rtkey) = renderers.get(entity) {
             if let Some(key) = rtkey.0 {

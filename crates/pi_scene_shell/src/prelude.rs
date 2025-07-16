@@ -46,7 +46,8 @@ pub use pi_render::{
         draw_obj_list::*,
         pipeline::*,
         buildin_data::*,
-        vertex_format::TVertexFormatByteSize
+        vertex_format::TVertexFormatByteSize,
+        errors::ErrorRecord,
     },
     rhi::{
         asset::*,

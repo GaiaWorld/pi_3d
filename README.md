@@ -174,3 +174,31 @@ scene.onBeforeRenderObservable.add(() => {
 |pi_bevy_window|0.3|
 |pi_bevy_post_process|0.3|
 |pi_bevy_plugin|0.3|
+
+# WebGPU
+
+* WebGPU 
+
+# wgpu
+
+1. 针对 webgl 平台做坐标处理
+2. 按原方案(wgpu), 对渲染到屏幕的渲染使用 blitframebuffer 进行倒置
+
+UI 呈现到屏幕的GraphID
+
+UI 的FBO是运行时申请,没有使用传递的FBO
+
+a:
+
+Root节点清屏，传递FBO
+  UnderUI 场景申请FBO, 进行渲染, 传递FBO
+  canvas 节点接收 FBO为纹理, 渲染到UI内容fbo
+UI内容渲染到(UI的根fbo)，传递FBO
+UI 使用Root根FBO, 进行渲染到Screen
+
+b:
+
+Root节点清屏，传递FBO
+UnderUI 接收 FBO, 进行渲染, 传递FBO
+UI内容渲染到(UI的根fbo)，传递FBO
+UI 使用Root根FBO, 进行渲染到Screen

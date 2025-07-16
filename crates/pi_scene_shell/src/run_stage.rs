@@ -1,9 +1,11 @@
 use crate::ecs::*;
+use crate::error::ResErrorRecord;
 use crate::math::ResMatrixPool;
 
 use pi_bevy_render_plugin::{PiRenderDevice, PiRenderSystemSet};
+use pi_render::renderer::errors::ErrorRecord;
 
-use crate::prelude::{ActionList, DeviceLimits3D, EngineInstant, ErrorRecord, MemSize};
+use crate::prelude::{DeviceLimits3D, EngineInstant, MemSize};
 use crate::prelude::FrameDataPrepare;
 
 pub type KeySystem = &'static str;
@@ -70,7 +72,7 @@ impl Plugin for PluginRunstage {
         app.configure_set(StageD3, ERunStageChap::Collect        .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(ERunStageChap::Culled));
         app.configure_set(StageD3Final, ERunStageChap::StateCheck     .in_set(ERunStageChap::D3).in_set(FrameDataPrepare).after(ERunStageChap::Collect).before(PiRenderSystemSet));
 
-        app.insert_resource(ErrorRecord(vec![], false));
+        app.insert_resource(ResErrorRecord(ErrorRecord(vec![], false)));
 
         app.insert_resource(RunState3D::default());
 

@@ -31,7 +31,7 @@ fn setup(
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
     demooption: Res<base::DemoOption>,
     engineopt: Res<EngineCustomPlugins>,
-    mut combineatlas: ResMut<TextureCombineAtlas2DMgr>,
+    mut combineatlas: ResMut<ResTextureCombineAtlas2DMgr>,
     device: Res<PiRenderDevice>,
     mut testdatas: ResMut<ActionListTestData>,
 ) {
@@ -254,9 +254,9 @@ pub fn main() {
 
     app.add_plugins(PluginTest);
     
-    app.add_systems(StageD3, pi_3d::sys_info_node);
-    app.add_systems(StageD3, pi_3d::sys_info_resource);
-    app.add_systems(StageD3, pi_3d::sys_info_draw);
+    // app.add_systems(StageD3, pi_3d::sys_info_node);
+    // app.add_systems(StageD3, pi_3d::sys_info_resource);
+    // app.add_systems(StageD3, pi_3d::sys_info_draw);
         #[cfg(feature = "use_bevy")]
     app.add_systems(Startup, setup.after(base::setup_default_mat));
     #[cfg(not(feature = "use_bevy"))]

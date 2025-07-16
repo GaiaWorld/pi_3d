@@ -78,7 +78,7 @@ pub fn sys_state_resource(
         Res<CombineDataCommon>,
         Res<TmpTransformWorldCalc0>,
         Res<TmpTransformWorldCalc1>,
-        Res<ImageTextureLoader>,
+        Res<ResImageTextureLoader>,
         Res<ImageTextureViewLoader2>,
     ),
     renderers: Query<&Renderer>,
@@ -376,7 +376,7 @@ pub fn sys_info_resource(
     states: Res<StateResource>,
     psperformance: Res<ParticleSystemPerformance>,
     mut performance: ResMut<Performance>,
-    errors: Res<ErrorRecord>,
+    errors: Res<ResErrorRecord>,
     cmd: Commands,
     command: Query<Entity>,
     actinstance: Res<ActionListInstanceMeshCreate>,
@@ -412,7 +412,7 @@ pub fn sys_info_resource(
 }
 
 pub fn sys_info_error(
-    mut states: ResMut<ErrorRecord>,
+    mut states: ResMut<ResErrorRecord>,
 ) {
     if (states.0.len() > 0) {
         log::error!("Errors: ");
@@ -603,8 +603,8 @@ impl<'w> ActionSets<'w> {
 pub struct ResourceSets<'w> {
     pub default_mat: Res<'w, SingleIDBaseDefaultMaterial>,
     pub node_material_blocks: ResMut<'w, NodeMaterialBlocks>,
-    pub imgtex_loader: ResMut<'w, ImageTextureLoader>,
-    pub imgtex_loader_state: ResMut<'w, StateTextureLoader>,
+    pub imgtex_loader: ResMut<'w, ResImageTextureLoader>,
+    pub imgtex_loader_state: ResMut<'w, ResStateTextureLoader>,
     pub imgtex_asset: Res<'w, ShareAssetMgr<ImageTextureFrame>>,
     pub imgtexview_asset: Res<'w, ShareAssetMgr<ImageTextureViewFrame>>,
     pub gltf2_asset: Res<'w, ShareAssetMgr<GLTF>>,
@@ -627,7 +627,7 @@ pub struct ResourceSets<'w> {
     pub anime_events: ResMut<'w, GlobalAnimeEvents>,
     pub trailbuffer: ResMut<'w, ResTrailBuffer>,
     pub particlesys: ResourceParticleSystem<'w>,
-    pub error_record: ResMut<'w, ErrorRecord>,
+    pub error_record: ResMut<'w, ResErrorRecord>,
     pub textureatlas: ResMut<'w, ResSpriteFrames>,
     pub enginopt: Res<'w, EngineCustomPlugins>,
     pub combinebuffer: Res<'w, CombineBuffer>,
@@ -636,7 +636,7 @@ pub struct ResourceSets<'w> {
     pub matrix1: Res<'w, TmpTransformWorldCalc1>,
     pub texloader2: Res<'w, ImageTextureViewLoader2>,
     pub vballocator: Res<'w, VertexBufferAllocator3D>,
-    pub texcombine: ResMut<'w, TextureCombineAtlas2DMgr>,
+    pub texcombine: ResMut<'w, ResTextureCombineAtlas2DMgr>,
 }
 impl<'w> MemSize for ResourceSets<'w> {
     fn memsize(&self) -> usize {

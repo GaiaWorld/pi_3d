@@ -276,7 +276,7 @@ pub fn setup_demoinit(
     mut animegroupres: ResourceAnimationGroup,
     mut demooption: ResMut<DemoOption>,
     mut assets: (ResMut<CustomRenderTargets>, Res<PiRenderDevice>, Res<ShareAssetMgr<SamplerRes>>, Res<PiSafeAtlasAllocator>,),
-    mut errors: ResMut<ErrorRecord>,
+    mut errors: ResMut<ResErrorRecord>,
     engineopt: Res<EngineCustomPlugins>,
     asset_mgr: Res<ShareAssetMgr<ShaderEffectMeta>>,
     mut nodematblocks: ResMut<NodeMaterialBlocks>,
@@ -348,7 +348,9 @@ pub fn test_plugins() -> (App, Arc<pi_winit::window::Window>,EventLoop<()>) {
     app.add_plugins(PluginLocalLoad);
     app.add_plugins(PluginFrameTime);
             
-    app.insert_resource(EngineCustomPlugins::default());
+    let mut opt: EngineCustomPlugins = EngineCustomPlugins::default();
+    opt.maxlen_material_array = 1;
+    app.insert_resource(opt);
     PluginBundleDefault::add(&mut app);
     
     app.add_plugins(PluginNodeMaterial);
@@ -433,7 +435,9 @@ pub fn test_plugins_with_gltf() -> (App, Arc<Window>, EventLoop<()>) {
     app.add_plugins(PluginLocalLoad);
     app.add_plugins(PluginFrameTime);
 
-    app.insert_resource(EngineCustomPlugins::default());
+    let mut opt: EngineCustomPlugins = EngineCustomPlugins::default();
+    opt.maxlen_material_array = 1;
+    app.insert_resource(opt);
     PluginBundleDefault::add(&mut app);
 
     app.add_plugins(PluginNodeMaterial);

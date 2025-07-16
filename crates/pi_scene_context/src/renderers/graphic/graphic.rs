@@ -123,7 +123,7 @@ impl Node for RenderNode {
             }
 
             match to_final_target {
-                RendererRenderTarget::FinalRender => {},
+                RendererRenderTarget::FinalRender(realscreen) => {},
                 RendererRenderTarget::Custom(_srt) => {
                     output.target = Some(_srt.clone());
                 },
@@ -262,19 +262,19 @@ impl Node for RenderNode {
             let render_depth_view;
 
             match &to_final_target {
-                RendererRenderTarget::FinalRender => {
+                RendererRenderTarget::FinalRender(realscreen) => {
                     // log::warn!("Graphic: FinalRender");
                     if let Some(screen) = &screen.0 {
-                        match (&screen.view, screen.texture()) {
+                        match (screen.view(), screen.texture()) {
                             (Some(view), Some(texture)) => {
                                 can_render = true;
-                                let width = texture.texture.width();
-                                let height = texture.texture.height();
+                                let width = texture.width();
+                                let height = texture.height();
                                 x = width as f32 * x;
                                 y = height as f32 * y;
                                 w = width as f32 * w;
                                 h = height as f32 * h;
-                                render_color_view = view.deref();
+                                render_color_view = view;
                                 render_depth_view = None;
                             },
                             _ => {

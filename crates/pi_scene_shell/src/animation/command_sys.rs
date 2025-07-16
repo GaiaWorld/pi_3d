@@ -1,3 +1,5 @@
+use pi_render::renderer::errors::ErrorRecord;
+use pi_slotmap::Key;
 use crate::ecs::*;
 
 use std::ops::Deref;
@@ -5,7 +7,7 @@ use std::ops::Deref;
 use crate::object::ActionEntity;
 use crate::object::DisposeCan;
 use crate::object::DisposeReady;
-use crate::prelude::{Performance, ErrorRecord};
+use crate::prelude::{Performance, ResErrorRecord};
 
 use super::base::*;
 use super::command::*;
@@ -187,7 +189,7 @@ pub fn sys_act_animation_group_action(
     mut cmdsaction: ResMut<ActionListAnimationGroupAction>,
     items: Query<(&AnimationGroupKey, &AnimationGroupScene)>,
     mut scenes: Query<&mut SceneAnimationContext>,
-    mut errors: ResMut<ErrorRecord>,
+    mut errors: ResMut<ResErrorRecord>,
     mut globals: ResMut<GlobalAnimeAbout>,
 ) {
     cmdsaction.drain().for_each(|act| {
@@ -196,7 +198,7 @@ pub fn sys_act_animation_group_action(
                 if let Ok(mut ctx) = scenes.get_mut(idscene.0) {
                     match ctx.0.start_with_progress(groupkey.0, param.speed, param.loop_mode, param.from, param.to, param.fps, param.amountcalc, delay_time_ms, fillmode) {
                         Ok(_) => {},
-                        Err(_) => { errors.record(entity, ErrorRecord::ERROR_ANIMATION_START_FAIL); },
+                        Err(_) => { errors.record(entity.index(), ErrorRecord::ERROR_ANIMATION_START_FAIL); },
                     }
                 }
             },
@@ -204,7 +206,7 @@ pub fn sys_act_animation_group_action(
                 if let Ok(mut ctx) = scenes.get_mut(idscene.0) {
                     match ctx.0.pause(groupkey.0) {
                         Ok(_) => {},
-                        Err(_) => { errors.record(entity, ErrorRecord::ERROR_ANIMATION_PAUSE_FAIL); },
+                        Err(_) => { errors.record(entity.index(), ErrorRecord::ERROR_ANIMATION_PAUSE_FAIL); },
                     }
                 }
             },
@@ -212,7 +214,7 @@ pub fn sys_act_animation_group_action(
                 if let Ok(mut ctx) = scenes.get_mut(idscene.0) {
                     match ctx.0.stop(groupkey.0) {
                         Ok(_) => {},
-                        Err(_) => { errors.record(entity, ErrorRecord::ERROR_ANIMATION_STOP_FAIL); },
+                        Err(_) => { errors.record(entity.index(), ErrorRecord::ERROR_ANIMATION_STOP_FAIL); },
                     }
                 }
             },
@@ -221,7 +223,7 @@ pub fn sys_act_animation_group_action(
                     if let Ok(mut ctx) = scenes.get_mut(idscene.0) {
                         match ctx.0.add_target_animation_notype(animation, groupkey.0, target) {
                             Ok(_) => {},
-                            Err(_) => { errors.record(entity, ErrorRecord::ERROR_ADD_TARGET_ANIMATION_FAIL); },
+                            Err(_) => { errors.record(entity.index(), ErrorRecord::ERROR_ADD_TARGET_ANIMATION_FAIL); },
                         }
                     }
                 }

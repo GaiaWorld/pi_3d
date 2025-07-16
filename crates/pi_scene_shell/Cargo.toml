@@ -13,6 +13,7 @@ default_features = ["use_pi_ecs"]
 record_shader = []
 use_bevy = []
 use_pi_ecs = []
+webgl_context = []
 
 [dependencies]
 log                 = "0.4"

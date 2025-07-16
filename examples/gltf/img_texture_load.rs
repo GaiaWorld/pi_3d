@@ -7,25 +7,25 @@ use pi_scene_shell::prelude::*;
 mod base;
 
 fn setup(
-    mut loader: ResMut<ImageTextureLoader>,
+    mut loader: ResMut<ResImageTextureLoader>,
 ) {
     loader.create_load(KeyImageTextureFrame { url: Atom::from("assets/images/eff_ui_ll_0805.png"), ..Default::default() });
 }
 
 fn sys_load_check(
-    mut loader: ResMut<ImageTextureLoader>,
+    mut loader: ResMut<ResImageTextureLoader>,
 ) {
-    let mut item = loader.fails.pop();
-    while let Some(param) = item {
-        log::debug!("Failed: {:?}, Error: {:?}", param, loader.query_failed_reason(param));
-        item = loader.fails.pop();
-    }
-    let mut item = loader.success_load.pop();
-    while let Some(param) = item {
-        log::debug!("Successed: {:?}, {:?}", param, loader.query_success(param).is_some());
-        // log::error!("Successed: {:?}", param.1.errors.len());
-        item = loader.success_load.pop();
-    }
+    // let mut item = loader.fails.pop();
+    // while let Some(param) = item {
+    //     log::debug!("Failed: {:?}, Error: {:?}", param, loader.query_failed_reason(param));
+    //     item = loader.fails.pop();
+    // }
+    // let mut item = loader.success_load.pop();
+    // while let Some(param) = item {
+    //     log::debug!("Successed: {:?}, {:?}", param, loader.query_success(param).is_some());
+    //     // log::error!("Successed: {:?}", param.1.errors.len());
+    //     item = loader.success_load.pop();
+    // }
 }
 
 pub type ActionListTestData = ActionList<(ObjectID, f32, f32, f32)>;

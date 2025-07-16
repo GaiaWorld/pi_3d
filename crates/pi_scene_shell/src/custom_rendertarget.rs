@@ -13,7 +13,7 @@ pub type KeyRenderTarget = u64;
 #[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum KeyCustomRenderTarget {
     Custom(KeyRenderTarget),
-    FinalRender,
+    FinalRender(bool),
 }
 
 #[derive(Clone)]
@@ -118,12 +118,24 @@ impl CustomRenderTarget {
         //     ox,
         //     oy + sy,
         // )
-        (
-            sx * vsx,
-            (sy * -1.0) * vsy,
-            ox * vsx + vox,
-            (oy + sy) * vsy + voy,
-        )
+        
+        #[cfg(feature = "webgl_context")]
+        let result = (
+                sx * vsx,
+                sy * vsy,
+                ox * vsx + vox,
+                oy * vsy + voy,
+            );
+        #[cfg(not(feature = "webgl_context"))]
+        let result = (
+                sx * vsx,
+                (sy * -1.0) * vsy,
+                ox * vsx + vox,
+                (oy + sy) * vsy + voy,
+            );
+
+        result
+    
     }
 
     pub fn color_desc(format: &ColorFormat) -> SmallVec<[TextureDescriptor; 1]> {

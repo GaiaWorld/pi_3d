@@ -1,5 +1,5 @@
 use std::sync::Arc;
-
+use pi_slotmap::Key;
 use pi_scene_shell::{prelude::*, run_stage::EngineCustomPlugins};
 
 use crate::{
@@ -44,7 +44,7 @@ pub fn sys_create_material(
     mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
     mut materialmgr: ResMut<MaterialDataMgr>,
-    mut errors: ResMut<ErrorRecord>,
+    mut errors: ResMut<ResErrorRecord>,
     mut alter: Alter<(), (), MaterialBundle, ()>,
     engineopt: Res<EngineCustomPlugins>,
     // mut performance: ResMut<Performance>,
@@ -86,7 +86,7 @@ pub fn sys_create_material(
             // matcmds.insert(bundle);
             let _ = alter.alter(entity, bundle);
         } else {
-            errors.record(entity, ErrorRecord::ERROR_MATERIAL_SHADER_NOTFOUND);
+            errors.record(entity.index(), ErrorRecord::ERROR_MATERIAL_SHADER_NOTFOUND);
             // log::error!("ERROR_MATERIAL_SHADER_NOTFOUND: {:?}", key_shader);
         }
     });
@@ -101,7 +101,7 @@ pub fn sys_act_material_use(
     mut linkedtargets: Query<&mut LinkedMaterialID>,
     passes: Query<&PassMaterialID>,
     empty: Res<SingleEmptyEntity>,
-    mut errors: ResMut<ErrorRecord>,
+    mut errors: ResMut<ResErrorRecord>,
     // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_act_material_use"));
@@ -151,13 +151,13 @@ pub fn sys_act_material_use(
                                 // log::error!("MatID Again!");
                             }
                         } else {
-                            errors.record(id_mesh, ErrorRecord::ERROR_USE_MATERIAL_NULL_TARGET);
+                            errors.record(id_mesh.index(), ErrorRecord::ERROR_USE_MATERIAL_NULL_TARGET);
                         }
                     } else {
-                        errors.record(id_mesh, ErrorRecord::ERROR_USE_MATERIAL_NULL_TARGET);
+                        errors.record(id_mesh.index(), ErrorRecord::ERROR_USE_MATERIAL_NULL_TARGET);
                     }
                 } else {
-                    errors.record(id_mesh, ErrorRecord::ERROR_USE_MATERIAL_NULL_MAT);
+                    errors.record(id_mesh.index(), ErrorRecord::ERROR_USE_MATERIAL_NULL_MAT);
                 }
             },
             OpsMaterialUse::UnUse(id_mesh, _id_mat) => {

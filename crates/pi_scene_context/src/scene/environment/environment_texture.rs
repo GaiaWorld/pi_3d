@@ -50,8 +50,8 @@ pub fn sys_env_texture_load_launch(
     loader: Res<ImageTextureViewLoader<EnvTextureSlot>>,
     // image_assets_mgr: Res<ShareAssetMgr<ImageTexture>>,
     imgtex_assets_mgr: Res<ShareAssetMgr<ImageTextureView>>,
-    mut image_loader: ResMut<ImageTextureLoader>,
-    mut state: ResMut<StateTextureLoader>,
+    mut image_loader: ResMut<ResImageTextureLoader>,
+    mut state: ResMut<ResStateTextureLoader>,
     mut allocator: ResMut<ResBindBufferAllocator>,
 ) {
     addeds.iter().chain(changes.iter()).for_each(|entity| {
@@ -88,8 +88,8 @@ pub fn sys_env_texture_loaded_check(
     // mut commands: Commands,
     loader: Res<ImageTextureViewLoader<EnvTextureSlot>>,
     imgtex_assets_mgr: Res<ShareAssetMgr<ImageTextureViewFrame>>,
-    mut image_loader: ResMut<ImageTextureLoader>,
-    mut state: ResMut<StateTextureLoader>,
+    mut image_loader: ResMut<ResImageTextureLoader>,
+    mut state: ResMut<ResStateTextureLoader>,
     mut allocator: ResMut<ResBindBufferAllocator>,
 ) {
     let mut item = loader.wait.pop();

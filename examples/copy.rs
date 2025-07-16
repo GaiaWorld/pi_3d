@@ -50,6 +50,14 @@ impl PluginImageCopy {
             actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_06, EDepthState::Compare(CompareFunction::Always)));
             actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_07, EDepthState::Compare(CompareFunction::Always)));
             actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_08, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_01, EPrimitiveState::CCullMode(CullMode::Off)));
+            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_02, EPrimitiveState::CCullMode(CullMode::Off)));
+            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_03, EPrimitiveState::CCullMode(CullMode::Off)));
+            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_04, EPrimitiveState::CCullMode(CullMode::Off)));
+            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_05, EPrimitiveState::CCullMode(CullMode::Off)));
+            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_06, EPrimitiveState::CCullMode(CullMode::Off)));
+            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_07, EPrimitiveState::CCullMode(CullMode::Off)));
+            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_08, EPrimitiveState::CCullMode(CullMode::Off)));
 
             actions.geometry.create.push(OpsGeomeryCreate::ops(plane, id_geo, attrs, None));
             actions.material.usemat.push(OpsMaterialUse::ops(plane, copymat, PassTag::PASS_TAG_01));
@@ -109,6 +117,14 @@ impl PluginImageCopy {
             actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_06, EDepthState::Compare(CompareFunction::Always)));
             actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_07, EDepthState::Compare(CompareFunction::Always)));
             actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_08, EDepthState::Compare(CompareFunction::Always)));
+            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_01, EPrimitiveState::CCullMode(CullMode::Off)));
+            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_02, EPrimitiveState::CCullMode(CullMode::Off)));
+            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_03, EPrimitiveState::CCullMode(CullMode::Off)));
+            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_04, EPrimitiveState::CCullMode(CullMode::Off)));
+            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_05, EPrimitiveState::CCullMode(CullMode::Off)));
+            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_06, EPrimitiveState::CCullMode(CullMode::Off)));
+            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_07, EPrimitiveState::CCullMode(CullMode::Off)));
+            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_08, EPrimitiveState::CCullMode(CullMode::Off)));
 
             actions.geometry.create.push(OpsGeomeryCreate::ops(plane, id_geo, attrs, None));
             actions.material.usemat.push(OpsMaterialUse::ops(plane, copymat, PassTag::PASS_TAG_01));

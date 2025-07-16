@@ -32,9 +32,9 @@ struct PluginMaterial;
 impl Plugin for PluginMaterial {
     fn build(&self, app: &mut App) {
         {
-            app.insert_resource(TextureCombineAtlas2DMgr::default());
-            app.insert_resource(ImageTextureLoader::default());
-            app.insert_resource(StateTextureLoader::default());
+            app.insert_resource(ResTextureCombineAtlas2DMgr::default());
+            app.insert_resource(ResImageTextureLoader::default());
+            app.insert_resource(ResStateTextureLoader::default());
             app.insert_resource(ImageTextureViewLoader2::default());
 
             app.configure_set(StageD3, StageTextureLoad::TextureRequest.in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageMaterial::MatCommand));

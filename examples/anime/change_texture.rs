@@ -39,7 +39,7 @@ fn setup(
     queue: Res<PiRenderQueue>,
     mut testtex: ResMut<ResDemoTex>,
     engineopt: Res<EngineCustomPlugins>,
-    mut texatlas: ResMut<TextureCombineAtlas2DMgr>,
+    mut texatlas: ResMut<ResTextureCombineAtlas2DMgr>,
 ) {
     let (demopass, scene, camera01, copyrenderer, copyrendercamera) = if let (Some(demo), Some(copyrenderer), Some(copyrendercamera)) = (&demooption.demo, &demooption.copyrenderer, &demooption.copyrendercamera) {
         (demo, demo.scene, demo.camera, *copyrenderer, *copyrendercamera)

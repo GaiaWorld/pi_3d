@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use pi_scene_shell::prelude::*;
+use pi_slotmap::Key;
 
 use crate::{
     skeleton::prelude::*,
@@ -30,7 +31,7 @@ pub fn _set1_modify(
                 (Some(bind), Some(_)) => { bind_skin = Some(bind.clone()); },
                 (None, None) => { },
                 _ => {
-                    errors.record(idmodel, ErrorRecord::ERROR_PASS_BIND_SKIN_NONE); 
+                    errors.record(idmodel.index(), ErrorRecord::ERROR_PASS_BIND_SKIN_NONE); 
                     return result;
                 }
             }; 
@@ -40,7 +41,7 @@ pub fn _set1_modify(
                 },
                 (false, _) => { },
                 _ => { 
-                    errors.record(idmodel, ErrorRecord::ERROR_PASS_BIND_LIGHTING_NONE); 
+                    errors.record(idmodel.index(), ErrorRecord::ERROR_PASS_BIND_LIGHTING_NONE); 
                     return result;
                 }
             };
@@ -56,7 +57,7 @@ pub fn _set1_modify(
                 // *set0 = PassBindGroupModel(Some(data.clone()));
                 result = Some(data.clone());
             } else {
-                errors.record(idmodel, ErrorRecord::ERROR_PASS_SET1_FAIL); 
+                errors.record(idmodel.index(), ErrorRecord::ERROR_PASS_SET1_FAIL); 
                 // log::error!("create_bind_group 0: Error");
             }
     } else {

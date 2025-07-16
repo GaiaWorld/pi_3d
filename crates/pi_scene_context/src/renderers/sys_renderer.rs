@@ -1,4 +1,5 @@
 use std::{hash::Hasher, ops::Range, sync::Arc};
+use pi_slotmap::Key;
 
 use pi_scene_shell::{prelude::*, run_stage::EngineCustomPlugins};
 use crate::{
@@ -24,7 +25,7 @@ use super::{
         asset_mgr_bindgroup_layout: Res<ShareAssetMgr<BindGroupLayout>>,
         asset_mgr_bindgroup: Res<ShareAssetMgr<BindGroup>>,
         bindpassindexs: Res<BindPassIndexPool>,
-        mut errors: ResMut<ErrorRecord>,
+        mut errors: ResMut<ResErrorRecord>,
         entitysets: Res<EntityFilterForComponentChanged>,
         // mut performance: ResMut<Performance>,
     ) {
@@ -121,7 +122,7 @@ use super::{
                             if let Some(bind_group) = create_bind_group(&key_bind_group, &device, &asset_mgr_bindgroup_layout, &asset_mgr_bindgroup) {
                                 Some(Arc::new(BindGroupMaterial::new(BindGroupUsage::new(key_bind_group, bind_group), item.clone())))
                             } else {
-                                errors.record(idmodel, ErrorRecord::ERROR_PASS_SET2_FAIL);
+                                errors.record(idmodel.index(), ErrorRecord::ERROR_PASS_SET2_FAIL);
                                 // log::error!("Bindgroups Fail set2 {:?}", idmodel);
                                 return;
                             }
@@ -138,7 +139,7 @@ use super::{
                                         *bindgroups = PassBindGroups::new(None);
                                         *flag = PassFlagShader;
                                     }
-                                    errors.record(idmodel, ErrorRecord::ERROR_PASS_SET3_FAIL);
+                                    errors.record(idmodel.index(), ErrorRecord::ERROR_PASS_SET3_FAIL);
                                     return;
                                 }
                                 temp
@@ -420,7 +421,7 @@ use super::{
         >,
         assets: ResMut<ShareAssetMgr<Pipeline3D>>,
         device: Res<PiRenderDevice>,
-        mut errors: ResMut<ErrorRecord>,
+        mut errors: ResMut<ResErrorRecord>,
         entitysets: Res<EntityFilterForComponentChanged>,
     ) {
         // let time1 = pi_time::Instant::now();
@@ -464,7 +465,7 @@ use super::{
                                         *flag = PassDrawDirty;
                                     }
                                 } else {
-                                    errors.record(id_model.0, ErrorRecord::ERROR_PASS_PIPELINE_FAIL);
+                                    errors.record(id_model.0.index(), ErrorRecord::ERROR_PASS_PIPELINE_FAIL);
                                     if oldpipeline.0.is_some() {
                                         *oldpipeline = PassPipeline(None);
                                         *flag = PassDrawDirty;
