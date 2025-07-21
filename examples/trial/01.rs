@@ -91,7 +91,7 @@ fn setup(
                         // error.graphic(entity, err);
                     }
                 },
-                KeyCustomRenderTarget::FinalRender => todo!(),
+                KeyCustomRenderTarget::FinalRender(_) => todo!(),
             }
         },
         Err(err) => {

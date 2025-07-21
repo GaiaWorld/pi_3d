@@ -30,7 +30,7 @@ impl PluginImageCopy {
                     KeyCustomRenderTarget::Custom(pre_render_target) => {
                         actions.material.valb.push(OpsUniformValB::texture_from_target(copymat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockMainTexture::KEY_TEX), ..Default::default() }, pre_render_target, Atom::from(BlockMainTexture::KEY_TILLOFF)));
                     },
-                    KeyCustomRenderTarget::FinalRender => {},
+                    KeyCustomRenderTarget::FinalRender(_) => {},
                 }
 
             }
@@ -74,7 +74,7 @@ impl PluginImageCopy {
             actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(copy_renderer, false));
             actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(copy_renderer, false));
             actions.renderer.connect.push(OpsRendererConnect::ops(pre_renderer, copy_renderer, false));
-            actions.renderer.target.push(OpsRendererTarget::Custom(copy_renderer, KeyCustomRenderTarget::FinalRender, false));
+            actions.renderer.target.push(OpsRendererTarget::Custom(copy_renderer, KeyCustomRenderTarget::FinalRender(false), false));
         // }
         (copy_renderer, copycamera)
     }
@@ -97,7 +97,7 @@ impl PluginImageCopy {
                     KeyCustomRenderTarget::Custom(pre_render_target) => {
                         actions.material.valb.push(OpsUniformValB::texture_from_target(copymat, UniformTextureWithSamplerParam { slotname: Atom::from(BlockMainTexture::KEY_TEX), ..Default::default() }, pre_render_target, Atom::from(BlockMainTexture::KEY_TILLOFF)));
                     },
-                    KeyCustomRenderTarget::FinalRender => {},
+                    KeyCustomRenderTarget::FinalRender(_) => {},
                 }
 
             }

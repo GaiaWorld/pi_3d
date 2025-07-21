@@ -636,7 +636,6 @@ use super::{
                     return;
                 }
                 countmesh = 0;
-                renderer.draws.viewport = param.viewport.val();
                 let viewposition = (viewposition.0.x, viewposition.0.y, viewposition.0.z );
                 let viewdirection = (viewdirection.0.x, viewdirection.0.y, viewdirection.0.z );
                 for id_obj in list_model.0.iter() {
@@ -714,6 +713,7 @@ use super::{
                 } else {
                     &mut renderer.draws
                 };
+                draws.viewport = param.viewport.val();
                 if let Some(draw) = clear_draw {
                     draws.list.push(Arc::new(draw));
                 }
