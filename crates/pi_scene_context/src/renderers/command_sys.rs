@@ -33,8 +33,8 @@ pub fn sys_create_renderer(
     mut graphic: ResMut<PiRenderGraph>,
     mut viewers: Query<(&SceneID, &mut ViewerRenderersInfo, &mut DirtyViewerRenderersInfo, &ViewerGraphID)>,
     mut error: ResMut<ResErrorRecord>,
-    mut alter: Alter<(), (), (GraphId, SceneID, RendererBundle), ()>,
-    mut alter2: Alter<(), (), (GraphId, SceneID, CrossDrawList, RendererBundle), ()>,
+    mut alter: Alter<(), (), (GraphId, SceneID, RendererBundle, SimpleInOut), ()>,
+    mut alter2: Alter<(), (), (GraphId, SceneID, CrossDrawList, RendererBundle, SimpleInOut), ()>,
     // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_create_renderer"));
@@ -42,7 +42,7 @@ pub fn sys_create_renderer(
         if let Ok((sceneid, mut viewerrenderinfo, mut viewerflag, graph)) = viewers.get_mut(id_viewer) {
             let render_node = RenderNode::new(entity);
             
-            match graphic.add_node(name, render_node, graph.0) {
+            match graphic.add_node(name, render_node, graph.0, entity) {
                 Ok(nodeid) => {
                     // log::error!("Node: {:?} in Graph {:?}", &nodeid, &graph.0);
                     // if let Some(mut cmd) = commands.get_entity(entity) {
@@ -53,14 +53,16 @@ pub fn sys_create_renderer(
                         let crosslist = CrossDrawList::default();
                         let bundle = (
                             GraphId(nodeid), sceneid.clone(), crosslist,
-                            ActionRenderer::init(id_viewer, passtag, transparent, recordinput)
+                            ActionRenderer::init(id_viewer, passtag, transparent, recordinput),
+                            SimpleInOut::default(),
                         );
                         // commands.entity(entity).insert(bundle);
                         let _ = alter2.alter(entity, bundle);
                         } else {
                         let bundle = (
                             GraphId(nodeid), sceneid.clone(),
-                            ActionRenderer::init(id_viewer, passtag, transparent, recordinput)
+                            ActionRenderer::init(id_viewer, passtag, transparent, recordinput),
+                            SimpleInOut::default(),
                         );
                         // commands.entity(entity).insert(bundle);
                         let _ = alter.alter(entity, bundle);

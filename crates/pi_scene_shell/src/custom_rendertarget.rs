@@ -68,9 +68,9 @@ impl CustomRenderTarget {
         asset_samp: &ShareAssetMgr<SamplerRes>
     ) -> Option<Self> {
         if let Some(srt) = srt {
-            if let Some(color_format) = ColorFormat::new(srt.target().colors[0].1.format()) {
+            if let Some(color_format) = ColorFormat::new(srt.target().colors[0].0.texture.format()) {
                 let depth_stencil_format = if let Some(depth) = &srt.target().depth {
-                    depth_format(depth.1.format())
+                    depth_format(depth.0.texture.format())
                 } else { Some(DepthStencilFormat::None) };
 
                 if let Some(depth_stencil_format) = depth_stencil_format {
