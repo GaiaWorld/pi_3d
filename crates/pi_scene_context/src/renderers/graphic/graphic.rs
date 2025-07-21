@@ -1,5 +1,5 @@
 
-use std::ops::{Deref, DerefMut};
+use std::{mem::transmute, ops::{Deref, DerefMut}};
 
 use pi_scene_shell::prelude::*;
 use pi_futures::BoxFuture;
@@ -65,6 +65,7 @@ pub struct QueryParam0<'w> (
     ResMut<'w, CustomRenderTargets>,
     Res<'w, PiRenderDevice>,
     Res<'w, ShareAssetMgr<SamplerRes>>,
+    Query<'w, &'static mut SimpleInOut>,
 );
 
 pub struct RenderNode {
@@ -80,30 +81,44 @@ impl RenderNode {
     }
 }
 impl Node for RenderNode {
-    type Input = SimpleInOut;
-
-    type Output = SimpleInOut;
 
     type BuildParam = QueryParam0<'static>;
     type RunParam = QueryParam<'static>;
+    type ResetParam = Query<'static, &'static mut SimpleInOut>;
+
+    fn reset<'a>(
+		&'a mut self,
+		param: &'a mut Self::ResetParam,
+		_context: RenderContext,
+		id: Entity,
+	) {
+		if let Ok(mut r) = param.get_mut(id) {
+			if let Some(t) = &mut r.target {
+				*t = Share::new(t.downgrade());
+			}
+		}
+	}
 
     fn build<'a>(
-        &'a mut self,
-        // world: &'a mut World,
-        param: &'a mut Self::BuildParam,
-        _context: RenderContext,
-        input: &'a Self::Input,
-        _usage: &'a ParamUsage,
-        _id: NodeId,
-        _from: &'a [NodeId],
-        _to: &'a [NodeId],
-    ) -> Result<Self::Output, String> {
-        
-        let mut output = SimpleInOut::default();
+		&'a mut self,
+		param: &'a mut Self::BuildParam,
+		_context: pi_bevy_render_plugin::RenderContext,
+		id: Entity,
+		from: &'a [Entity],
+		_to: &'a [Entity],
+	) -> Result<(), String> { 
+
         // let mut param: QueryParam0 = param.get_mut(world);
-        let (atlas_allocator, query, engineopt, customrendertargets, device, asset_samp) = (&param.0, &mut param.1, &param.2, &mut param.3, &param.4, &param.5);
+        let (atlas_allocator, query, engineopt, customrendertargets, device, asset_samp, query_out) = (&param.0, &mut param.1, &param.2, &mut param.3, &param.4, &param.5, &mut param.6);
+        
+        let mut out = query_out.get_mut(id).unwrap();
+		let out = &mut *out;
+		let output = unsafe {transmute::<_, &'static mut SimpleInOut>(out)}; // 非安全转换生命周期， 使得query_out可再次使用, 在目前的结构下是安全的
+		*output = SimpleInOut::default(); // 释放旧的Target
+
+        
         if engineopt.active == false {
-            return Ok(output);
+            return Ok(());
         }
         if let Ok((
             param, disposed, mut to_final_target, mut customrendertargetkey
@@ -112,18 +127,24 @@ impl Node for RenderNode {
             let need_depth = param.depthstencilformat.need_depth();
             let to_final_target = to_final_target.deref_mut();
 
+            let input_target = match from.get(0) {
+                Some(r) => match query_out.get(*r) {
+                    Ok(r) => r.target.clone(),
+                    Err(_) => None,
+                },
+                None => None,
+            };
             if param.enable.0 && !disposed.0 {
                 if customrendertargetkey.1 {
-                    let tmp = input.target.clone();
-                    customrendertargetkey.0 = customrendertargets.insert_srt(tmp, customrendertargetkey.0, device, asset_samp);
+                    customrendertargetkey.0 = customrendertargets.insert_srt(input_target.clone(), customrendertargetkey.0, device, asset_samp);
                 }
             } else {
-                output.target = input.target.clone();
-                return Ok(output);
+                output.target = input_target;
+                return Ok(());
             }
 
             match to_final_target {
-                RendererRenderTarget::FinalRender(realscreen) => {},
+                RendererRenderTarget::FinalRender(_realscreen) => {},
                 RendererRenderTarget::Custom(_srt) => {
                     output.target = Some(_srt.clone());
                 },
@@ -133,7 +154,7 @@ impl Node for RenderNode {
                 RendererRenderTarget::None(_) => {
                     // 未强制声明重新申请 RenderTarget, 且 Input 的 RenderTarget 尺寸和格式与渲染器参数匹配,则使用 Input 的 RenderTarget
                     let mut currlist: Vec<ShareTargetView> = vec![];
-                    let srt = if let Some(srt) = input.target.clone() {
+                    let srt = if let Some(srt) = input_target {
                         currlist.push(srt.clone());
                         let rect = srt.rect();
                         let rtwidth  = (rect.max.x - rect.min.x).abs() as u32;
@@ -150,7 +171,7 @@ impl Node for RenderNode {
                         if !forcenew && sizeok {
                             match (param.depthstencilformat.0.val(), &srt.target().depth) {
                                 (Some(format), Some(depthview)) => {
-                                    if depthview.1.format() == format {
+                                    if depthview.0.texture.format() == format {
                                         Some(srt)
                                     } else { None }
                                 },
@@ -166,7 +187,7 @@ impl Node for RenderNode {
                     };
                     let srt = match srt {
                         Some(srt) => {
-                            if srt.target().colors[0].1.format() == param.colorformat.0.val() { Some(srt) } else { None }
+                            if srt.target().colors[0].0.texture.format() == param.colorformat.0.val() { Some(srt) } else { None }
                         },
                         None => { None },
                     };
@@ -199,20 +220,17 @@ impl Node for RenderNode {
                 },
             };
         }
-        return Ok(output);
+        return Ok(());
     }
 
     fn run<'a>(
         &'a mut self,
-        // world: &'a World,
         param: &'a Self::RunParam,
-        _: RenderContext,
+        _context: RenderContext,
         mut commands: ShareRefCell<wgpu::CommandEncoder>,
-        _input: &'a Self::Input,
-        _: &'a ParamUsage,
-		_id: NodeId,
-		_from: &[NodeId],
-		_to: &[NodeId],
+        _id: Entity,
+        _from: &'a [Entity],
+        _to: &'a [Entity],
     ) -> BoxFuture<'a, Result<(), String>> {
         // let time = pi_time::Instant::now();
 
@@ -262,7 +280,7 @@ impl Node for RenderNode {
             let render_depth_view;
 
             match &to_final_target {
-                RendererRenderTarget::FinalRender(realscreen) => {
+                RendererRenderTarget::FinalRender(_realscreen) => {
                     // log::warn!("Graphic: FinalRender");
                     if let Some(screen) = &screen.0 {
                         match (screen.view(), screen.texture()) {
@@ -327,7 +345,7 @@ impl Node for RenderNode {
                     // log::warn!("Graphic None: {:?}", (self.renderer_id, clear_color_ops));
                     let target = match &auto_srt {
                         Some((target, _x, _y, _w, _h)) => {
-                            if target.colors[0].1.format() == param.colorformat.0.val() {
+                            if target.colors[0].0.texture.format() == param.colorformat.0.val() {
                                 x = _x + _w * x;
                                 y = _y + _h * y;
                                 w = _w * w;
