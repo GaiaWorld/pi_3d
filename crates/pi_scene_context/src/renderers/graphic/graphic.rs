@@ -48,6 +48,7 @@ pub struct QueryParam<'w> (
         ()
     >,
     Res<'w, EngineCustomPlugins>,
+    Res<'w, pi_bevy_render_plugin::ScreenWithPostprocess>,
 );
 
 #[derive(SystemParam)]
@@ -66,6 +67,7 @@ pub struct QueryParam0<'w> (
     Res<'w, PiRenderDevice>,
     Res<'w, ShareAssetMgr<SamplerRes>>,
     Query<'w, &'static mut SimpleInOut>,
+    Res<'w, pi_bevy_render_plugin::ScreenWithPostprocess>,
 );
 
 pub struct RenderNode {
@@ -109,7 +111,7 @@ impl Node for RenderNode {
 	) -> Result<(), String> { 
 
         // let mut param: QueryParam0 = param.get_mut(world);
-        let (atlas_allocator, query, engineopt, customrendertargets, device, asset_samp, query_out) = (&param.0, &mut param.1, &param.2, &mut param.3, &param.4, &param.5, &mut param.6);
+        let (atlas_allocator, query, engineopt, customrendertargets, device, asset_samp, query_out, screenpostprocess) = (&param.0, &mut param.1, &param.2, &mut param.3, &param.4, &param.5, &mut param.6, &param.7);
         
         let mut out = query_out.get_mut(id).unwrap();
 		let out = &mut *out;
@@ -144,7 +146,11 @@ impl Node for RenderNode {
             }
 
             match to_final_target {
-                RendererRenderTarget::FinalRender(_realscreen) => {},
+                RendererRenderTarget::FinalRender(_realscreen) => {
+                    if customrendertargetkey.1 {
+                        customrendertargetkey.0 = customrendertargets.insert_srt(screenpostprocess.1.clone(), customrendertargetkey.0, device, asset_samp);
+                    }
+                },
                 RendererRenderTarget::Custom(_srt) => {
                     output.target = Some(_srt.clone());
                 },
@@ -237,7 +243,7 @@ impl Node for RenderNode {
         let auto_srt = self.auto_srt.take();
 
         // let param: QueryParam = param.get(world);
-        let (screen, _atlas_allocator, query, engineopt) = (&param.0, &param.1, &param.2, &param.3);
+        let (screen, _atlas_allocator, query, engineopt, screenpostprocess) = (&param.0, &param.1, &param.2, &param.3, &param.4);
 
         if engineopt.active == false {
             return Box::pin( async move { Ok(()) } );
@@ -282,25 +288,41 @@ impl Node for RenderNode {
             match &to_final_target {
                 RendererRenderTarget::FinalRender(_realscreen) => {
                     // log::warn!("Graphic: FinalRender");
-                    if let Some(screen) = &screen.0 {
-                        match (screen.view(), screen.texture()) {
-                            (Some(view), Some(texture)) => {
-                                can_render = true;
-                                let width = texture.width();
-                                let height = texture.height();
-                                x = width as f32 * x;
-                                y = height as f32 * y;
-                                w = width as f32 * w;
-                                h = height as f32 * h;
-                                render_color_view = view;
-                                render_depth_view = None;
-                            },
-                            _ => {
-                                return Box::pin( async move { Ok(()) } );
-                            },
+                    if !_realscreen {
+                        if let (Some(texture), Some(view)) = screenpostprocess.tex_and_view(screen) {
+                            can_render = true;
+                            let width = texture.width();
+                            let height = texture.height();
+                            x = width as f32 * x;
+                            y = height as f32 * y;
+                            w = width as f32 * w;
+                            h = height as f32 * h;
+                            render_color_view = view;
+                            render_depth_view = None;
+                        } else {
+                            return Box::pin( async move { Ok(()) } );
                         }
                     } else {
-                        return Box::pin( async move { Ok(()) } );
+                        if let Some(screen) = &screen.0 {
+                            match (screen.view(), screen.texture()) {
+                                (Some(view), Some(texture)) => {
+                                    can_render = true;
+                                    let width = texture.width();
+                                    let height = texture.height();
+                                    x = width as f32 * x;
+                                    y = height as f32 * y;
+                                    w = width as f32 * w;
+                                    h = height as f32 * h;
+                                    render_color_view = view;
+                                    render_depth_view = None;
+                                },
+                                _ => {
+                                    return Box::pin( async move { Ok(()) } );
+                                },
+                            }
+                        } else {
+                            return Box::pin( async move { Ok(()) } );
+                        }
                     }
                 },
                 RendererRenderTarget::Custom(srt) => {
