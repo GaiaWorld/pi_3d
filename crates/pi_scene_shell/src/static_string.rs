@@ -26,3 +26,4 @@ pub const S_EMISSION: &'static str = "emission";
 pub const S_TEXTURE2D: &'static str = "texture2D";
 pub const S_SAMPLER: &'static str = "sampler";
 pub const S_V_MAT_IDX: &'static str = "vMatIdx";
+pub const S_V_MAT_PARAM: &'static str = "vMatParam";
