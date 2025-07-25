@@ -618,6 +618,21 @@ use super::{
             renderer.clear();
             if let Some(crossdraws) = &mut crossdraws {
                 crossdraws.draw_list.list.clear();
+                if param.auto_clear_color.0 {
+                    crossdraws.clear_color = Some(param.color_clear.color());
+                } else {
+                    crossdraws.clear_color = None;
+                }
+                if param.auto_clear_depth.0 {
+                    crossdraws.clear_depth = Some(param.depth_clear.0);
+                } else {
+                    crossdraws.clear_depth = None;
+                }
+                if param.auto_clear_stencil.0 {
+                    crossdraws.clear_stencil = Some(param.stencil_clear.0);
+                } else {
+                    crossdraws.clear_stencil = None;
+                }
             }
             // log::warn!("Renderer: {:?}, Camera {:?}, {:?}", _id_renderer, id_viewer.0, (param.enable.0, passtag));
             if param.enable.0 == false {
