@@ -929,7 +929,7 @@ fn pipeline(
     // log::error!("Create pipeline");
     
     let key_shader = shader.key().clone();
-    // log::error!("Shader: {:?}", &key_shader);
+    log::error!("Shader: {:?}", &key_shader);
     let bind_group_layouts = bindgroups.bind_group_layouts();
     let key_bindgroup_layouts = KeyPipelineFromBindGroup(bindgroups.key_bindgroup_layouts());
 

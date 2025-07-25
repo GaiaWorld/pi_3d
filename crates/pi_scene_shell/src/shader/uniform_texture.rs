@@ -243,8 +243,7 @@ pub fn texture_bind_code_mat(engineopt: &EngineCustomPlugins, tex_sampler_type: 
 
 fn texture_code(slotname: &str, bindname: &str, tex_sampler_type: &wgpu::TextureSampleType, dimension: wgpu::TextureViewDimension, texidx: usize, _engineopt: &EngineCustomPlugins) -> String {
     let mut uv = String::from("uvAtlas(uv * tilloff.xy + tilloff.zw + os, ");
-    uv += "Mat[vMatIdx]";
-    uv += ".Atlas";
+    uv += "matParam.Atlas";
     uv += &texidx.to_string();
     // uv += slotname;
     // uv += BindEffectTextureTilloff::SUFFIX_TILLOFF;
@@ -252,8 +251,7 @@ fn texture_code(slotname: &str, bindname: &str, tex_sampler_type: &wgpu::Texture
     //     uv += "[vMatIdx]";
     // // }
     uv += ",";
-    uv += "Mat[vMatIdx]";
-    uv += ".Address";
+    uv += "matParam.Address";
     uv += &texidx.to_string();
     // uv += slotname;
     // uv += BindEffectTextureInfoAndTilloff::SUFFIX_ADDRESS;
@@ -263,8 +261,7 @@ fn texture_code(slotname: &str, bindname: &str, tex_sampler_type: &wgpu::Texture
     uv += ")";
     
     let mut coord = String::from("");
-    coord += "Mat[vMatIdx]";
-    coord += ".Address";
+    coord += "matParam.Address";
     coord += &texidx.to_string();
     // coord += slotname;
     // coord += BindEffectTextureInfoAndTilloff::SUFFIX_ADDRESS;
@@ -277,15 +274,15 @@ fn texture_code(slotname: &str, bindname: &str, tex_sampler_type: &wgpu::Texture
     let uvatlas = &uv;
     match tex_sampler_type {
         wgpu::TextureSampleType::Float { .. } => match dimension {
-            wgpu::TextureViewDimension::D1          => String::from("vec4 Get") + slotname + "(const float uv){ return texture(sampler1D(" + bindname + ", sampler" + bindname + "), uv); }\n",
-            wgpu::TextureViewDimension::D2          => String::from("vec4 Get") + slotname + "(const vec2 uv, const vec2 os, const vec4 tilloff){ return texture(sampler2D(" + bindname + ", sampler" + bindname + "), " + uvatlas +"); }\n",
-            wgpu::TextureViewDimension::D2Array     => String::from("vec4 Get") + slotname + "(const vec2 uv, const vec2 os, const vec4 tilloff){ return texture(sampler2DArray(" + bindname + ", sampler" + bindname + "), vec3(" + uvatlas +", " + &coord + ")); }\n",
+            wgpu::TextureViewDimension::D1          => String::from("vec4 Get") + slotname + "(const float uv, const MatParam matParam){ return texture(sampler1D(" + bindname + ", sampler" + bindname + "), uv); }\n",
+            wgpu::TextureViewDimension::D2          => String::from("vec4 Get") + slotname + "(const vec2 uv, const vec2 os, const vec4 tilloff, const MatParam matParam){ return texture(sampler2D(" + bindname + ", sampler" + bindname + "), " + uvatlas +"); }\n",
+            wgpu::TextureViewDimension::D2Array     => String::from("vec4 Get") + slotname + "(const vec2 uv, const vec2 os, const vec4 tilloff, const MatParam matParam){ return texture(sampler2DArray(" + bindname + ", sampler" + bindname + "), vec3(" + uvatlas +", " + &coord + ")); }\n",
             wgpu::TextureViewDimension::Cube        => String::from(""),
             wgpu::TextureViewDimension::CubeArray   => String::from(""),
-            wgpu::TextureViewDimension::D3          => String::from("vec4 Get") + slotname + "(const vec2 uv, const vec2 os, const float layer, const vec4 tilloff){ return texture(sampler3D(" + bindname + ", sampler" + bindname + "), vec3(" + uvatlas + ", layer)); }\n",
+            wgpu::TextureViewDimension::D3          => String::from("vec4 Get") + slotname + "(const vec2 uv, const vec2 os, const float layer, const vec4 tilloff, const MatParam matParam){ return texture(sampler3D(" + bindname + ", sampler" + bindname + "), vec3(" + uvatlas + ", layer)); }\n",
         },
-        wgpu::TextureSampleType::Depth => String::from("vec4 Get") + slotname + "(const vec2 uv, const vec2 os, const vec4 tilloff){ return texture(sampler2D(" + bindname + ", sampler" + bindname + "), " + uvatlas +"); }\n",
-        wgpu::TextureSampleType::Sint => String::from("ivec4 Get") + slotname + "(const vec2 uv, const vec2 os, const vec4 tilloff){ return texture(sampler2D(" + bindname + ", sampler" + bindname + "), " + uvatlas +"); }\n",
-        wgpu::TextureSampleType::Uint => String::from("uvec4 Get") + slotname + "(const vec2 uv, const vec2 os, const vec4 tilloff){ return texture(sampler2D(" + bindname + ", sampler" + bindname + "), " + uvatlas +"); }\n",
+        wgpu::TextureSampleType::Depth => String::from("vec4 Get") + slotname + "(const vec2 uv, const vec2 os, const vec4 tilloff, const MatParam matParam){ return texture(sampler2D(" + bindname + ", sampler" + bindname + "), " + uvatlas +"); }\n",
+        wgpu::TextureSampleType::Sint => String::from("ivec4 Get") + slotname + "(const vec2 uv, const vec2 os, const vec4 tilloff, const MatParam matParam){ return texture(sampler2D(" + bindname + ", sampler" + bindname + "), " + uvatlas +"); }\n",
+        wgpu::TextureSampleType::Uint => String::from("uvec4 Get") + slotname + "(const vec2 uv, const vec2 os, const vec4 tilloff, const MatParam matParam){ return texture(sampler2D(" + bindname + ", sampler" + bindname + "), " + uvatlas +"); }\n",
     }
 }
