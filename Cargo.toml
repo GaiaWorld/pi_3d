@@ -105,8 +105,8 @@ fixedbitset             = { path = "../fixedbitset"}
 
 [dev-dependencies]
 # winit           = { version = "0.28", registry = "yn", path = "../winit"}
-# wgpu            = { version = "0.3", registry = "yn", package = "pi_wgpu" }
-wgpu            = { version = "0.3", registry = "yn", package = "pi_wgpu", features = ["use_wgpu"] }
+wgpu            = { version = "0.3", registry = "yn", package = "pi_wgpu" }
+# wgpu            = { version = "0.3", registry = "yn", package = "pi_wgpu", features = ["use_wgpu"] }
 pi_winit        = {version = "0.28", registry="yn", package="winit"}
 rand            = "0.8"
 ktx             = "0.3"

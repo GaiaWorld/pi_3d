@@ -462,9 +462,9 @@ impl ShaderEffectMeta {
             file_name = temp + file_name.as_str();
             let _ = std::fs::write(root_dir.join(file_name), fs.as_str());
         }
-        // log::error!("Shader: {:?}", key_meta);
-        // log::error!("VS: {:?}", vs.as_str());
-        // log::error!("FS: {:?}", fs.as_str());
+        log::error!("Shader: {:?}", key_meta);
+        log::error!("VS: {:?}", vs.as_str());
+        log::error!("FS: {:?}", fs.as_str());
 
         let vs = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some((key_meta.to_string() + "-VS").as_str()),

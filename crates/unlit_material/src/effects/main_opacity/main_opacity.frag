@@ -8,13 +8,13 @@
 
     // ----------------------------------------------------------
 
-    vec4 mainTextureColor   = mainTexture(v_uv, applyUVOffsetSpeed(matParam.uMainUVOS), matParam);
+    vec4 mainTextureColor   = mainTexture(v_uv, matParam);
     baseColor.rgb           *= mainTextureColor.rgb * mainStrength(matParam);
     alpha                   *= mainTextureColor.a;
 
     diffuseColor            = mainColor(matParam);
 
-    vec4 opacityData        = opacityTexture(v_uv2, applyUVOffsetSpeed(matParam.uOpacityUVOS), matParam);
+    vec4 opacityData        = opacityTexture(v_uv2, matParam);
     alpha                   *= opacityChannel(opacityData, matParam);
 
     if (cutoff(alpha, matParam)) {

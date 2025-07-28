@@ -12,7 +12,7 @@ impl EmissiveFresnelShader {
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.fs_define = String::from(S_BREAK) + "layout(location = 0) out vec4 gl_FragColor;" + S_BREAK;
 
-        nodemat.vs = String::from(include_str!("../base.vert"));
+        nodemat.vs = String::from(include_str!("./base.vert"));
         nodemat.fs = String::from(include_str!("./emissive_fresnel.frag"));
 
         nodemat.varyings = Varyings(

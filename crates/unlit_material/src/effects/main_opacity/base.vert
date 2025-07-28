@@ -12,7 +12,8 @@
     v_pos = worldPos.xyz;
 
     mat3 normalWorld = mat3(finalWorld);
-    v_normal = A_NORMAL; // normalize(vec3(finalWorld * vec4(a_normal, 1.0)));
-    
-    v_uv  = A_UV * matParam.uMainTilloff.xy + matParam.uMainTilloff.zw + applyUVOffsetSpeed(matParam.uMainUVOS);
+    v_normal = A_NORMAL;
+
+    v_uv = A_UV * matParam.uMainTilloff.xy + matParam.uMainTilloff.zw + applyUVOffsetSpeed(matParam.uMainUVOS);
+    v_uv2 = A_UV * matParam.uOpacityTilloff.xy + matParam.uOpacityTilloff.zw + applyUVOffsetSpeed(matParam.uOpacityUVOS);
     v_color = A_COLOR4;

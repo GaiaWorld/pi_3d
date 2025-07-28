@@ -11,7 +11,7 @@ impl OpacityClipShader {
 
         let mut nodemat = NodeMaterialBuilder::new();
 
-        nodemat.vs = String::from(include_str!("../base.vert"));
+        nodemat.vs = String::from(include_str!("./base.vert"));
         nodemat.fs = String::from(include_str!("./opacity_clip.frag"));
 
         nodemat.varyings = Varyings(
@@ -31,6 +31,14 @@ impl OpacityClipShader {
                 Varying { 
                     format: Atom::from(S_VEC4),
                     name: Atom::from(pi_scene_shell::prelude::S_V_COLOR),
+                },
+                Varying {
+                    format: Atom::from(S_VEC2),
+                    name: Atom::from("v_uv2"),
+                },
+                Varying {
+                    format: Atom::from(S_VEC2),
+                    name: Atom::from("v_uv3"),
                 },
             ]
         );

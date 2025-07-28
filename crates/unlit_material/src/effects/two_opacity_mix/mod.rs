@@ -36,6 +36,22 @@ impl TwoOpacityMixShader {
                     format: Atom::from(S_VEC4),
                     name: Atom::from(S_V_COLOR),
                 },
+                Varying {
+                    format: Atom::from(S_VEC2),
+                    name: Atom::from("v_uv2"),
+                },
+                Varying {
+                    format: Atom::from(S_VEC2),
+                    name: Atom::from("v_uv3"),
+                },
+                Varying {
+                    format: Atom::from(S_VEC2),
+                    name: Atom::from("v_uv4"),
+                },
+                Varying {
+                    format: Atom::from(S_VEC2),
+                    name: Atom::from("v_uv5"),
+                },
             ]
         );
 

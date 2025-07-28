@@ -36,7 +36,7 @@ impl ShaderWater {
 
     gl_Position = PI_MATRIX_VP * worldPos;
 
-    vUV = A_UV;
+    v_uv  = A_UV * matParam.uMainTilloff.xy + matParam.uMainTilloff.zw + applyUVOffsetSpeed(matParam.uMainUVOS);
     vColor = A_COLOR4;
     v_pos_SS = gl_Position;
 ");
@@ -47,9 +47,9 @@ impl ShaderWater {
     
         baseColor.rgb           *= mainColor(matParam);
         
-        vec4 mainTextureColor   = mainTexture(vUV * 10., applyUVOffsetSpeed(matParam.uMainUVOS) + vec2(Random1DTo1D(screenUV.x * 200., PI_Time.y, .762) * 2., Random1DTo1D(screenUV.y * 200., PI_Time.y, .762) * 2.), matParam);
+        vec4 mainTextureColor   = mainTexture(vUV * 10. + vec2(Random1DTo1D(screenUV.x * 200., PI_Time.y, .762) * 2., Random1DTo1D(screenUV.y * 200., PI_Time.y, .762) * 2.), matParam);
     
-        vec4 emissiveTexture    = emissiveTexture(screenUV, vec2(0., 0.), matParam);
+        vec4 emissiveTexture    = emissiveTexture(screenUV, matParam);
         float dDepth            = emissiveTexture.r + mainTextureColor.r * 0.01 * mainStrength(matParam);
         dDepth                  = dDepth - (v_pos_SS.z);
         if (dDepth < 0.) {

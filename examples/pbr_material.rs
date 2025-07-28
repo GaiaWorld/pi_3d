@@ -53,7 +53,7 @@ impl ShaderPBR {
     v_normal = normalize(normalWorld * A_NORMAL);
 
     v_color = A_COLOR4;
-    v_uv = A_UV;
+    v_uv  = A_UV * matParam.uMainTilloff.xy + matParam.uMainTilloff.zw + applyUVOffsetSpeed(matParam.uMainUVOS);
         ");
         nodemat.fs = String::from("
 
@@ -72,7 +72,7 @@ impl ShaderPBR {
     vec4 baseColor              = v_color;
     float alpha                 = baseColor.a;
 
-    vec4 mainTextureColor       = mainTexture(v_uv, applyUVOffsetSpeed(matParam.uMainUVOS), matParam);
+    vec4 mainTextureColor       = mainTexture(v_uv, matParam);
     baseColor.rgb               *= mainTextureColor.rgb * mainStrength(matParam);
     alpha                       *= mainTextureColor.a;
 

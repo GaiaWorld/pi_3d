@@ -20,23 +20,23 @@
 	vec3 diffuseBase 					= vec3(0., 0., 0.);
 	vec3 specularBase 					= vec3(0., 0., 0.);
 
-    vec4 mainTextureColor   = mainTexture(v_uv, applyUVOffsetSpeed(matParam.uMainUVOS), matParam);
+    vec4 mainTextureColor   = mainTexture(v_uv, matParam);
     baseColor.rgb           *= mainTextureColor.rgb * mainStrength(matParam) * mainColor(matParam);
     alpha                   *= mainTextureColor.a;
 
-    vec4 opacityData        = opacityTexture(v_uv, applyUVOffsetSpeed(matParam.uOpacityUVOS), matParam);
+    vec4 opacityData        = opacityTexture(v_uv2,  matParam);
     alpha                   *= opacityChannel(opacityData, matParam);
 
-    vec4 staticOpacityData  = opacity2Texture(v_uv, applyUVOffsetSpeed(matParam.uOpacity2UVOS), matParam);
+    vec4 staticOpacityData  = opacity2Texture(v_uv3,  matParam);
     float staticOpacity     = opacity2Channel(staticOpacityData, matParam);
 
-    vec4 mixData            = mixTexture(v_uv, applyUVOffsetSpeed(matParam.uMixUVOS), matParam);
+    vec4 mixData            = mixTexture(v_uv4,  matParam);
     float mixValue          = valueByChannel(mixData, matParam.uTwoOpacityMixChannel);
     float mixFactor 	    = smoothstep(mixValue - matParam.uTwoOpacityMixControl * 0.5, mixValue, matParam.uTwoOpacityMixControl);
     alpha 					= mix(1.0, mixValue * sqrt(alpha * staticOpacity), mixFactor);
 
     vec3 emissiveColor      = emissiveColor();
-    emissiveColor           *= emissiveTexture(v_uv, applyUVOffsetSpeed(matParam.uEmissiveUVOS), matParam).rgb * emissiveStrength(matParam);
+    emissiveColor           *= emissiveTexture(v_uv5, matParam).rgb * emissiveStrength(matParam);
     emissiveColor           = emissiveFresnel(absNdV, emissiveColor, matParam);
 
     alpha 					+= opacityFresnel(absNdV, matParam);

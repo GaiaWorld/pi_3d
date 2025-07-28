@@ -12,27 +12,7 @@ impl MainOpacityShader {
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.fs_define = String::from(S_BREAK) + "layout(location = 0) out vec4 gl_FragColor;" + S_BREAK;
 
-        nodemat.vs = String::from("
-    mat4 finalWorld = PI_ObjectToWorld;
-
-    vec4 position =  vec4(A_POSITION, 1.);
-    vec4 worldPos =  finalWorld * position;
-    // vec4 worldPos =  position;
-
-    gl_Position = PI_MATRIX_VP * worldPos;
-     
-    // gl_Position = position;
-
-    v_pos = worldPos.xyz;
-
-    mat3 normalWorld = mat3(finalWorld);
-    v_normal = A_NORMAL;
-    
-    v_uv = A_UV;
-    v_uv2 = A_UV;
-    v_uv3 = A_UV;
-    v_color = A_COLOR4;
-        ");
+        nodemat.vs = String::from(include_str!("./base.vert"));
         nodemat.fs = String::from(include_str!("./main_opacity.frag"));
 
         nodemat.varyings = Varyings(

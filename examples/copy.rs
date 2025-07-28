@@ -161,11 +161,11 @@ impl ShaderImageCopy {
 
         nodemat.vs = String::from("
         gl_Position = vec4(A_POSITION, 1.);
-        v_uv = gl_Position.xy + 0.5;
+        v_uv = (gl_Position.xy + 0.5) * matParam.uMainTilloff.xy + matParam.uMainTilloff.zw;
         gl_Position.xy *= 2.;
         ");
         nodemat.fs = String::from("
-        gl_FragColor = mainTexture(v_uv, vec2(0., 0.), matParam);
+        gl_FragColor = mainTexture(v_uv, matParam);
         ");
 
         nodemat.varyings = Varyings(

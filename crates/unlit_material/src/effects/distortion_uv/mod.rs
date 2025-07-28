@@ -1,4 +1,5 @@
 use pi_atom::Atom;
+use pi_render::renderer::buildin_var::ShaderVarVarying;
 use pi_scene_shell::prelude::*;
 use pi_node_materials::{prelude::*, NodeMaterialBlocks};
 
@@ -14,7 +15,7 @@ impl DistortionUVShader {
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.fs_define = String::from(S_BREAK) + "layout(location = 0) out vec4 gl_FragColor;" + S_BREAK;
 
-        nodemat.vs = String::from(include_str!("../base.vert"));
+        nodemat.vs = String::from(include_str!("./base.vert"));
         nodemat.fs = String::from(include_str!("./distortion_uv.frag"));
 
         nodemat.varyings = Varyings(
@@ -34,6 +35,18 @@ impl DistortionUVShader {
                 Varying { 
                     format: Atom::from(S_VEC4),
                     name: Atom::from(S_V_COLOR),
+                },
+                Varying { 
+                    format: Atom::from(S_VEC2),
+                    name: Atom::from(ShaderVarVarying::UV2)
+                },
+                Varying { 
+                    format: Atom::from(S_VEC2),
+                    name: Atom::from(ShaderVarVarying::UV3),
+                },
+                Varying { 
+                    format: Atom::from(S_VEC2),
+                    name: Atom::from("maskValue"),
                 },
             ]
         );

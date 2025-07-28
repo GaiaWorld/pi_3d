@@ -8,11 +8,11 @@ void shader(const MatParam matParam) {
 
 	// ----------------------------------------------------------
 
-    const vec4 mainTextureColor   = mainTexture(v_uv, applyUVOffsetSpeed(matParam.uMainUVOS), matParam);
+    const vec4 mainTextureColor   = mainTexture(v_uv, matParam);
     baseColor               *= mainTextureColor.rgb * mainStrength(matParam) * mainColor(matParam);
     alpha                   *= mainTextureColor.a;
 
-    const vec4 opacityData        = opacityTexture(v_uv, applyUVOffsetSpeed(matParam.uOpacityUVOS), matParam);
+    const vec4 opacityData        = opacityTexture(v_uv2, matParam);
     const float opacityValue      = opacityChannel(opacityData, matParam);
 
     if (cutoff(opacityValue - 0.001, matParam)) {
@@ -20,7 +20,7 @@ void shader(const MatParam matParam) {
     }
 
     vec3 emissiveColor = emissiveColor(matParam);
-    emissiveColor *= emissiveTexture(v_uv, applyUVOffsetSpeed(matParam.uEmissiveUVOS), matParam).rgb * emissiveStrength(matParam);
+    emissiveColor *= emissiveTexture(v_uv3, matParam).rgb * emissiveStrength(matParam);
 
 	const vec3 specularBase 					= vec3(0., 0., 0.);
 	const vec3 specularColor 		    = vec3(0., 0., 0.);

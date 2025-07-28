@@ -11,7 +11,7 @@ impl MainOpacityFresnelShader {
         let mut nodemat = NodeMaterialBuilder::new();
         nodemat.fs_define = String::from(S_BREAK) + "layout(location = 0) out vec4 gl_FragColor;" + S_BREAK;
 
-        nodemat.vs = String::from(include_str!("../base.vert"));
+        nodemat.vs = String::from(include_str!("./base.vert"));
         nodemat.fs = String::from(include_str!("./main_opacity_fresnel.frag"));
 
         nodemat.varyings = Varyings(
@@ -31,6 +31,14 @@ impl MainOpacityFresnelShader {
                 Varying { 
                     format: Atom::from(S_VEC4),
                     name: Atom::from(S_V_COLOR),
+                },
+                Varying {
+                    format: Atom::from(S_VEC2),
+                    name: Atom::from("v_uv2"),
+                },
+                Varying {
+                    format: Atom::from(S_VEC2),
+                    name: Atom::from("v_uv3"),
                 },
             ]
         );

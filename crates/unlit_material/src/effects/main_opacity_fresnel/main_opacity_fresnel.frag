@@ -20,15 +20,15 @@
 	vec3 diffuseBase 					= vec3(0., 0., 0.);
 	vec3 specularBase 					= vec3(0., 0., 0.);
 
-    vec4 mainTextureColor   = mainTexture(v_uv, applyUVOffsetSpeed(matParam.uMainUVOS), matParam);
+    vec4 mainTextureColor   = mainTexture(v_uv, matParam);
     baseColor.rgb           *= mainTextureColor.rgb * mainStrength(matParam) * mainColor(matParam);
     alpha                   *= mainTextureColor.a;
 
-    vec4 opacityData        = opacityTexture(v_uv, applyUVOffsetSpeed(matParam.uOpacityUVOS), matParam);
+    vec4 opacityData        = opacityTexture(v_uv2, matParam);
     alpha                   *= opacityChannel(opacityData, matParam);
 
     vec3 emissiveColor = emissiveColor(matParam);
-    emissiveColor *= emissiveTexture(v_uv, applyUVOffsetSpeed(matParam.uEmissiveUVOS),matParam).rgb * emissiveStrength(matParam);
+    emissiveColor *= emissiveTexture(v_uv3, matParam).rgb * emissiveStrength(matParam);
 
     alpha 					+= opacityFresnel(absNdV, matParam);
 
