@@ -95,9 +95,7 @@ impl Node for RenderNode {
 		id: Entity,
 	) {
 		if let Ok(mut r) = param.get_mut(id) {
-			if let Some(t) = &mut r.target {
-				*t = Share::new(t.downgrade());
-			}
+            r.target = None;
 		}
 	}
 
