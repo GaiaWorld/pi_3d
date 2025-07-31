@@ -96,7 +96,7 @@ impl Node for RenderNode {
 		id: Entity,
 	) {
 		if let Ok(mut r) = param.get_mut(id) {
-			r.target = None;
+            r.target = None;
 		}
 	}
 
@@ -179,30 +179,25 @@ impl Node for RenderNode {
                                     if depthview.0.texture.format() == format {
                                         Some(srt)
                                     } else { 
-                                        log::error!(">>>>> Format Diff Depth ");  
                                         None
                                     }
                                 },
                                 (None, _) => { Some(srt) },
                                 _ => { 
-                                    log::error!(">>>>> Format Diff Depth Option "); 
                                     None
                                 }
 
                             }
                         } else {
-                            log::error!(">>>>> forcenew "); 
                             // log::error!("customrendertargetkey {:?}", customrendertargetkey.0);
                             None
                         }
                     } else {
-                        log::error!(">>>>> None Input ");
                         None
                     };
                     let srt = match srt {
                         Some(srt) => {
                             if srt.target().colors[0].0.texture.format() == param.colorformat.0.val() { Some(srt) } else { 
-                                log::error!(">>>>> Format Diff 2 ");  
                                 None
                             }
                         },
@@ -210,7 +205,6 @@ impl Node for RenderNode {
                     };
 
                     let srt = if let Some(srt) = srt { srt } else {
-                        // if let Some() = screen.
                         // log::warn!("SRT Allocate by allocate.");
                         let width = param.rendersize.width();
                         let height = param.rendersize.height();
@@ -299,7 +293,7 @@ impl Node for RenderNode {
 
             match &to_final_target {
                 RendererRenderTarget::FinalRender(_realscreen) => {
-                    log::error!("Graphic: FinalRender, {:?}", _realscreen);
+                    // log::error!("Graphic: FinalRender, {:?}", _realscreen);
                     if !_realscreen {
                         if let (Some(texture), Some(view)) = screenpostprocess.tex_and_view(screen) {
                             can_render = true;
