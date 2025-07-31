@@ -38,15 +38,15 @@ layout(location = 0) out vec4 gl_FragColor;
         ");
         nodemat.fs = String::from("
     vec4 baseColor          = v_color;
-    float alpha             = opacity(matParam) * baseColor.a;
+    float alpha             = opacity() * baseColor.a;
 
-    baseColor.rgb           *= mainColor(matParam);
+    baseColor.rgb           *= mainColor();
     
-    vec4 mainTextureColor   = mainTexture(v_uv, applyUVOffsetSpeed(matParam.uMainUVOS), matParam);
+    vec4 mainTextureColor   = mainTexture(v_uv + applyUVOffsetSpeed(matParam.uMainUVOS));
 
     vec2 screenUV           = v_pos_SS.xy / v_pos_SS.w * 0.5 + 0.5;
-    vec4 emissiveTexture    = emissiveTexture(screenUV + (mainTextureColor.rg - 0.5) * 0.01 * mainStrength(matParam), vec2(0., 0.), matParam);
-    baseColor.rgb           *= emissiveTexture.rgb * emissiveStrength(matParam);
+    vec4 emissiveTexture    = emissiveTexture(screenUV + (mainTextureColor.rg - 0.5) * 0.01 * mainStrength());
+    baseColor.rgb           *= emissiveTexture.rgb * emissiveStrength();
     alpha                   *= emissiveTexture.a;
 
     gl_FragColor = vec4(baseColor.rgb, alpha);

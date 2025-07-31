@@ -72,8 +72,8 @@ impl ShaderPBR {
     vec4 baseColor              = v_color;
     float alpha                 = baseColor.a;
 
-    vec4 mainTextureColor       = mainTexture(v_uv, matParam);
-    baseColor.rgb               *= mainTextureColor.rgb * mainStrength(matParam);
+    vec4 mainTextureColor       = mainTexture(v_uv);
+    baseColor.rgb               *= mainTextureColor.rgb * mainStrength();
     alpha                       *= mainTextureColor.a;
 
     InputParam inputParam; 

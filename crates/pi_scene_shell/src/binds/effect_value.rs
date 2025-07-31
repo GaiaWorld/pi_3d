@@ -205,7 +205,7 @@ impl ShaderBindEffectValueArr {
         self.meta.uniforms.vs_code(set, bind, self.maxcount, engineopt)
     }
     pub fn fs_define_code(&self, set: u32, bind: u32, engineopt: &EngineCustomPlugins) -> String {
-        self.meta.uniforms.fs_code(set, bind, self.maxcount, engineopt)
+        self.meta.uniforms.fs_code(set, bind, self.maxcount, engineopt) + "MatParam matParam;\n"
     }
 }
 impl TBindDefine for ShaderBindEffectValueArr {

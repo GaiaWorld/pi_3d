@@ -324,14 +324,14 @@ impl ShaderEffectMeta {
 
         if engineopt.disenable_material_array == false {
             if BindDefines::need_effect_value(self.binddefines) {
-                code += "MatParam matParam = Mat[";
+                code += "const MatParam matParam = Mat[";
                 code += crate::static_string::S_V_MAT_IDX;
                 code += "];";
                 code += crate::prelude::S_BREAK;
             }
         } else {
             if BindDefines::need_effect_value(self.binddefines) {
-                code += "MatParam matParam = Mat;";
+                code += "const MatParam matParam = Mat;";
                 code += crate::prelude::S_BREAK;
             }
         }
@@ -387,6 +387,18 @@ impl ShaderEffectMeta {
             code += val;
         });
 
+        // if engineopt.disenable_material_array == false {
+        //     if BindDefines::need_effect_value(self.binddefines) {
+        //         code += " MatParam matParam;";
+        //         code += crate::prelude::S_BREAK;
+        //     }
+        // } else {
+        //     if BindDefines::need_effect_value(self.binddefines) {
+        //         code += " MatParam matParam";
+        //         code += crate::prelude::S_BREAK;
+        //     }
+        // }
+
         // Shader 自带定义块代码 - 常量 、 方法, 不包含 Uniform 定义
         code += self.fs.define.as_str();
 
@@ -396,14 +408,14 @@ impl ShaderEffectMeta {
 
         if engineopt.disenable_material_array == false {
             if BindDefines::need_effect_value(self.binddefines) {
-                code += "MatParam matParam = Mat[";
+                code += "matParam = Mat[";
                 code += crate::static_string::S_V_MAT_IDX;
                 code += "];";
                 code += crate::prelude::S_BREAK;
             }
         } else {
             if BindDefines::need_effect_value(self.binddefines) {
-                code += "MatParam matParam = Mat;";
+                code += "matParam = Mat;";
                 code += crate::prelude::S_BREAK;
             }
         }
@@ -462,9 +474,9 @@ impl ShaderEffectMeta {
             file_name = temp + file_name.as_str();
             let _ = std::fs::write(root_dir.join(file_name), fs.as_str());
         }
-        log::error!("Shader: {:?}", key_meta);
-        log::error!("VS: {:?}", vs.as_str());
-        log::error!("FS: {:?}", fs.as_str());
+        // log::error!("Shader: {:?}", key_meta);
+        // log::error!("VS: {:?}", vs.as_str());
+        // log::error!("FS: {:?}", fs.as_str());
 
         let vs = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some((key_meta.to_string() + "-VS").as_str()),

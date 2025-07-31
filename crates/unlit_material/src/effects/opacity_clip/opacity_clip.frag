@@ -1,2 +1,2 @@
 
-shader(matParam);
+shader();

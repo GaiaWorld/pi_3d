@@ -1,6 +1,5 @@
 float opacityFresnel(
-    const float absNV,
-	const MatParam matParam
+    const float absNV
 ) {
 	float x = matParam.opacityFresnelLeft;
 	float y = matParam.opacityFresnelRight;

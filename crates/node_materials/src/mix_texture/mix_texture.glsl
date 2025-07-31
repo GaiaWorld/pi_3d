@@ -1,1 +1,1 @@
-vec4 mixTexture(const vec2 vUV, const MatParam matParam) {return Get_MixTex(vUV, matParam);}
+vec4 mixTexture(const vec2 vUV) {return Get_MixTex(vUV, matParam);}

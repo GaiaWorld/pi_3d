@@ -68,6 +68,7 @@ pub struct QueryParam0<'w> (
     Res<'w, ShareAssetMgr<SamplerRes>>,
     Query<'w, &'static mut SimpleInOut>,
     Res<'w, pi_bevy_render_plugin::ScreenWithPostprocess>,
+    Res<'w, PiScreenTexture>,
 );
 
 pub struct RenderNode {
@@ -95,9 +96,7 @@ impl Node for RenderNode {
 		id: Entity,
 	) {
 		if let Ok(mut r) = param.get_mut(id) {
-			if let Some(t) = &mut r.target {
-				*t = Share::new(t.downgrade());
-			}
+			r.target = None;
 		}
 	}
 
@@ -111,7 +110,7 @@ impl Node for RenderNode {
 	) -> Result<(), String> { 
 
         // let mut param: QueryParam0 = param.get_mut(world);
-        let (atlas_allocator, query, engineopt, customrendertargets, device, asset_samp, query_out, screenpostprocess) = (&param.0, &mut param.1, &param.2, &mut param.3, &param.4, &param.5, &mut param.6, &param.7);
+        let (atlas_allocator, query, engineopt, customrendertargets, device, asset_samp, query_out, screenpostprocess, screen) = (&param.0, &mut param.1, &param.2, &mut param.3, &param.4, &param.5, &mut param.6, &param.7, &param.8);
         
         let mut out = query_out.get_mut(id).unwrap();
 		let out = &mut *out;
@@ -171,34 +170,47 @@ impl Node for RenderNode {
                         let deltaw = (rtwidth as i32 - rw as i32).abs();
                         let deltah = (rtheight as i32 - rh as i32).abs();
                         let sizeok = 0 <= deltaw && deltaw <= 1 && 0 <= deltah && deltah <= 1;
-                        // if !forcenew && !sizeok {
-                        //     log::error!(">>>>> {:?}", (forcenew, (rtwidth, rw) , (rtheight, rh)));  
-                        // }
+                        if !forcenew && !sizeok {
+                            log::error!(">>>>> {:?}", (forcenew, (rtwidth, rw) , (rtheight, rh)));  
+                        }
                         if !forcenew && sizeok {
                             match (param.depthstencilformat.0.val(), &srt.target().depth) {
                                 (Some(format), Some(depthview)) => {
                                     if depthview.0.texture.format() == format {
                                         Some(srt)
-                                    } else { None }
+                                    } else { 
+                                        log::error!(">>>>> Format Diff Depth ");  
+                                        None
+                                    }
                                 },
                                 (None, _) => { Some(srt) },
-                                _ => { None }
+                                _ => { 
+                                    log::error!(">>>>> Format Diff Depth Option "); 
+                                    None
+                                }
+
                             }
                         } else {
+                            log::error!(">>>>> forcenew "); 
                             // log::error!("customrendertargetkey {:?}", customrendertargetkey.0);
                             None
                         }
                     } else {
+                        log::error!(">>>>> None Input ");
                         None
                     };
                     let srt = match srt {
                         Some(srt) => {
-                            if srt.target().colors[0].0.texture.format() == param.colorformat.0.val() { Some(srt) } else { None }
+                            if srt.target().colors[0].0.texture.format() == param.colorformat.0.val() { Some(srt) } else { 
+                                log::error!(">>>>> Format Diff 2 ");  
+                                None
+                            }
                         },
                         None => { None },
                     };
 
                     let srt = if let Some(srt) = srt { srt } else {
+                        // if let Some() = screen.
                         // log::warn!("SRT Allocate by allocate.");
                         let width = param.rendersize.width();
                         let height = param.rendersize.height();
@@ -287,7 +299,7 @@ impl Node for RenderNode {
 
             match &to_final_target {
                 RendererRenderTarget::FinalRender(_realscreen) => {
-                    // log::warn!("Graphic: FinalRender");
+                    log::error!("Graphic: FinalRender, {:?}", _realscreen);
                     if !_realscreen {
                         if let (Some(texture), Some(view)) = screenpostprocess.tex_and_view(screen) {
                             can_render = true;

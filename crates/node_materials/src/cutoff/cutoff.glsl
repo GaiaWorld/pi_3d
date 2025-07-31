@@ -1,4 +1,4 @@
 
-bool cutoff(const float value, const MatParam matParam) {
+bool cutoff(const float value) {
     return value < matParam.uCutoff;
 }

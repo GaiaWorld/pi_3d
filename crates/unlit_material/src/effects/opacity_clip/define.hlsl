@@ -1,26 +1,26 @@
 
 layout(location = 0) out vec4 gl_FragColor;
-void shader(const MatParam matParam) {
+void shader() {
     vec3 baseColor = vec3(1., 1., 1.);
-    float alpha = opacity(matParam);
+    float alpha = opacity();
 
 	const float glossiness 			    = 0.;
 
 	// ----------------------------------------------------------
 
-    const vec4 mainTextureColor   = mainTexture(v_uv, matParam);
-    baseColor               *= mainTextureColor.rgb * mainStrength(matParam) * mainColor(matParam);
+    const vec4 mainTextureColor   = mainTexture(v_uv);
+    baseColor               *= mainTextureColor.rgb * mainStrength() * mainColor();
     alpha                   *= mainTextureColor.a;
 
-    const vec4 opacityData        = opacityTexture(v_uv2, matParam);
-    const float opacityValue      = opacityChannel(opacityData, matParam);
+    const vec4 opacityData        = opacityTexture(v_uv2);
+    const float opacityValue      = opacityChannel(opacityData);
 
-    if (cutoff(opacityValue - 0.001, matParam)) {
+    if (cutoff(opacityValue - 0.001)) {
         discard;
     }
 
-    vec3 emissiveColor = emissiveColor(matParam);
-    emissiveColor *= emissiveTexture(v_uv3, matParam).rgb * emissiveStrength(matParam);
+    vec3 emissiveColor = emissiveColor();
+    emissiveColor *= emissiveTexture(v_uv3).rgb * emissiveStrength();
 
 	const vec3 specularBase 					= vec3(0., 0., 0.);
 	const vec3 specularColor 		    = vec3(0., 0., 0.);
