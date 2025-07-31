@@ -132,7 +132,7 @@ pub fn sys_act_renderer_modify(
                             }
                             *rendertarget = RendererRenderTarget::FinalRender(realscreen);
     
-                            if let Err(err) = graphic.set_finish(nodeid.0, true) {
+                            if let Err(err) = graphic.set_finish(nodeid.0, realscreen) {
                                 error.graphic(entity.index(), err);
                             }
                         },
