@@ -1,7 +1,7 @@
 use crate::{ecs::*, prelude::MemSize};
 
 use pi_bevy_asset::ShareAssetMgr;
-use pi_bevy_render_plugin::{constant::texture_sampler::{ColorFormat, DepthStencilFormat}, PiSafeAtlasAllocator};
+use pi_bevy_render_plugin::{constant::texture_sampler::{ColorFormat, DepthStencilFormat}, PiSafeAtlasAllocator, PiScreenTexture};
 use pi_render::{components::view::target_alloc::{SafeTargetView, ShareTargetView, TargetDescriptor, TextureDescriptor}, renderer::sampler::{BindDataSampler, KeySampler, SamplerRes}, rhi::device::RenderDevice};
 use pi_scene_math::Number;
 use pi_share::Share;
@@ -29,16 +29,32 @@ impl CustomRenderTarget {
     pub fn new(
         device: &RenderDevice, sample: KeySampler,
         asset_samp: &ShareAssetMgr<SamplerRes>, atlas_allocator: &PiSafeAtlasAllocator,
-        color_format: ColorFormat, depth_stencil_format: DepthStencilFormat, width: u32, height: u32
+        color_format: ColorFormat, depth_stencil_format: DepthStencilFormat, width: u32, height: u32, screen: &PiScreenTexture
     ) -> Option<Self> {
         let currlist: Vec<ShareTargetView> = vec![];
         if let Some(sampler) = BindDataSampler::create(sample, &device, &asset_samp) {
+            
+            let mut default_width = width;
+            let mut default_height = height;
+            if let Some(screen) = &screen.0 {
+                if let Some(screen) = screen.texture() {
+                    let swidth = screen.width();
+                    let sheight = screen.height();
+                    if width <= swidth && height <= sheight {
+                        default_width = swidth;
+                        default_height = sheight;
+                    }
+                }
+            }
+            default_width = ((default_width - 1) / 32 + 1) * 32;
+            default_height = ((default_height - 1) / 32 + 1) * 32;
+
             let target_type = atlas_allocator.create_type(
                 TargetDescriptor {
                     colors_descriptor: Self::color_desc(&color_format),
                     need_depth: Self::need_depth(&depth_stencil_format),
-                    default_width: width,
-                    default_height: height,
+                    default_width,
+                    default_height,
                     depth_descriptor: Self::depth_desc(&depth_stencil_format)
                 }
             );
@@ -194,9 +210,10 @@ impl CustomRenderTargets {
         device: &RenderDevice,
         asset_samp: &ShareAssetMgr<SamplerRes>, atlas_allocator: &PiSafeAtlasAllocator,
         sample: KeySampler,
-        color_format: ColorFormat, depth_stencil_format: DepthStencilFormat, width: u32, height: u32
+        color_format: ColorFormat, depth_stencil_format: DepthStencilFormat, width: u32, height: u32,
+        screen: &PiScreenTexture,
     ) -> Option<KeyRenderTarget> {
-        if let Some(rt) = CustomRenderTarget::new(device, sample, asset_samp, atlas_allocator, color_format, depth_stencil_format, width, height) {
+        if let Some(rt) = CustomRenderTarget::new(device, sample, asset_samp, atlas_allocator, color_format, depth_stencil_format, width, height, screen) {
             let key = self.0.insert(Some(rt));
             Some(key)
         } else{
@@ -227,11 +244,13 @@ impl CustomRenderTargets {
     pub fn update(
         &mut self,
         device: &RenderDevice,
-        asset_samp: &ShareAssetMgr<SamplerRes>, atlas_allocator: &PiSafeAtlasAllocator,
+        asset_samp: &ShareAssetMgr<SamplerRes>,
+        atlas_allocator: &PiSafeAtlasAllocator,
+        screen: &PiScreenTexture,
     ) {
         self.1.drain(..).for_each(|(key, sample, color_format, depth_stencil_format, width, height)| {
             if let Some(item) = self.0.get_mut(key) {
-                if let Some(rt) = CustomRenderTarget::new(device, sample, asset_samp, atlas_allocator, color_format, depth_stencil_format, width, height) {
+                if let Some(rt) = CustomRenderTarget::new(device, sample, asset_samp, atlas_allocator, color_format, depth_stencil_format, width, height, screen) {
                     *item = Some(rt)
                 }
             }

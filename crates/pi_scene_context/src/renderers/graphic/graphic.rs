@@ -208,12 +208,27 @@ impl Node for RenderNode {
                         // log::warn!("SRT Allocate by allocate.");
                         let width = param.rendersize.width();
                         let height = param.rendersize.height();
+                        let mut default_width = width;
+                        let mut default_height = height;
+                        if let Some(screen) = &screen.0 {
+                            if let Some(screen) = screen.texture() {
+                                let swidth = screen.width();
+                                let sheight = screen.height();
+                                if width <= swidth && height <= sheight {
+                                    default_width = swidth;
+                                    default_height = sheight;
+                                }
+                            }
+                        }
+                        default_width = ((default_width - 1) / 32 + 1) * 32;
+                        default_height = ((default_height - 1) / 32 + 1) * 32;
+                            
                         let target_type = atlas_allocator.get_or_create_type(
                             TargetDescriptor {
                                 colors_descriptor: param.colorformat.desc(),
                                 need_depth, 
-                                default_width: 2048,
-                                default_height: 2048,
+                                default_width,
+                                default_height,
                                 depth_descriptor: param.depthstencilformat.desc()
                             }
                         );
