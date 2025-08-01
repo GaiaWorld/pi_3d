@@ -131,6 +131,7 @@ impl DemoScene {
         device: &RenderDevice,
         asset_samp: &ShareAssetMgr<SamplerRes>,
         atlas_allocator: &PiSafeAtlasAllocator,
+        screen: &PiScreenTexture,
         camera_size: f32,
         camera_fov: f32,
         camera_nearfar: (f32, f32),
@@ -141,7 +142,7 @@ impl DemoScene {
             EFreeCameraMode::Orthograhic
         } else { EFreeCameraMode::Perspective };
         
-        let keytarget =  match targets.create_sync(device, asset_samp, atlas_allocator, KeySampler::linear_clamp(), ColorFormat::Rgba8Unorm, DepthStencilFormat::Depth32Float, 800, 600) {
+        let keytarget =  match targets.create_sync(device, asset_samp, atlas_allocator, KeySampler::linear_clamp(), ColorFormat::Rgba8Unorm, DepthStencilFormat::Depth32Float, 800, 600, &screen) {
             Some(key) => { Some(KeyCustomRenderTarget::Custom(key)) },
             None => None,
         };
@@ -280,6 +281,7 @@ pub fn setup_demoinit(
     engineopt: Res<EngineCustomPlugins>,
     asset_mgr: Res<ShareAssetMgr<ShaderEffectMeta>>,
     mut nodematblocks: ResMut<NodeMaterialBlocks>,
+    screen: Res<PiScreenTexture>,
 ) {
     
     ActionMaterial::regist_material_meta(&asset_mgr, KeyShaderMeta::from(ShaderDistortion::KEY), ShaderDistortion::meta(&mut nodematblocks, &engineopt));
@@ -293,7 +295,9 @@ pub fn setup_demoinit(
     // errors.1 = true;
     let demopass = DemoScene::new(&mut commands, &mut actions, &mut animegroupres, 
         &mut assets.0, &assets.1, &assets.2, &assets.3,
-        demooption.camera_size, demooption.camera_fov, demooption.camera_nearfar, demooption.camera_position, demooption.orthographic_camera
+        &screen,
+        demooption.camera_size, demooption.camera_fov, demooption.camera_nearfar, demooption.camera_position, demooption.orthographic_camera,
+        
     );
     let (scene, camera01) = (demopass.scene, demopass.camera);
 

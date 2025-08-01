@@ -45,8 +45,9 @@ pub fn sys_custom_render_target(
     asset_samp: Res<ShareAssetMgr<SamplerRes>>,
     atlas_allocator: Res<PiSafeAtlasAllocator>,
     mut customrendertargets: ResMut<CustomRenderTargets>,
+    screen: Res<PiScreenTexture>
 ) {
-    customrendertargets.update(&device, &asset_samp, &atlas_allocator);
+    customrendertargets.update(&device, &asset_samp, &atlas_allocator, &screen);
 }
 
 pub struct PluginRenderer;
