@@ -27,8 +27,8 @@
         discard;
     }
 
-    vec4 mainTextureColor = mainTexture(v_uv, applyUVOffsetSpeed(matParam.uMainUVOS), matParam);
-    baseColor.rgb *= mainTextureColor.rgb * mainStrength(matParam) * mainColor(matParam);
+    vec4 mainTextureColor = mainTexture(v_uv);
+    baseColor.rgb *= mainTextureColor.rgb * mainStrength() * mainColor();
 
     alpha *= mainTextureColor.a;
 

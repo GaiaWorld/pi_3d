@@ -100,7 +100,7 @@ pub struct ListTestData(SegQueue<(Entity, Entity, Vec<Entity>)>, Option<Entity>,
                     actions.instance.create.push(OpsInstanceMeshCreation::ops(source, instance));
                     actions.transform.tree.push(OpsTransformNodeParent::ops(instance, scene));
                     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(instance, ETransformSRT::Translation(random.gen_range(-0.5f32..0.5f32) as f32 * (TEST_SIZE as f32), random.gen_range(-0.5f32..0.5f32) * (TEST_SIZE as f32), random.gen_range(0f32..0.5f32) * (TEST_SIZE as f32))));
-                    actions.transform.localsrt.push(OpsTransformNodeLocal::ops(instance, ETransformSRT::Scaling(0.5, 0.5, 0.5)));
+                    actions.transform.localsrt.push(OpsTransformNodeLocal::ops(instance, ETransformSRT::Scaling(10.5, 10.5, 10.5)));
                     
                     // let instance = commands.spawn_empty_id();
                     // actions.transform.tree.push(OpsTransformNodeParent::ops(instance, scene));
@@ -168,7 +168,7 @@ fn setup(
                 actions.instance.create.push(OpsInstanceMeshCreation::ops(source, instance));
                 actions.transform.tree.push(OpsTransformNodeParent::ops(instance, scene));
                 actions.transform.localsrt.push(OpsTransformNodeLocal::ops(instance, ETransformSRT::Translation(i as f32 * 2. - (tes_size) as f32, 0., j as f32 * 2. - (tes_size) as f32)));
-                actions.transform.localsrt.push(OpsTransformNodeLocal::ops(instance, ETransformSRT::Scaling(0.2, 0.2, 0.2)));
+                actions.transform.localsrt.push(OpsTransformNodeLocal::ops(instance, ETransformSRT::Scaling(1.2, 1.2, 1.2)));
                 tmp.push(instance);
             }
         }

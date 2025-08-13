@@ -52,24 +52,36 @@ fn setup(
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/fractal.png"),
+        wrapu: EAddressMode::Repeat,
+        wrapv: EAddressMode::Repeat,
+        wrapw: EAddressMode::Repeat,
         ..Default::default()
     }));
     actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockOpacityTexture::KEY_TEX),
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/eff_ui_ll_085.png"),
+        wrapu: EAddressMode::Repeat,
+        wrapv: EAddressMode::Repeat,
+        wrapw: EAddressMode::Repeat,
         ..Default::default()
     }));
     actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockOpacity2Texture::KEY_TEX),
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/eff_uv_lf_002.png"),
+        wrapu: EAddressMode::Repeat,
+        wrapv: EAddressMode::Repeat,
+        wrapw: EAddressMode::Repeat,
         ..Default::default()
     }));
     actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockMixTexture::KEY_TEX),
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/icon_city.png"),
+        wrapu: EAddressMode::Repeat,
+        wrapv: EAddressMode::Repeat,
+        wrapw: EAddressMode::Repeat,
         ..Default::default()
     }));
     actions.material.val.push(OpsUniformVal::vec4(

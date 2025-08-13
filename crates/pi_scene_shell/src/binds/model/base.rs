@@ -32,6 +32,8 @@ impl ShaderBindModelAbout {
             let matrix = Matrix::identity();
             range.write_data(ShaderBindModelAbout::OFFSET_WORLD_MATRIX as usize, bytemuck::cast_slice(matrix.as_slice()));
             range.write_data(ShaderBindModelAbout::OFFSET_WORLD_MATRIX_INV as usize, bytemuck::cast_slice(matrix.as_slice()));
+            range.write_data(ShaderBindModelAbout::OFFSET_VELOCITY as usize, bytemuck::cast_slice(&[0f32, 0., 1., 0.]));
+            range.write_data(ShaderBindModelAbout::OFFSET_SKINOFFSET as usize, bytemuck::cast_slice(&[0f32, 0., 0., 0.]));
             Some( Self { data: range, } )
         } else { None }
     }

@@ -3,6 +3,5 @@ vec3 emissiveFresnel(
     const vec3 emissiveColor
 ) {
     float emissiveFresnelTerm = computeFresnelTerm(absVN, matParam.fresnelParam.x, matParam.fresnelParam.y);
-    emissiveColor *= matParam.fresnelLeft.rgb * (1.0 - emissiveFresnelTerm) + emissiveFresnelTerm * matParam.fresnelRight.rgb;
-    return emissiveColor;
+    return emissiveColor * matParam.fresnelLeft.rgb * (1.0 - emissiveFresnelTerm) + emissiveFresnelTerm * matParam.fresnelRight.rgb;
 }

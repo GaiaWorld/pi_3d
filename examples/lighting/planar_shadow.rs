@@ -109,7 +109,7 @@ impl Plugin for PluginTest {
     let state: MeshInstanceState = base::instance_attr(true, false, false);
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
 
-    // actions.material.usemat.push(OpsMaterialUse::Use(source, lightingmat, DemoScene::PASS_OPAQUE));
+    actions.material.usemat.push(OpsMaterialUse::Use(source, lightingmat, DemoScene::PASS_OPAQUE));
     actions.material.usemat.push(OpsMaterialUse::Use(source, planarmat, DemoScene::PASS_TRANSPARENT));
     // actions.mesh.shadow.push(OpsMeshShadow::CastShadow(source, true));
     

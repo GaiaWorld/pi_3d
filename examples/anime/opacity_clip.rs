@@ -85,7 +85,7 @@ fn setup(
     actions.material.val.push(OpsUniformVal::float(
             idmat, 
             Atom::from(BlockCutoff::KEY_VALUE), 
-            0.8
+            0.0
         )
     );
     actions.material.val.push(OpsUniformVal::vec3(
@@ -103,24 +103,24 @@ fn setup(
     // actions.anime.attach.push(OpsAnimationGroupAttach::ops(scene, source, id_group));
 
     {
-        let key_curve0 = pi_atom::Atom::from("cutoff");
-        let key_curve0 =key_curve0.asset_u64();
-        let mut curve = FrameCurve::<AnimatorableFloat>::curve_frame_values(10000);
-        curve.curve_frame_values_frame(0, AnimatorableFloat(0.));
-        curve.curve_frame_values_frame(10000, AnimatorableFloat(1.));
+        // let key_curve0 = pi_atom::Atom::from("cutoff");
+        // let key_curve0 =key_curve0.asset_u64();
+        // let mut curve = FrameCurve::<AnimatorableFloat>::curve_frame_values(10000);
+        // curve.curve_frame_values_frame(0, AnimatorableFloat(0.));
+        // curve.curve_frame_values_frame(10000, AnimatorableFloat(1.));
         
-        let asset_curve = if let Some(curve) = anime_assets.float.get(&key_curve0) {
-            curve
-        } else {
-            match anime_assets.float.insert(key_curve0, TypeFrameCurve(curve)) {
-                Ok(value) => { value },
-                Err(_) => { return; },
-            }
-        };
+        // let asset_curve = if let Some(curve) = anime_assets.float.get(&key_curve0) {
+        //     curve
+        // } else {
+        //     match anime_assets.float.insert(key_curve0, TypeFrameCurve(curve)) {
+        //         Ok(value) => { value },
+        //         Err(_) => { return; },
+        //     }
+        // };
     
-        let animation = anime_contexts.float.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group, idmat, animation));
-        actions.material.valb.push(OpsUniformValB::targetanim( idmat, Atom::from(BlockCutoff::KEY_VALUE), id_group.clone(), key_curve0));
+        // let animation = anime_contexts.float.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+        // actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group, idmat, animation));
+        // actions.material.valb.push(OpsUniformValB::targetanim( idmat, Atom::from(BlockCutoff::KEY_VALUE), id_group.clone(), key_curve0));
     }
     // {
     //     let key_curve0 = pi_atom::Atom::from("tilloff");
@@ -142,27 +142,27 @@ fn setup(
     //     // actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group, idmat, animation));
     //     actions.material.valb.push(OpsUniformValB::targetanim( idmat, Atom::from(BlockMainTexture::KEY_TILLOFF), id_group.clone(), key_curve0));
     // }
-    // {
-    //     let key_curve0 = pi_atom::Atom::from("Pos");
-    //     let key_curve0 = key_curve0.asset_u64();
-    //     let mut curve = FrameCurve::<LocalPosition>::curve_frame_values(10000);
-    //     curve.curve_frame_values_frame(0, LocalPosition(Vector3::new(0., 0., 0.)));
-    //     curve.curve_frame_values_frame(10000, LocalPosition(Vector3::new(2., 0., 0.)));
+    {
+        let key_curve0 = pi_atom::Atom::from("Pos");
+        let key_curve0 = key_curve0.asset_u64();
+        let mut curve = FrameCurve::<LocalPosition>::curve_frame_values(10000);
+        curve.curve_frame_values_frame(0, LocalPosition(Vector3::new(-4., 0., 0.)));
+        curve.curve_frame_values_frame(10000, LocalPosition(Vector3::new(4., 0., 0.)));
         
-    //     let asset_curve = if let Some(curve) = anime_assets.position.get(&key_curve0) {
-    //         curve
-    //     } else {
-    //         match anime_assets.position.insert(key_curve0, TypeFrameCurve(curve)) {
-    //             Ok(value) => { value },
-    //             Err(_e) => { return; },
-    //         }
-    //     };
+        let asset_curve = if let Some(curve) = anime_assets.position.get(&key_curve0) {
+            curve
+        } else {
+            match anime_assets.position.insert(key_curve0, TypeFrameCurve(curve)) {
+                Ok(value) => { value },
+                Err(_e) => { return; },
+            }
+        };
     
-    //     let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-    //     actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group, root, animation));
-    // }
+        let animation = anime_contexts.position.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
+        actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group, root, animation));
+    }
     let mut parma = AnimationGroupParam::default();
-    parma.loop_mode = ELoopMode::Not;
+    parma.loop_mode = ELoopMode::PositivePly(None);
     parma.speed = 0.1;
     actions.anime.action.push(OpsAnimationGroupAction::Start(id_group, parma, 0., pi_animation::base::EFillMode::NONE));
 
@@ -171,7 +171,7 @@ fn setup(
     actions.anime.action.push(OpsAnimationGroupAction::listen_start(id_group));
     actions.anime.action.push(OpsAnimationGroupAction::listen_end(id_group));
 
-    testdatas.push((root, 0., scene, 0.));
+    // testdatas.push((root, 0., scene, 0.));
 }
 
 pub fn sys_anime_event(

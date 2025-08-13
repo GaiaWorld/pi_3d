@@ -2,8 +2,8 @@
     vec4 baseColor = v_color;
     float alpha = 1.0;
 
-    vec4 mainTextureColor = mainTexture(v_uv, matParam);
-    baseColor.rgb *= mainTextureColor.rgb * mainStrength(matParam) * mainColor(matParam);
+    vec4 mainTextureColor = mainTexture(v_uv);
+    baseColor.rgb *= mainTextureColor.rgb * mainStrength() * mainColor();
     alpha *= mainTextureColor.a;
 
     gl_FragColor = vec4(baseColor.rgb, alpha);

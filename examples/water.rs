@@ -36,21 +36,22 @@ impl ShaderWater {
 
     gl_Position = PI_MATRIX_VP * worldPos;
 
-    v_uv  = A_UV * matParam.uMainTilloff.xy + matParam.uMainTilloff.zw + applyUVOffsetSpeed(matParam.uMainUVOS);
+    vUV  = A_UV * matParam.uMainTilloff.xy + matParam.uMainTilloff.zw + applyUVOffsetSpeed(matParam.uMainUVOS);
     vColor = A_COLOR4;
     v_pos_SS = gl_Position;
+    v_pos_SS.y = -v_pos_SS.y;
 ");
         nodemat.fs = String::from("
         vec4 baseColor          = vColor;
-        float alpha             = opacity(matParam) * baseColor.a;
+        float alpha             = opacity() * baseColor.a;
         vec2 screenUV           = v_pos_SS.xy / v_pos_SS.w * 0.5 + 0.5;
     
-        baseColor.rgb           *= mainColor(matParam);
+        baseColor.rgb           *= mainColor();
         
-        vec4 mainTextureColor   = mainTexture(vUV * 10. + vec2(Random1DTo1D(screenUV.x * 200., PI_Time.y, .762) * 2., Random1DTo1D(screenUV.y * 200., PI_Time.y, .762) * 2.), matParam);
+        vec4 mainTextureColor   = mainTexture(vUV * 10. + vec2(Random1DTo1D(screenUV.x * 200., PI_Time.y, .762) * 2., Random1DTo1D(screenUV.y * 200., PI_Time.y, .762) * 2.));
     
-        vec4 emissiveTexture    = emissiveTexture(screenUV, matParam);
-        float dDepth            = emissiveTexture.r + mainTextureColor.r * 0.01 * mainStrength(matParam);
+        vec4 emissiveTexture    = emissiveTexture(screenUV);
+        float dDepth            = emissiveTexture.r + mainTextureColor.r * 0.01 * mainStrength();
         dDepth                  = dDepth - (v_pos_SS.z);
         if (dDepth < 0.) {
             discard;

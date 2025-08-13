@@ -72,6 +72,9 @@ fn setup(
         slotname: Atom::from(BlockEmissiveTexture::KEY_TEX),
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/icon_city.png"),
+        wrapu: EAddressMode::Repeat,
+        wrapv: EAddressMode::Repeat,
+        wrapw: EAddressMode::Repeat,
         ..Default::default()
     }));
 }

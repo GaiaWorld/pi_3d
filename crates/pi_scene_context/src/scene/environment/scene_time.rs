@@ -57,11 +57,14 @@ impl SceneTime {
     //     });
     // }
     pub fn update(&self, bind: &BindSceneEffect) {
-        let time_ms = self.time_ms as f32 * 0.001;
-        let delta_ms = self.delta_ms() as f32 * 0.001;
+        // let time_ms = self.time_ms as f64 * 0.001;
+        // let delta_ms = self.delta_ms() as f64 * 0.001;
+        let time_ms = self.time_ms as f64 * 0.001;
+        let delta_ms = self.delta_ms() as f64 * 0.001;
+        // log::error!("{:?}", (time_ms, 316515. + time_ms, 316515. + (time_ms as f64), (316515. + (time_ms as f64)) as f32));
         let values = [
-            time_ms, time_ms, time_ms.sin(), time_ms.cos(),
-            delta_ms, 1. / delta_ms, delta_ms.sin(), delta_ms.cos()
+            time_ms as f32, time_ms as f32, time_ms.sin() as f32, time_ms.cos() as f32,
+            delta_ms as f32, 1. / delta_ms as f32, delta_ms.sin() as f32, delta_ms.cos() as f32
         ];
         bind.0.as_ref().unwrap().data().write_data(ShaderBindSceneAboutEffect::OFFSET_TIME as usize, bytemuck::cast_slice(&values));
     }

@@ -14,4 +14,4 @@
     
     v_color = A_COLOR4;
 
-    v_uv = A_UV;
+    v_uv = A_UV * matParam.uMainTilloff.xy + matParam.uMainTilloff.zw + applyUVOffsetSpeed(matParam.uMainUVOS);

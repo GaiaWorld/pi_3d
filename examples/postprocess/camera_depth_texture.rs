@@ -226,7 +226,7 @@ impl Plugin for PluginTest {
             
             actions.renderer.connect.push(OpsRendererConnect::ops(shadow_renderer, depth_renderer, false));
             actions.renderer.connect.push(OpsRendererConnect::ops(depth_renderer, demopass.opaque_renderer, false));
-            actions.renderer.target.push(OpsRendererTarget::Custom(depth_renderer, KeyCustomRenderTarget::Custom(depthtarget.unwrap()), false));
+            actions.renderer.target.push(OpsRendererTarget::Custom(depth_renderer, KeyCustomRenderTarget::Custom(depthtarget.unwrap()), true));
 
             actions.renderer.connect.push(OpsRendererConnect::ops(shadow_renderer, demopass.opaque_renderer, true));
             

@@ -39,6 +39,7 @@ fn setup(
     let indices = CubeBuilder::indices_meta();
     let state = MeshInstanceState::default();
     let source = base::DemoScene::mesh(&mut commands, scene, scene, &mut actions,  vertices, indices, state);
+    actions.transform.localsrt.push(OpsTransformNodeLocal::ops(source, ETransformSRT::Scaling(6., 6., 6.)));
 
     let mut blend = ModelBlend::default(); blend.combine();
     actions.mesh.render_state.push(OpsRenderState::blend(source, DemoScene::PASS_OPAQUE, blend));
@@ -50,18 +51,30 @@ fn setup(
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/fractal.png"),
+        wrapu: EAddressMode::Repeat,
+        wrapv: EAddressMode::Repeat,
+        wrapw: EAddressMode::Repeat,
         ..Default::default()
     }));
     actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockOpacityTexture::KEY_TEX),
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/icon_city.png"),
+        wrapu: EAddressMode::Repeat,
+        wrapv: EAddressMode::Repeat,
+        wrapw: EAddressMode::Repeat,
         ..Default::default()
     }));
-    actions.material.val.push(OpsUniformVal::vec4(
+    actions.material.val.push(OpsUniformVal::vec2(
             idmat, 
-            Atom::from(BlockEmissiveTexture::KEY_INFO), 
-            1., 1., 1., 1.
+            Atom::from(BlockMainTextureUVOffsetSpeed::KEY_PARAM), 
+            0.4, 0.4
+        )
+    );
+    actions.material.val.push(OpsUniformVal::vec2(
+            idmat, 
+            Atom::from(BlockOpacityTextureUVOffsetSpeed::KEY_PARAM), 
+            0.4, 0.4
         )
     );
 }

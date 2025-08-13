@@ -33,8 +33,9 @@ layout(location = 0) out vec4 gl_FragColor;
     gl_Position = PI_MATRIX_VP * worldPos;
 
     v_color = A_COLOR4;
-    v_uv = A_UV;
+    v_uv  = A_UV * matParam.uMainTilloff.xy + matParam.uMainTilloff.zw + applyUVOffsetSpeed(matParam.uMainUVOS);
     v_pos_SS = gl_Position;
+    v_pos_SS.y = -v_pos_SS.y;
         ");
         nodemat.fs = String::from("
     vec4 baseColor          = v_color;
@@ -42,7 +43,7 @@ layout(location = 0) out vec4 gl_FragColor;
 
     baseColor.rgb           *= mainColor();
     
-    vec4 mainTextureColor   = mainTexture(v_uv + applyUVOffsetSpeed(matParam.uMainUVOS));
+    vec4 mainTextureColor   = mainTexture(v_uv);
 
     vec2 screenUV           = v_pos_SS.xy / v_pos_SS.w * 0.5 + 0.5;
     vec4 emissiveTexture    = emissiveTexture(screenUV + (mainTextureColor.rg - 0.5) * 0.01 * mainStrength());

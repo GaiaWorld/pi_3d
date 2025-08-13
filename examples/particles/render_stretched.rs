@@ -153,7 +153,7 @@ fn cone_cfg(count: f32, _speed: f32) -> IParticleSystemConfig {
     cfg.max_particles = count;
     cfg.emission = (count, None);
     cfg.lifetime = OneParamInfo::TInterpolateTwoConstants(0.1, 0.3);
-    cfg.start_speed = OneParamInfo::TInterpolateConstant(10.1);
+    cfg.start_speed = OneParamInfo::TInterpolateConstant(4.1);
     // cfg.start_speed = OneParamInfo::TInterpolateConstant(_speed);
     cfg.start_color = FourGradientInfo::TInterpolateColor([1., 1., 1., 1.]);
     cfg.start_size = ParamInfo::OneParamInfo(OneParamInfo::TInterpolateConstant(1.));

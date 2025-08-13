@@ -50,12 +50,18 @@ fn setup(
         slotname: Atom::from(BlockMainTexture::KEY_TEX),
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/fractal.png"),
+        wrapu: EAddressMode::Repeat,
+        wrapv: EAddressMode::Repeat,
+        wrapw: EAddressMode::Repeat,
         ..Default::default()
     }));
     actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
         slotname: Atom::from(BlockOpacityTexture::KEY_TEX),
         sample: KeySampler::linear_repeat(),
         url: EKeyTexture::from("assets/images/eff_ui_ll_085.png"),
+        wrapu: EAddressMode::Repeat,
+        wrapv: EAddressMode::Repeat,
+        wrapw: EAddressMode::Repeat,
         ..Default::default()
     }));
     actions.material.val.push(OpsUniformVal::float(

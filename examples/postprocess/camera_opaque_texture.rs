@@ -220,7 +220,7 @@ impl Plugin for PluginTest {
 
         {
             let (targets, device, asset_samp, atlas_allocator) = (&mut assets.0, &assets.1, &assets.2, &assets.3);
-            let opaquetarget = targets.create( KeySampler::linear_repeat(), ColorFormat::Rgba8Unorm, DepthStencilFormat::Depth32Float, 128, 128 ); 
+            let opaquetarget = targets.create( KeySampler::linear_repeat(), ColorFormat::Rgba8Unorm, DepthStencilFormat::Depth32Float, 512, 512 ); 
             let (opaque_texture_renderer, opaque_texture_renderer_camera) = copy::PluginImageCopy::init(&mut commands, &mut actions, scene,
                 demopass.skywater_renderer, demopass.transparent_renderer, demopass.opaque_target.clone(), Some(KeyCustomRenderTarget::Custom(opaquetarget.unwrap()))
             );
