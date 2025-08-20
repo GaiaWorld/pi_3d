@@ -36,16 +36,16 @@ impl CustomRenderTarget {
             
             let mut default_width = width;
             let mut default_height = height;
-            if let Some(screen) = &screen.0 {
-                if let Some(screen) = screen.texture() {
-                    let swidth = screen.width();
-                    let sheight = screen.height();
-                    if width <= swidth && height <= sheight {
-                        default_width = swidth;
-                        default_height = sheight;
-                    }
-                }
-            }
+            // if let Some(screen) = &screen.0 {
+            //     if let Some(screen) = screen.texture() {
+            //         let swidth = screen.width();
+            //         let sheight = screen.height();
+            //         if width <= swidth && height <= sheight {
+            //             default_width = swidth;
+            //             default_height = sheight;
+            //         }
+            //     }
+            // }
             default_width = ((default_width - 1) / 32 + 1) * 32;
             default_height = ((default_height - 1) / 32 + 1) * 32;
 
@@ -59,7 +59,7 @@ impl CustomRenderTarget {
                 }
             );
 
-            // log::warn!("CustomRenderTarget Allocate. {:?}", (width, height, color_format, depth_stencil_format));
+            // log::error!("CustomRenderTarget Allocate. {:?}", (width, height, color_format, depth_stencil_format));
             
             // log::warn!("New RenderTarget: {:?}", (format.desc(), depth.desc()));
             let rt = atlas_allocator.allocate_alone_not_share(
@@ -69,7 +69,7 @@ impl CustomRenderTarget {
                 currlist.iter(),
                 true
             );
-            // log::error!("CustomTarget: {:?}", (color_format, depth_stencil_format));
+            // log::error!("CustomTarget: {:?}", (color_format, depth_stencil_format, rt.target().colors[0].0.width, rt.target().colors[0].0.height));
             Some(
                 Self { rt: Share::new(rt), sampler, width, height, color_format, depth_stencil_format }
             )

@@ -172,11 +172,11 @@ fn _sys_update_viewer_model_list_by_model(
         }
     }
 }
-
+// 物件变化时暂不好设置viewer的重新剔除，因此暂时总是重新剔除
 pub fn sys_tick_viewer_culling(
     mut viewers: Query<
         (&SceneID, &ViewerActive, &ModelList, &ViewerTransformMatrix, &ViewerViewMatrix, &ForceIncludeModelList, &mut ModelListAfterCulling),
-        Or<(Changed<ModelList>, Changed<ViewerTransformMatrix>, Changed<ViewerViewMatrix>, Changed<ForceIncludeModelList>, Changed<ViewerCullingDirty>)>
+        // Or<(Changed<ModelList>, Changed<ViewerTransformMatrix>, Changed<ViewerViewMatrix>, Changed<ForceIncludeModelList>, Changed<ViewerCullingDirty>)>
     >,
     items: Query< (& GlobalEnable, Option<& MeshInstanceState>), With<AbstructMesh> >,
     mut flags: Query<&mut AbstructMeshCullingFlag>,
