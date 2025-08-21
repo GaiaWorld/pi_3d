@@ -10,16 +10,36 @@ use pi_render::{
     },
     rhi::sampler::EAddressMode
 };
+use serde::{Deserialize, Serialize};
 
 use crate::prelude::EngineCustomPlugins;
 
 use super::{UniformPropertyName, ShaderSetBind, TUnifromShaderProperty};
 
-#[derive(Clone, Hash)]
+#[derive(Clone, Copy, Hash, Serialize, Deserialize)]
+pub enum ESamplerType {
+    Float,
+    FloatFilter,
+    Depth,
+    Uint,
+    Sint,
+}
+impl ESamplerType {
+    pub fn sample_type(&self) -> wgpu::TextureSampleType {
+        match self {
+            ESamplerType::Float => wgpu::TextureSampleType::Float { filterable: false },
+            ESamplerType::FloatFilter => wgpu::TextureSampleType::Float { filterable: true },
+            ESamplerType::Depth => wgpu::TextureSampleType::Depth,
+            ESamplerType::Uint => wgpu::TextureSampleType::Uint,
+            ESamplerType::Sint => wgpu::TextureSampleType::Sint,
+        }
+    }
+}
+
+#[derive(Clone, Hash, Serialize, Deserialize)]
 pub struct UniformTexture2DDesc {
     pub slotname: UniformPropertyName,
-    pub tex_sampler_type: wgpu::TextureSampleType,
-    pub dimision: wgpu::TextureViewDimension,
+    pub tex_sampler_type: ESamplerType,
     pub multisampled: bool,
     pub stage: EShaderStage,
     pub initial: EDefaultTexture,
@@ -28,8 +48,7 @@ impl Default for UniformTexture2DDesc {
     fn default() -> Self {
         Self {
             slotname: UniformPropertyName::from("_MainTex"),
-            tex_sampler_type: wgpu::TextureSampleType::Float { filterable: true },
-            dimision: wgpu::TextureViewDimension::D2,
+            tex_sampler_type: ESamplerType::FloatFilter,
             multisampled: false,
             stage: EShaderStage::FRAGMENT,
             initial: EDefaultTexture::White,
@@ -39,8 +58,7 @@ impl Default for UniformTexture2DDesc {
 impl UniformTexture2DDesc {
     pub fn new(
         slotname: UniformPropertyName,
-        tex_sampler_type: wgpu::TextureSampleType,
-        dimision: wgpu::TextureViewDimension,
+        tex_sampler_type: ESamplerType,
         multisampled: bool,
         stage: EShaderStage,
         initial: EDefaultTexture,
@@ -48,7 +66,6 @@ impl UniformTexture2DDesc {
         Self {
             slotname,
             tex_sampler_type,
-            dimision,
             multisampled,
             stage,
             initial
@@ -61,8 +78,7 @@ impl UniformTexture2DDesc {
         Arc::new(
             Self {
                 slotname,
-                tex_sampler_type: wgpu::TextureSampleType::Float { filterable: true },
-                dimision: wgpu::TextureViewDimension::D2,
+                tex_sampler_type: ESamplerType::FloatFilter,
                 multisampled: false,
                 stage,
                 initial: EDefaultTexture::White,
@@ -74,10 +90,11 @@ impl UniformTexture2DDesc {
     }
     pub fn sampler_type(&self) -> wgpu::SamplerBindingType {
         match self.tex_sampler_type {
-            wgpu::TextureSampleType::Float { filterable } => if filterable { wgpu::SamplerBindingType::Filtering } else { wgpu::SamplerBindingType::NonFiltering } ,
-            wgpu::TextureSampleType::Depth => wgpu::SamplerBindingType::Filtering,
-            wgpu::TextureSampleType::Sint => wgpu::SamplerBindingType::NonFiltering,
-            wgpu::TextureSampleType::Uint => wgpu::SamplerBindingType::NonFiltering,
+            ESamplerType::Float => wgpu::SamplerBindingType::NonFiltering ,
+            ESamplerType::FloatFilter => wgpu::SamplerBindingType::Filtering,
+            ESamplerType::Depth => wgpu::SamplerBindingType::Filtering,
+            ESamplerType::Sint => wgpu::SamplerBindingType::NonFiltering,
+            ESamplerType::Uint => wgpu::SamplerBindingType::NonFiltering,
         }
     }
 }

@@ -13,6 +13,7 @@ use pi_render::{asset::TAssetKeyU64, renderer::texture::{ImageTextureFrame, KeyI
 use pi_world::single_res::{SingleRes, SingleResMut};
 use pi_world_macros::Resource;
 use pi_share::Share;
+use serde::{Deserialize, Serialize};
 use wgpu::Origin3d;
 
 use crate::prelude::MemSize;
@@ -29,7 +30,7 @@ pub enum ETextureFrameRenderMode {
     EAtlasRenderHS      = 2,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct SpriteFrame {
     pub rotated: bool,
     pub trimmed: bool,

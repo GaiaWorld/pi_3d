@@ -3,6 +3,7 @@ use std::{fmt::Debug, hash::Hash, ops::Range};
 use pi_render::renderer::{vertex_buffer::KeyVertexBuffer, vertex_format::TVertexFormatByteSize};
 
 use super::{EVertexAttribute, ShaderEffectMeta};
+use serde::{Deserialize, Serialize};
 
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -79,7 +80,7 @@ impl EVertexBufferSlot {
 }
 
 pub type VertexBufferRangeVType = u32;
-#[derive(Debug, Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct VertexBufferDescRange(pub(crate) VertexBufferRangeVType, pub(crate) VertexBufferRangeVType);
 impl Default for VertexBufferDescRange {
     fn default() -> Self {

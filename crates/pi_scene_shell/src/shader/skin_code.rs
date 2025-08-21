@@ -95,8 +95,7 @@ impl ESkinCode {
     pub fn uniform_desc_tex() -> UniformTexture2DDesc {
         UniformTexture2DDesc::new(
             Atom::from(ShaderVarUniform::BONE_TEX),
-            wgpu::TextureSampleType::Float { filterable: false },
-            wgpu::TextureViewDimension::D2,
+            crate::shader::ESamplerType::Float,
             false,
             EShaderStage::VERTEX,
             EDefaultTexture::White,

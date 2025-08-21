@@ -10,7 +10,7 @@ impl ShaderShadowGenerator {
     pub fn res(engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
         let mut result = ShaderEffectMeta::new(
             ShaderEffectValueUniformDesc {
-                stage: wgpu::ShaderStages::VERTEX_FRAGMENT,
+                stage: wgpu::ShaderStages::VERTEX_FRAGMENT.bits(),
                 mat4_list: vec![],
                 // mat2_list: vec![],
                 vec4_list: vec![],

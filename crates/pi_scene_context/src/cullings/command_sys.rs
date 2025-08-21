@@ -16,7 +16,10 @@ pub fn sys_act_collider(
             // if (intersection_treshold + 0.2928932).abs() < 0.00001 {
             // log::error!("add_components Collider {:?}", entity);
             // }
-        } else { return; };
+        } else {
+            log::error!("add_components Fail {:?}", (entity, min, max));
+            // return;
+        };
     });
 }
 

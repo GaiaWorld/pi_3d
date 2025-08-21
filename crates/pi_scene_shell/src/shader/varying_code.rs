@@ -1,4 +1,5 @@
 use pi_atom::Atom;
+use serde::{Deserialize, Serialize};
 
 
 #[derive(Clone)]
@@ -15,7 +16,7 @@ impl EVaryingKind {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Varying {
     pub format: Atom,
     pub name: Atom,

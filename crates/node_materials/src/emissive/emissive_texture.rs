@@ -37,8 +37,7 @@ impl TNodeMaterialBlock for BlockEmissiveTexture {
         vec![
             UniformTexture2DDesc::new(
                 UniformPropertyName::from(Self::KEY_TEX),
-                wgpu::TextureSampleType::Float { filterable: true },
-                wgpu::TextureViewDimension::D2,
+                ESamplerType::FloatFilter,
                 false,
                 EShaderStage::FRAGMENT,
                 EDefaultTexture::White

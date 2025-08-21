@@ -1,12 +1,13 @@
 use std::hash::Hash;
 
 use pi_atom::Atom;
+use serde::{Deserialize, Serialize};
 
 use crate::run_stage::EngineCustomPlugins;
 
 use super::{TUnifromShaderProperty, UniformPropertyName};
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct UniformPropertyMat4(pub UniformPropertyName, pub [f32;16], pub bool);
 impl TUnifromShaderProperty for UniformPropertyMat4 {
     fn tag(&self) -> &UniformPropertyName {
@@ -37,7 +38,7 @@ impl Ord for UniformPropertyMat4 {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct UniformPropertyVec4(pub UniformPropertyName, pub [f32;4], pub bool);
 impl UniformPropertyVec4 {
     pub fn instance(&self) -> bool { self.2 }
@@ -71,7 +72,7 @@ impl Ord for UniformPropertyVec4 {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct UniformPropertyVec3(pub UniformPropertyName, pub [f32;3], pub bool);
 impl UniformPropertyVec3 {
     pub fn instance(&self) -> bool { self.2 }
@@ -105,7 +106,7 @@ impl Ord for UniformPropertyVec3 {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct UniformPropertyVec2(pub UniformPropertyName, pub [f32;2], pub bool);
 impl UniformPropertyVec2 {
     pub fn instance(&self) -> bool { self.2 }
@@ -139,7 +140,7 @@ impl Ord for UniformPropertyVec2 {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct UniformPropertyFloat(pub UniformPropertyName, pub f32, pub bool);
 impl UniformPropertyFloat {
     pub fn instance(&self) -> bool { self.2 }
@@ -173,7 +174,7 @@ impl Ord for UniformPropertyFloat {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct UniformPropertyInt(pub UniformPropertyName, pub i32, pub bool);
 impl UniformPropertyInt {
     pub fn instance(&self) -> bool { self.2 }
@@ -207,7 +208,7 @@ impl Ord for UniformPropertyInt {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct UniformPropertyUint(pub UniformPropertyName, pub u32, pub bool);
 impl UniformPropertyUint {
     pub fn instance(&self) -> bool { self.2 }
@@ -241,9 +242,9 @@ impl Ord for UniformPropertyUint {
     }
 }
 
-#[derive(Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MaterialValueBindDesc {
-    pub stage: wgpu::ShaderStages,
+    pub stage: u32,
     pub mat4_list: Vec<UniformPropertyMat4>,
     // pub mat2_list: Vec<UniformPropertyMat2>,
     pub vec4_list: Vec<UniformPropertyVec4>,
@@ -255,8 +256,9 @@ pub struct MaterialValueBindDesc {
 }
 impl Default for MaterialValueBindDesc {
     fn default() -> Self {
+        
         Self {
-            stage: wgpu::ShaderStages::VERTEX_FRAGMENT, 
+            stage: wgpu::ShaderStages::VERTEX_FRAGMENT.bits(), 
             mat4_list: vec![],
             // mat2_list: vec![],
             vec4_list: vec![], vec3_list: vec![], vec2_list: vec![], float_list: vec![],
@@ -268,7 +270,8 @@ impl Default for MaterialValueBindDesc {
 impl MaterialValueBindDesc {
     pub const PRE_KEY_FOR_INSTANCE_UNIFORM: &'static str = "_I";
     pub fn none(stage: wgpu::ShaderStages) -> Self {
-        Self { stage, 
+        Self {
+            stage: stage.bits(), 
             mat4_list: vec![],
             // mat2_list: vec![],
             vec4_list: vec![], vec3_list: vec![], vec2_list: vec![], float_list: vec![],
@@ -515,7 +518,7 @@ impl MaterialValueBindDesc {
 }
 impl MaterialValueBindDesc {
     pub fn vs_code(&self, set: u32, bind: u32, arrlen: u32, engineopt: &EngineCustomPlugins) -> String {
-        if self.stage & wgpu::ShaderStages::VERTEX == wgpu::ShaderStages::VERTEX {
+        if wgpu::ShaderStages::from_bits_retain(self.stage) & wgpu::ShaderStages::VERTEX == wgpu::ShaderStages::VERTEX {
             self._code(set, bind, arrlen, engineopt)
         } else {
             String::from("")
@@ -523,7 +526,7 @@ impl MaterialValueBindDesc {
     }
 
     pub fn fs_code(&self, set: u32, bind: u32, arrlen: u32, engineopt: &EngineCustomPlugins) -> String {
-        if self.stage & wgpu::ShaderStages::FRAGMENT == wgpu::ShaderStages::FRAGMENT {
+        if wgpu::ShaderStages::from_bits_retain(self.stage) & wgpu::ShaderStages::FRAGMENT == wgpu::ShaderStages::FRAGMENT {
             self._code(set, bind, arrlen, engineopt)
         } else {
             String::from("")

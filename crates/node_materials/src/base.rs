@@ -1,5 +1,7 @@
 use pi_scene_shell::{prelude::*, run_stage::EngineCustomPlugins};
 
+use serde::{Deserialize, Serialize};
+
 pub type TShaderLanguageDefine = u8;
 pub struct ShaderLanguageDefine;
 impl ShaderLanguageDefine {
@@ -63,7 +65,7 @@ pub trait TNodeMaterialBlock {
 }
 
 /// 节点材质块
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Serialize, Deserialize)]
 pub struct NodeMaterialBlockInfo {
     /// 像素着色器 声明代码
     pub fs_define: String,

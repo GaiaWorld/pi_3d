@@ -1,5 +1,6 @@
 
 use pi_atom::Atom;
+use serde::{Deserialize, Serialize};
 
 use crate::prelude::S_BREAK;
 
@@ -413,7 +414,7 @@ impl EBuildinVertexAtribute {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum ECustomVertexType {
     IVec4,
     UVec4,
@@ -451,7 +452,7 @@ impl ECustomVertexType {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct CustomVertexAttribute {
     key: Atom,
     vscode: Atom,
