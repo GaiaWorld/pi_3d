@@ -48,14 +48,14 @@ pub fn sys_act_pass_object(
     // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_act_pass_object"));
-    cmds.drain().for_each(|cmd| {
+    cmds.drain().for_each(|OpsRenderState(entity, cmd)| {
         match cmd {
-            OpsRenderState::RenderQueue(entity, val) => {
+            ERenderState::RenderQueue( val) => {
                 if let Ok(mut item) = itemsqueue.get_mut(entity) {
                     *item = val;
                 }
             },
-            OpsRenderState::Blend(entity, tag, value) => {
+            ERenderState::Blend( tag, value) => {
                 if let Ok(passids) = models.get(entity) {
                     let passid = passids.0[tag.index()];
         
@@ -64,7 +64,7 @@ pub fn sys_act_pass_object(
                     }
                 }
             },
-            OpsRenderState::DepthState(entity, tag, cmd) => {
+            ERenderState::DepthState( tag, cmd) => {
                 if let Ok(passids) = models.get(entity) {
                     let passid = passids.0[tag.index()];
         
@@ -77,7 +77,7 @@ pub fn sys_act_pass_object(
                     }
                 }
             },
-            OpsRenderState::PrimitiveState(entity, tag, cmd) => {
+            ERenderState::PrimitiveState( tag, cmd) => {
                 if let Ok(passids) = models.get(entity) {
                     let passid = passids.0[tag.index()];
         
@@ -96,7 +96,7 @@ pub fn sys_act_pass_object(
                 //     log::error!("Not Found Mesh {:?}", entity);
                 }
             },
-            OpsRenderState::StencilState(entity, tag, cmd) => {
+            ERenderState::StencilState( tag, cmd) => {
                 if let Ok(passids) = models.get(entity) {
                     let passid = passids.0[tag.index()];
                     if let Ok(mut item) = items.get_mut(passid) {

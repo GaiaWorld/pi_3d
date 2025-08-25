@@ -98,7 +98,7 @@ impl OpsAnimationGroupDispose {
 }
 pub type ActionListAnimeGroupDispose = ActionList<OpsAnimationGroupDispose>;
 
-/// 必须确保 这三个操作 顺序绝对正确 所以放入同一个列表
+/// 必须确保 启动 暂停 结束 这三个操作 顺序绝对正确 所以放入同一个列表
 pub enum OpsAnimationGroupAction {
     Start(Entity, AnimationGroupParam, pi_animation::base::TimeMS, pi_animation::base::EFillMode),
     Pause(Entity),

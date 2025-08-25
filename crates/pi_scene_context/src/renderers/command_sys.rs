@@ -92,9 +92,9 @@ pub fn sys_act_renderer_modify(
     // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_act_renderer_modify"));
-    cmds.drain().for_each(|cmd| {
+    cmds.drain().for_each(|OpsRendererTarget(entity, cmd)| {
         match cmd {
-            OpsRendererTarget::Custom(entity, keytarg, asout) => {
+            ERendererTarget::Custom(keytarg, asout) => {
                 if let Ok((mut renderparam, mut rendertarget, nodeid, mut flag)) = renderers.get_mut(entity) {
 
                     match keytarg {
@@ -139,7 +139,7 @@ pub fn sys_act_renderer_modify(
                     }
                 };
             },
-            OpsRendererTarget::Auto(entity, width, height, colorformat, depthstencilformat, force) => {
+            ERendererTarget::Auto(width, height, colorformat, depthstencilformat, force) => {
                 if let Ok((mut renderparam, mut rendertarget, _nodeid, mut flag)) = renderers.get_mut(entity) {
                     renderparam.rendersize = RenderSize::new(width as u32, height as u32, force);
                     if renderparam.colorformat.0 != colorformat || renderparam.depthstencilformat.0 != depthstencilformat {
@@ -152,55 +152,55 @@ pub fn sys_act_renderer_modify(
             },
         }
     });
-    cmdmodifys.drain().for_each(|cmd| {
+    cmdmodifys.drain().for_each(|OpsRendererCommand(entity, cmd)| {
         match cmd {
-            OpsRendererCommand::Active(entity, val) => {
+            ERendererCommand::Active( val) => {
                         if let Ok((mut comp, _, nodeid, _)) = renderers.get_mut(entity) {
                             comp.enable = RendererEnable(val);
                             let _ = graphic.set_enable(nodeid.0, val);
                         }
                     },
-            OpsRendererCommand::Blend(entity, val) => {
+            ERendererCommand::Blend( val) => {
                         if let Ok((mut comp, _, _, _)) = renderers.get_mut(entity) {
                             comp.blend = RendererBlend(val);
                         }
                     },
-            OpsRendererCommand::ColorClear(entity, val) => {
+            ERendererCommand::ColorClear( val) => {
                         if let Ok((mut comp, _, _, _)) = renderers.get_mut(entity) {
                             comp.color_clear = val;
                         }
                     },
-            OpsRendererCommand::DepthClear(entity, val) => {
+            ERendererCommand::DepthClear( val) => {
                         if let Ok((mut comp, _, _, _)) = renderers.get_mut(entity) {
                             comp.depth_clear = val;
                         }
                     },
-            OpsRendererCommand::StencilClear(entity, val) => {
+            ERendererCommand::StencilClear( val) => {
                         if let Ok((mut comp, _, _, _)) = renderers.get_mut(entity) {
                             comp.stencil_clear = val;
                         }
                     },
-            OpsRendererCommand::AutoClearColor(entity, val) => {
+            ERendererCommand::AutoClearColor( val) => {
                         if let Ok((mut comp, _, _, _)) = renderers.get_mut(entity) {
                             comp.auto_clear_color = RenderAutoClearColor(val);
                         }
                     },
-            OpsRendererCommand::AutoClearDepth(entity, val) => {
+            ERendererCommand::AutoClearDepth( val) => {
                         if let Ok((mut comp, _, _, _)) = renderers.get_mut(entity) {
                             comp.auto_clear_depth = RenderAutoClearDepth(val);
                         }
                     },
-            OpsRendererCommand::AutoClearStencil(entity, val) => {
+            ERendererCommand::AutoClearStencil( val) => {
                         if let Ok((mut comp, _, _, _)) = renderers.get_mut(entity) {
                             comp.auto_clear_stencil = RenderAutoClearStencil(val);
                         }
                     },
-            OpsRendererCommand::Viewport(entity, x, y, z, w, mind, maxd) => {
+            ERendererCommand::Viewport( x, y, z, w, mind, maxd) => {
                         if let Ok((mut comp, _, _, _)) = renderers.get_mut(entity) {
                             comp.viewport = RenderViewport(x, y, z, w, mind, maxd);
                         }
                     }
-            OpsRendererCommand::ClearLinkMesh(entity, entity1) => {
+            ERendererCommand::ClearLinkMesh(entity1) => {
                     if let Ok(mut comp) = rendererslink.get_mut(entity) {
                         comp.mesh_as_clear = entity1;
                     }

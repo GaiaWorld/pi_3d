@@ -1,5 +1,6 @@
 
 use pi_scene_shell::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::pass::PassTag;
 
@@ -55,28 +56,33 @@ impl OpsUniformValB {
 }
 pub type ActionListUniformValB = ActionList<OpsUniformValB>;
 
-pub enum OpsUniformVal {
-    Vec4(Entity, Atom, f32, f32, f32, f32),
-    Vec3(Entity, Atom, f32, f32, f32),
-    Vec2(Entity, Atom, f32, f32),
-    Float(Entity, Atom, f32),
-    Uint(Entity, Atom, u32),
+#[derive(Serialize, Deserialize)]
+pub enum EUniformVal {
+    Vec4 (Atom, f32, f32, f32, f32),
+    Vec3 (Atom, f32, f32, f32),
+    Vec2 (Atom, f32, f32),
+    Float(Atom, f32),
+    Uint (Atom, u32),
 }
+pub struct OpsUniformVal(pub(crate) Entity, pub(crate) EUniformVal);
 impl OpsUniformVal {
+    pub fn ops(mat: Entity, val: EUniformVal) -> Self {
+        Self(mat, val)
+    }
     pub fn vec4(mat: Entity, uniformname: Atom, x: f32, y: f32, z: f32, w: f32) -> Self {
-        Self::Vec4(mat, uniformname, x, y, z, w)
+        Self(mat, EUniformVal::Vec4(uniformname, x, y, z, w))
     }
     pub fn vec3(mat: Entity, uniformname: Atom, x: f32, y: f32, z: f32) -> Self {
-        Self::Vec3(mat, uniformname, x, y, z)
+        Self(mat, EUniformVal::Vec3( uniformname, x, y, z))
     }
     pub fn vec2(mat: Entity, uniformname: Atom, x: f32, y: f32) -> Self {
-        Self::Vec2(mat, uniformname, x, y)
+        Self(mat, EUniformVal::Vec2( uniformname, x, y))
     }
     pub fn float(mat: Entity, uniformname: Atom, x: f32) -> Self {
-        Self::Float(mat, uniformname, x)
+        Self(mat, EUniformVal::Float( uniformname, x))
     }
     pub fn uint(mat: Entity, uniformname: Atom, x: u32) -> Self {
-        Self::Uint(mat, uniformname, x)
+        Self(mat, EUniformVal::Uint( uniformname, x))
     }
 }
 pub type ActionListUniformVal = ActionList<OpsUniformVal>;

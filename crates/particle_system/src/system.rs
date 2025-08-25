@@ -36,7 +36,7 @@ pub fn sys_particle_active(
                 if let (Ok(calculator), Ok(scenetime)) = (calculators.get(ids.calculator.as_ref().unwrap().0), scenes.get(idscene.0)) {
 
                     if 0 < calculator.delay && state.deltatime < calculator.delay as u64 {
-                        cmds.push(OpsCPUParticleSystemState::Start(entity));
+                        cmds.push(OpsCPUParticleSystemState(entity, crate::command::ECPUParticleSystemState::Start()));
                         state.deltatime += scenetime.delta_ms();
                         return;
                     }

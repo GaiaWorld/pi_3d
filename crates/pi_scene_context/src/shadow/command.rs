@@ -1,4 +1,5 @@
 use pi_scene_shell::prelude::*;
+use serde_derive::{Deserialize, Serialize};
 
 use crate::{object::ActionEntity, viewer::prelude::*};
 
@@ -12,15 +13,23 @@ impl OpsShadowGenerator {
 }
 pub type ActionListShadowGenerator = ActionList<OpsShadowGenerator>;
 
-pub enum OpsShadowGeneratorParam {
-    ShadowMinz(Entity, f32),
-    ShadowMaxz(Entity, f32),
-    ShadowFrustumSize(Entity, f32),
-    Bias(Entity, f32),
-    NormalBias(Entity, f32),
-    DepthScale(Entity, f32),
+#[derive(Serialize, Deserialize)]
+pub enum EShadowGeneratorParam {
+    ShadowMinz(f32),
+    ShadowMaxz(f32),
+    ShadowFrustumSize(f32),
+    Bias(f32),
+    NormalBias(f32),
+    DepthScale(f32),
     // AtlasSize(Entity, u32),
     // ShadowEnable(Entity, bool),
+}
+
+pub struct OpsShadowGeneratorParam(pub Entity, pub EShadowGeneratorParam);
+impl OpsShadowGeneratorParam {
+    pub fn ops(shadow: Entity, val: EShadowGeneratorParam) -> Self {
+        Self(shadow, val)
+    }
 }
 pub type ActionListShadowGeneratorParam = ActionList<OpsShadowGeneratorParam>;
 

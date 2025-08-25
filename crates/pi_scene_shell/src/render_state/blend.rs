@@ -1,7 +1,9 @@
 
+use serde::{Deserialize, Serialize};
+
 use crate::prelude::*;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ModelBlend {
     pub enable: bool,
     pub src_color: BlendFactor,

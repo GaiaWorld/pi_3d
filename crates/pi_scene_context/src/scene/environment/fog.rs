@@ -1,17 +1,18 @@
 
 
 use pi_scene_shell::prelude::*;
+use serde::{Deserialize, Serialize};
 
 
 use super::BindSceneEffect;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct FogLinearParam {
     pub start: f32,
     pub end: f32,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct FogExpParam {
     pub density_fallof: f32,
 }
@@ -21,7 +22,7 @@ impl Default for FogExpParam {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct FogExp2Param {
     pub density_fallof: f32,
 }
@@ -31,7 +32,7 @@ impl Default for FogExp2Param {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct FogAltitudeBaseParam {
     pub h_while_max_density: f32,
     pub density_fallof: f32,
@@ -43,7 +44,7 @@ impl Default for FogAltitudeBaseParam {
     }
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Serialize, Deserialize)]
 pub enum FogParam {
     #[default]
     None,

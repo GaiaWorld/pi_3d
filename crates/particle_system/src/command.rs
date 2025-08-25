@@ -1,5 +1,6 @@
 use pi_assets::asset::Handle;
 use pi_scene_shell::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::{iparticle_system_config::IParticleSystemConfig, base::{ParticleSystemCalculatorID, ParticleAttribute, ParticleAttributes}};
 
@@ -20,20 +21,26 @@ impl OpsCPUParticleSystem {
 }
 pub type ActionListCPUParticleSystem = ActionList<OpsCPUParticleSystem>;
 
-pub enum OpsCPUParticleSystemState {
-    Start(Entity),
-    TimeScale(Entity, f32),
-    Stop(Entity),
+#[derive(Deserialize, Serialize)]
+pub enum ECPUParticleSystemState {
+    Start(),
+    TimeScale( f32),
+    Stop(),
 }
+
+pub struct OpsCPUParticleSystemState(pub(crate) Entity, pub (crate) ECPUParticleSystemState);
 impl OpsCPUParticleSystemState {
+    pub fn ops(entity: Entity, val: ECPUParticleSystemState) -> Self {
+        Self(entity, val)
+    }
     pub fn ops_start(entity: Entity) -> Self {
-        Self::Start(entity)
+        Self(entity, ECPUParticleSystemState::Start())
     }
     pub fn ops_speed(entity: Entity, speed: f32) -> Self {
-        Self::TimeScale(entity, speed)
+        Self(entity, ECPUParticleSystemState::TimeScale( speed))
     }
     pub fn ops_stop(entity: Entity) -> Self {
-        Self::Stop(entity)
+        Self(entity, ECPUParticleSystemState::Stop())
     }
 }
 pub type ActionListCPUParticleSystemState = ActionList<OpsCPUParticleSystemState>;

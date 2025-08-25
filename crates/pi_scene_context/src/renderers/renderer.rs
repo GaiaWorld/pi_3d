@@ -1,5 +1,6 @@
 
 use std::{ops::Deref, slice::Iter};
+use serde::{Deserialize, Serialize};
 
 use pi_scene_shell::prelude::*;
 use smallvec::SmallVec;
@@ -70,7 +71,7 @@ impl RenderColorFormat {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct RenderColorClear(pub u8, pub u8, pub u8, pub u8);
 impl Default for RenderColorClear {
     fn default() -> Self {
@@ -83,7 +84,7 @@ impl RenderColorClear {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct RenderDepthFormat(pub DepthStencilFormat);
 impl Default for RenderDepthFormat {
     fn default() -> Self {
@@ -123,7 +124,7 @@ impl RenderDepthFormat {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct RenderDepthClear(pub f32);
 impl Default for RenderDepthClear {
     fn default() -> Self {
@@ -131,7 +132,7 @@ impl Default for RenderDepthClear {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct RenderStencilClear(pub u32);
 impl Default for RenderStencilClear {
     fn default() -> Self {
@@ -139,7 +140,7 @@ impl Default for RenderStencilClear {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct RenderAutoClearColor(pub bool);
 impl Default for RenderAutoClearColor {
     fn default() -> Self {
@@ -147,7 +148,7 @@ impl Default for RenderAutoClearColor {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct RenderAutoClearDepth(pub bool);
 impl Default for RenderAutoClearDepth {
     fn default() -> Self {
@@ -155,7 +156,7 @@ impl Default for RenderAutoClearDepth {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct RenderAutoClearStencil(pub bool);
 impl Default for RenderAutoClearStencil {
     fn default() -> Self {
@@ -163,7 +164,7 @@ impl Default for RenderAutoClearStencil {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum RenderTargetMode {
     Auto,
     Window,

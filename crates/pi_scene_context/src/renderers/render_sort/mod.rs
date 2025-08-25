@@ -1,8 +1,9 @@
 
 use pi_scene_shell::prelude::*;
+use serde::{Deserialize, Serialize};
 
 /// 标识 Mesh 的渲染排序参数
-#[derive(Debug, Clone, Copy, Component, Default)]
+#[derive(Debug, Clone, Copy, Component, Default, Serialize, Deserialize)]
 pub struct RenderQueueSortParam {
     /// 同 渲染类型 中的 渲染分组
     pub group: i32,

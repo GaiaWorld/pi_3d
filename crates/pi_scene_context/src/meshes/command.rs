@@ -1,5 +1,6 @@
 
 use pi_scene_shell::prelude::*;
+use serde::{Serialize, Deserialize};
 
 use crate::{cullings::prelude::*, geometry::instance::EInstanceSortMode};
 
@@ -74,6 +75,7 @@ impl OpsMeshStateModify {
 }
 pub type ActionListMeshStateModify = ActionList<OpsMeshStateModify>;
 
+#[derive(Serialize, Deserialize)]
 pub enum EMeshValueStateModify {
     BoneOffset(u32),
     IndiceRange(Option<(u32, u32)>),

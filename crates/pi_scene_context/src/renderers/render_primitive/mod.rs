@@ -1,6 +1,7 @@
 
 
 use pi_scene_shell::prelude::*;
+use serde::{Serialize, Deserialize};
 
 #[derive(Clone, Copy)]
 pub struct PrimitiveState {
@@ -35,6 +36,7 @@ impl PrimitiveState {
     }
 }
 
+#[derive(Deserialize, Serialize)]
 pub enum EPrimitiveState {
     CCullMode   (CullMode),
     CPolygonMode(PolygonMode),

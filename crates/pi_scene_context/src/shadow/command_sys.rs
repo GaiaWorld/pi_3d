@@ -104,34 +104,34 @@ pub fn sys_act_shadow_generator(
     // mut atlassize: Query< &mut ShadowAtlasSize>,
     mut shadow: Query<&mut ShadowParam>,
 ) {
-    cmds.drain().for_each(|cmd| {
+    cmds.drain().for_each(|OpsShadowGeneratorParam(entity, cmd)| {
         match cmd {
-            OpsShadowGeneratorParam::ShadowMinz(entity, val) => {
+            EShadowGeneratorParam::ShadowMinz( val) => {
                 if let Ok(mut item) = shadow.get_mut(entity) {
                     item.minz = val;
                 }
             },
-            OpsShadowGeneratorParam::ShadowMaxz(entity, val) => {
+            EShadowGeneratorParam::ShadowMaxz( val) => {
                 if let Ok(mut item) = shadow.get_mut(entity) {
                     item.maxz = val;
                 }
             },
-            OpsShadowGeneratorParam::ShadowFrustumSize(entity, val) => {
+            EShadowGeneratorParam::ShadowFrustumSize( val) => {
                 if let Ok(mut item) = shadow.get_mut(entity) {
                     item.frustum = val;
                 }
             },
-            OpsShadowGeneratorParam::Bias(entity, val) => {
+            EShadowGeneratorParam::Bias( val) => {
                 if let Ok(mut item) = shadow.get_mut(entity) {
                     item.bias = val;
                 }
             },
-            OpsShadowGeneratorParam::NormalBias(entity, val) => {
+            EShadowGeneratorParam::NormalBias( val) => {
                 if let Ok(mut item) = shadow.get_mut(entity) {
                     item.normalbias  = val;
                 }
             },
-            OpsShadowGeneratorParam::DepthScale(entity, val) => {
+            EShadowGeneratorParam::DepthScale( val) => {
                 if let Ok(mut item) = shadow.get_mut(entity) {
                     item.depthscale = val;
                 }

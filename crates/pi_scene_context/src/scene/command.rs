@@ -1,6 +1,7 @@
 
 use pi_scene_shell::prelude::*;
 use pi_scene_math::Number;
+use serde_derive::{Deserialize, Serialize};
 
 use crate::cullings::prelude::*;
 
@@ -52,6 +53,7 @@ impl OpsSceneCreation {
 }
 pub type ActionListSceneCreate = ActionList<OpsSceneCreation>;
 
+#[derive(Serialize, Deserialize)]
 pub enum ESceneOps {
     AmbientColor(f32, f32, f32),
     AmbientIntensity(f32),

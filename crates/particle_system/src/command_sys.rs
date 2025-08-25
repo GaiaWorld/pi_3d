@@ -222,19 +222,19 @@ pub fn sys_act_partilce_system_state(
             actions.push(OpsMaterialUse::Use(trail.mesh, idmat, pass));
         }
     });
-    cmds.drain().for_each(|cmd| {
+    cmds.drain().for_each(|OpsCPUParticleSystemState(entity, cmd)| {
         match cmd {
-            OpsCPUParticleSystemState::Start(entity) => {
+            ECPUParticleSystemState::Start() => {
                 if let Ok((mut active, _)) = items.get_mut(entity) {
                     active.0 = true;
                 }
             },
-            OpsCPUParticleSystemState::TimeScale(entity, timescale) => {
+            ECPUParticleSystemState::TimeScale( timescale) => {
                 if let Ok((_, mut time)) = items.get_mut(entity) {
                     time.time_scale = timescale;
                 }
             },
-            OpsCPUParticleSystemState::Stop(entity) => {
+            ECPUParticleSystemState::Stop() => {
                 if let Ok((mut active, _)) = items.get_mut(entity) {
                     active.0 = false;
                 }

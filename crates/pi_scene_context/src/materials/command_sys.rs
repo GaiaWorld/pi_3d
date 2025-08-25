@@ -303,9 +303,9 @@ pub fn sys_act_material_value(
         }
     });
 
-    cmdsval.drain().for_each(|cmd| {
+    cmdsval.drain().for_each(|OpsUniformVal(linked, cmd)| {
         match cmd {
-            OpsUniformVal::Vec4(linked, slot, x, y, z, w) => {
+            EUniformVal::Vec4( slot, x, y, z, w) => {
                 if let Ok((mut bindvalue, _)) = bindvalues.get_mut(linked) {
                     if let Some(bindvalue) = &mut bindvalue.0 {
                         let val = [x, y, z, w];
@@ -316,7 +316,7 @@ pub fn sys_act_material_value(
                     }
                 }
             },
-            OpsUniformVal::Vec3(linked, slot, x, y, z) => {
+            EUniformVal::Vec3( slot, x, y, z) => {
                 if let Ok((mut bindvalue, _)) = bindvalues.get_mut(linked) {
                     if let Some(bindvalue) = &mut bindvalue.0 {
                         let val = [x, y, z];
@@ -327,7 +327,7 @@ pub fn sys_act_material_value(
                     }
                 }
             },
-            OpsUniformVal::Vec2(linked, slot, x, y) => {
+            EUniformVal::Vec2( slot, x, y) => {
                 if let Ok((mut bindvalue, _)) = bindvalues.get_mut(linked) {
                     if let Some(bindvalue) = &mut bindvalue.0 {
                         let val = [x, y];
@@ -338,7 +338,7 @@ pub fn sys_act_material_value(
                     }
                 }
             },
-            OpsUniformVal::Float(linked, slot, val) => {
+            EUniformVal::Float( slot, val) => {
                 if let Ok((mut bindvalue, _)) = bindvalues.get_mut(linked) {
                     if let Some(bindvalue) = &mut bindvalue.0 {
                         let vv = [val];
@@ -349,7 +349,7 @@ pub fn sys_act_material_value(
                     }
                 }
             },
-            OpsUniformVal::Uint(linked, slot, val) => {
+            EUniformVal::Uint( slot, val) => {
                 if let Ok((mut bindvalue, _)) = bindvalues.get_mut(linked) {
                     if let Some(bindvalue) = &mut bindvalue.0 {
                         let vv = [val];

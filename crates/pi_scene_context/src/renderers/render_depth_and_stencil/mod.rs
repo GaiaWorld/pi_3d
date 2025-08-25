@@ -1,5 +1,6 @@
 
 use pi_scene_shell::prelude::*;
+use serde::{Deserialize, Serialize};
 
 
 #[derive(Clone)]
@@ -21,6 +22,8 @@ impl Default for DepthState {
         }
     }
 }
+
+#[derive(Serialize, Deserialize)]
 pub enum EDepthState {
     Write(bool),
     Compare(CompareFunction),
@@ -44,6 +47,8 @@ impl Default for StencilState {
         }
     }
 }
+
+#[derive(Serialize, Deserialize)]
 pub enum EStencilState {
     Front(StencilFaceState),
     Back(StencilFaceState),

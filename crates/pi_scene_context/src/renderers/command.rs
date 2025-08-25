@@ -1,5 +1,6 @@
 
 use pi_scene_shell::prelude::*;
+use serde::{Deserialize, Serialize};
 use super::renderer::*;
 
 pub struct OpsSubGraphCreate(pub(crate) Entity, pub(crate) String);
@@ -26,30 +27,42 @@ impl OpsRendererConnect {
 }
 pub type ActionListRendererConnect = ActionList<OpsRendererConnect>;
 
-pub enum OpsRendererTarget {
-    Custom(Entity, KeyCustomRenderTarget, bool),
-    Auto(Entity, u16, u16, ColorFormat, DepthStencilFormat, bool),
+#[derive(Serialize, Deserialize)]
+pub enum ERendererTarget {
+    Custom(KeyCustomRenderTarget, bool),
+    Auto(u16, u16, ColorFormat, DepthStencilFormat, bool),
 }
+
+pub struct OpsRendererTarget(pub(crate) Entity, pub(crate) ERendererTarget);
 impl OpsRendererTarget {
     pub fn ops(idrenderer: Entity, key: KeyCustomRenderTarget) -> Self {
-        Self::Custom(idrenderer, key, false)
+        Self(idrenderer, ERendererTarget::Custom(key, false))
+    }
+    pub fn new(idrenderer: Entity, key: ERendererTarget) -> Self {
+        Self(idrenderer, key)
     }
 }
 pub type ActionListRendererTarget = ActionList<OpsRendererTarget>;
 
+#[derive(Serialize, Deserialize)]
+pub enum ERendererCommand {
+    Active(bool),
+    Blend(bool),
+    ColorClear(RenderColorClear),
+    DepthClear(RenderDepthClear),
+    StencilClear(RenderStencilClear),
+    AutoClearColor(bool),
+    AutoClearDepth(bool),
+    AutoClearStencil(bool),
+    Viewport(f32, f32, f32, f32, f32, f32),
+    ClearLinkMesh(Entity),
+}
 
-#[derive(Clone, Copy)]
-pub enum OpsRendererCommand {
-    Active(Entity, bool),
-    Blend(Entity, bool),
-    ColorClear(Entity, RenderColorClear),
-    DepthClear(Entity, RenderDepthClear),
-    StencilClear(Entity, RenderStencilClear),
-    AutoClearColor(Entity, bool),
-    AutoClearDepth(Entity, bool),
-    AutoClearStencil(Entity, bool),
-    Viewport(Entity, f32, f32, f32, f32, f32, f32),
-    ClearLinkMesh(Entity, Entity),
+pub struct OpsRendererCommand(pub(crate) Entity, pub(crate) ERendererCommand);
+impl OpsRendererCommand {
+    pub fn ops(entity: Entity, cmd: ERendererCommand) -> Self {
+        Self(entity, cmd)
+    }
 }
 
 pub type ActionListRendererModify = ActionList<OpsRendererCommand>;
