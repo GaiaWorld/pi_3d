@@ -23,7 +23,7 @@ impl Default for DepthState {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum EDepthState {
     Write(bool),
     Compare(CompareFunction),
@@ -48,7 +48,7 @@ impl Default for StencilState {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum EStencilState {
     Front(StencilFaceState),
     Back(StencilFaceState),

@@ -10,6 +10,9 @@ mod particle_system;
 mod factory;
 
 
+#[derive(Resource, Default)]
+pub struct ResGLTFRecords(pub XHashMap<Entity, Handle<GLTF>>);
+
 pub struct PluginGLTF2Res;
 impl Plugin for PluginGLTF2Res {
     fn build(&self, app: &mut App) {
@@ -17,6 +20,7 @@ impl Plugin for PluginGLTF2Res {
         app.insert_resource(ShareAssetMgr::<GLTF>::new(GarbageEmpty(), cfg.flag, cfg.max, cfg.timeout));
 
         app.insert_resource(GLTFResLoader::new());
+        app.insert_resource(ResGLTFRecords::default());
 
         app
         .add_systems(StageD3, sys_gltf_analy.in_set(StageScene::SceneCreate))

@@ -1,6 +1,7 @@
 
 use pi_scene_shell::prelude::*;
 use pi_scene_math::{Vector3, Isometry3, coordiante_system::CoordinateSytem3, vector::{TToolMatrix, TToolVector3}};
+use serde::{Deserialize, Serialize};
 
 use crate::{
     viewer::prelude::*,
@@ -59,7 +60,7 @@ impl Default for LightParam {
     }
 }
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, Component)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, Component, Serialize, Deserialize)]
 pub enum LightingMode {
     Lambert,
     PBR,

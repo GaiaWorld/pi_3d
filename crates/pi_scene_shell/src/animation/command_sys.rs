@@ -218,6 +218,14 @@ pub fn sys_act_animation_group_action(
                     }
                 }
             },
+            OpsAnimationGroupAction::Restart(entity) => if let Ok( (groupkey, idscene) ) = items.get(entity) {
+                if let Ok(mut ctx) = scenes.get_mut(idscene.0) {
+                    match ctx.0.restart(groupkey.0) {
+                        Ok(_) => {},
+                        Err(_) => { errors.record(entity.index(), ErrorRecord::ERROR_ANIMATION_START_FAIL); },
+                    }
+                }
+            },
             OpsAnimationGroupAction::AddTarget(entity, target, animation) => {
                 if let Ok( (groupkey, idscene) ) = items.get(entity) {
                     if let Ok(mut ctx) = scenes.get_mut(idscene.0) {

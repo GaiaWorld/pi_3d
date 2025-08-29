@@ -1,5 +1,6 @@
 use pi_scene_shell::prelude::*;
 use pi_scene_math::{coordiante_system::CoordinateSytem3, vector::TToolVector3, Vector3, Matrix, Number, Point3};
+use serde::{Deserialize, Serialize};
 
 use crate::{flags::GlobalEnable, prelude::MeshInstanceState, viewer::prelude::ViewerTransformMatrix};
 
@@ -78,7 +79,7 @@ impl Null for BoundingKey {
 
 /// 检测级别
 /// *
-#[derive(Default, PartialEq, Eq)]
+#[derive(Default, PartialEq, Eq, Clone, Copy, Serialize, Deserialize)]
 pub enum ECullingStrategy {
     /// 不用检测直接通过检测
     None,

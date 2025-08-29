@@ -1,4 +1,5 @@
 use pi_scene_shell::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::prelude::{EDepthState, EPrimitiveState, EStencilState, RenderQueueSortParam};
 
@@ -12,6 +13,7 @@ impl OpsPassObject {
 }
 pub type ActionListPassObject = ActionList<OpsPassObject>;
 
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum ERenderState {
     RenderQueue( RenderQueueSortParam),
     Blend( PassTag, ModelBlend),

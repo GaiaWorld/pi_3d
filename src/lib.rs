@@ -1,8 +1,10 @@
 
 use std::sync::Arc;
 use pi_scene_shell::{prelude::*, run_stage::PluginRunstage};
-use pi_gltf2_load::{GLTFResLoader, GLTF};
+use pi_gltf2_load::{GLTFResLoader, ResGLTFRecords, GLTF};
 use pi_node_materials::prelude::*;
+use pi_trail_renderer::*;
+use pi_particle_system::prelude::*;
 use pi_particle_system::prelude::{ParticleSystemPerformance, ActionSetParticleSystem, ResourceParticleSystem};
 use pi_scene_context::{
     animation::PluginSceneAnimation, cameras::PluginCamera, cullings::PluginCulling, geometry::{instance::{instanced_buffer::*, types::ModelInstanceAttributes}, PluginGeometry}, layer_mask::PluginLayerMask, light::PluginLighting, materials::PluginGroupMaterial, meshes::PluginMesh, prelude::*, renderers::PluginRenderer, scene::PluginScene, shadow::PluginShadowGenerator, skeleton::PluginSkeleton, transforms::{transform_node_sys::{TmpTransformWorldCalc0, TmpTransformWorldCalc1}, PluginGroupTransformNode}, viewer::PluginViewerBase
@@ -522,6 +524,73 @@ impl<'w> MemSize for ActionSetAnimation<'w> {
     }
 }
 
+pub trait TActionSet {
+    fn scene_create(&mut self) -> &mut ActionListSceneCreate;
+    fn scene_options(&mut self) -> &mut ActionListSceneOption;
+    fn scene_dispose(&mut self) -> &mut ActionListSceneDispose;
+    fn scene_boundingbox(&mut self) -> &mut ActionListBoundingBoxDisplay;
+    fn scene_collider(&mut self) -> &mut ActionListCollider;
+    fn obj_dispose(&mut self) -> &mut ActionListDispose;
+    fn transform_create(&mut self) -> &mut ActionListTransformNodeCreate;
+    fn transform_localsrt(&mut self) -> &mut ActionListTransformNodeLocal;
+    fn transform_localrotq(&mut self) -> &mut ActionListTransformNodeLocalRotationQuaternion;
+    fn transform_tree(&mut self) -> &mut ActionListTransformNodeParent;
+    fn transform_enable(&mut self) -> &mut ActionListNodeEnable;
+    fn camera_create(&mut self) -> &mut ActionListCameraCreate;
+    fn camera_param(&mut self) -> &mut ActionListCameraModify;
+    fn camera_target(&mut self) -> &mut ActionListCameraTarget;
+    fn camera_forceinclude(&mut self) -> &mut ActionListViewerForceInclude;
+    fn mesh_create(&mut self) -> &mut ActionListMeshCreate;
+    fn mesh_render_state(&mut self) -> &mut ActionListRenderState;
+    fn mesh_pose(&mut self) -> &mut ActionListAbstractMeshPose;
+    fn mesh_state(&mut self) -> &mut ActionListMeshStateModify;
+    fn mesh_valuestate(&mut self) -> &mut ActionListAbstructMeshValueStateModify;
+    fn mesh_bounding(&mut self) -> &mut ActionListMeshBounding;
+    fn forcelighting(&mut self) -> &mut ActionListMeshForceLighting;
+    fn skin_create(&mut self) -> &mut ActionListSkinCreate;
+    fn skin_use(&mut self) -> &mut ActionListSkinUse;
+    fn skin_bonecreate(&mut self) -> &mut ActionListBoneCreate;
+    fn skin_bonepose(&mut self) -> &mut ActionListBonePose;
+    fn mesh_layermask(&mut self) -> &mut ActionListLayerMask;
+    fn instance_create(&mut self) -> &mut ActionListInstanceMeshCreate;
+    fn instance_attr(&mut self) -> &mut ActionListInstanceAttr;
+    fn instance_targetanime(&mut self) -> &mut ActionListTargetAnimationAttribute;
+    fn geometry_create(&mut self) -> &mut ActionListGeometryCreate;
+    fn material_usemat(&mut self) -> &mut ActionListMaterialUse;
+    fn material_create(&mut self) -> &mut ActionListMaterialCreate;
+    fn material_val(&mut self) -> &mut ActionListUniformVal;
+    fn material_valb(&mut self) -> &mut ActionListUniformValB;
+    fn light_create(&mut self) -> &mut ActionListLightCreate;
+    fn light_param(&mut self) -> &mut ActionListLightParam;
+    fn shadow_param(&mut self) -> &mut ActionListShadowGeneratorParam;
+    fn shadow_create(&mut self) -> &mut ActionListShadowGenerator;
+    fn renderer_subgraph(&mut self) -> &mut ActionListSubGraphCreate;
+    fn renderer_create(&mut self) -> &mut ActionListRendererCreate;
+    fn renderer_connect(&mut self) -> &mut ActionListRendererConnect;
+    fn renderer_modify(&mut self) -> &mut ActionListRendererModify;
+    fn renderer_target(&mut self) -> &mut ActionListRendererTarget;
+    fn anime_create(&mut self) -> &mut ActionListAnimeGroupCreate;
+    fn anime_action(&mut self) -> &mut ActionListAnimationGroupAction;
+    fn anime_dispose(&mut self) -> &mut ActionListAnimeGroupDispose;
+    fn anime_reset_while_start(&mut self) -> &mut ActionListAnimeGroupStartReset;
+    fn anime_property_targetanime(&mut self) -> &mut ActionListPropertyTargetAnimation;
+    fn anime_goto(&mut self) -> &mut ActionListAnimationGroupGoto;
+    fn anime_float(&mut self) -> &mut ActionListAnimatorableFloat;
+    fn anime_sint(&mut self) -> &mut ActionListAnimatorableSint;
+    fn anime_uint(&mut self) -> &mut ActionListAnimatorableUint;
+    fn anime_vec2(&mut self) -> &mut ActionListAnimatorableVec2;
+    fn anime_vec3(&mut self) -> &mut ActionListAnimatorableVec3;
+    fn anime_vec4(&mut self) -> &mut ActionListAnimatorableVec4;
+    fn trail_create(&mut self) -> &mut ActionListTrail;
+    fn trail_age(&mut self) -> &mut ActionListTrailAge;
+    fn parsys_calculator(&mut self) -> &mut ActionListCPUParticleCalculator;
+    fn parsys_create(&mut self) -> &mut ActionListCPUParticleSystem;
+    fn parsys_state(&mut self) -> &mut ActionListCPUParticleSystemState;
+    fn parsys_trailmaterial(&mut self) -> &mut ActionListCPUParticleSystemTrailMaterial;
+    fn sprite_create(&mut self) -> &mut ActionListSpriteCreate;
+    fn sprite_modify(&mut self) -> &mut ActionListSpriteModify;
+}
+
 #[derive(SystemParam)]
 pub struct ActionSets<'w> {
     pub scene: ActionSetScene<'w>,
@@ -599,6 +668,264 @@ impl<'w> ActionSets<'w> {
     }
 }
 
+impl<'w> TActionSet for ActionSets<'w> {
+    fn scene_create(&mut self) -> &mut ActionListSceneCreate {
+        &mut self.scene.create
+    }
+
+    fn scene_options(&mut self) -> &mut ActionListSceneOption {
+        &mut self.scene.options
+    }
+
+    fn scene_dispose(&mut self) -> &mut ActionListSceneDispose {
+        &mut self.scene_dispose
+    }
+
+    fn scene_boundingbox(&mut self) -> &mut ActionListBoundingBoxDisplay {
+        &mut self.scene.boundingboxdisplay
+    }
+
+    fn scene_collider(&mut self) -> &mut ActionListCollider {
+        &mut self.scene.collider
+    }
+
+    fn obj_dispose(&mut self) -> &mut ActionListDispose {
+        &mut self.obj_dispose
+    }
+
+    fn transform_create(&mut self) -> &mut ActionListTransformNodeCreate {
+        &mut self.transform.create
+    }
+
+    fn transform_localsrt(&mut self) -> &mut ActionListTransformNodeLocal {
+        &mut self.transform.localsrt
+    }
+
+    fn transform_localrotq(&mut self) -> &mut ActionListTransformNodeLocalRotationQuaternion {
+        &mut self.transform.localrotq
+    }
+
+    fn transform_tree(&mut self) -> &mut ActionListTransformNodeParent {
+        &mut self.transform.tree
+    }
+
+    fn transform_enable(&mut self) -> &mut ActionListNodeEnable {
+        &mut self.transform.enable
+    }
+
+    fn camera_create(&mut self) -> &mut ActionListCameraCreate {
+        &mut self.camera.create
+    }
+
+    fn camera_param(&mut self) -> &mut ActionListCameraModify {
+        &mut self.camera.param
+    }
+
+    fn camera_target(&mut self) -> &mut ActionListCameraTarget {
+        &mut self.camera.target
+    }
+
+    fn camera_forceinclude(&mut self) -> &mut ActionListViewerForceInclude {
+        &mut self.camera.forceinclude
+    }
+
+    fn mesh_create(&mut self) -> &mut ActionListMeshCreate {
+        &mut self.mesh.create
+    }
+
+    fn mesh_render_state(&mut self) -> &mut ActionListRenderState {
+        &mut self.mesh.render_state
+    }
+
+    fn mesh_pose(&mut self) -> &mut ActionListAbstractMeshPose {
+        &mut self.mesh.pose
+    }
+
+    fn mesh_state(&mut self) -> &mut ActionListMeshStateModify {
+        &mut self.mesh.state
+    }
+
+    fn mesh_valuestate(&mut self) -> &mut ActionListAbstructMeshValueStateModify {
+        &mut self.mesh.value_state
+    }
+
+    fn mesh_bounding(&mut self) -> &mut ActionListMeshBounding {
+        &mut self.mesh.bounding
+    }
+
+    fn mesh_layermask(&mut self) -> &mut ActionListLayerMask {
+        &mut self.mesh.layermask
+    }
+
+    fn forcelighting(&mut self) -> &mut ActionListMeshForceLighting {
+        &mut self.mesh.forcelighting
+    }
+
+    fn skin_create(&mut self) -> &mut ActionListSkinCreate {
+        &mut self.skin.skin_create
+    }
+
+    fn skin_use(&mut self) -> &mut ActionListSkinUse {
+        &mut self.skin.skin_use
+    }
+
+    fn skin_bonecreate(&mut self) -> &mut ActionListBoneCreate {
+        &mut self.skin.bone_create
+    }
+
+    fn skin_bonepose(&mut self) -> &mut ActionListBonePose {
+        &mut self.skin.bone_pose
+    }
+
+    fn instance_create(&mut self) -> &mut ActionListInstanceMeshCreate {
+        &mut self.instance.create
+    }
+
+    fn instance_attr(&mut self) -> &mut ActionListInstanceAttr {
+        &mut self.instance.attr
+    }
+
+    fn instance_targetanime(&mut self) -> &mut ActionListTargetAnimationAttribute {
+        &mut self.animation.anime_instance
+    }
+
+    fn geometry_create(&mut self) -> &mut ActionListGeometryCreate {
+        &mut self.geometry.create
+    }
+
+    fn material_usemat(&mut self) -> &mut ActionListMaterialUse {
+        &mut self.material.usemat
+    }
+
+    fn material_create(&mut self) -> &mut ActionListMaterialCreate {
+        &mut self.material.create
+    }
+
+    fn material_val(&mut self) -> &mut ActionListUniformVal {
+        &mut self.material.val
+    }
+
+    fn material_valb(&mut self) -> &mut ActionListUniformValB {
+        &mut self.material.valb
+    }
+
+    fn light_create(&mut self) -> &mut ActionListLightCreate {
+        &mut self.light.create
+    }
+
+    fn light_param(&mut self) -> &mut ActionListLightParam {
+        &mut self.light.param
+    }
+
+    fn shadow_param(&mut self) -> &mut ActionListShadowGeneratorParam {
+        &mut self.shadow.param
+    }
+
+    fn shadow_create(&mut self) -> &mut ActionListShadowGenerator {
+        &mut self.shadow.create
+    }
+
+    fn renderer_subgraph(&mut self) -> &mut ActionListSubGraphCreate {
+        &mut self.renderer.subgraph
+    }
+
+    fn renderer_create(&mut self) -> &mut ActionListRendererCreate {
+        &mut self.renderer.create
+    }
+
+    fn renderer_connect(&mut self) -> &mut ActionListRendererConnect {
+        &mut self.renderer.connect
+    }
+
+    fn renderer_modify(&mut self) -> &mut ActionListRendererModify {
+        &mut self.renderer.modify
+    }
+
+    fn renderer_target(&mut self) -> &mut ActionListRendererTarget {
+        &mut self.renderer.target
+    }
+
+    fn anime_create(&mut self) -> &mut ActionListAnimeGroupCreate {
+        &mut self.anime.create
+    }
+
+    fn anime_action(&mut self) -> &mut ActionListAnimationGroupAction {
+        &mut self.anime.action
+    }
+
+    fn anime_dispose(&mut self) -> &mut ActionListAnimeGroupDispose {
+        &mut self.anime.dispose
+    }
+
+    fn anime_reset_while_start(&mut self) -> &mut ActionListAnimeGroupStartReset {
+        &mut self.anime.reset_while_start
+    }
+
+    fn anime_property_targetanime(&mut self) -> &mut ActionListPropertyTargetAnimation {
+        &mut self.property_targetanimation
+    }
+
+    fn anime_goto(&mut self) -> &mut ActionListAnimationGroupGoto {
+        &mut self.anime.goto
+    }
+
+    fn anime_float(&mut self) -> &mut ActionListAnimatorableFloat {
+        &mut self.animation.anime_float
+    }
+
+    fn anime_sint(&mut self) -> &mut ActionListAnimatorableSint {
+        &mut self.animation.anime_sint
+    }
+
+    fn anime_uint(&mut self) -> &mut ActionListAnimatorableUint {
+        &mut self.animation.anime_uint
+    }
+
+    fn anime_vec2(&mut self) -> &mut ActionListAnimatorableVec2 {
+        &mut self.animation.anime_vec2
+    }
+
+    fn anime_vec3(&mut self) -> &mut ActionListAnimatorableVec3 {
+        &mut self.animation.anime_vec3
+    }
+
+    fn anime_vec4(&mut self) -> &mut ActionListAnimatorableVec4 {
+        &mut self.animation.anime_vec4
+    }
+
+    fn trail_create(&mut self) -> &mut ActionListTrail {
+        &mut self.trail.create
+    }
+
+    fn trail_age(&mut self) -> &mut ActionListTrailAge {
+        &mut self.trail.age
+    }
+
+    fn parsys_calculator(&mut self) -> &mut ActionListCPUParticleCalculator {
+        &mut self.parsys.calculator
+    }
+
+    fn parsys_create(&mut self) -> &mut ActionListCPUParticleSystem {
+        &mut self.parsys.create
+    }
+
+    fn parsys_state(&mut self) -> &mut ActionListCPUParticleSystemState {
+        &mut self.parsys.state
+    }
+
+    fn parsys_trailmaterial(&mut self) -> &mut ActionListCPUParticleSystemTrailMaterial {
+        &mut self.parsys.trailmaterial
+    }
+
+    fn sprite_create(&mut self) -> &mut ActionListSpriteCreate {
+        &mut self.spritecreate
+    }
+
+    fn sprite_modify(&mut self) -> &mut ActionListSpriteModify {
+        &mut self.spritemodify
+    }
+}
+
 #[derive(SystemParam)]
 pub struct ResourceSets<'w> {
     pub default_mat: Res<'w, SingleIDBaseDefaultMaterial>,
@@ -608,6 +935,7 @@ pub struct ResourceSets<'w> {
     pub imgtex_asset: Res<'w, ShareAssetMgr<ImageTextureFrame>>,
     pub imgtexview_asset: Res<'w, ShareAssetMgr<ImageTextureViewFrame>>,
     pub gltf2_asset: Res<'w, ShareAssetMgr<GLTF>>,
+    pub gltf2_records: ResMut<'w, ResGLTFRecords>,
     pub gltf2_loader: ResMut<'w, GLTFResLoader>,
     pub device: Res<'w, PiRenderDevice>,
     pub queue: Res<'w, PiRenderQueue>,
@@ -706,5 +1034,263 @@ impl<'w> ResourceSets<'w> {
         offset += 1; result[offset] = self.texloader2.memsize() as f64;
         offset += 1; result[offset] = self.vballocator.total_buffer_size() as f64;
         offset + 1
+    }
+}
+
+impl TActionSet for World {
+    fn scene_create(&mut self) -> &mut pi_scene_context::prelude::ActionListSceneCreate {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListSceneCreate>().unwrap()
+    }
+
+    fn scene_options(&mut self) -> &mut pi_scene_context::prelude::ActionListSceneOption {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListSceneOption>().unwrap()
+    }
+
+    fn scene_dispose(&mut self) -> &mut pi_scene_shell::prelude::ActionListSceneDispose {
+        &mut *self.get_resource_mut::<pi_scene_shell::prelude::ActionListSceneDispose>().unwrap()
+    }
+
+    fn scene_boundingbox(&mut self) -> &mut pi_scene_context::prelude::ActionListBoundingBoxDisplay {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListBoundingBoxDisplay>().unwrap()
+    }
+
+    fn scene_collider(&mut self) -> &mut pi_scene_context::prelude::ActionListCollider {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListCollider>().unwrap()
+    }
+
+    fn obj_dispose(&mut self) -> &mut pi_scene_context::prelude::ActionListDispose {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListDispose>().unwrap()
+    }
+
+    fn transform_create(&mut self) -> &mut pi_scene_context::prelude::ActionListTransformNodeCreate {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListTransformNodeCreate>().unwrap()
+    }
+
+    fn transform_localsrt(&mut self) -> &mut pi_scene_context::prelude::ActionListTransformNodeLocal {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListTransformNodeLocal>().unwrap()
+    }
+
+    fn transform_localrotq(&mut self) -> &mut pi_scene_context::prelude::ActionListTransformNodeLocalRotationQuaternion {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListTransformNodeLocalRotationQuaternion>().unwrap()
+    }
+
+    fn transform_tree(&mut self) -> &mut pi_scene_context::prelude::ActionListTransformNodeParent {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListTransformNodeParent>().unwrap()
+    }
+
+    fn transform_enable(&mut self) -> &mut pi_scene_context::prelude::ActionListNodeEnable {
+        &mut *self.get_resource_mut::<>().unwrap()
+    }
+
+    fn camera_create(&mut self) -> &mut pi_scene_context::prelude::ActionListCameraCreate {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListCameraCreate>().unwrap()
+    }
+
+    fn camera_param(&mut self) -> &mut pi_scene_context::prelude::ActionListCameraModify {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListCameraModify>().unwrap()
+    }
+
+    fn camera_target(&mut self) -> &mut pi_scene_context::prelude::ActionListCameraTarget {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListCameraTarget>().unwrap()
+    }
+
+    fn camera_forceinclude(&mut self) -> &mut pi_scene_context::prelude::ActionListViewerForceInclude {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListViewerForceInclude>().unwrap()
+    }
+
+    fn mesh_create(&mut self) -> &mut pi_scene_context::prelude::ActionListMeshCreate {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListMeshCreate>().unwrap()
+    }
+
+    fn mesh_render_state(&mut self) -> &mut pi_scene_context::prelude::ActionListRenderState {
+        &mut *self.get_resource_mut::<>().unwrap()
+    }
+
+    fn mesh_pose(&mut self) -> &mut pi_scene_context::prelude::ActionListAbstractMeshPose {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListAbstractMeshPose>().unwrap()
+    }
+
+    fn mesh_state(&mut self) -> &mut pi_scene_context::prelude::ActionListMeshStateModify {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListMeshStateModify>().unwrap()
+    }
+
+    fn mesh_valuestate(&mut self) -> &mut pi_scene_context::prelude::ActionListAbstructMeshValueStateModify {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListAbstructMeshValueStateModify>().unwrap()
+    }
+
+    fn mesh_bounding(&mut self) -> &mut pi_scene_context::prelude::ActionListMeshBounding {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListMeshBounding>().unwrap()
+    }
+
+    fn forcelighting(&mut self) -> &mut pi_scene_context::prelude::ActionListMeshForceLighting {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListMeshForceLighting>().unwrap()
+    }
+
+    fn skin_create(&mut self) -> &mut pi_scene_context::prelude::ActionListSkinCreate {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListSkinCreate>().unwrap()
+    }
+
+    fn skin_use(&mut self) -> &mut pi_scene_context::prelude::ActionListSkinUse {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListSkinUse>().unwrap()
+    }
+
+    fn skin_bonecreate(&mut self) -> &mut pi_scene_context::prelude::ActionListBoneCreate {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListBoneCreate>().unwrap()
+    }
+
+    fn skin_bonepose(&mut self) -> &mut pi_scene_context::prelude::ActionListBonePose {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListBonePose>().unwrap()
+    }
+
+    fn mesh_layermask(&mut self) -> &mut pi_scene_context::prelude::ActionListLayerMask {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListLayerMask>().unwrap()
+    }
+
+    fn instance_create(&mut self) -> &mut pi_scene_context::prelude::ActionListInstanceMeshCreate {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListInstanceMeshCreate>().unwrap()
+    }
+
+    fn instance_attr(&mut self) -> &mut pi_scene_context::prelude::ActionListInstanceAttr {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListInstanceAttr>().unwrap()
+    }
+
+    fn instance_targetanime(&mut self) -> &mut pi_scene_context::prelude::ActionListTargetAnimationAttribute {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListTargetAnimationAttribute>().unwrap()
+    }
+
+    fn geometry_create(&mut self) -> &mut pi_scene_context::prelude::ActionListGeometryCreate {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListGeometryCreate>().unwrap()
+    }
+
+    fn material_usemat(&mut self) -> &mut pi_scene_context::prelude::ActionListMaterialUse {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListMaterialUse>().unwrap()
+    }
+
+    fn material_create(&mut self) -> &mut pi_scene_context::prelude::ActionListMaterialCreate {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListMaterialCreate>().unwrap()
+    }
+
+    fn material_val(&mut self) -> &mut pi_scene_context::prelude::ActionListUniformVal {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListUniformVal>().unwrap()
+    }
+
+    fn material_valb(&mut self) -> &mut pi_scene_context::prelude::ActionListUniformValB {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListUniformValB>().unwrap()
+    }
+
+    fn light_create(&mut self) -> &mut pi_scene_context::prelude::ActionListLightCreate {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListLightCreate>().unwrap()
+    }
+
+    fn light_param(&mut self) -> &mut pi_scene_context::prelude::ActionListLightParam {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListLightParam>().unwrap()
+    }
+
+    fn shadow_param(&mut self) -> &mut pi_scene_context::prelude::ActionListShadowGeneratorParam {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListShadowGeneratorParam>().unwrap()
+    }
+
+    fn shadow_create(&mut self) -> &mut pi_scene_context::prelude::ActionListShadowGenerator {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListShadowGenerator>().unwrap()
+    }
+
+    fn renderer_subgraph(&mut self) -> &mut pi_scene_context::prelude::ActionListSubGraphCreate {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListSubGraphCreate>().unwrap()
+    }
+
+    fn renderer_create(&mut self) -> &mut pi_scene_context::prelude::ActionListRendererCreate {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListRendererCreate>().unwrap()
+    }
+
+    fn renderer_connect(&mut self) -> &mut pi_scene_context::prelude::ActionListRendererConnect {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListRendererConnect>().unwrap()
+    }
+
+    fn renderer_modify(&mut self) -> &mut pi_scene_context::prelude::ActionListRendererModify {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListRendererModify>().unwrap()
+    }
+
+    fn renderer_target(&mut self) -> &mut pi_scene_context::prelude::ActionListRendererTarget {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListRendererTarget>().unwrap()
+    }
+
+    fn anime_create(&mut self) -> &mut pi_scene_shell::prelude::ActionListAnimeGroupCreate {
+        &mut *self.get_resource_mut::<pi_scene_shell::prelude::ActionListAnimeGroupCreate>().unwrap()
+    }
+
+    fn anime_action(&mut self) -> &mut pi_scene_shell::prelude::ActionListAnimationGroupAction {
+        &mut *self.get_resource_mut::<pi_scene_shell::prelude::ActionListAnimationGroupAction>().unwrap()
+    }
+
+    fn anime_dispose(&mut self) -> &mut pi_scene_shell::prelude::ActionListAnimeGroupDispose {
+        &mut *self.get_resource_mut::<pi_scene_shell::prelude::ActionListAnimeGroupDispose>().unwrap()
+    }
+
+    fn anime_reset_while_start(&mut self) -> &mut pi_scene_shell::prelude::ActionListAnimeGroupStartReset {
+        &mut *self.get_resource_mut::<pi_scene_shell::prelude::ActionListAnimeGroupStartReset>().unwrap()
+    }
+
+    fn anime_property_targetanime(&mut self) -> &mut pi_scene_context::prelude::ActionListPropertyTargetAnimation {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListPropertyTargetAnimation>().unwrap()
+    }
+
+    fn anime_goto(&mut self) -> &mut pi_scene_shell::prelude::ActionListAnimationGroupGoto {
+        &mut *self.get_resource_mut::<pi_scene_shell::prelude::ActionListAnimationGroupGoto>().unwrap()
+    }
+
+    fn anime_float(&mut self) -> &mut pi_scene_shell::prelude::ActionListAnimatorableFloat {
+        &mut *self.get_resource_mut::<pi_scene_shell::prelude::ActionListAnimatorableFloat>().unwrap()
+    }
+
+    fn anime_sint(&mut self) -> &mut pi_scene_shell::prelude::ActionListAnimatorableSint {
+        &mut *self.get_resource_mut::<pi_scene_shell::prelude::ActionListAnimatorableSint>().unwrap()
+    }
+
+    fn anime_uint(&mut self) -> &mut pi_scene_shell::prelude::ActionListAnimatorableUint {
+        &mut *self.get_resource_mut::<pi_scene_shell::prelude::ActionListAnimatorableUint>().unwrap()
+    }
+
+    fn anime_vec2(&mut self) -> &mut pi_scene_shell::prelude::ActionListAnimatorableVec2 {
+        &mut *self.get_resource_mut::<pi_scene_shell::prelude::ActionListAnimatorableVec2>().unwrap()
+    }
+
+    fn anime_vec3(&mut self) -> &mut pi_scene_shell::prelude::ActionListAnimatorableVec3 {
+        &mut *self.get_resource_mut::<pi_scene_shell::prelude::ActionListAnimatorableVec3>().unwrap()
+    }
+
+    fn anime_vec4(&mut self) -> &mut pi_scene_shell::prelude::ActionListAnimatorableVec4 {
+        &mut *self.get_resource_mut::<pi_scene_shell::prelude::ActionListAnimatorableVec4>().unwrap()
+    }
+
+    fn trail_create(&mut self) -> &mut pi_trail_renderer::ActionListTrail {
+        &mut *self.get_resource_mut::<pi_trail_renderer::ActionListTrail>().unwrap()
+    }
+
+    fn trail_age(&mut self) -> &mut pi_trail_renderer::ActionListTrailAge {
+        &mut *self.get_resource_mut::<pi_trail_renderer::ActionListTrailAge>().unwrap()
+    }
+
+    fn parsys_calculator(&mut self) -> &mut pi_particle_system::prelude::ActionListCPUParticleCalculator {
+        &mut *self.get_resource_mut::<pi_particle_system::prelude::ActionListCPUParticleCalculator>().unwrap()
+    }
+
+    fn parsys_create(&mut self) -> &mut pi_particle_system::prelude::ActionListCPUParticleSystem {
+        &mut *self.get_resource_mut::<pi_particle_system::prelude::ActionListCPUParticleSystem>().unwrap()
+    }
+
+    fn parsys_state(&mut self) -> &mut pi_particle_system::prelude::ActionListCPUParticleSystemState {
+        &mut *self.get_resource_mut::<pi_particle_system::prelude::ActionListCPUParticleSystemState>().unwrap()
+    }
+
+    fn parsys_trailmaterial(&mut self) -> &mut pi_particle_system::prelude::ActionListCPUParticleSystemTrailMaterial {
+        &mut *self.get_resource_mut::<pi_particle_system::prelude::ActionListCPUParticleSystemTrailMaterial>().unwrap()
+    }
+
+    fn sprite_create(&mut self) -> &mut pi_scene_context::prelude::ActionListSpriteCreate {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListSpriteCreate>().unwrap()
+    }
+
+    fn sprite_modify(&mut self) -> &mut pi_scene_context::prelude::ActionListSpriteModify {
+        &mut *self.get_resource_mut::<pi_scene_context::prelude::ActionListSpriteModify>().unwrap()
     }
 }

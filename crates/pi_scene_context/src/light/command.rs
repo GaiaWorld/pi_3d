@@ -1,6 +1,7 @@
 
 use pi_scene_shell::prelude::*;
 use pi_scene_math::{Vector3, Number};
+use serde::{Deserialize, Serialize};
 
 use super::base::*;
 
@@ -28,6 +29,7 @@ pub type ActionListLightCreate = ActionList<OpsLightCreate>;
 // }
 // pub type ActionListLightColor = ActionList<OpsLightColor>;
 
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum ELightModify {
     Color(Number, Number, Number),
     LightingType(LightingMode),

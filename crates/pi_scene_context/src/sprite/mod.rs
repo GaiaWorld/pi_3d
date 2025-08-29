@@ -19,7 +19,6 @@ impl crate::Plugin for PluginSprite {
         app.insert_resource(ActionListSpriteModify::default());
         let cfg = app.world.get_resource_mut::<AssetMgrConfigs>().unwrap().query::<TextureFrameAtlas>();
         app.insert_resource(TextureFrameAtlasManager::new(GarbageEmpty(), cfg.flag, cfg.min, cfg.timeout));
-        app.insert_resource(ResSpriteFrames::default());
 
         // let a = app.world.get_resource::<ActionListSpriteCreate>();
         // log::error!("ActionListSpriteCreate : {}", a.is_some());

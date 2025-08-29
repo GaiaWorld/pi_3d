@@ -53,6 +53,7 @@ pub fn sys_create_particle_calculator(
 pub fn sys_create_cpu_partilce_system(
     mut cmds: ResMut<ActionListCPUParticleSystem>,
     mut commands: Commands,
+    links: Res<ShareAssetMgr<ParticleSystemCalculatorID>>,
     calculators: Query<(&ParticleCalculatorBase, &ParticleCalculatorStartModifiers, &ParticleCalculatorOverLifetime)>,
     trailmodifiers: Query<&ParticleCalculatorTrail>,
     trailbuffer: Res<ResParticleTrailBuffer>,
@@ -83,6 +84,10 @@ pub fn sys_create_cpu_partilce_system(
             disposeready.push(OpsDisposeReadyForRef::ops(trailgeo));
             return;
         };
+
+        let calculator = if let Some(calculator) = links.get(&calculator) {
+            calculator
+        } else { return; };
 
         let idcalculator = calculator.0;
         if let Ok((

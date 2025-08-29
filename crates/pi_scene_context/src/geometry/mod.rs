@@ -37,6 +37,7 @@ impl Plugin for PluginGeometry {
     fn build(&self, app: &mut App) {
         let option = app.world.get_resource::<EngineCustomPlugins>().unwrap().clone();
         app.insert_resource(ActionListGeometryCreate::default());
+        app.insert_resource(ActionListCustomBuffer::default());
         app.insert_resource(VertexBufferDataMap3D(SingleVertexBufferDataMap::default()));
         
         let cfg = if let Some(cfg) = app.world.get_resource::<AssetCfgVertexBuffer3D>() {
@@ -115,6 +116,7 @@ impl Plugin for PluginGeometry {
         .add_systems(StageD3, sys_create_geometry
             // .run_if(runif_acts::<OpsGeomeryCreate>)     
             .in_set(StageGeometry::GeoCreate))
+        .add_systems(StageD3, sys_custom_buffer             .in_set(StageGeometry::GeoCreate))
         .add_systems(StageD3, sys_vertex_buffer_loaded    .in_set(StageGeometry::VertexBufferLoaded))
         .add_systems(StageD3, sys_vertex_buffer_slots_loaded
             // .run_if(runif_comp::<FlagGeometryDirty>)      

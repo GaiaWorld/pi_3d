@@ -36,6 +36,8 @@ impl Plugin for PluginMaterial {
             app.insert_resource(ResImageTextureLoader::default());
             app.insert_resource(ResStateTextureLoader::default());
             app.insert_resource(ImageTextureViewLoader2::default());
+            app.insert_resource(DataTextureCmds::default());
+            app.insert_resource(ResSpriteFrames::default());
 
             app.configure_set(StageD3, StageTextureLoad::TextureRequest.in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageMaterial::MatCommand));
             app.configure_set(StageD3, StageTextureLoad::TextureLoading.in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageTextureLoad::TextureRequest));
@@ -60,6 +62,7 @@ impl Plugin for PluginMaterial {
 
 #[cfg(not(feature = "use_bevy"))]
             app
+                .add_systems(StageD3, sys_update_data_texture                .in_set(StageMaterial::MatCommand))
                 .add_systems(StageD3, sys_texture_combine                .in_set(StageTextureLoad::TextureLoading))
                 .add_systems(StageD3, sys_image_texture_load_launch                                                   .in_set(StageTextureLoad::TextureLoading))
                 .add_systems(StageD3, sys_image_texture_loaded        .after(sys_image_texture_load_launch)   .in_set(StageTextureLoad::TextureLoading))

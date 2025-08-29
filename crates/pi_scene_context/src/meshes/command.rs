@@ -30,6 +30,7 @@ impl OpsAbstractMeshPose {
 }
 pub type ActionListAbstractMeshPose = ActionList<OpsAbstractMeshPose>;
 
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum EInstanceAttr {
     Float(Number),
     Uint(u32),
@@ -59,6 +60,7 @@ impl OpsTargetAnimationAttribute {
 }
 pub type ActionListTargetAnimationAttribute = ActionList<OpsTargetAnimationAttribute>;
 
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum EMeshStateModify {
     Alignment(ERenderAlignment),
     ScalingMode(EScalingMode),
@@ -75,7 +77,7 @@ impl OpsMeshStateModify {
 }
 pub type ActionListMeshStateModify = ActionList<OpsMeshStateModify>;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum EMeshValueStateModify {
     BoneOffset(u32),
     IndiceRange(Option<(u32, u32)>),
@@ -91,6 +93,7 @@ impl OpsAbstructMeshValueStateModify {
 }
 pub type ActionListAbstructMeshValueStateModify = ActionList<OpsAbstructMeshValueStateModify>;
 
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum EMeshForceLighting {
     ForcePointLighting(bool),
     ForceSpotLighting(bool),

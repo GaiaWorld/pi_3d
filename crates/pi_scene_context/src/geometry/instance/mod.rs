@@ -1,5 +1,6 @@
 use pi_scene_shell::prelude::*;
 use pi_slotmap::Key;
+use serde::{Deserialize, Serialize};
 
 pub mod instanced_buffer;
 pub mod types;
@@ -27,7 +28,7 @@ impl TEntityRef for InstanceMesh {
 }
 
 /// 标识同Mesh的实例同层级时如何排序
-#[derive(Debug, Clone, Component, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Component, Default, PartialEq, Eq, Copy, Serialize, Deserialize)]
 pub enum EInstanceSortMode {
     LocalPositionX = 0,
     LocalPositionY = 1,

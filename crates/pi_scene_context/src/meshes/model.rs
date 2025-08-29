@@ -3,6 +3,7 @@ use std::{ops::Range, u32};
 use derive_deref::{Deref, DerefMut};
 use pi_scene_shell::prelude::*;
 use pi_scene_math::{Matrix, Vector3};
+use serde::{Deserialize, Serialize};
 
 use crate::prelude::*;
 
@@ -20,7 +21,7 @@ pub enum StageModel {
     MeshDispose,
 }
 
-#[derive(Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub enum EScalingMode {
     Hierarchy = 0,
     Local,

@@ -16,6 +16,31 @@ pub type BundleGeometry = (
     AssetResBufferIndicesComp, InstancedInfoComp, FlagGeometryDirty
 );
 
+pub fn sys_custom_buffer(
+    mut actions: ResMut<ActionListCustomBuffer>,
+    queue: Res<PiRenderQueue>,
+    mut vb_wait: ResMut<crate::prelude::VertexBufferDataMap3D>,
+    vb_mgr: Res<crate::prelude::ShareAssetMgr<pi_scene_shell::prelude::EVertexBufferRange>>,
+) {
+    actions.drain().for_each(|(key, data, isindices)| {
+
+		let key_u64 = key.asset_u64();
+        if isindices {
+            if let Some(buffer) = vb_mgr.get(&key_u64) {
+                queue.write_buffer(buffer.buffer(), 0, &data);
+            } else {
+                crate::prelude::ActionVertexBuffer::create_indices(&mut vb_wait, key, data);
+            }
+        } else {
+            if let Some(buffer) = vb_mgr.get(&key_u64) {
+                queue.write_buffer(buffer.buffer(), 0, &data);
+            } else {
+                crate::prelude::ActionVertexBuffer::create(&mut vb_wait, key, data);
+            }
+        }
+    });
+}
+
 pub fn sys_create_geometry(
     mut commands: Commands,
     mut meshes: Query<(&mut GeometryID, &MeshInstanceState)>,

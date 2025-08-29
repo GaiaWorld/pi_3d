@@ -56,7 +56,7 @@ impl OpsUniformValB {
 }
 pub type ActionListUniformValB = ActionList<OpsUniformValB>;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub enum EUniformVal {
     Vec4 (Atom, f32, f32, f32, f32),
     Vec3 (Atom, f32, f32, f32),

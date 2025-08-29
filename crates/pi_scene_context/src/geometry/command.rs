@@ -8,3 +8,5 @@ impl OpsGeomeryCreate {
     }
 }
 pub type ActionListGeometryCreate = ActionList<OpsGeomeryCreate>;
+
+pub type ActionListCustomBuffer = pi_scene_shell::prelude::ActionList<(KeyVertexBuffer, Vec<u8>, bool)>;

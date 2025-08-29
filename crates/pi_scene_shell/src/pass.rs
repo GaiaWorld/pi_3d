@@ -1,10 +1,12 @@
+use serde::{Deserialize, Serialize};
+
 use crate::ecs::*;
 
 use std::ops::Deref;
 
 pub type PassTagValue = u16;
 
-#[derive(Debug, Clone, Copy, Component, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, Component, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct PassTag(PassTagValue);
 impl Deref for PassTag {
     type Target = PassTagValue;

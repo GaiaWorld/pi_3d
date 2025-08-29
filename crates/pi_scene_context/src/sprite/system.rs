@@ -46,9 +46,13 @@ pub fn sys_modify_sprite(
                     }
                 },
                 super::SpriteModify::Data(data) => {
-                    SpriteFrame::from_data(&data.as_slice())
+                    Some(SpriteFrame::from_data(&data.as_slice()))
                 }
             };
+
+            let frame = if let Some(frame) = frame {
+                frame
+            } else { return };
 
             let atlaswidth = frame.w;
             let atlasheight = frame.h;

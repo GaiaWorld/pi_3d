@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 
 #[derive(Default)]
 pub enum EParticleScalingMode {
@@ -155,7 +157,7 @@ impl ERenderAlignmentForShader {
 //     }
 }
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ERenderAlignment {
     /// * 只保留了粒子的旋转信息, 节点树上的旋转信息被忽略
     /// * 先应用相机的旋转矩阵的逆矩阵, 这样正方向与相机 中轴线 上视线方向刚好相反

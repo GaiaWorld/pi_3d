@@ -53,7 +53,7 @@ impl OpsSceneCreation {
 }
 pub type ActionListSceneCreate = ActionList<OpsSceneCreation>;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub enum ESceneOps {
     AmbientColor(f32, f32, f32),
     AmbientIntensity(f32),

@@ -1,6 +1,7 @@
 
 use pi_scene_shell::prelude::*;
 use pi_scene_math::{Number, Vector3};
+use serde::{Deserialize, Serialize};
 
 use super::camera::*;
 
@@ -12,6 +13,7 @@ impl OpsCameraCreation {
 }
 pub type ActionListCameraCreate = ActionList<OpsCameraCreation>;
 
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum ECameraModify {
     FreeMode(EFreeCameraMode),
     Active(bool),

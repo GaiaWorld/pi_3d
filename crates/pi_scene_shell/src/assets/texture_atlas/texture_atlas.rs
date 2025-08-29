@@ -434,7 +434,7 @@ pub fn sys_texture_combine(
 }
 
 #[derive(Resource)]
-pub struct ResSpriteFrames(pub Vec<SpriteFrame>);
+pub struct ResSpriteFrames(pub Vec<Option<SpriteFrame>>);
 impl Default for ResSpriteFrames {
     fn default() -> Self {
         Self(Vec::with_capacity(4096))
@@ -443,5 +443,21 @@ impl Default for ResSpriteFrames {
 impl MemSize for ResSpriteFrames {
     fn memsize(&self) -> usize {
         self.0.capacity() * 26
+    }
+}
+impl ResSpriteFrames {
+    pub fn push(&mut self, val: SpriteFrame) {
+        self.0.push(Some(val));
+    }
+    pub fn insert(&mut self, idx: usize, val: SpriteFrame) {
+        let hascount = self.0.len();
+        if hascount <= idx {
+            for _ in hascount..idx {
+                self.0.push(None);
+            }
+            self.0.push(Some(val));
+        } else {
+                self.0[idx] = Some(val);
+        }
     }
 }

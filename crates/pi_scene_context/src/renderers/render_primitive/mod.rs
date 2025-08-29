@@ -36,7 +36,7 @@ impl PrimitiveState {
     }
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 pub enum EPrimitiveState {
     CCullMode   (CullMode),
     CPolygonMode(PolygonMode),

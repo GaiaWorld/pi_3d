@@ -2,6 +2,7 @@
 use derive_deref::{Deref, DerefMut};
 use pi_scene_shell::prelude::*;
 use pi_scene_math::{Vector3, Number, coordiante_system::CoordinateSytem3, camera::{TPerspectiveCameraTool, TOrthographicCameraTool}};
+use serde::{Deserialize, Serialize};
 
 use crate::viewer::prelude::*;
 
@@ -9,14 +10,14 @@ use crate::viewer::prelude::*;
 #[derive(Clone, Copy, Component, Default)]
 pub struct Camera(pub bool);
 
-#[derive(Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub enum EFixedMode {
     #[default]
     VerticalFixed,
     HorizontalFixed,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub enum EFreeCameraMode {
     #[default]
     Perspective,

@@ -103,6 +103,7 @@ pub enum OpsAnimationGroupAction {
     Start(Entity, AnimationGroupParam, pi_animation::base::TimeMS, pi_animation::base::EFillMode),
     Pause(Entity),
     Stop(Entity),
+    Restart(Entity),
     AddTarget(Entity, Entity, AnimationInfo),
     FrameEvent(Entity, f32, AnimeFrameEventData),
     ListenFrame(Entity),
@@ -120,6 +121,9 @@ impl OpsAnimationGroupAction {
     }
     pub fn frameevent(group: Entity, terget: f32, data: AnimeFrameEventData) -> Self {
         Self::FrameEvent(group, terget, data)
+    }
+    pub fn restart(group: Entity) -> Self {
+        Self::Restart(group)
     }
     pub fn pause(group: Entity) -> Self {
         Self::Pause(group)
