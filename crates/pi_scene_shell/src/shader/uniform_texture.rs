@@ -16,7 +16,7 @@ use crate::prelude::EngineCustomPlugins;
 
 use super::{UniformPropertyName, ShaderSetBind, TUnifromShaderProperty};
 
-#[derive(Clone, Copy, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Hash, Serialize, Deserialize)]
 pub enum ESamplerType {
     Float,
     FloatFilter,
@@ -36,7 +36,7 @@ impl ESamplerType {
     }
 }
 
-#[derive(Clone, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Hash, Serialize, Deserialize)]
 pub struct UniformTexture2DDesc {
     pub slotname: UniformPropertyName,
     pub tex_sampler_type: ESamplerType,

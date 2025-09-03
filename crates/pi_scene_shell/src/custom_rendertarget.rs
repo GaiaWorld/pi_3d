@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 pub type KeyRenderTarget = u64;
 
-#[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum KeyCustomRenderTarget {
     Custom(KeyRenderTarget),
     FinalRender(bool),

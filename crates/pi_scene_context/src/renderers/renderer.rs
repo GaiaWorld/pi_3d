@@ -71,7 +71,7 @@ impl RenderColorFormat {
     }
 }
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct RenderColorClear(pub u8, pub u8, pub u8, pub u8);
 impl Default for RenderColorClear {
     fn default() -> Self {
@@ -84,7 +84,7 @@ impl RenderColorClear {
     }
 }
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct RenderDepthFormat(pub DepthStencilFormat);
 impl Default for RenderDepthFormat {
     fn default() -> Self {
@@ -124,7 +124,7 @@ impl RenderDepthFormat {
     }
 }
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct RenderDepthClear(pub f32);
 impl Default for RenderDepthClear {
     fn default() -> Self {
@@ -132,7 +132,7 @@ impl Default for RenderDepthClear {
     }
 }
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct RenderStencilClear(pub u32);
 impl Default for RenderStencilClear {
     fn default() -> Self {

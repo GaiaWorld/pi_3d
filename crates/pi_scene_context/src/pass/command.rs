@@ -13,7 +13,7 @@ impl OpsPassObject {
 }
 pub type ActionListPassObject = ActionList<OpsPassObject>;
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum ERenderState {
     RenderQueue( RenderQueueSortParam),
     Blend( PassTag, ModelBlend),

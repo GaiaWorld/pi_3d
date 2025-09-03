@@ -30,7 +30,7 @@ pub enum ETextureFrameRenderMode {
     EAtlasRenderHS      = 2,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpriteFrame {
     pub rotated: bool,
     pub trimmed: bool,

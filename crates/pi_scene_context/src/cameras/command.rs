@@ -13,7 +13,7 @@ impl OpsCameraCreation {
 }
 pub type ActionListCameraCreate = ActionList<OpsCameraCreation>;
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum ECameraModify {
     FreeMode(EFreeCameraMode),
     Active(bool),

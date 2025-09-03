@@ -7,24 +7,24 @@ use serde::{Deserialize, Serialize};
 use crate::viewer::prelude::*;
 
 
-#[derive(Clone, Copy, Component, Default)]
+#[derive(Debug, Clone, Copy, Component, Default)]
 pub struct Camera(pub bool);
 
-#[derive(Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub enum EFixedMode {
     #[default]
     VerticalFixed,
     HorizontalFixed,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub enum EFreeCameraMode {
     #[default]
     Perspective,
     Orthograhic,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct CameraNearFar(pub Number, pub Number);
 impl Default for CameraNearFar {
     fn default() -> Self {
@@ -32,7 +32,7 @@ impl Default for CameraNearFar {
     }
 }
 
-#[derive(Clone, Copy, Component)]
+#[derive(Debug, Clone, Copy, Component)]
 pub struct CameraOrthograhicParam {
     pub left: Number,
     pub right: Number,
@@ -45,7 +45,7 @@ impl Default for CameraOrthograhicParam {
     }
 }
 
-#[derive(Clone, Copy, Component, Deref, DerefMut)]
+#[derive(Debug, Clone, Copy, Component, Deref, DerefMut)]
 pub struct CameraFov(pub Number);
 impl pi_curves::curve::frame::FrameDataValue for CameraFov {
     fn interpolate(&self, rhs: &Self, amount: pi_curves::curve::frame::KeyFrameCurveValue) -> Self {

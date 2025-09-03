@@ -65,7 +65,7 @@ pub trait TNodeMaterialBlock {
 }
 
 /// 节点材质块
-#[derive(Default, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct NodeMaterialBlockInfo {
     /// 像素着色器 声明代码
     pub fs_define: String,

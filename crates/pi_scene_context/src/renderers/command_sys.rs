@@ -42,9 +42,9 @@ pub fn sys_create_renderer(
         if let Ok((sceneid, mut viewerrenderinfo, mut viewerflag, graph)) = viewers.get_mut(id_viewer) {
             let render_node = RenderNode::new(entity);
             
-            match graphic.add_node(name, render_node, graph.0, entity) {
+            match graphic.add_node(name.clone(), render_node, graph.0, entity) {
                 Ok(nodeid) => {
-                    // log::error!("Node: {:?} in Graph {:?}", &nodeid, &graph.0);
+                    // log::error!("Node: {:?} in Graph {:?}", (&name, &entity, &nodeid), &graph.0);
                     // if let Some(mut cmd) = commands.get_entity(entity) {
                         viewerrenderinfo.add(entity, passtag);
                         *viewerflag = DirtyViewerRenderersInfo;
@@ -219,6 +219,7 @@ pub fn sys_act_renderer_connect(
     // performance.systems.push(String::from("sys_act_renderer_connect"));
     cmds.drain().for_each(|OpsRendererConnect(before, after, isdisconnect)| {
         if let (Ok(nbefore), Ok(nafter)) = (renderers.get(before), renderers.get(after)) {
+            // log::error!("Connect: {:?} => {:?} {:?}", &nbefore.0, &nafter.0, isdisconnect);
             if isdisconnect {
                 if let Err(err) = render_graphic.remove_depend(nbefore.0, nafter.0) {
                     // log::error!("3D Disconnect: {:?}", (nbefore.0, nafter.0));

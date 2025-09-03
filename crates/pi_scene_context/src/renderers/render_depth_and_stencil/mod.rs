@@ -23,14 +23,14 @@ impl Default for DepthState {
     }
 }
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum EDepthState {
     Write(bool),
     Compare(CompareFunction),
     Bias(DepthBiasState),
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct StencilState {
     pub stencil_front: StencilFaceState,
     pub stencil_back: StencilFaceState,
@@ -48,7 +48,7 @@ impl Default for StencilState {
     }
 }
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum EStencilState {
     Front(StencilFaceState),
     Back(StencilFaceState),

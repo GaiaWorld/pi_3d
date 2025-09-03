@@ -18,7 +18,7 @@ impl OpsTransformNodeParent {
 }
 pub type ActionListTransformNodeParent = ActionList<OpsTransformNodeParent>;
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum ETransformSRT {
     Euler(f32, f32, f32),
     Translation(f32, f32, f32),

@@ -21,7 +21,7 @@ impl OpsCPUParticleSystem {
 }
 pub type ActionListCPUParticleSystem = ActionList<OpsCPUParticleSystem>;
 
-#[derive(Clone, Copy, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 pub enum ECPUParticleSystemState {
     Start(),
     TimeScale( f32),

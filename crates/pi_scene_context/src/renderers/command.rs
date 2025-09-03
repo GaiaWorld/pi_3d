@@ -27,7 +27,7 @@ impl OpsRendererConnect {
 }
 pub type ActionListRendererConnect = ActionList<OpsRendererConnect>;
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ERendererTarget {
     Custom(KeyCustomRenderTarget, bool),
     Auto(u16, u16, ColorFormat, DepthStencilFormat, bool),
@@ -44,7 +44,7 @@ impl OpsRendererTarget {
 }
 pub type ActionListRendererTarget = ActionList<OpsRendererTarget>;
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum ERendererCommand {
     Active(bool),
     Blend(bool),

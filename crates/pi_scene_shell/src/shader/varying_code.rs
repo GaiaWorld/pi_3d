@@ -16,7 +16,7 @@ impl EVaryingKind {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Varying {
     pub format: Atom,
     pub name: Atom,

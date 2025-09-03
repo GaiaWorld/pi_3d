@@ -176,8 +176,6 @@ impl  GLTF {
         let key = Atom::from(path.as_str());
 
         let key = key.asset_u64();
-        
-        // log::debug!("Curve: id: {:?}, {:?}-{:?}", key, group_index, channel_index);
 
         key
     }

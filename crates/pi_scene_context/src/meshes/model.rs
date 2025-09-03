@@ -21,7 +21,7 @@ pub enum StageModel {
     MeshDispose,
 }
 
-#[derive(Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub enum EScalingMode {
     Hierarchy = 0,
     Local,

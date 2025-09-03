@@ -29,7 +29,7 @@ pub type ActionListLightCreate = ActionList<OpsLightCreate>;
 // }
 // pub type ActionListLightColor = ActionList<OpsLightColor>;
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum ELightModify {
     Color(Number, Number, Number),
     LightingType(LightingMode),

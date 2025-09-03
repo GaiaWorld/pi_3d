@@ -13,7 +13,7 @@ impl OpsShadowGenerator {
 }
 pub type ActionListShadowGenerator = ActionList<OpsShadowGenerator>;
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum EShadowGeneratorParam {
     ShadowMinz(f32),
     ShadowMaxz(f32),
