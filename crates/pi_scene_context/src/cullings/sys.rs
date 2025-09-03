@@ -47,7 +47,7 @@ pub fn sys_update_collider(
         if !entities.insert(entity) { return; }
         if let Ok((collider, idscene, dispose)) = items.get(*entity) {
             if let Ok(mut pool) = scenes.get_mut(idscene.0) {
-                if dispose.0 == true {
+                if dispose.0 == true || collider.intersection_treshold <= -1.0 {
                     pool.remove(*entity);
                 } else {
                     if let Ok(worldmatrix) = rmatrix.get(*entity) {

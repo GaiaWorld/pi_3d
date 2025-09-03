@@ -108,6 +108,10 @@ pub fn intersects_sphere(center: (Number, Number, Number), radius: Number, inter
     let pyth = x * x + y * y + z * z;
     let radius = radius + intersection_treshold;
     let rr = radius * radius;
+    
+    if radius <= 0. {
+        return false;
+    }
 
     if pyth <= rr {
         return true;

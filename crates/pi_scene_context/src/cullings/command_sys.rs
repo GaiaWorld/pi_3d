@@ -14,7 +14,7 @@ pub fn sys_act_collider(
         if let Some(mut cmd) = commands.get_entity(entity) {
             cmd.insert(Collider { minimum: min, maximum: max, intersection_treshold, sortindex });
             // if (intersection_treshold + 0.2928932).abs() < 0.00001 {
-            // log::error!("add_components Collider {:?}", entity);
+            // log::error!("add_components Collider {:?}", (entity, entity, min, max, intersection_treshold, sortindex));
             // }
         } else {
             log::error!("add_components Fail {:?}", (entity, min, max));

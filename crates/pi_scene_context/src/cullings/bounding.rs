@@ -95,7 +95,7 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
             }
             lastalphaindex = item.3;
             if let Some(d) = aabb.cast_local_ray(&ray, f32::MAX, false) {
-                // println!("========= id: {:?}, aabb: {:?}, dest: {}",  entity, aabb, d);
+                // log::error!("========= id: {:?}, aabb: {:?}, dest: {}",  entity, item.0, d);
                 // println!("========= dest： {}", dest);
                 if d < dest  {
                     dest = d;
