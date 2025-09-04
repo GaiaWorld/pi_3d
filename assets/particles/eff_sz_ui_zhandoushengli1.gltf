@@ -1,0 +1,243 @@
+{
+    "extras": {
+        "meshParticle": {
+            "name": "line02",
+            "duration": 1,
+            "startDelay": 0,
+            "looping": 1,
+            "prewarm": 0,
+            "localP": [
+                0,
+                0.3,
+                0
+            ],
+            "localS": [
+                1,
+                1,
+                1
+            ],
+            "localR": [
+                0,
+                0,
+                0
+            ],
+            "simulationSpaceIsWorld": 0,
+            "scalingMode": 0,
+            "renderAlignment": 3,
+            "renderMode": 1,
+            "stretchedLengthScale": -0.35,
+            "stretchedVelocityScale": 0,
+            "renderPivot": [
+                0,
+                0,
+                0
+            ],
+            "maxParticles": 8,
+            "startSpeed": [
+                1,
+                1,
+                0.1
+            ],
+            "lifetime": [
+                1,
+                2,
+                0.3,
+                0.5
+            ],
+            "startColor": [
+                4,
+                1,
+                [
+                    1,
+                    0.9866647,
+                    0.7311321,
+                    1
+                ]
+            ],
+            "startSize": [
+                1,
+                2,
+                10,
+                20
+            ],
+            "startRotation": [
+                1,
+                1,
+                0
+            ],
+            "gravity": [
+                1,
+                1,
+                0
+            ],
+            "emission": [
+                0,
+                [
+                    [
+                        0,
+                        8,
+                        1,
+                        9.99999977648258,
+                        1
+                    ]
+                ]
+            ],
+            "shape": {
+                "type": 3,
+                "radius": 1,
+                "radiusThickness": 0.6,
+                "arc": {
+                    "mode": 1,
+                    "value": 360,
+                    "spread": 0,
+                    "speed": 1
+                },
+                "scale": [
+                    1,
+                    1,
+                    1
+                ],
+                "position": [
+                    0,
+                    0,
+                    0
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ],
+                "alignDir": 0,
+                "randomize": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+            "limitVelocityOverLifetime": [
+                1,
+                1,
+                1
+            ],
+            "limitVelocityOverLifetimeDampen": 0.5,
+            "colorOverLifetime": [
+                4,
+                4,
+                [
+                    [
+                        [
+                            0,
+                            1
+                        ],
+                        [
+                            0.9117723,
+                            1
+                        ]
+                    ],
+                    [
+                        [
+                            0,
+                            1
+                        ],
+                        [
+                            0.9117723,
+                            0.7223022
+                        ]
+                    ],
+                    [
+                        [
+                            0,
+                            1
+                        ],
+                        [
+                            0.9117723,
+                            0.1764706
+                        ]
+                    ],
+                    [
+                        [
+                            0.06176852,
+                            0
+                        ],
+                        [
+                            0.4088197,
+                            1
+                        ],
+                        [
+                            0.8500038,
+                            0.2470588
+                        ],
+                        [
+                            1,
+                            0
+                        ]
+                    ]
+                ]
+            ],
+            "sizeOverLifetime": [
+                3,
+                4,
+                [
+                    [
+                        [
+                            [
+                                0,
+                                0.6900368,
+                                -1.29204,
+                                -1.29204
+                            ],
+                            [
+                                1,
+                                0.0571577,
+                                -0.2175653,
+                                -0.2175653
+                            ]
+                        ],
+                        1
+                    ],
+                    [
+                        [
+                            [
+                                0,
+                                0.5506058,
+                                1.06466,
+                                1.06466
+                            ],
+                            [
+                                1,
+                                1,
+                                0,
+                                0
+                            ]
+                        ],
+                        1
+                    ],
+                    [
+                        [
+                            [
+                                0,
+                                1,
+                                0,
+                                0
+                            ],
+                            [
+                                1,
+                                1,
+                                0,
+                                0
+                            ]
+                        ],
+                        1
+                    ]
+                ]
+            ]
+        }
+    },
+    "mesh": 4,
+    "name": "dot_-21642",
+    "translation": [
+        0,
+        0.3,
+        0
+    ]
+}

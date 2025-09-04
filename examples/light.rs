@@ -20,7 +20,7 @@ impl DemoLight {
         actions.transform.localsrt.push(OpsTransformNodeLocal::ops(light, ETransformSRT::Translation(0., 20., -10.)));
         actions.mesh.layermask.push(OpsLayerMask::ops(light, 0xFFFFFFFF));
         actions.light.create.push(OpsLightCreate::ops(scene, light, ELightType::Direct));
-        actions.light.param.push(OpsLightParam::ops(light, ELightModify::Directional( Vector3::new(-0., -1., 1.) )));
+        actions.light.param.push(OpsLightParam::ops(light, ELightModify::Directional( -0., -1., 1. )));
         actions.light.param.push(OpsLightParam::ops(light, ELightModify::Color(1.4, 1.4, 1.4)));
 
         light
@@ -40,7 +40,7 @@ impl DemoLight {
         actions.transform.localsrt.push(OpsTransformNodeLocal::ops(light, ETransformSRT::Translation(position.0, position.1, position.2)));
         actions.mesh.layermask.push(OpsLayerMask::ops(light, layer));
         actions.light.create.push(OpsLightCreate::ops(scene, light, ELightType::Direct));
-        actions.light.param.push(OpsLightParam::ops(light, ELightModify::Directional(Vector3::new(direction.0, direction.1, direction.2))));
+        actions.light.param.push(OpsLightParam::ops(light, ELightModify::Directional(direction.0, direction.1, direction.2)));
         actions.light.param.push(OpsLightParam::ops(light, ELightModify::Color(color.0, color.1, color.2)));
 
         light
@@ -78,7 +78,7 @@ impl DemoLight {
         actions.transform.localsrt.push(OpsTransformNodeLocal::ops(light, ETransformSRT::Translation(position.0, position.1, position.2)));
         actions.mesh.layermask.push(OpsLayerMask::ops(light, layer));
         actions.light.create.push(OpsLightCreate::ops(scene, light, ELightType::Spot));
-        actions.light.param.push(OpsLightParam::ops(light, ELightModify::Directional(Vector3::new(direction.0, direction.1, direction.2))));
+        actions.light.param.push(OpsLightParam::ops(light, ELightModify::Directional(direction.0, direction.1, direction.2)));
         actions.light.param.push(OpsLightParam::ops(light, ELightModify::Color(color.0, color.1, color.2)));
         actions.light.param.push(OpsLightParam::ops(light, ELightModify::SpotAngle(0.5, 1.5)));
         actions.light.param.push(OpsLightParam::ops(light, ELightModify::Radius(10.)));

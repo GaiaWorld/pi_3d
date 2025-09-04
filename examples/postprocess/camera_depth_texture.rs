@@ -218,15 +218,15 @@ impl Plugin for PluginTest {
             let depthtarget = targets.create( KeySampler::linear_repeat(), ColorFormat::R16Float, DepthStencilFormat::Depth32Float, 256, 256 );
 
             let depth_renderer = commands.spawn_empty_id(); actions.renderer.create.push(OpsRendererCreate::ops(depth_renderer, String::from("PreDepth") + depth_renderer.index().to_string().as_str(), camera01, DemoScene::PASS_PRE_DEPTH, false, false, false));
-            actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(depth_renderer, true));
-            actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(depth_renderer, true));
-            actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(depth_renderer, true));
-            actions.renderer.modify.push(OpsRendererCommand::DepthClear(depth_renderer, RenderDepthClear(1.)));
-            actions.renderer.modify.push(OpsRendererCommand::ColorClear(depth_renderer, RenderColorClear(0, 0, 0, 0)));
+            actions.renderer.modify.push(OpsRendererCommand::ops(depth_renderer, ERendererCommand::AutoClearColor( true)));
+            actions.renderer.modify.push(OpsRendererCommand::ops(depth_renderer, ERendererCommand::AutoClearDepth( true)));
+            actions.renderer.modify.push(OpsRendererCommand::ops(depth_renderer, ERendererCommand::AutoClearStencil( true)));
+            actions.renderer.modify.push(OpsRendererCommand::ops(depth_renderer, ERendererCommand::DepthClear( RenderDepthClear(1.))));
+            actions.renderer.modify.push(OpsRendererCommand::ops(depth_renderer, ERendererCommand::ColorClear( RenderColorClear(0, 0, 0, 0))));
             
             actions.renderer.connect.push(OpsRendererConnect::ops(shadow_renderer, depth_renderer, false));
             actions.renderer.connect.push(OpsRendererConnect::ops(depth_renderer, demopass.opaque_renderer, false));
-            actions.renderer.target.push(OpsRendererTarget::Custom(depth_renderer, KeyCustomRenderTarget::Custom(depthtarget.unwrap()), true));
+            actions.renderer.target.push(OpsRendererTarget::new( depth_renderer, ERendererTarget::Custom( KeyCustomRenderTarget::Custom(depthtarget.unwrap()), true)) );
 
             actions.renderer.connect.push(OpsRendererConnect::ops(shadow_renderer, demopass.opaque_renderer, true));
             

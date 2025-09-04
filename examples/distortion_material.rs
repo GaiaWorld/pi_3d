@@ -9,7 +9,7 @@ impl ShaderDistortion {
     pub fn meta(nodeblocks: &mut NodeMaterialBlocks, engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
 
         let mut nodemat = NodeMaterialBuilder::new();
-        nodemat.values.stage = wgpu::ShaderStages::VERTEX_FRAGMENT;
+        nodemat.values.stage = wgpu::ShaderStages::bits( &wgpu::ShaderStages::VERTEX_FRAGMENT );
         nodemat.material_instance_code = String::from("
         ");
         nodemat.varyings.0.push(Varying { format: Atom::from("vec4"), name: Atom::from("v_color") });

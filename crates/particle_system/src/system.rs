@@ -824,6 +824,7 @@ pub fn sys_update_buffer(
                                     if f_lc {
                                         calc_local_strentched_call(&scaling, &l_velocity, calculator.stretched_length_scale, calculator.stretched_velocity_scale * vlen, &mut refwmatrix, &mut reflmatrix, &mut localmatrix);
                                         CoordinateSytem3::mul_to(&resultmatrix, &localmatrix, &mut refwmatrix);
+                                        refwmatrix.try_inverse_mut();
                                         // refwmatrix.copy_from(&resultmatrix);
                                         &refwmatrix
                                     } else {
@@ -849,7 +850,7 @@ pub fn sys_update_buffer(
 
                                 // 获取粒子的网格实例化属性写入顶点Buffer
                                 {
-                                    // log::warn!("LOCAL: {:?}", ([uv.uscale, uv.vscale, uv.uoffset, uv.voffset], color));
+                                    // log::warn!("LOCAL: {:?}", (&uv.data, color));
                                     let m = matrix.as_slice();
                                     temp.as_mut_slice()[0..64  ].copy_from_slice(bytemuck::cast_slice(m));
                                     temp.as_mut_slice()[64..80 ].copy_from_slice(bytemuck::cast_slice(&matidxs.0));

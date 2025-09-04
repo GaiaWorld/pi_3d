@@ -33,7 +33,7 @@ pub type ActionListLightCreate = ActionList<OpsLightCreate>;
 pub enum ELightModify {
     Color(Number, Number, Number),
     LightingType(LightingMode),
-    Directional(Vector3),
+    Directional(f32, f32, f32),
     SpotAngle(f32, f32),
     Strength(f32),
     Radius(f32),

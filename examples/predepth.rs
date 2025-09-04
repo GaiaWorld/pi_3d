@@ -9,7 +9,7 @@ impl ShaderPreDepth {
     pub fn meta(nodeblocks: &mut NodeMaterialBlocks, engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
 
         let mut nodemat = NodeMaterialBuilder::new();
-        nodemat.values.stage = wgpu::ShaderStages::VERTEX_FRAGMENT;
+        nodemat.values.stage = wgpu::ShaderStages::bits( &wgpu::ShaderStages::VERTEX_FRAGMENT );
         nodemat.binddefines = BindDefines::MODEL_BIND | BindDefines::VIEWER;
         nodemat.varyings = Varyings(
             vec![

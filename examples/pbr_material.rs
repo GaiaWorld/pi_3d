@@ -9,7 +9,7 @@ impl ShaderPBR {
     pub fn meta(nodeblocks: &mut NodeMaterialBlocks, engineopt: &EngineCustomPlugins) -> ShaderEffectMeta {
 
         let mut nodemat = NodeMaterialBuilder::new();
-        nodemat.values.stage = wgpu::ShaderStages::VERTEX_FRAGMENT;
+        nodemat.values.stage = wgpu::ShaderStages::bits( &wgpu::ShaderStages::VERTEX_FRAGMENT );
         nodemat.values.vec2_list.push(UniformPropertyVec2(Atom::from("uMetallicRoughness"), [0.2, 0.8], true));
         nodemat.material_instance_code = String::from("");
         // nodemat.check_instance = EVerticeExtendCode(EVerticeExtendCode::INSTANCE_CUSTOM_VEC4_A);

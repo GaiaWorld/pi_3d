@@ -126,8 +126,8 @@ impl ERenderAlignmentForShader {
 //         )
 //     }
     /// 
-    const STRENTCHED_DEFINE: &'static str = include_str!("./renderalignment/vertical_define.hlsl");
-    const STRENTCHED_RUNNING: &'static str = include_str!("./renderalignment/vertical_running.hlsl");
+    const STRENTCHED_DEFINE: &'static str = include_str!("./renderalignment/stretched_define.hlsl");
+    const STRENTCHED_RUNNING: &'static str = include_str!("./renderalignment/stretched_running.hlsl");
     fn stretched_running_code() -> String {
         String::from(Self::STRENTCHED_RUNNING)
     }

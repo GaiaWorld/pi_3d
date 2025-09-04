@@ -71,7 +71,7 @@ fn setup(
                     let calculator = particlesys_res.calcultors.insert(syskey.asset_u64(), particle_sys_calculator).unwrap();
                     let trailmesh = commands.spawn_empty_id();
                     let trailgeo = commands.spawn_empty_id();
-                    actions.parsys.create.push(OpsCPUParticleSystem::ops(scene, source, trailmesh, trailgeo, calculator, base::particelsystem_attrs(), 0));
+                    actions.parsys.create.push(OpsCPUParticleSystem::ops(scene, source, trailmesh, trailgeo, *calculator.key(), base::particelsystem_attrs(), 0));
                     actions.parsys.state.push(OpsCPUParticleSystemState::ops_start(source));
                     // actions.particlesys_cmds.particlesys_state_.push(OpsCPUParticleSystemState::ops_stop(source));
                     //

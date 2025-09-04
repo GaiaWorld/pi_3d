@@ -51,7 +51,7 @@ impl Plugin for PluginTest {
 
         actions.camera.param.push(OpsCameraModify::ops( camera01, ECameraModify::OrthSize( tes_size as f32 * 0.7 )));
         actions.camera.target.push(OpsCameraTarget::ops(camera01, -1., -1., 4.));
-        actions.renderer.modify.push(OpsRendererCommand::DepthClear(demopass.opaque_renderer, RenderDepthClear(1.)));
+        actions.renderer.modify.push(OpsRendererCommand::ops(demopass.opaque_renderer, ERendererCommand::DepthClear( RenderDepthClear(1.) )));
 
         let cameraroot = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(cameraroot, scene)); actions.transform.tree.push(OpsTransformNodeParent::ops(camera01, cameraroot));
         actions.transform.create.push(OpsTransformNode::ops(scene, cameraroot));

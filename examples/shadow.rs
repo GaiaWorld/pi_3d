@@ -20,23 +20,23 @@ impl DemoShadow {
     ) -> Entity {
         let shadow = commands.spawn_empty_id(); 
         actions.shadow.create.push(OpsShadowGenerator::ops(shadow, scene, light, pass, Entity::null()));
-        actions.shadow.param.push(OpsShadowGeneratorParam::Bias(shadow, 20. / 1024. * 0.001));
-        actions.shadow.param.push(OpsShadowGeneratorParam::NormalBias(shadow, 20. / 1024. * 0.001));
-        actions.shadow.param.push(OpsShadowGeneratorParam::ShadowFrustumSize(shadow, 20.0));
-        actions.shadow.param.push(OpsShadowGeneratorParam::ShadowMinz(shadow, 1.0));
-        actions.shadow.param.push(OpsShadowGeneratorParam::ShadowMaxz(shadow, 101.));
+        actions.shadow.param.push(OpsShadowGeneratorParam::ops(shadow, EShadowGeneratorParam::Bias( 20. / 1024. * 0.001 )));
+        actions.shadow.param.push(OpsShadowGeneratorParam::ops(shadow, EShadowGeneratorParam::NormalBias( 20. / 1024. * 0.001 )));
+        actions.shadow.param.push(OpsShadowGeneratorParam::ops(shadow, EShadowGeneratorParam::ShadowFrustumSize( 20.0 )));
+        actions.shadow.param.push(OpsShadowGeneratorParam::ops(shadow, EShadowGeneratorParam::ShadowMinz( 1.0 )));
+        actions.shadow.param.push(OpsShadowGeneratorParam::ops(shadow, EShadowGeneratorParam::ShadowMaxz( 101. )));
 
         actions.renderer.create.push(OpsRendererCreate::ops(shadow, String::from("Shadow01"), shadow, pass, false, false, false));
         if let Some(pre_renderer) = pre_renderer {
             actions.renderer.connect.push(OpsRendererConnect::ops(pre_renderer, shadow, false));
         }
         actions.renderer.connect.push(OpsRendererConnect::ops(shadow, next_renderer, false));
-        actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(shadow, true));
-        actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(shadow, true));
-        actions.renderer.modify.push(OpsRendererCommand::DepthClear(shadow, RenderDepthClear(1.)));
-        actions.renderer.modify.push(OpsRendererCommand::ColorClear(shadow, RenderColorClear(0, 0, 0, 0)));
+        actions.renderer.modify.push(OpsRendererCommand::ops( shadow, ERendererCommand::AutoClearColor( true) ));
+        actions.renderer.modify.push(OpsRendererCommand::ops( shadow, ERendererCommand::AutoClearDepth( true) ));
+        actions.renderer.modify.push(OpsRendererCommand::ops( shadow, ERendererCommand::DepthClear( RenderDepthClear(1.)) ));
+        actions.renderer.modify.push(OpsRendererCommand::ops( shadow, ERendererCommand::ColorClear( RenderColorClear(0, 0, 0, 0)) ));
         if let Some(key) = rendertarget {
-            actions.renderer.target.push(OpsRendererTarget::Custom(shadow, KeyCustomRenderTarget::Custom(key), false));
+            actions.renderer.target.push(OpsRendererTarget::new(shadow, ERendererTarget::Custom( KeyCustomRenderTarget::Custom(key), false) ));
         }
 
         shadow

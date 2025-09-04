@@ -50,14 +50,14 @@ impl PluginImageCopy {
             actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_06, EDepthState::Compare(CompareFunction::Always)));
             actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_07, EDepthState::Compare(CompareFunction::Always)));
             actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_08, EDepthState::Compare(CompareFunction::Always)));
-            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_01, EPrimitiveState::CCullMode(CullMode::Off)));
-            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_02, EPrimitiveState::CCullMode(CullMode::Off)));
-            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_03, EPrimitiveState::CCullMode(CullMode::Off)));
-            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_04, EPrimitiveState::CCullMode(CullMode::Off)));
-            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_05, EPrimitiveState::CCullMode(CullMode::Off)));
-            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_06, EPrimitiveState::CCullMode(CullMode::Off)));
-            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_07, EPrimitiveState::CCullMode(CullMode::Off)));
-            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_08, EPrimitiveState::CCullMode(CullMode::Off)));
+            actions.mesh.render_state.push(OpsRenderState::ops(plane, ERenderState::PrimitiveState(PassTag::PASS_TAG_01, EPrimitiveState::CCullMode(CullMode::Off))));
+            actions.mesh.render_state.push(OpsRenderState::ops(plane, ERenderState::PrimitiveState(PassTag::PASS_TAG_02, EPrimitiveState::CCullMode(CullMode::Off))));
+            actions.mesh.render_state.push(OpsRenderState::ops(plane, ERenderState::PrimitiveState(PassTag::PASS_TAG_03, EPrimitiveState::CCullMode(CullMode::Off))));
+            actions.mesh.render_state.push(OpsRenderState::ops(plane, ERenderState::PrimitiveState(PassTag::PASS_TAG_04, EPrimitiveState::CCullMode(CullMode::Off))));
+            actions.mesh.render_state.push(OpsRenderState::ops(plane, ERenderState::PrimitiveState(PassTag::PASS_TAG_05, EPrimitiveState::CCullMode(CullMode::Off))));
+            actions.mesh.render_state.push(OpsRenderState::ops(plane, ERenderState::PrimitiveState(PassTag::PASS_TAG_06, EPrimitiveState::CCullMode(CullMode::Off))));
+            actions.mesh.render_state.push(OpsRenderState::ops(plane, ERenderState::PrimitiveState(PassTag::PASS_TAG_07, EPrimitiveState::CCullMode(CullMode::Off))));
+            actions.mesh.render_state.push(OpsRenderState::ops(plane, ERenderState::PrimitiveState(PassTag::PASS_TAG_08, EPrimitiveState::CCullMode(CullMode::Off))));
 
             actions.geometry.create.push(OpsGeomeryCreate::ops(plane, id_geo, attrs, None));
             actions.material.usemat.push(OpsMaterialUse::ops(plane, copymat, PassTag::PASS_TAG_01));
@@ -70,11 +70,11 @@ impl PluginImageCopy {
             actions.camera.param.push(OpsCameraModify::ops( copycamera, ECameraModify::Active( true )));
             
             let copy_renderer = commands.spawn_empty_id(); actions.renderer.create.push(OpsRendererCreate::ops(copy_renderer, String::from("ImageCopy") + copy_renderer.index().to_string().as_str(), copycamera, PassTag::PASS_TAG_01, false, false, false));
-            actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(copy_renderer, false));
-            actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(copy_renderer, false));
-            actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(copy_renderer, false));
+            actions.renderer.modify.push(OpsRendererCommand::ops(copy_renderer, ERendererCommand::AutoClearColor(false)));
+            actions.renderer.modify.push(OpsRendererCommand::ops(copy_renderer, ERendererCommand::AutoClearDepth(false)));
+            actions.renderer.modify.push(OpsRendererCommand::ops(copy_renderer, ERendererCommand::AutoClearStencil(false)));
             actions.renderer.connect.push(OpsRendererConnect::ops(pre_renderer, copy_renderer, false));
-            actions.renderer.target.push(OpsRendererTarget::Custom(copy_renderer, KeyCustomRenderTarget::FinalRender(true), false));
+            actions.renderer.target.push(OpsRendererTarget::new(copy_renderer, ERendererTarget::Custom( KeyCustomRenderTarget::FinalRender(true), false) )) ;
         // }
         (copy_renderer, copycamera)
     }
@@ -117,14 +117,14 @@ impl PluginImageCopy {
             actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_06, EDepthState::Compare(CompareFunction::Always)));
             actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_07, EDepthState::Compare(CompareFunction::Always)));
             actions.mesh.render_state.push(OpsRenderState::depth_state(plane, PassTag::PASS_TAG_08, EDepthState::Compare(CompareFunction::Always)));
-            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_01, EPrimitiveState::CCullMode(CullMode::Off)));
-            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_02, EPrimitiveState::CCullMode(CullMode::Off)));
-            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_03, EPrimitiveState::CCullMode(CullMode::Off)));
-            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_04, EPrimitiveState::CCullMode(CullMode::Off)));
-            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_05, EPrimitiveState::CCullMode(CullMode::Off)));
-            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_06, EPrimitiveState::CCullMode(CullMode::Off)));
-            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_07, EPrimitiveState::CCullMode(CullMode::Off)));
-            actions.mesh.render_state.push(OpsRenderState::PrimitiveState(plane, PassTag::PASS_TAG_08, EPrimitiveState::CCullMode(CullMode::Off)));
+            actions.mesh.render_state.push(OpsRenderState::ops(plane, ERenderState::PrimitiveState(PassTag::PASS_TAG_01, EPrimitiveState::CCullMode(CullMode::Off))));
+            actions.mesh.render_state.push(OpsRenderState::ops(plane, ERenderState::PrimitiveState(PassTag::PASS_TAG_02, EPrimitiveState::CCullMode(CullMode::Off))));
+            actions.mesh.render_state.push(OpsRenderState::ops(plane, ERenderState::PrimitiveState(PassTag::PASS_TAG_03, EPrimitiveState::CCullMode(CullMode::Off))));
+            actions.mesh.render_state.push(OpsRenderState::ops(plane, ERenderState::PrimitiveState(PassTag::PASS_TAG_04, EPrimitiveState::CCullMode(CullMode::Off))));
+            actions.mesh.render_state.push(OpsRenderState::ops(plane, ERenderState::PrimitiveState(PassTag::PASS_TAG_05, EPrimitiveState::CCullMode(CullMode::Off))));
+            actions.mesh.render_state.push(OpsRenderState::ops(plane, ERenderState::PrimitiveState(PassTag::PASS_TAG_06, EPrimitiveState::CCullMode(CullMode::Off))));
+            actions.mesh.render_state.push(OpsRenderState::ops(plane, ERenderState::PrimitiveState(PassTag::PASS_TAG_07, EPrimitiveState::CCullMode(CullMode::Off))));
+            actions.mesh.render_state.push(OpsRenderState::ops(plane, ERenderState::PrimitiveState(PassTag::PASS_TAG_08, EPrimitiveState::CCullMode(CullMode::Off))));
 
             actions.geometry.create.push(OpsGeomeryCreate::ops(plane, id_geo, attrs, None));
             actions.material.usemat.push(OpsMaterialUse::ops(plane, copymat, PassTag::PASS_TAG_01));
@@ -137,12 +137,12 @@ impl PluginImageCopy {
             actions.camera.param.push(OpsCameraModify::ops( copycamera, ECameraModify::Active( true )));
             
             let copy_renderer = commands.spawn_empty_id(); actions.renderer.create.push(OpsRendererCreate::ops(copy_renderer, String::from("ImageCopy") + copy_renderer.index().to_string().as_str(), copycamera, PassTag::PASS_TAG_01, false, false, false));
-            actions.renderer.modify.push(OpsRendererCommand::AutoClearColor(copy_renderer, false));
-            actions.renderer.modify.push(OpsRendererCommand::AutoClearDepth(copy_renderer, false));
-            actions.renderer.modify.push(OpsRendererCommand::AutoClearStencil(copy_renderer, false));
+            actions.renderer.modify.push(OpsRendererCommand::ops(copy_renderer, ERendererCommand::AutoClearColor(false)));
+            actions.renderer.modify.push(OpsRendererCommand::ops(copy_renderer, ERendererCommand::AutoClearDepth(false)));
+            actions.renderer.modify.push(OpsRendererCommand::ops(copy_renderer, ERendererCommand::AutoClearStencil(false)));
             actions.renderer.connect.push(OpsRendererConnect::ops(pre_renderer, copy_renderer, false));
             actions.renderer.connect.push(OpsRendererConnect::ops(copy_renderer, next_renderer, false));
-            actions.renderer.target.push(OpsRendererTarget::Custom(copy_renderer, dst_render_target.unwrap(), false));
+            actions.renderer.target.push(OpsRendererTarget::new(copy_renderer, ERendererTarget::Custom( dst_render_target.unwrap(), false) ));
         // }
         (copy_renderer, copycamera)
     }

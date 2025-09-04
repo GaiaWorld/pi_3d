@@ -91,8 +91,8 @@ pub fn sys_act_light_param(
             ELightModify::LightingType(val) => if let Ok(mut item) = param_lights.get_mut(entity) {
                 item.mode = val;
             },
-            ELightModify::Directional(val) => if let Ok(mut item) = directlights.get_mut(entity) {
-                *item = LightDirection(val);
+            ELightModify::Directional(x, y, z) => if let Ok(mut item) = directlights.get_mut(entity) {
+                *item = LightDirection(Vector3::new(x, y, z));
             },
             ELightModify::SpotAngle(inangle, outangle) => if let Ok(mut out_val) = spot_lights.get_mut(entity) {
                 out_val.out_value = outangle;
