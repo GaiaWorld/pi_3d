@@ -11,6 +11,7 @@ use pi_scene_context::{
 };
 use pi_trail_renderer::{ActionSetTrailRenderer, ResTrailBuffer};
 
+#[cfg(not(target_arch = "wasm32"))]
 pub mod spector;
 
 pub struct Limit(pub wgpu::Limits);
