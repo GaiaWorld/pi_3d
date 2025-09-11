@@ -11,6 +11,8 @@ use pi_scene_context::{
 };
 use pi_trail_renderer::{ActionSetTrailRenderer, ResTrailBuffer};
 
+pub mod spector;
+
 pub struct Limit(pub wgpu::Limits);
 // impl TMemoryAllocatorLimit for Limit {
 //     fn max_size(&self) -> u64 {

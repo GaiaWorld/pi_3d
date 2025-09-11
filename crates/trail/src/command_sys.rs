@@ -6,7 +6,7 @@ use pi_scene_math::Vector4;
 
 use crate::{base::*, command::*, ResTrailBuffer};
 
-pub type BundleTrail = (TrailParam, TrailGeometry, TrailBase, TrailPoints, TrailRandom);
+pub type BundleTrail = (EntityTag, TrailParam, TrailGeometry, TrailBase, TrailPoints, TrailRandom);
 
 pub fn sys_create_trail_mesh(
     mut cmds: ResMut<ActionListTrail>,
@@ -89,6 +89,7 @@ pub fn sys_create_trail_mesh(
             }
             // if let Some(mut _cmd) = commands.get_entity(id_mesh) {
                 let bundle: BundleTrail = (
+                    EntityTag(TAG_TRAIL),
                     TrailParam {
                         size: 1.,
                         color: Vector4::new(1., 1., 1., 1.),

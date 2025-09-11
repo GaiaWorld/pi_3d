@@ -133,7 +133,7 @@ pub fn sys_create_bone(
             return;
         };
         let bundle = ActionBone::init(&empty, scene);
-        bonecmd.insert(bundle);
+        bonecmd.insert((EntityTag(TAG_BONE), bundle));
         // alter.alter(bone, bundle);
         // log::error!("Bone Create Success");
     });

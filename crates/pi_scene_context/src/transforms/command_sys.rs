@@ -11,7 +11,7 @@ use super::transform_node::*;
 pub fn sys_create_transform_node(
     mut cmds: ResMut<ActionListTransformNodeCreate>,
     // mut commands: Commands,
-    mut alter: Alter<(), (), (TransformNode, TransformNodeBundle), ()>,
+    mut alter: Alter<(), (), (EntityTag, TransformNode, TransformNodeBundle), ()>,
 ) {
     cmds.drain().for_each(|OpsTransformNode(scene, entity)| {
         // let mut transformnode = if let Some(cmd) = commands.get_entity(entity) {
@@ -20,6 +20,7 @@ pub fn sys_create_transform_node(
         //     return;
         // };
         let bundle = (
+            EntityTag(TAG_TRANSFORM),
             TransformNode,
             ActionTransformNode::init(scene),
         );

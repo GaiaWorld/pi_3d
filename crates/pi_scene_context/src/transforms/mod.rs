@@ -112,4 +112,3 @@ impl PluginGroupTransformNode {
             .add_plugins(PluginAnimeLocalScaling::new())
     }
 }
-

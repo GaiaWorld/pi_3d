@@ -11,6 +11,7 @@ pub fn sys_create_sprite(
     cmds.drain().for_each(|OpsSpriteCreate(_mesh, sprite, atlas)| {
         if let Some(mut entitycmd) = commands.get_entity(sprite) {
             entitycmd.insert((
+                EntityTag(TAG_SPRITE),
                 RenderPoseMatrix::default(),
                 Sprite {
                     atlas: Some(atlas)

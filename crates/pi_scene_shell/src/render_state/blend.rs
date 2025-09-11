@@ -41,4 +41,11 @@ impl ModelBlend {
             opt_alpha: BlendOperation::Add,
         }
     }
+    pub fn to_string(&self) -> String {
+        if self.enable {
+            String::from("None")
+        } else { 
+            String::from(format!("{:?} {:?} {:?} {:?} {:?} {:?}", self.src_color, self.dst_color, self.src_alpha, self.dst_alpha, self.opt_color, self.opt_alpha))
+        }
+    }
 }

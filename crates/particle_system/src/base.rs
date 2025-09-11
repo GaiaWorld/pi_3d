@@ -614,6 +614,13 @@ impl ParticleIDs {
             maxcount,
         }
     }
+    pub fn calculator(&self) -> Option<Entity> {
+        if let  Some(calculator) = &self.calculator {
+            Some(calculator.0)
+        } else {
+            None
+        }
+    }
     pub fn create_new(&mut self, newcount: usize) {
         let num = newcount.min(self.unactives.len());
 

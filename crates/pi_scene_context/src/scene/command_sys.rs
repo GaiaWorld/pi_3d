@@ -55,6 +55,8 @@ pub fn sys_create_scene(
 
             if let Some(bundle) = ActionScene::init(lightlimit.0, shadowlimit.0, &mut dynbuffer, &device, &asset_samp) {
                 let bundle = (
+                    EntityTag(TAG_SCENE),
+                    Root,
                     bundle,
                     pool,
                     pool2,

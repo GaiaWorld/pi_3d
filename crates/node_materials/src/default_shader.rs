@@ -1,7 +1,7 @@
 use pi_atom::Atom;
 use pi_scene_shell::{prelude::*, run_stage::EngineCustomPlugins};
 use pi_scene_context::materials::command_sys::ActionMaterial;
-use crate::{base::*, prelude::BlockMainTexture};
+use crate::{base::*, opacity::BlockOpacity, prelude::BlockMainTexture};
 
 pub struct DefaultShader;
 impl DefaultShader {
@@ -31,7 +31,7 @@ v_color = A_COLOR4;
         nodemat.fs = String::from("
 vec4 baseColor = v_color;
 baseColor.rgb *= matParam.uMainInfo.rgb;
-float alpha = 1.0;
+float alpha = matParam.uOpacity;
 vec3 normal = normalize(v_normal);
 // baseColor.rgb *= max(0., dot(normal, normalize(-light)));
 // // float level = dot(v_normal, vec3(0., 0., -1.));
@@ -46,6 +46,7 @@ gl_FragColor = vec4(baseColor.rgb, alpha);
         nodemat.binddefines = BindDefines::MODEL_BIND | BindDefines::VIEWER | BindDefines::EFFECT_VALUE_BIND;
 
         nodemat.values.vec3_list.push(UniformPropertyVec3(Atom::from(BlockMainTexture::KEY_COLOR), [1., 1., 1.], true));
+        nodemat.values.float_list.push(UniformPropertyFloat(Atom::from(BlockOpacity::KEY_ALPHA), 1., true));
         nodemat.varyings = Varyings(
             vec![
                 Varying { 

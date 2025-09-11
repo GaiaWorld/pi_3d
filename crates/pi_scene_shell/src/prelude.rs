@@ -99,6 +99,17 @@ pub use crate::ecs::*;
 pub use crate::render_state::*;
 pub use crate::math::*;
 
+pub const TAG_SCENE: u8             = 100;
+pub const TAG_CAMERA: u8            = 101;
+pub const TAG_TRANSFORM: u8         = 102;
+pub const TAG_MESH: u8              = 103;
+pub const TAG_INSTANCE: u8          = 104;
+pub const TAG_SPRITE: u8            = 105;
+pub const TAG_PARTICLESYSTEM: u8    = 106;
+pub const TAG_TRAIL: u8             = 107;
+pub const TAG_BONE: u8              = 108;
+pub const TAG_LIGHT: u8             = 109;
+
 #[derive(Resource, Deref)]
 pub struct DeviceLimits3D(pub(crate) wgpu::Limits);
 

@@ -26,7 +26,7 @@ pub fn sys_create_camera(
             let bindviewer = BindViewer::new(&mut dynallocator);
             
             // log::error!("Camera SubGraph: {:?}", (entity, graph));
-            let bundle = (ViewerGraphID(graph), bindviewer, ActionCamera::init(scene));
+            let bundle = (EntityTag(TAG_CAMERA), ViewerGraphID(graph), bindviewer, ActionCamera::init(scene));
             commands.insert(bundle);
         }
     })

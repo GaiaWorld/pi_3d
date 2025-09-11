@@ -101,7 +101,7 @@ pub fn sys_create_mesh(
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
     lightlimit: Res<ModelLightLimit>,
     commonbindmodel: Res<CommonBindModel>,
-    mut altermodel: Alter<(), (), (BundleModel, BindModel, ModelBindDefines, ModelMatIdxs, PassIDs, ModelStatic), ()>,
+    mut altermodel: Alter<(), (), (EntityTag, BundleModel, BindModel, ModelBindDefines, ModelMatIdxs, PassIDs, ModelStatic), ()>,
     mut passinsert: Insert<(BundleEntity, PassObjInitBundle, PassTag)>,
     engineopt: Res<EngineCustomPlugins>,
     // mut performance: ResMut<Performance>,
@@ -113,7 +113,7 @@ pub fn sys_create_mesh(
         // if ActionMesh::init(&mut commands, entity, scene, &mut allocator, &empty, state, &lightlimit.0, &commonbindmodel) == false {
         if ActionMesh::init(
             entity, &mut commands, scene, &mut allocator, &empty, state, &lightlimit.0, &commonbindmodel,
-            &mut altermodel, &mut passinsert, &engineopt
+            &mut altermodel, &mut passinsert, &engineopt, EntityTag(TAG_MESH)
         ) == false {
             // disposereadylist.push(OpsDisposeReadyForRef::ops(entity));
         }
@@ -125,7 +125,7 @@ pub fn sys_create_instanced_mesh(
     mut cmds: ResMut<ActionListInstanceMeshCreate>,
     // mut commands: Commands,
     mut meshes: Query<(&SceneID, &mut InstanceSourceRefs, &ModelInstanceAttributes, &mut FlagMeshNeedRecheckForView)>,
-    mut alter: Alter<(), (), (ModelInstanceAttributes, TargetAnimatorableIsRunning, InstanceAttributeAnimated, (TransformNodeBundle, BundleInstance)), ()>,
+    mut alter: Alter<(), (), (EntityTag, ModelInstanceAttributes, TargetAnimatorableIsRunning, InstanceAttributeAnimated, (TransformNodeBundle, BundleInstance)), ()>,
 
     // mut performance: ResMut<Performance>,
 ) {
@@ -137,6 +137,7 @@ pub fn sys_create_instanced_mesh(
                 let instanceattrs = instanceattrs.clone();
 
                 let bundle = (
+                    EntityTag(TAG_INSTANCE), 
                     instanceattrs,
                     TargetAnimatorableIsRunning,
                     InstanceAttributeAnimated::default(),
@@ -429,9 +430,10 @@ impl ActionMesh {
         state: MeshInstanceState,
         lightlimit: &LightLimitInfo,
         commonbindmodel: &CommonBindModel,
-        altermodel: &mut Alter<(), (), (BundleModel, BindModel, ModelBindDefines, ModelMatIdxs, PassIDs, ModelStatic), ()>,
+        altermodel: &mut Alter<(), (), (EntityTag, BundleModel, BindModel, ModelBindDefines, ModelMatIdxs, PassIDs, ModelStatic), ()>,
         passinsert: &mut Insert<(BundleEntity, PassObjInitBundle, PassTag)>,
         _engineopt: &EngineCustomPlugins,
+        tag: EntityTag,
     ) -> bool {
         // state.instance_matrix = true;
         // state.instances.push(
@@ -481,11 +483,11 @@ impl ActionMesh {
 
         if instanceattr {
             let _ = altermodel.alter(entity, (
-                bundle, commonbindmodel.0.clone(), ModelBindDefines::default(), ModelMatIdxs::default(), passids, ModelStatic(true)
+                tag, bundle, commonbindmodel.0.clone(), ModelBindDefines::default(), ModelMatIdxs::default(), passids, ModelStatic(true)
             ));
         } else {
             let _ = altermodel.alter(entity, (
-                bundle, BindModel::new(allocator), ModelBindDefines::default(), ModelMatIdxs::default(), passids, ModelStatic(false)
+                tag, bundle, BindModel::new(allocator), ModelBindDefines::default(), ModelMatIdxs::default(), passids, ModelStatic(false)
             ));
         }
 
