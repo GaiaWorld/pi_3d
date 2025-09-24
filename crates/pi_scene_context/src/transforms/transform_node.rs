@@ -355,7 +355,7 @@ impl GlobalMatrix {
 }
 
 /// 记录 TransformNode 的全局节点信息
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub struct AbsoluteTransform {
     scaling: Vector3,
     // rotation: Rotation3,

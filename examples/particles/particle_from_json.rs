@@ -82,7 +82,6 @@ fn setup(
                     actions.parsys.state.push(OpsCPUParticleSystemState::ops_speed(source, 0.7));
                     // actions.particlesys_cmds.particlesys_state_.push(OpsCPUParticleSystemState::ops_stop(source));
                     //
-                    let idmat = commands.spawn_empty_id();
                     actions.material.usemat.push(OpsMaterialUse::ops(source, idmattrail, DemoScene::PASS_TRANSPARENT));
                     source
                 };

@@ -17,6 +17,7 @@ pub type ActionListCameraCreate = ActionList<OpsCameraCreation>;
 pub enum ECameraModify {
     FreeMode(EFreeCameraMode),
     Active(bool),
+    Link(Entity),
     FixMode(EFixedMode),
     Fov(Number),
     OrthSize(Number),

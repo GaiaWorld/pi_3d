@@ -1,7 +1,24 @@
 use pi_scene_shell::prelude::*;
 
-use crate::prelude::{Camera, ViewerRenderersInfo};
+use crate::prelude::{AbsoluteTransform, Camera, GlobalMatrix, LocalPosition, ViewerRenderersInfo};
 
+pub fn sys_camera_link_transform(
+    mut cameras: Query<(Entity, &Camera)>,
+    mut nodes: Query<(&mut GlobalMatrix, &mut AbsoluteTransform)>,
+) {
+    cameras.iter_mut().for_each(|(camera, mut link)| {
+        if camera != link.1 {
+            if let Ok((globalmatrix, absolute)) = nodes.get_mut(link.1) {
+                let globalmatrix = globalmatrix.clone();
+                let absolute = absolute.clone();
+                if let Ok((mut cglobalmatrix, mut cabsolute)) = nodes.get_mut(camera) {
+                    *cglobalmatrix = globalmatrix;
+                    *cabsolute = absolute;
+                }
+            }
+        }
+    });
+}
 
 pub fn sys_dispose_about_camera(
     items: Query<(Entity, &DisposeReady, &Camera), Changed<DisposeReady>>,

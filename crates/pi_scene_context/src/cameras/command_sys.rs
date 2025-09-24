@@ -26,7 +26,7 @@ pub fn sys_create_camera(
             let bindviewer = BindViewer::new(&mut dynallocator);
             
             // log::error!("Camera SubGraph: {:?}", (entity, graph));
-            let bundle = (EntityTag(TAG_CAMERA), ViewerGraphID(graph), bindviewer, ActionCamera::init(scene));
+            let bundle = (EntityTag(TAG_CAMERA), ViewerGraphID(graph), bindviewer, ActionCamera::init(scene, entity));
             commands.insert(bundle);
         }
     })
@@ -61,10 +61,14 @@ pub fn sys_act_camera_mode(
             ECameraModify::Active(val) => if let Ok((mut camera, mut viewer)) = active_cameras.get_mut(entity) {
                 // log::warn!("CameraActive {:?}, New {:?}", viewer, mode);
                 if camera.0 != val {
-                    *camera = Camera(val);
+                    camera.0 = val;
                     *viewer = ViewerActive(val);
                     // log::warn!("CameraActive Ok");
                 }
+            },
+            ECameraModify::Link(node) => if let Ok((mut camera, mut viewer)) = active_cameras.get_mut(entity) {
+                // log::warn!("CameraActive {:?}, New {:?}", viewer, mode);
+                camera.1 = node;
             },
             ECameraModify::FixMode(val) => if let Ok((mut camera, _)) = cameras.get_mut(entity) {
                 if camera.fixed_mode != val {
@@ -116,16 +120,17 @@ pub struct ActionCamera;
 impl ActionCamera {
     pub fn init(
         scene: Entity,
+        camera: Entity,
     ) -> CameraBundle {
         (
             ActionTransformNode::init(scene),
-            ActionCamera::as_camera(),
+            ActionCamera::as_camera(camera),
             ActionViewer::as_viewer(false),
         )
     }
-    pub(crate) fn as_camera() -> CameraBaseBundle {
+    pub(crate) fn as_camera(camera: Entity) -> CameraBaseBundle {
         (
-            Camera(false),
+            Camera(false, camera),
             ViewerDistanceCompute::default(),
             CameraFov::default(),
             CameraOrthSize::default(),

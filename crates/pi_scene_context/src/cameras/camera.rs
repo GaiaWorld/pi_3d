@@ -8,7 +8,7 @@ use crate::viewer::prelude::*;
 
 
 #[derive(Debug, Clone, Copy, Component, Default)]
-pub struct Camera(pub bool);
+pub struct Camera(pub bool, pub Entity);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub enum EFixedMode {
