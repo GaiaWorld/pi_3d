@@ -7,7 +7,6 @@
 #define ddx dFdx
 #define ddy dFdy
 
-
 float saturate(const float x)  {
 	return clamp(x, 0., 1.0);
 }
@@ -26,7 +25,6 @@ float pow5(const float v) {
 	float s = v*v;
 	return s*s*v;
 }
-
 
 float saturateEps(const float x) {
 	return clamp(x, Epsilon, 1.0);

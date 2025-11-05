@@ -192,6 +192,78 @@ pub fn sys_act_animation_group_action(
     mut errors: ResMut<ResErrorRecord>,
     mut globals: ResMut<GlobalAnimeAbout>,
 ) {
+    _sys_act_animation_group_action(
+        &mut cmdsaction,
+        items,
+        scenes,
+        &mut errors,
+        &mut globals
+    );
+    // cmdsaction.drain().for_each(|act| {
+    //     match act {
+    //         OpsAnimationGroupAction::Start(entity, param, delay_time_ms, fillmode) => if let Ok( (groupkey, idscene) ) = items.get(entity) {
+    //             if let Ok(mut ctx) = scenes.get_mut(idscene.0) {
+    //                 match ctx.0.start_with_progress(groupkey.0, param.speed, param.loop_mode, param.from, param.to, param.fps, param.amountcalc, delay_time_ms, fillmode) {
+    //                     Ok(_) => {},
+    //                     Err(_) => { errors.record(entity.index(), ErrorRecord::ERROR_ANIMATION_START_FAIL); },
+    //                 }
+    //             }
+    //         },
+    //         OpsAnimationGroupAction::Pause(entity) => if let Ok( (groupkey, idscene) ) = items.get(entity) {
+    //             if let Ok(mut ctx) = scenes.get_mut(idscene.0) {
+    //                 match ctx.0.pause(groupkey.0) {
+    //                     Ok(_) => {},
+    //                     Err(_) => { errors.record(entity.index(), ErrorRecord::ERROR_ANIMATION_PAUSE_FAIL); },
+    //                 }
+    //             }
+    //         },
+    //         OpsAnimationGroupAction::Stop(entity) => if let Ok( (groupkey, idscene) ) = items.get(entity) {
+    //             if let Ok(mut ctx) = scenes.get_mut(idscene.0) {
+    //                 match ctx.0.stop(groupkey.0) {
+    //                     Ok(_) => {},
+    //                     Err(_) => { errors.record(entity.index(), ErrorRecord::ERROR_ANIMATION_STOP_FAIL); },
+    //                 }
+    //             }
+    //         },
+    //         OpsAnimationGroupAction::Restart(entity) => if let Ok( (groupkey, idscene) ) = items.get(entity) {
+    //             if let Ok(mut ctx) = scenes.get_mut(idscene.0) {
+    //                 match ctx.0.restart(groupkey.0) {
+    //                     Ok(_) => {},
+    //                     Err(_) => { errors.record(entity.index(), ErrorRecord::ERROR_ANIMATION_START_FAIL); },
+    //                 }
+    //             }
+    //         },
+    //         OpsAnimationGroupAction::AddTarget(entity, target, animation) => {
+    //             if let Ok( (groupkey, idscene) ) = items.get(entity) {
+    //                 if let Ok(mut ctx) = scenes.get_mut(idscene.0) {
+    //                     match ctx.0.add_target_animation_notype(animation, groupkey.0, target) {
+    //                         Ok(_) => {},
+    //                         Err(_) => { errors.record(entity.index(), ErrorRecord::ERROR_ADD_TARGET_ANIMATION_FAIL); },
+    //                     }
+    //                 }
+    //             }
+    //         },
+    //         OpsAnimationGroupAction::FrameEvent(entity, percent, data) => {
+    //             if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_frame_event(groupkey.0, percent, data); }
+    //         },
+    //         OpsAnimationGroupAction::ListenFrame(entity) => { if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_frame_event_listen(groupkey.0); } },
+    //         OpsAnimationGroupAction::ListenStart(entity) => { if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_start_listen(groupkey.0); } },
+    //         OpsAnimationGroupAction::ListenLoop(entity) => { if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_loop_listen(groupkey.0); } },
+    //         OpsAnimationGroupAction::ListenEnd(entity) => { if let Ok( (groupkey, _idscene) ) = items.get(entity) { globals.add_end_listen(groupkey.0); } },
+    //         OpsAnimationGroupAction::Weight(_entity, _weight) => {
+    //             // todo!()
+    //         },
+    //     }
+    // });
+}
+#[inline(never)]
+fn _sys_act_animation_group_action(
+    cmdsaction: &mut ActionListAnimationGroupAction,
+    items: Query<(&AnimationGroupKey, &AnimationGroupScene)>,
+    mut scenes: Query<&mut SceneAnimationContext>,
+    mut errors: &mut ResErrorRecord,
+    mut globals: &mut GlobalAnimeAbout,
+) {
     cmdsaction.drain().for_each(|act| {
         match act {
             OpsAnimationGroupAction::Start(entity, param, delay_time_ms, fillmode) => if let Ok( (groupkey, idscene) ) = items.get(entity) {

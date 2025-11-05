@@ -280,14 +280,21 @@ impl MaterialValueBindDesc {
         }
     }
     pub fn sort(&mut self) {
-        self.mat4_list.sort_by(|a, b| { a.0.cmp(&b.0) });
-        // self.mat2_list.sort_by(|a, b| { a.0.cmp(&b.0) });
-        self.vec4_list.sort_by(|a, b| { a.0.cmp(&b.0) });
-        self.vec3_list.sort_by(|a, b| { a.0.cmp(&b.0) });
-        self.vec2_list.sort_by(|a, b| { a.0.cmp(&b.0) });
-        self.float_list.sort_by(|a, b| { a.0.cmp(&b.0) });
-        // self.int_list.sort_by(|a, b| { a.0.cmp(&b.0) });
-        self.uint_list.sort_by(|a, b| { a.0.cmp(&b.0) });
+        // self.mat4_list.sort_by(|a, b| { a.0.cmp(&b.0) });
+        // // self.mat2_list.sort_by(|a, b| { a.0.cmp(&b.0) });
+        // self.vec4_list.sort_by(|a, b| { a.0.cmp(&b.0) });
+        // self.vec3_list.sort_by(|a, b| { a.0.cmp(&b.0) });
+        // self.vec2_list.sort_by(|a, b| { a.0.cmp(&b.0) });
+        // self.float_list.sort_by(|a, b| { a.0.cmp(&b.0) });
+        // // self.int_list.sort_by(|a, b| { a.0.cmp(&b.0) });
+        // self.uint_list.sort_by(|a, b| { a.0.cmp(&b.0) });
+        
+        self.mat4_list.sort_by_key(|a| { a.0.clone() });
+        self.vec4_list.sort_by_key(|a| { a.0.clone() });
+        self.vec3_list.sort_by_key(|a| { a.0.clone() });
+        self.vec2_list.sort_by_key(|a| { a.0.clone() });
+        self.float_list.sort_by_key(|a| { a.0.clone() });
+        self.uint_list.sort_by_key(|a| { a.0.clone() });
     }
     pub fn size(&self) -> usize {
         let mut size = 0;
@@ -326,23 +333,23 @@ impl MaterialValueBindDesc {
         size
     }
     pub fn query_instance(&self, key: &Atom) -> bool {
-        match self.vec4_list.binary_search_by(|v| { v.0.cmp(key) }) {
+        match self.vec4_list.binary_search_by_key(key, |v| { v.0.clone() }) {
             Ok(idx) => return self.vec4_list[idx].2,
             Err(_) => {},
         }
-        match self.vec3_list.binary_search_by(|v| { v.0.cmp(key) }) {
+        match self.vec3_list.binary_search_by_key(key, |v| { v.0.clone() }) {
             Ok(idx) => return self.vec3_list[idx].2,
             Err(_) => {},
         }
-        match self.vec2_list.binary_search_by(|v| { v.0.cmp(key) }) {
+        match self.vec2_list.binary_search_by_key(key, |v| { v.0.clone() }) {
             Ok(idx) => return self.vec2_list[idx].2,
             Err(_) => {},
         }
-        match self.float_list.binary_search_by(|v| { v.0.cmp(key) }) {
+        match self.float_list.binary_search_by_key(key, |v| { v.0.clone() }) {
             Ok(idx) => return self.float_list[idx].2,
             Err(_) => {},
         }
-        match self.uint_list.binary_search_by(|v| { v.0.cmp(key) }) {
+        match self.uint_list.binary_search_by_key(key, |v| { v.0.clone() }) {
             Ok(idx) => return self.uint_list[idx].2,
             Err(_) => {},
         }

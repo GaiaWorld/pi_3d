@@ -13,7 +13,7 @@ use pi_render::{
     rhi::device::RenderDevice
 };
 
-use crate::{prelude::BindDefines, run_stage::EngineCustomPlugins};
+use crate::{prelude::{BindDefines, arr_push}, run_stage::EngineCustomPlugins};
 
 use super::{
     block_code::{BlockCode, BlockCodeAtom},
@@ -213,15 +213,15 @@ impl ShaderEffectMeta {
         // uniforms.uint_list.iter().for_each(|item| { if item.instance() { varyings.0.push(Varying { format: Atom::from(crate::static_string::S_UINT), name: item.tag().clone() }) } });
 
         // if engineopt.disenable_material_array == false {
-            varyings.0.push(Varying { format: Atom::from(crate::static_string::S_UINT), name: Atom::from(crate::static_string::S_V_MAT_IDX) });
+        arr_push(&mut varyings.0, Varying { format: Atom::from(crate::static_string::S_UINT), name: Atom::from(crate::static_string::S_V_MAT_IDX) });
         // }
 
         let size = varyings.size() + vs.size() + fs.size();
 
         let len = arc_textures.len();
         for i in 0..len {
-            uniforms.vec4_list.push(UniformPropertyVec4(Atom::from(String::from("Atlas") + &i.to_string()), [1., 1., 0., 0.], false));
-            uniforms.vec4_list.push(UniformPropertyVec4(Atom::from(String::from("Address") + &i.to_string()), [255., 255., 255., 0.], false));
+            arr_push(&mut uniforms.vec4_list, UniformPropertyVec4(Atom::from(String::from("Atlas") + &i.to_string()), [1., 1., 0., 0.], false));
+            arr_push(&mut uniforms.vec4_list, UniformPropertyVec4(Atom::from(String::from("Address") + &i.to_string()), [255., 255., 255., 0.], false));
         }
 
         uniforms.sort();

@@ -305,6 +305,86 @@ pub fn sys_info_node(
     // });
 }
 
+    pub fn info(v: EError) -> String {
+        match v {
+00001 => { String::from("ERROR_UNKOWN") }
+00002 => { String::from("ERROR_VERTEX_BUFFER_CREATE_FAIL") }
+00003 => { String::from("ERROR_BIND_BUFFER_CREATE_FAIL") }
+00004 => { String::from("ERROR_BIND_GROUP_CREATE_FAIL") }
+00005 => { String::from("ERROR_SHADER_CREATE_FAIL") }
+00006 => { String::from("ERROR_PIPELINE_CREATE_FAIL") }
+00007 => { String::from("ERROR_TEXTURE_CREATE_FAIL") }
+00008 => { String::from("ERROR_TEXTURE_VIEW_CREATE_FAIL") }
+00009 => { String::from("ERROR_SAMPER_CREATE_FAIL") }
+00010 => { String::from("ERROR_BIND_VIEWER_CREATE_FAIL") }
+00011 => { String::from("ERROR_BIND_EFFECT_CREATE_FAIL") }
+00012 => { String::from("ERROR_MODIFY_ERROR_MATERIAL_TEXTURE") }
+00013 => { String::from("ERROR_MATERIAL_SHADER_NOTFOUND") }
+00014 => { String::from("ERROR_USE_MATERIAL_NULL_MAT") }
+00015 => { String::from("ERROR_USE_MATERIAL_NULL_TARGET") }
+00016 => { String::from("ERROR_TEXTURE_CACHE_FAIL") }
+00017 => { String::from("ERROR_TEXTURE_CANT_LOAD_FROM_DATA") }
+00018 => { String::from("ERROR_TEXTURE_LOAD_FAIL") }
+00019 => { String::from("ERROR_TEXTURE_COMBINE_FAIL") }
+00019 => { String::from("ERROR_TEXTURE_FROM_KTX_FAIL") }
+00100 => { String::from("ERROR_ANIMATION_START_FAIL") }
+00101 => { String::from("ERROR_ANIMATION_PAUSE_FAIL") }
+00102 => { String::from("ERROR_ANIMATION_STOP_FAIL") }
+00103 => { String::from("ERROR_ADD_TARGET_ANIMATION_FAIL") }
+00100 => { String::from("ERROR_GRAPHIC_NONE_NGRAPHIC") }
+00101 => { String::from("ERROR_GRAPHIC_NONE_NODE") }
+00102 => { String::from("ERROR_GRAPHIC_EXTI_NODE") }
+00103 => { String::from("ERROR_GRAPHIC_RUN_ERR") }
+00104 => { String::from("ERROR_GRAPHIC_BUILD_ERR") }
+00105 => { String::from("ERROR_GRAPHIC_INPUT_ERR") }
+00106 => { String::from("ERROR_GRAPHIC_OUTPUT_ERR") }
+00107 => { String::from("ERROR_GRAPHIC_CUSTOM_BUILD_ERR") }
+00108 => { String::from("ERROR_GRAPHIC_CUSTOM_RUN_ERR") }
+00109 => { String::from("ERROR_GRAPHIC_WRONG_NODE_TYPE") }
+00110 => { String::from("ERROR_GRAPHIC_MISMATCH_PARAM") }
+00111 => { String::from("ERROR_SUB_GRAPHIC_ERROR") }
+00200 => { String::from("ERROR_GLTF_BIN_LOAD_FAIL") }
+00201 => { String::from("ERROR_GLTF_BUFFER") }
+00202 => { String::from("ERROR_GLTF_ACCESSOR") }
+00203 => { String::from("ERROR_GLTF_IMAGE") }
+00204 => { String::from("ERROR_GLTF_GLTF_LOAD") }
+00205 => { String::from("ERROR_GLTF_GLTF_PARSE") }
+00207 => { String::from("ERROR_GLTF_GLTF_CACHE") }
+00208 => { String::from("ERROR_GLTF_VERTEX_BUFFER") }
+00209 => { String::from("ERROR_GLTF_ANIMATION") }
+10001 => { String::from("ERROR_ENTITY_NONE") }
+10002 => { String::from("ERROR_ENTITY_DISPOSED") }
+20001 => { String::from("ERROR_SCENE_NONE") }
+20002 => { String::from("ERROR_SCENE_BIND_FAIL") }
+20003 => { String::from("ERROR_ENVIRONMENT_INFO_PARSE") }
+20004 => { String::from("ERROR_ENVIRONMENT_INFO_MAGICNUMBER") }
+20100 => { String::from("ERROR_RENDERER_NOT_FOUND") }
+50000 => { String::from("ERROR_PASS_BIND_SCENE_NONE") }
+50001 => { String::from("ERROR_PASS_BIND_VIEWER_NONE") }
+50002 => { String::from("ERROR_PASS_SET0_FAIL") }
+50003 => { String::from("ERROR_PASS_BIND_MODEL_NONE") }
+50004 => { String::from("ERROR_PASS_BIND_EFFECT_VALUE_NONE") }
+50005 => { String::from("ERROR_PASS_BIND_LIGHTING_NONE") }
+50006 => { String::from("ERROR_PASS_BIND_SKIN_NONE") }
+50007 => { String::from("ERROR_PASS_SET1_FAIL") }
+50008 => { String::from("ERROR_PASS_SET2_FAIL") }
+50010 => { String::from("ERROR_PASS_BIND_SHADOW_NONE") }
+50011 => { String::from("ERROR_PASS_BIND_BRDF_NONE") }
+50012 => { String::from("ERROR_PASS_BIND_CAMERA_OPAQUE_NONE") }
+50013 => { String::from("ERROR_PASS_BIND_CAMERA_DEPTH_NONE") }
+50014 => { String::from("ERROR_PASS_BIND_ENV_NONE") }
+50015 => { String::from("ERROR_PASS_SET3_FAIL") }
+50016 => { String::from("ERROR_PASS_BIND_GROUPS_FAIL") }
+50017 => { String::from("ERROR_PASS_SHADER_FAIL") }
+50018 => { String::from("ERROR_PASS_PIPELINE_FAIL") }
+50019 => { String::from("ERROR_PASS_DRAW_FAIL") }
+50020 => { String::from("ERROR_PASS_BIND_VELOCITY_NONE") }
+50021 => { String::from("ERROR_PASS_BIND_MODEL_INV_NONE") }
+50022 => { String::from("ERROR_PASS_BIND_MORPH_NONE") }
+50023 => { String::from("ERROR_PASS_BIND_SKININS_NONE") }
+_ => { String::from("N") }
+        }
+    }
 pub fn sys_info_draw(
     draws: Query<(
         // &PassBindGroupScene, &PassBindGroupModel, &PassBindEffectValue,
@@ -420,11 +500,12 @@ pub fn sys_info_resource(
 pub fn sys_info_error(
     mut states: ResMut<ResErrorRecord>,
 ) {
+    states.1 = true;
     if (states.0.len() > 0) {
         log::error!("Errors: ");
     }
     states.0.drain(..).for_each(|err| {
-        log::error!("Error: {:?}", err);
+        log::error!("Error: {:?}", info(err));
     });
 }
 

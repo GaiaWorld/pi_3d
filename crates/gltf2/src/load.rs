@@ -667,8 +667,8 @@ impl GLTFTempLoaded {
 pub struct GLTFResLoader {
     pub waiting: SegQueue<(QueryKey, Atom)>,
     pub querys: XHashMap<Atom, Vec<QueryKey>>,
-    pub loaded: XHashMap<Atom, Handle<GLTF>>,
-    pub errors: XHashMap<Atom, EError>,
+    // pub loaded: XHashMap<Atom, Handle<GLTF>>,
+    // pub errors: XHashMap<Atom, EError>,
     pub successed: XHashMap<QueryKey, Handle<GLTF>>,
     pub failed: XHashMap<QueryKey, EError>,
     pub baseloader: GLTFBaseLoader,
@@ -679,8 +679,8 @@ impl MemSize for GLTFResLoader {
     fn memsize(&self) -> usize {
         self.waiting.len() * 16 + 256
         + self.querys.capacity() * 24
-        + self.loaded.capacity() * 16
-        + self.errors.capacity() * 12
+        // + self.loaded.capacity() * 16
+        // + self.errors.capacity() * 12
         + self.successed.capacity() * 16
         + self.failed.capacity() * 16
         + self.successquerys.len() * 16 + 256
@@ -693,8 +693,8 @@ impl GLTFResLoader {
             // query_counter: 0,
             waiting: SegQueue::default(),
             querys: XHashMap::default(),
-            loaded: XHashMap::default(),
-            errors: XHashMap::default(),
+            // loaded: XHashMap::default(),
+            // errors: XHashMap::default(),
             successed: XHashMap::default(),
             failed: XHashMap::default(),
             baseloader: GLTFBaseLoader::new(),
@@ -735,27 +735,26 @@ impl GLTFResLoader {
         particlesys_res: &mut ResourceParticleSystem,
         gltfassets: &ShareAssetMgr<GLTF>,
     ) {
+        // let mut temploaded = Vec::new();
+        // let mut temperrors = Vec::new();
         self.baseloader.check();
         self.baseloader.loaded.drain().for_each(|(key, gltfbase)|{
             let gltf = GLTFTempLoaded::analy(gltfbase, key.clone(), commands, vb_assets_mgr, vballocator, device, queue, anime_assets, particlesys_cmds, particlesys_res);
             let key_u64 = key.asset_u64();
             if let Ok(gltf) = gltfassets.insert(key_u64, gltf) {
-                self.loaded.insert(key, gltf);
+                // self.loaded.insert(key, gltf);
+                // temploaded.push((key, gltf));
+                
+                if let Some(mut querys) = self.querys.remove(&key) {
+                    querys.drain(..).for_each(|query| {
+                        self.successed.insert(query, gltf.clone());
+                        self.successquerys.push(query);
+                    });
+                }
             }
         });
         self.baseloader.errors.drain().for_each(|(key, error)| {
-            self.errors.insert(key, error);
-        });
-
-        self.loaded.drain().for_each(|(key, gltf)| {
-            if let Some(mut querys) = self.querys.remove(&key) {
-                querys.drain(..).for_each(|query| {
-                    self.successed.insert(query, gltf.clone());
-                    self.successquerys.push(query);
-                });
-            }
-        });
-        self.errors.drain().for_each(|(key, error)| {
+            // temperrors.push((key, error));
             if let Some(mut querys) = self.querys.remove(&key) {
                 querys.drain(..).for_each(|query| {
                     self.failed.insert(query, error);
@@ -763,6 +762,23 @@ impl GLTFResLoader {
                 });
             }
         });
+
+        // temploaded.drain(..).for_each(|(key, gltf)| {
+        //     if let Some(mut querys) = self.querys.remove(&key) {
+        //         querys.drain(..).for_each(|query| {
+        //             self.successed.insert(query, gltf.clone());
+        //             self.successquerys.push(query);
+        //         });
+        //     }
+        // });
+        // self.errors.drain().for_each(|(key, error)| {
+        //     if let Some(mut querys) = self.querys.remove(&key) {
+        //         querys.drain(..).for_each(|query| {
+        //             self.failed.insert(query, error);
+        //             self.failquerys.push(query);
+        //         });
+        //     }
+        // });
     }
     pub fn get_success(&mut self, key: QueryKey) -> Option<Handle<GLTF>> {
         self.successed.remove(&key)

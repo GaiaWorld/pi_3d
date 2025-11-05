@@ -178,6 +178,14 @@ impl MemSize for GlobalAnimeEvents {
 /// 记录动画目标非动画修改的值,用于动画结束或启动时重置目标属性
 #[derive(Resource, Deref, DerefMut, Default)]
 pub struct AnimeTargetRecordValues<V: TAnimatableComp>(pub XHashMap<Entity, V>);
+impl<V: TAnimatableComp> AnimeTargetRecordValues<V> {
+    pub fn insert(&mut self, k: Entity, v: V) -> Option<V> {
+        self.0.insert(k, v)
+    }
+    pub fn get(&self, k: &Entity) -> Option<&V> {
+        self.0.get(k)
+    }
+}
 
 pub struct AnimationGroupGoto(pub Entity, pub KeyFrameCurveValue);
 impl AnimationGroupGoto {

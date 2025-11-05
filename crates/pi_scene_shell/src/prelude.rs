@@ -304,41 +304,41 @@ impl<T: Send + Sync> Default for ActionList<T> {
     }
 }
 impl<T: Send + Sync> ActionList<T> {
-    #[inline(always)]
+    // #[inline(always)]
     pub fn capacity(&self) -> usize {
         self.0.capacity() * size_of::<T>()
     }
-    #[inline(always)]
+    // #[inline(always)]
     pub fn append(&mut self, val: &mut Self) -> &mut Self {
         self.0.append(&mut val.0);
         self
     }
-    #[inline(always)]
+    // #[inline(always)]
     pub fn push_some(&mut self, val: impl IntoIterator<Item = T>) -> &mut Self {
         self.0.extend(val);
         self
     }
-    #[inline(always)]
+    // #[inline(always)]
     pub fn push(&mut self, val: T) -> &mut Self {
         // self.0.extend([val]);
-        self.0.push(val);
+        arr_push( &mut self.0, val);
         self
     }
-    #[inline(always)]
+    // #[inline(always)]
     pub fn drain(&mut self) -> Drain<T> {
         self.0.drain(..)
     }
-    #[inline(always)]
+    // #[inline(always)]
     pub fn exchange_empty(&mut self) -> Vec<T> {
         // self.0.drain().collect()
         replace(&mut self.0, vec![])
     }
-    #[inline(always)]
+    // #[inline(always)]
     pub fn exchange(&mut self, other: Vec<T>) -> Vec<T> {
         // self.0.drain().collect()
         replace(&mut self.0, other)
     }
-    #[inline(always)]
+    // #[inline(always)]
     pub fn len(&self) -> usize {
         return self.0.len();
     }
@@ -458,4 +458,9 @@ pub fn runif_changes2<T: Component, T2: Component>(
     acts2: ComponentChanged<T2>
 ) -> bool {
     acts.len() + acts2.len() > 0
+}
+
+#[inline(never)]
+pub fn arr_push<T>(vec: &mut Vec<T>, val: T) {
+    vec.push(val);
 }

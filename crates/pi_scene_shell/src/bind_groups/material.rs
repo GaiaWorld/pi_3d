@@ -339,6 +339,6 @@ impl HashAsResource for BindGroupMaterial {
 }
 impl TBindGroupHashForShader for BindGroupMaterial {
     fn hash_for_shader<H: std::hash::Hasher>(&self, _state: &mut H) {
-        // todo!()
+
     }
 }

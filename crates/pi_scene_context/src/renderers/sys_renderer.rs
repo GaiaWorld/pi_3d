@@ -302,27 +302,18 @@ use super::{
                                             *old_shader = PassShader(Some(shader));
                                             *flagpipeline = PassPipelineStateDirty;
                                         }
-                                    } else {
-                                        // log::error!("Shader Fail");
-                                        if old_shader.0.is_some() {
-                                            *old_shader = PassShader(None);
-                                            *flagpipeline = PassPipelineStateDirty;
-                                        }
+                                        return;
                                     }
-                                } else {
-                                    // log::error!("MAX_ATTRIBUTES: {}, Using Attributes: {}, MAX_BUFFER: {}, Using Buffers: {}", limit.max_vertex_attributes, vb.0.attrcount, limit.max_vertex_buffers, vb.0.desccount);
-                                    *old_shader = PassShader(None);
-                                    *flagpipeline = PassPipelineStateDirty;
                                 }
                             },
                             _ => {
                                 // log::error!("Shader Fail Geometry");
-                                if old_shader.0.is_some() {
-                                    *old_shader = PassShader(None);
-                                    *flagpipeline = PassPipelineStateDirty;
-                                }
                             }
                         };
+                        if old_shader.0.is_some() {
+                            *old_shader = PassShader(None);
+                            *flagpipeline = PassPipelineStateDirty;
+                        }
                     }
                 }
             }
@@ -464,32 +455,19 @@ use super::{
                                         *oldpipeline = PassPipeline(Some(pipeline));
                                         *flag = PassDrawDirty;
                                     }
+                                    return;
                                 } else {
                                     errors.record(id_model.0.index(), ErrorRecord::ERROR_PASS_PIPELINE_FAIL);
-                                    if oldpipeline.0.is_some() {
-                                        *oldpipeline = PassPipeline(None);
-                                        *flag = PassDrawDirty;
-                                    }
                                 }
                             },
-                            _ => { 
-                                if oldpipeline.0.is_some() {
-                                    *oldpipeline = PassPipeline(None);
-                                    *flag = PassDrawDirty;
-                                }
-                            }
+                            _ => {}
                         }
-                    } else {
-                        if oldpipeline.0.is_some() {
-                            *oldpipeline = PassPipeline(None);
-                            *flag = PassDrawDirty;
-                        }
-                    }
-                } else {
-                    if oldpipeline.0.is_some() {
-                        *oldpipeline = PassPipeline(None);
-                        *flag = PassDrawDirty;
-                    }
+                    } else {}
+                }
+                
+                if oldpipeline.0.is_some() {
+                    *oldpipeline = PassPipeline(None);
+                    *flag = PassDrawDirty;
                 }
             }
         });
@@ -730,7 +708,7 @@ use super::{
                 };
                 draws.viewport = param.viewport.val();
                 if let Some(draw) = clear_draw {
-                    draws.list.push(Arc::new(draw));
+                    arr_push(&mut draws.list, Arc::new(draw));
                 }
 
                 opaque_list.sort_by(|a, b| DrawTmpRef::cmp_opaque(a, b));
@@ -871,41 +849,41 @@ fn shader(
         // log::error!("{:?}", key_attributes);
         // log::error!("{:?}", key_attributes.vs_define_code());
     
-        vs_defined_snippets.push(key_attributes.vs_define_code());
+        arr_push(&mut vs_defined_snippets, key_attributes.vs_define_code());
         vs_extend_varying += &key_attributes.vs_varying_code(meta.varyings.0.len() as u32, meta);
         fs_extend_varying += &key_attributes.fs_varying_code(meta.varyings.0.len() as u32, meta);
     
         if let Some(set) = set0 {
-            vs_defined_snippets.push(set.vs_define_code(setidx));
-            fs_defined_snippets.push(set.fs_define_code(setidx));
+            arr_push(&mut vs_defined_snippets, set.vs_define_code(setidx));
+            arr_push(&mut fs_defined_snippets, set.fs_define_code(setidx));
             setidx += 1;
         }
     
         if let Some(set) = set1 {
             let skin = set.key().key.skin;
-            vs_defined_snippets.push(set.vs_define_code(setidx));
-            fs_defined_snippets.push(set.fs_define_code(setidx));
+            arr_push(&mut vs_defined_snippets, set.vs_define_code(setidx));
+            arr_push(&mut fs_defined_snippets, set.fs_define_code(setidx));
     
-            vs_running_attribute_snippets.push(set.vs_running_model_snippet(meta));
-            vs_running_model_snippets.push(skin.running_code());
-            vs_running_model_snippets.push(renderalignment.running_code());
+            arr_push(&mut vs_running_attribute_snippets, set.vs_running_model_snippet(meta));
+            arr_push(&mut vs_running_model_snippets, skin.running_code());
+            arr_push(&mut vs_running_model_snippets, renderalignment.running_code());
     
-            vs_defined_snippets.push(renderalignment.define_code());
+            arr_push(&mut vs_defined_snippets, renderalignment.define_code());
     
             setidx += 1;
         }
-        vs_running_attribute_snippets.push(key_attributes.vs_running_code());
-        fs_running_before_effect_snippets.push(key_attributes.fs_running_code(meta));
+        arr_push(&mut vs_running_attribute_snippets, key_attributes.vs_running_code());
+        arr_push(&mut fs_running_before_effect_snippets, key_attributes.fs_running_code(meta));
     
         if let Some(set) = set2 {
-            vs_defined_snippets.push(set.vs_define_code(setidx, meta, engineopt));
-            fs_defined_snippets.push(set.fs_define_code(setidx, meta, engineopt));
+            arr_push(&mut vs_defined_snippets, set.vs_define_code(setidx, meta, engineopt));
+            arr_push(&mut fs_defined_snippets, set.fs_define_code(setidx, meta, engineopt));
             setidx += 1;
         }
         
         if let Some(set) = set3 {
-            vs_defined_snippets.push(set.vs_define_code(setidx, meta, engineopt));
-            fs_defined_snippets.push(set.fs_define_code(setidx, meta, engineopt));
+            arr_push(&mut vs_defined_snippets, set.vs_define_code(setidx, meta, engineopt));
+            arr_push(&mut fs_defined_snippets, set.fs_define_code(setidx, meta, engineopt));
             setidx += 1;
         }
 
@@ -1026,11 +1004,11 @@ fn collect_draw<'w>(
                     };
                     
                     if is_transparent == false {
-                        opaque_list.push(draw);
+                        arr_push(opaque_list, draw);
                     } else {
                         // let mut queue = sort_param.clone();
                         draw.queue.index = *alphaindex;
-                        transparent_list.push(draw);
+                        arr_push(transparent_list, draw);
 
                     }
                 } else {
@@ -1073,9 +1051,9 @@ fn collect_draw<'w>(
             queue: sort_param.clone(),
         };
         if is_transparent == false {
-            opaque_list.push(draw);
+            arr_push(opaque_list, draw);
         } else {
-            transparent_list.push(draw);
+            arr_push(transparent_list, draw);
         }
     }
 }
@@ -1162,7 +1140,7 @@ fn collect_draw_batch(
                 return;
             }
             *count_vertex += (vertex * (draw.instances.end - draw.instances.start)) as usize;
-            draws.list.push(Arc::new(draw));
+            arr_push(&mut draws.list, Arc::new(draw));
         } else {
             // log::error!("create_not_updatable_buffer fail {:?}", bytelen);
             // let data = instancedcache.instance_initial_buffer();
@@ -1187,6 +1165,6 @@ fn collect_draw_batch(
         };
 
         *count_vertex += (vertexcount * (draw.instances.end - draw.instances.start)) as usize;
-        draws.list.push(Arc::new(draw));
+        arr_push(&mut draws.list, Arc::new(draw));
     }
 }
