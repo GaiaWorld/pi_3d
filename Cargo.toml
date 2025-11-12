@@ -174,6 +174,10 @@ path = "examples/simple/morphtargetinfluence.rs"
 name = "sprite"
 path = "examples/instance/sprite.rs"
 
+[[example]]
+name = "sdftext"
+path = "examples/simple/sdf_text.rs"
+
 # 
 # [[example]]
 # name = "quad"
@@ -201,10 +205,10 @@ path = "examples/instance/sprite.rs"
 [[example]]
 name = "drawlistperformance"
 path = "examples/performance/drawlistperformance.rs"
-# 
-# [[example]]
-# name = "instance_color_tilloff"
-# path = "examples/instance/instance_color_tilloff.rs"
+
+[[example]]
+name = "instance_color_tilloff"
+path = "examples/instance/instance_color_tilloff.rs"
 # 
 # [[example]]
 # name = "oct_tree"

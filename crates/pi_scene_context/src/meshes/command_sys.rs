@@ -445,6 +445,7 @@ impl ActionMesh {
         // );
         // state.instances.push(EVertexAttribute::Buildin(EBuildinVertexAtribute::ModelMaterialSkin));
 
+        let instance_matrix = state.instance_matrix;
         let meshinstanceattributes = ModelInstanceAttributes::new(&state.instances, state.instance_matrix, true);
 
         // let passids = PassIDs([entity, entity, entity, entity, entity, entity, entity, entity]);
@@ -481,7 +482,7 @@ impl ActionMesh {
             state,
         );
 
-        if instanceattr {
+        if instanceattr && instance_matrix {
             let _ = altermodel.alter(entity, (
                 tag, bundle, commonbindmodel.0.clone(), ModelBindDefines::default(), ModelMatIdxs::default(), passids, ModelStatic(true)
             ));

@@ -43,7 +43,7 @@ if (matParam.debug_normal > 0) {
 baseColor.rgb = max(vec3(0.02, 0.02, 0.02), baseColor.rgb);
 gl_FragColor = vec4(baseColor.rgb, alpha);
 ");
-        nodemat.binddefines = BindDefines::MODEL_BIND | BindDefines::VIEWER | BindDefines::EFFECT_VALUE_BIND;
+        nodemat.binddefines = BindDefines::MODEL_BIND | BindDefines::VIEWER | BindDefines::SCENE_EFFECT | BindDefines::EFFECT_VALUE_BIND;
 
         nodemat.values.vec3_list.push(UniformPropertyVec3(Atom::from(BlockMainTexture::KEY_COLOR), [1., 1., 1.], true));
         nodemat.values.float_list.push(UniformPropertyFloat(Atom::from(BlockOpacity::KEY_ALPHA), 1., true));

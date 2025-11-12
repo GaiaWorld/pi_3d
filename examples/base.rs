@@ -6,8 +6,8 @@ use pbr_material::ShaderPBR;
 use pi_3d::*;
 use pi_bevy_ecs_extend::action;
 // use pi_bevy_ecs_extend::system_param::layer_dirty::ComponentEvent;
-use pi_bevy_render_plugin::PiRenderPlugin;
-use pi_render::components::view;
+use pi_bevy_render_plugin::{PiRenderPlugin, ShareFontSheet};
+use pi_render::{components::view, font::{Font, FontType}};
 use pi_scene_shell::{prelude::*, frame_time::PluginFrameTime, run_stage::RunState3D};
 use pi_node_materials::prelude::*;
 use pi_particle_system::{PluginParticleSystem, prelude::{ActionSetParticleSystem, ParticleAttribute, EParticleAttributeType}};
@@ -20,9 +20,9 @@ use water::ShaderWater;
 use wgpu::Backends;
 use pi_winit::{event::WindowEvent, event_loop::EventLoop, window::Window};
 
-use std::sync::Arc;
+use std::{collections::VecDeque, sync::{Arc, atomic::AtomicBool}};
 use pi_async_rt::rt::AsyncRuntime;
-use pi_hal::{init_load_cb, runtime::MULTI_MEDIA_RUNTIME, on_load};
+use pi_hal::{font::sdf2_table::SdfResult, init_load_cb, on_load, runtime::MULTI_MEDIA_RUNTIME};
 
 #[path = "./copy.rs"]
 mod copy;
@@ -392,6 +392,8 @@ pub fn test_plugins() -> (App, Arc<pi_winit::window::Window>,EventLoop<()>) {
     #[cfg(not(feature = "use_bevy"))]
     app.add_startup_system(Update, setup_default_mat);
     
+    app.add_plugins(SDFPlugin);
+
     (app, w, eventloop)
 }
 
@@ -477,6 +479,8 @@ pub fn test_plugins_with_gltf() -> (App, Arc<Window>, EventLoop<()>) {
     app.add_systems(Startup, setup_default_mat);
     #[cfg(not(feature = "use_bevy"))]
     app.add_startup_system(Update, setup_default_mat);
+
+    app.add_plugins(SDFPlugin);
     
     (app, w, event_loop)
 }
@@ -659,4 +663,70 @@ pub fn run_loop<T>(mut app:  App, window: Arc<Window>, event_loop: EventLoop<T>)
         }
         
     })
+}
+
+pub struct SDFPlugin;
+impl Plugin for SDFPlugin {
+    fn build(&self, app: &mut App) {
+        let mut fontsheet = ShareFontSheet::new(&mut app.world, FontType::Sdf2);
+        {
+			let mut font_sheet = fontsheet.borrow_mut();
+			let font_file = include_bytes!("../assets/SOURCEHANSANSK-MEDIUM.TTF").to_vec();
+			let font_face_id = font_sheet.font_mgr_mut().create_font_face(&Atom::from("hwkt"));
+			font_sheet.font_mgr_mut().table.sdf2_table.add_font(font_face_id, Arc::new(font_file));
+
+            let f = font_sheet.font_id(Font::new(Atom::from("hwkt"), 20, 400));
+            "点击添加描述信息".chars().for_each(|char| {
+                let id = font_sheet.glyph_id(f, char);
+                font_sheet.measure_width(f, char);
+                log::error!("Glyph: {:?}", (char, id));
+            });
+        }
+
+        app.insert_resource(fontsheet);
+
+        app.add_system(First, draw_sdf);
+    }
+}
+
+pub fn draw_sdf(
+    font_sheet: SingleResMut<ShareFontSheet>, 
+    mut await_list: Local<VecDeque<(SdfResult, Share<AtomicBool>, usize)>>,
+) {
+    let mut font_sheet: pi_share::cell::RefMut<'_, pi_render::font::FontSheet> = font_sheet.borrow_mut();
+    let draw_count = font_sheet.draw_count();
+
+    // log::error!("Draw Count: {}", draw_count);
+    if draw_count > 0 {
+        let result = SdfResult::default();
+        let mark = Share::new(AtomicBool::new(false));
+        await_list.push_back((result.clone(), mark.clone(), draw_count));
+        let cur_await = font_sheet.draw_await(result.clone(), 0, draw_count);
+        MULTI_MEDIA_RUNTIME.spawn(async move {
+            let t1 = pi_time::Instant::now();
+            cur_await.await;
+            log::error!("draw sdf2==========={:?}", (draw_count,  pi_time::Instant::now() - t1));
+            mark.store(true, std::sync::atomic::Ordering::Relaxed);
+        }).unwrap();
+    }
+
+
+    let mut next = await_list.front();
+    loop {
+        if let Some((_result, is_load, _)) = next {
+            // println!("await================{:?}", &await_set_gylph);
+            if is_load.load(std::sync::atomic::Ordering::Relaxed) == true {
+                let (result, _, draw_count) = await_list.pop_front().unwrap();
+                let t1 = pi_time::Instant::now();
+                font_sheet.update_sdf2(result); // 更新纹理
+                log::error!("update_sdf2================{:?}", (draw_count, pi_time::Instant::now() - t1));
+
+                next = await_list.front();
+                // render_dirty.0 = true; // 文字纹理更新， 设置全屏渲染脏（要知道那个节点文字纹理加载成功，需要更多索引关系， 性能不一定好， 鉴于文字纹理更新不会太过频繁， 直接全屏更新）
+                continue;
+            }
+        }
+        break;
+    }
+    
 }
