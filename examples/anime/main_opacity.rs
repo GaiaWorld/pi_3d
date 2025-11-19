@@ -85,7 +85,7 @@ fn setup(
             Err(_) => { return; },
         };
         let animation = anime_contexts.vec3s.ctx.create_animation(0, AssetTypeFrameCurve::from(asset_curve) );
-        // actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), idmat, animation));
+        actions.anime.action.push(OpsAnimationGroupAction::addtarget(id_group.clone(), idmat, animation));
         actions.material.valb.push(OpsUniformValB::targetanim( idmat, Atom::from(BlockMainTexture::KEY_COLOR), id_group.clone(), key_curve0));
     }
     // {

@@ -118,10 +118,11 @@ impl MemSize for GlobalAnimeAbout {
     fn memsize(&self) -> usize {
         let mut result = 0;
         self.runtimeinfos.list.iter().for_each(|item| {
-            item.iter().for_each(|(_, item)| {
-                result += item.capacity() * 32;
-            });
-            result += item.capacity() * 32;
+            // item.iter().for_each(|(_, item)| {
+            //     result += item.capacity() * 32;
+            // });
+            // result += item.capacity() * 32;
+            result += item.capacity() * (56 + 8);
         });
         result += self.runtimeinfos.list.capacity() * 32;
 

@@ -1,6 +1,7 @@
 use pi_render::renderer::errors::ErrorRecord;
 use pi_slotmap::Key;
 use crate::ecs::*;
+use crate::object::EntityFilterForComponentChanged;
 
 use std::ops::Deref;
 
@@ -378,6 +379,7 @@ pub fn sys_calc_type_anime<D: TAnimatableComp>(
     links: Query<&AnimatorableLink>,
     mut linkeds: Query<&mut TargetAnimatorableIsRunning>,
     mut performance: ResMut<Performance>,
+    entitysets: Res<EntityFilterForComponentChanged>,
 ) {
     let time = if performance.debug { Some(pi_time::Instant::now()) } else { None };
     
@@ -415,31 +417,50 @@ pub fn sys_calc_type_anime<D: TAnimatableComp>(
     let ty = type_ctx.ctx.ty();
     // log::warn!("Anime Run ");
     let curves = type_ctx.ctx.curves();
+    
+    let mut entities = entitysets.pop();
     if let Some(map) = runinfos.runtimeinfos.get_type_list(ty) {
 
         for (target, info) in map {
-            let mut last_value: D = D::default();
-            let mut last_weight: f32 = 0.;
+            // let mut last_value: D = D::default();
+            // let mut last_weight: f32 = 0.;
 
             if let Ok(mut item) = items.get_mut(*target) {
-                let mut enable = false;
-                info.iter().for_each(|info| {
-                    if let Some(Some(curve)) = curves.get(info.curve_id) {
-                        // log::error!("{:?}", (info.amount_in_second));
-                        let value = curve.as_ref().interple(info.amount_in_second, &info.amount_calc);
-                        last_weight += info.group_weight;
-                        last_value  = last_value.interpolate(&value, info.group_weight / last_weight);
-                    }
-                    enable = true;
-                });
+                // let mut enable = false;
+                // info.iter().for_each(|info| {
+                //     if let Some(Some(curve)) = curves.get(info.curve_id) {
+                //         // log::error!("{:?}", (info.amount_in_second));
+                //         let value = curve.as_ref().interple(info.amount_in_second, &info.amount_calc);
+                //         last_weight += info.group_weight;
+                //         last_value  = last_value.interpolate(&value, info.group_weight / last_weight);
+                //     }
+                //     enable = true;
+                // });
                 
-                if enable {
-                    *item = last_value;
-                    if let Ok(linked) = links.get(*target) {
-                        if let Ok(mut item) = linkeds.get_mut(linked.deref().clone()) {
-                            *item = TargetAnimatorableIsRunning;
+                // if enable {
+                //     *item = last_value;
+                //     if let Ok(linked) = links.get(*target) {
+                //         if let Ok(mut item) = linkeds.get_mut(linked.deref().clone()) {
+                //             *item = TargetAnimatorableIsRunning;
+                //         }
+                //     }
+                // }
+                
+                if let Some(Some(curve)) = curves.get(info.curve_id) {
+                    // log::error!("{:?}", (info.amount_in_second));
+                    let value = curve.as_ref().interple(info.amount_in_second, &info.amount_calc);
+                    let last_value = if entities.insert(target) {
+                        if let Ok(linked) = links.get(*target) {
+                            if let Ok(mut item) = linkeds.get_mut(linked.deref().clone()) {
+                                *item = TargetAnimatorableIsRunning;
+                            }
                         }
-                    }
+                        D::default()
+                    } else {
+                        item.clone()
+                    };
+                    *item  = last_value.append(&value, info.group_weight);
+
                 }
             } else {
                 // log::warn!("Animation Target NotFound:");
@@ -448,6 +469,8 @@ pub fn sys_calc_type_anime<D: TAnimatableComp>(
     } else {
         // // log::trace!("Not Found Anime Type: {}", ty);
     }
+
+    entitysets.push(entities);
 
     if performance.debug { performance.animation += (pi_time::Instant::now() - time.unwrap()).as_micros() as u32; }
 }
