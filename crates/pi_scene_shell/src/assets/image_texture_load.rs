@@ -6,6 +6,7 @@ use pi_assets::{
     mgr::{AssetMgr, LoadResult},
 };
 use pi_async_rt::prelude::AsyncRuntime;
+use pi_bevy_render_plugin::asimage_url::{RenderTarget, load_from_asimage_url};
 pub use pi_bevy_render_plugin::{ResStateTextureLoader, ResTextureCombineAtlas2DMgr};
 use pi_hal::{loader::AsyncLoader, runtime::RENDER_RUNTIME};
 use pi_bevy_asset::ShareAssetMgr;
@@ -192,6 +193,7 @@ pub fn sys_image_texture_view_load_launch<K: std::ops::Deref<Target = EKeyTextur
     device: Res<PiRenderDevice>,
     mut state: ResMut<ResStateTextureLoader>,
     targets: Res<CustomRenderTargets>,
+    asimage: Query<(OrDefault<RenderTarget>, OrDefault<GraphId>)>
     // mut combinemgr: ResMut<ResTextureCombineAtlas2DMgr>,
 ) {
     items.iter_mut().for_each(|(entity, param, mut cmd)| {
@@ -199,7 +201,7 @@ pub fn sys_image_texture_view_load_launch<K: std::ops::Deref<Target = EKeyTextur
         let param = param.deref();
         match _sys_image_texture_view_load_launch2(
             entity, 0, param, &imgtex_assets_mgr, &texres_assets_mgr, &mut image_loader,
-            &queue, &device, &mut state, &loader.wait, &loader.success, &loader.fail, &targets
+            &queue, &device, &mut state, &loader.wait, &loader.success, &loader.fail, &targets, &asimage
         ) {
             Some(data) => { 
                 *cmd = D::from(data); 
@@ -380,6 +382,7 @@ pub fn sys_image_texture_view_load_launch2(
     device: Res<PiRenderDevice>,
     mut state: ResMut<ResStateTextureLoader>,
     targets: Res<CustomRenderTargets>,
+    asimage: Query<(OrDefault<RenderTarget>, OrDefault<GraphId>)>
 ) {
     items.iter_mut().for_each(|(entity, param, mut cmd)| {
         state.texview_count += 1;
@@ -388,7 +391,7 @@ pub fn sys_image_texture_view_load_launch2(
         param.0.iter().for_each(|key| {
             match _sys_image_texture_view_load_launch2(
                 entity, idx, &key.deref().url, &imgtex_assets_mgr, &texres_assets_mgr, &mut image_loader,
-                &queue, &device, &mut state, &loader.wait, &loader.success, &loader.fail, &targets
+                &queue, &device, &mut state, &loader.wait, &loader.success, &loader.fail, &targets, &asimage
             ) {
                 Some(data) => {
                     cmd.loaded_textureviewusage(idx, data, key.deref().url.clone());
@@ -415,9 +418,28 @@ fn _sys_image_texture_view_load_launch2(
     success: &Share<SegQueue<(ObjectID, EKeyTexture, ETextureViewUsage, usize)>>,
     fail: &Share<SegQueue<(ObjectID, EKeyTexture, usize)>>,
     targets: &CustomRenderTargets,
+    asimage: &Query<(OrDefault<RenderTarget>, OrDefault<GraphId>)>,
 ) -> Option<ETextureViewUsage> {
     match param {
         EKeyTexture::Tex(url) => {
+            if url.starts_with("asimage:://") {
+                let key = param.clone();
+                match load_from_asimage_url(url, asimage) {
+                    Ok(rt) => match rt {
+                        Some(rt) => {
+                            state.texview_success += 1;
+                            Some(ETextureViewUsage::from(&rt.0))
+                        },
+                        None => {
+                            fail.push((entity, key, slot)); None
+                        },
+                    },
+                    Err(_) => {
+                        fail.push((entity, key, slot));
+                        None
+                    }
+                }
+            } else {
             let key_u64 = url.asset_u64();
             let result = AssetMgr::load(&texres_assets_mgr, &key_u64);
             match result {
@@ -445,6 +467,7 @@ fn _sys_image_texture_view_load_launch2(
                     
                     None
                 },
+            }
             }
         },
         EKeyTexture::Image(_key) => {
