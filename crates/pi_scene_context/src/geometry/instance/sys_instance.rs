@@ -11,174 +11,126 @@ use crate::{
 
 use super::{*, instanced_buffer::*, types::ModelInstanceAttributes, };
 
-#[derive(Clone, Copy)]
-pub struct TmpInstanceSort {
-    pub idx: u32,
-    pub index: i32,
-    pub sortparam: f32,
-}
-impl PartialEq for TmpInstanceSort {
-    fn eq(&self, other: &Self) -> bool {
-        self.index == other.index && self.sortparam == other.sortparam
-    }
-}
-impl Eq for TmpInstanceSort {
-    fn assert_receiver_is_total_eq(&self) {
+pub fn sys_tick_instanced_buffer_update_single(
+    actives: Query<(&GlobalEnable, &RenderQueueSortParam, &AbstructMeshCullingFlag, &GlobalMatrix, &LocalPosition), With<InstanceMesh>>,
+    instanceattributes: Query<&ModelInstanceAttributes>,
+    changeds: ComponentChanged<InstanceSourceRefs>,
+    mut sources: Query<
+        (
+            Entity, &EInstanceSortMode, &InstanceSourceRefs, &GeometryID, &MeshInstanceState, &mut InstancedMeshTransparentSortCollection
+        )
+    >,
+    dispoeds: Query<&DisposeReady>,
+    geometrys: Query<&InstancedInfoComp>,
+    mut slots: Query<(&AssetDescVBSlots, &mut AssetResVBSlots, &mut LoadedKeyVBSlots, &mut FlagGeometryDirty)>,
+    instancedcache: Res<InstanceBufferAllocator>,
+    mut allocator: ResMut<VertexBufferAllocator3D>,
+    device: Res<PiRenderDevice>,
+    queue: Res<PiRenderQueue>,
+    mut temp: ResMut<TmpCommonVec>,
+    entitysets: Res<EntityFilterForComponentChanged>,
+    // mut performance: ResMut<Performance>,
+) {
+    // performance.systems.push(String::from("sys_tick_instanced_buffer_update_single"));
+    let mut entities = entitysets.pop();
+    changeds.iter().for_each(|entity| {
+        if !entities.insert(entity) { return; }
+        if let Ok((idsource, sortmode, instances, idgeo, meshinsstate, mut instancessortinfos)) = sources.get_mut(*entity) {
+            if let Ok(disposed) = dispoeds.get(idsource) {
+                if disposed.0 == true { return; }
+                if meshinsstate.use_single_instancebuffer == false { return; }
+                if let Ok(InstancedInfoComp(Some(buffer))) = geometrys.get(idgeo.0) {
+                    instancessortinfos.reset();
+                    instancessortinfos.sizeperinstance = buffer.bytes_per_instance as u16;
+                    instancessortinfos.use_single_instancebuffer = meshinsstate.use_single_instancebuffer;
 
-    }
-}
-impl PartialOrd for TmpInstanceSort {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        // self.index.partial_cmp(&other.index)
-        match self.index.partial_cmp(&other.index) {
-            Some(order) => match order {
-                std::cmp::Ordering::Equal => {
-                    self.sortparam.partial_cmp(&other.sortparam)
-                },
-                _ => Some(order),
-            },
-            None => None,
+                    // 实例按渲染队列排序
+                    temp.clear();
+                    
+                    if collect_instance_info(sortmode, instances, &mut instancessortinfos, &actives, &dispoeds, &instanceattributes, &mut temp, u32::MAX) {
+                        let collected = instancessortinfos.data.as_slice();
+                        let instancedinfo = buffer;
+                        if let Ok((desclist, mut buffer, mut keys, mut flag)) = slots.get_mut(idgeo.0) {
+                            let buffer = match instancedinfo.slot() {
+                                EVertexBufferSlot::Slot01 => { if let Some(buffer) = &mut buffer[0] { keys.0[0] = desclist.key(0); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
+                                EVertexBufferSlot::Slot02 => { if let Some(buffer) = &mut buffer[1] { keys.0[1] = desclist.key(1); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
+                                EVertexBufferSlot::Slot03 => { if let Some(buffer) = &mut buffer[2] { keys.0[2] = desclist.key(2); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
+                                EVertexBufferSlot::Slot04 => { if let Some(buffer) = &mut buffer[3] { keys.0[3] = desclist.key(3); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
+                                EVertexBufferSlot::Slot05 => { if let Some(buffer) = &mut buffer[4] { keys.0[4] = desclist.key(4); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
+                                EVertexBufferSlot::Slot06 => { if let Some(buffer) = &mut buffer[5] { keys.0[5] = desclist.key(5); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
+                                EVertexBufferSlot::Slot07 => { if let Some(buffer) = &mut buffer[6] { keys.0[6] = desclist.key(6); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
+                                EVertexBufferSlot::Slot08 => { if let Some(buffer) = &mut buffer[7] { keys.0[7] = desclist.key(7); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
+                                _ => { return; }
+                            };
+                            update_instanced_buffer_for_single(buffer, &collected, &instancedcache, &mut allocator, &device, &queue);
+                        }
+                    }
+                }
+            }
         }
-    }
-}
-impl Ord for TmpInstanceSort {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.partial_cmp(other).unwrap()
-    }
+    });
+    entitysets.push(entities);
 }
 
-    pub fn sys_tick_instanced_buffer_update_single(
-        actives: Query<(&GlobalEnable, &RenderQueueSortParam, &AbstructMeshCullingFlag, &GlobalMatrix, &LocalPosition), With<InstanceMesh>>,
-        instanceattributes: Query<&ModelInstanceAttributes>,
-        changeds: ComponentChanged<InstanceSourceRefs>,
-        mut sources: Query<
-            (
-                Entity, &EInstanceSortMode, &InstanceSourceRefs, &GeometryID, &MeshInstanceState, &mut InstancedMeshTransparentSortCollection
-            )
-        >,
-        dispoeds: Query<&DisposeReady>,
-        geometrys: Query<&InstancedInfoComp>,
-        mut slots: Query<(&AssetDescVBSlots, &mut AssetResVBSlots, &mut LoadedKeyVBSlots, &mut FlagGeometryDirty)>,
-        instancedcache: Res<InstanceBufferAllocator>,
-        mut allocator: ResMut<VertexBufferAllocator3D>,
-        device: Res<PiRenderDevice>,
-        queue: Res<PiRenderQueue>,
-        mut temp: ResMut<TmpCommonVec>,
-        // mut combinedata: ResMut<CombineDataCommon>,
-        // engineopt: Res<EngineCustomPlugins>,
-        entitysets: Res<EntityFilterForComponentChanged>,
-        // mut performance: ResMut<Performance>,
-    ) {
-        // performance.systems.push(String::from("sys_tick_instanced_buffer_update_single"));
-        let mut entities = entitysets.pop();
-        // changeds.iter().for_each(|entity| {
-        //     entities.insert(*entity);
-        // });
-        changeds.iter().for_each(|entity| {
-            if !entities.insert(entity) { return; }
-            if let Ok((idsource, sortmode, instances, idgeo, meshinsstate, mut instancessortinfos)) = sources.get_mut(*entity) {
-                if let Ok(disposed) = dispoeds.get(idsource) {
-                    if disposed.0 == true { return; }
-                    if meshinsstate.use_single_instancebuffer == false { return; }
-                    if let Ok(InstancedInfoComp(Some(buffer))) = geometrys.get(idgeo.0) {
-                        instancessortinfos.reset();
-                        instancessortinfos.sizeperinstance = buffer.bytes_per_instance as u16;
-                        instancessortinfos.use_single_instancebuffer = meshinsstate.use_single_instancebuffer;
-    
-                        // 实例按渲染队列排序
-                        temp.clear();
-                        
-                        if collect_instance_info(sortmode, instances, &mut instancessortinfos, &actives, &dispoeds, &instanceattributes, &mut temp, u32::MAX) {
-                            let collected = instancessortinfos.data.as_slice();
-                            let instancedinfo = buffer;
-                            if let Ok((desclist, mut buffer, mut keys, mut flag)) = slots.get_mut(idgeo.0) {
-                                let buffer = match instancedinfo.slot() {
-                                    EVertexBufferSlot::Slot01 => { if let Some(buffer) = &mut buffer[0] { keys.0[0] = desclist.key(0); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
-                                    EVertexBufferSlot::Slot02 => { if let Some(buffer) = &mut buffer[1] { keys.0[1] = desclist.key(1); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
-                                    EVertexBufferSlot::Slot03 => { if let Some(buffer) = &mut buffer[2] { keys.0[2] = desclist.key(2); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
-                                    EVertexBufferSlot::Slot04 => { if let Some(buffer) = &mut buffer[3] { keys.0[3] = desclist.key(3); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
-                                    EVertexBufferSlot::Slot05 => { if let Some(buffer) = &mut buffer[4] { keys.0[4] = desclist.key(4); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
-                                    EVertexBufferSlot::Slot06 => { if let Some(buffer) = &mut buffer[5] { keys.0[5] = desclist.key(5); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
-                                    EVertexBufferSlot::Slot07 => { if let Some(buffer) = &mut buffer[6] { keys.0[6] = desclist.key(6); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
-                                    EVertexBufferSlot::Slot08 => { if let Some(buffer) = &mut buffer[7] { keys.0[7] = desclist.key(7); *flag = FlagGeometryDirty;  &mut buffer.0 } else { return; } },
-                                    _ => { return; }
-                                };
-                                update_instanced_buffer_for_single(buffer, &collected, &instancedcache, &mut allocator, &device, &queue);
-                            }
-                        }
+
+pub fn sys_tick_instanced_buffer_update(
+    changeds: ComponentChanged<InstanceSourceRefs>,
+    actives: Query<(&GlobalEnable, &RenderQueueSortParam, &AbstructMeshCullingFlag, &GlobalMatrix, &LocalPosition), With<InstanceMesh>>,
+    instanceattributes: Query<&ModelInstanceAttributes>,
+    mut sources: Query<
+        (
+            Entity, &EInstanceSortMode, &InstanceSourceRefs, &GeometryID, &MeshInstanceState, &mut InstancedMeshTransparentSortCollection
+        ),
+    >,
+    dispoeds: Query<&DisposeReady>,
+    geometrys: Query<&InstancedInfoComp>,
+    mut temp: ResMut<TmpCommonVec>,
+    engineopt: Res<EngineCustomPlugins>,
+    entitysets: Res<EntityFilterForComponentChanged>,
+    // mut performance: ResMut<Performance>,
+) {
+    let mut entities = entitysets.pop();
+    // performance.systems.push(String::from("sys_tick_instanced_buffer_update"));
+    // log::error!("Instance Update");
+    let mut counter = 0;
+    changeds.iter().for_each(|entity| {
+        if !entities.insert(entity) { return; }
+        if let Ok((idsource, sortmode, instances, idgeo, meshinsstate, mut instancessortinfos)) = sources.get_mut(*entity) {
+            if let Ok(disposed) = dispoeds.get(idsource) {
+                if disposed.0 == true { return; }
+                if meshinsstate.use_single_instancebuffer == true { return; }
+
+                if let Ok(InstancedInfoComp(Some(instancedinfo))) = geometrys.get(idgeo.0) {
+                    // *renderenable = RenderGeometryEable(false);
+
+                    // 实例按渲染队列排序
+                    temp.clear();
+                    instancessortinfos.reset();
+                    instancessortinfos.use_single_instancebuffer = meshinsstate.use_single_instancebuffer;
+                    instancessortinfos.sizeperinstance = instancedinfo.bytes_per_instance as u16;
+
+                    if collect_instance_info(sortmode, instances, &mut instancessortinfos, &actives, &dispoeds, &instanceattributes, &mut temp, engineopt.max_instance_batch_count) {
+                        counter += 1;
                     }
+                    // log::error!("{:?}", (instancessortinfos.count, instancessortinfos.data.len()));
                 }
             }
-        });
-        entitysets.push(entities);
-    }
+        }
+    });
+    entitysets.push(entities);
+
+    // log::error!("sys_tick_instanced_buffer_update {:?}", (counter));
+}
 
 
-    pub fn sys_tick_instanced_buffer_update(
-        changeds: ComponentChanged<InstanceSourceRefs>,
-        actives: Query<(&GlobalEnable, &RenderQueueSortParam, &AbstructMeshCullingFlag, &GlobalMatrix, &LocalPosition), With<InstanceMesh>>,
-        instanceattributes: Query<&ModelInstanceAttributes>,
-        mut sources: Query<
-            (
-                Entity, &EInstanceSortMode, &InstanceSourceRefs, &GeometryID, &MeshInstanceState, &mut InstancedMeshTransparentSortCollection
-            ),
-        >,
-        dispoeds: Query<&DisposeReady>,
-        geometrys: Query<&InstancedInfoComp>,
-        mut temp: ResMut<TmpCommonVec>,
-        engineopt: Res<EngineCustomPlugins>,
-        entitysets: Res<EntityFilterForComponentChanged>,
-        // mut performance: ResMut<Performance>,
-    ) {
-        let mut entities = entitysets.pop();
-        // changeds.iter().for_each(|entity| {
-        //     entities.insert(*entity);
-        // });
-        // performance.systems.push(String::from("sys_tick_instanced_buffer_update"));
-        // log::error!("Instance Update");
-        let mut counter = 0;
-        // let mut size = 0;
-        changeds.iter().for_each(|entity| {
-            if !entities.insert(entity) { return; }
-            if let Ok((idsource, sortmode, instances, idgeo, meshinsstate, mut instancessortinfos)) = sources.get_mut(*entity) {
-                if let Ok(disposed) = dispoeds.get(idsource) {
-                    if disposed.0 == true { return; }
-                    if meshinsstate.use_single_instancebuffer == true { return; }
-    
-                    if let Ok(InstancedInfoComp(Some(instancedinfo))) = geometrys.get(idgeo.0) {
-                        // *renderenable = RenderGeometryEable(false);
-    
-                        // 实例按渲染队列排序
-                        temp.clear();
-                        instancessortinfos.reset();
-                        instancessortinfos.use_single_instancebuffer = meshinsstate.use_single_instancebuffer;
-                        instancessortinfos.sizeperinstance = instancedinfo.bytes_per_instance as u16;
-
-                        if collect_instance_info(sortmode, instances, &mut instancessortinfos, &actives, &dispoeds, &instanceattributes, &mut temp, engineopt.max_instance_batch_count) {
-                            counter += 1;
-                        }
-                        // log::error!("{:?}", (instancessortinfos.count, instancessortinfos.data.len()));
-                    }
-                }
-            }
-        });
-        entitysets.push(entities);
-        // sources.iter_mut().for_each(|(idsource, sortmode, instances, idgeo, meshinsstate, mut instancessortinfos)| {
-            
-        // });
-
-        // log::error!("sys_tick_instanced_buffer_update {:?}", (counter));
-    }
-
-
-    pub fn sys_instanced_buffer_upload(
-        mut instancedcache: ResMut<InstanceBufferAllocator>,
-        queue: Res<PiRenderQueue>,
-        // mut performance: ResMut<Performance>,
-    ) {
-        // performance.systems.push(String::from("sys_instanced_buffer_upload"));
-        instancedcache.upload(&queue);
-    }
+pub fn sys_instanced_buffer_upload(
+    mut instancedcache: ResMut<InstanceBufferAllocator>,
+    queue: Res<PiRenderQueue>,
+    // mut performance: ResMut<Performance>,
+) {
+    // performance.systems.push(String::from("sys_instanced_buffer_upload"));
+    instancedcache.upload(&queue);
+}
 
 pub fn update_instanced_buffer_for_single(
     oldbuffer: &mut EVerticesBufferTmp,
@@ -225,8 +177,6 @@ fn collect_instance_info(
 ) -> bool {
     
     let (isglobal, vidx, scl) = sortmode.arg_for_sortparam();
-    // let mut alphaindexarr: Vec<(i32, usize)> = vec![];
-    // let mut infoarr: Vec<(Vec<Number>, Vec<(Entity, (Number, Number, Number))>)> = vec![];
 
     instances.iter().for_each(|(_k, id)| {
         if let (Ok((enable, instancelayer, culling, gtransform, localpos)), Ok(disposed)) = (actives.get(*id), dispoeds.get(*id)) {
@@ -237,9 +187,6 @@ fn collect_instance_info(
                     localpos.0.as_slice()[vidx] * scl
                 };
                 temp.push(*id, instancelayer.index, sortparam, gtransform.xyz());
-                // let idx = temp.instancesort.len() as u32;
-                // temp.instancesort.push(TmpInstanceSort { index: instancelayer.index, idx, sortparam });
-                // temp.instances.push((*id, gtransform.xyz()));
             }
         }
     });
@@ -256,13 +203,6 @@ fn collect_instance_info(
         let mut tmp_alphaindex = i32::MIN;
         let mut tmp_instance_start = 0;
         let mut tmp_instance_end = 0;
-        // let mut xyz = &instances[sorted_instances[0].idx as usize].1;
-        // minx = minx.min(xyz.0);
-        // miny = miny.min(xyz.1);
-        // minz = minz.min(xyz.2);
-        // maxx = maxx.max(xyz.0);
-        // maxy = maxy.max(xyz.1);
-        // maxz = maxz.max(xyz.2);
 
         temp.iter(|(idinstance, index, xyz)| {
             if let Ok(instancedata) = instanceattributes.get(*idinstance) {

@@ -17,7 +17,6 @@ pub trait TBoundingInfoCalc {
         result: &mut Option<PickResult>,
         sortparams: &Query<&GlobalEnable>,
     );
-    fn entities(&self) -> Vec<Entity>;
     fn size(&self) -> usize;
     fn reset_temp(&mut self);
 }
@@ -256,13 +255,6 @@ impl SceneColliderPool {
             SceneColliderPool::OctTree(item) => item.ray_test(ray, result, sortparams),
         }
     }
-    pub fn entities(&self) -> Vec<Entity> {
-        match self {
-            SceneColliderPool::List(items) => items.entities(),
-            SceneColliderPool::QuadTree() => vec![],
-            SceneColliderPool::OctTree(items) => items.entities(),
-        }
-    }
     pub fn size(&self) -> usize {
         match self {
             SceneColliderPool::List(items) => items.size(),
@@ -397,14 +389,6 @@ impl SceneBoundingPool {
             SceneBoundingPool::QuadTree() => todo!(),
             SceneBoundingPool::OctTree(item) => item.ray_test(ray, result, sortparams),
             SceneBoundingPool::None => {}
-        }
-    }
-    pub fn entities(&self) -> Vec<Entity> {
-        match self {
-            SceneBoundingPool::List(items) => items.entities(),
-            SceneBoundingPool::QuadTree() => vec![],
-            SceneBoundingPool::OctTree(items) => items.entities(),
-            SceneBoundingPool::None => { vec![] }
         }
     }
     pub fn size(&self) -> usize {

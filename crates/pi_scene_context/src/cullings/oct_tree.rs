@@ -13,22 +13,23 @@ pub type TOctTreeBind = (Number, i32);
 pub struct BoundingOctTree {
     fast: XHashSet<Entity>,
     tree: OctTree<BoundingKey, TOctTreeBind>,
-    temp: XHashSet<Entity>,
+    // temp: XHashSet<Entity>,
 }
 impl BoundingOctTree {
     pub fn new(tree: OctTree<BoundingKey, TOctTreeBind>) -> Self {
         Self {
             fast: XHashSet::default(),
             tree,
-            temp: XHashSet::default(),
+            // temp: XHashSet::default(),
         }
     }
 }
 
 impl TBoundingInfoCalc for BoundingOctTree {
     fn add_fast(&mut self, key: Entity) {
-        self.fast.insert(key);
-        self.tree.remove(BoundingKey(key));
+        if self.fast.insert(key) {
+            self.tree.remove(BoundingKey(key));
+        }
     }
     fn add(&mut self, key: Entity, min: (Number, Number, Number), max: (Number, Number, Number), intersection_treshold: Number, sortindex: i32) {
         // println!("add: {:?}", (key, min, max));
@@ -120,22 +121,11 @@ impl TBoundingInfoCalc for BoundingOctTree {
 
         self.tree.query(&aabb, intersects, &mut args, ray_test_func);
     }
-    fn entities(&self) -> Vec<Entity> {
-        let count = self.fast.len() + self.tree.len();
-        let mut result = Vec::with_capacity(count);
-        self.fast.iter().for_each(|v| {
-            result.push(*v);
-        });
-        self.tree.ab_map.keys().for_each(|v| {
-            result.push(v.0);
-        });
-        result
-    }
     fn size(&self) -> usize {
         self.fast.capacity() + self.tree.ab_map.capacity()
     }
     fn reset_temp(&mut self) {
-        self.temp.clear();
+        // self.temp.clear();
     }
 }
 

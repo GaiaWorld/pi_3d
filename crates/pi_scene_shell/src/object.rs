@@ -130,6 +130,7 @@ pub type ActionListDisposeCan = ActionList<OpsDisposeCan>;
 //     }
 // }
 
+#[derive(Clone)]
 pub struct EntityRepeatCheck(Vec<u8>, usize);
 impl Default for EntityRepeatCheck {
     fn default() -> Self {

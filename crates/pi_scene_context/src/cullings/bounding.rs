@@ -11,14 +11,15 @@ use super::{base::{PiRay, PickResult, TBoundingInfoCalc, TFilter}, bounding_sphe
 #[derive(Default, Clone)]
 pub struct VecBoundingInfoCalc {
     pool: XHashMap<Entity, ((Number, Number, Number), (Number, Number, Number), Number, i32)>,
-    fast: XHashSet<Entity>,
-    temp: XHashSet<Entity>,
+    fast: EntityRepeatCheck,
+    // temp: XHashSet<Entity>,
 }
 
 impl TBoundingInfoCalc for VecBoundingInfoCalc {
     fn add_fast(&mut self, key: Entity) {
-        self.fast.insert(key);
-        self.pool.remove(&key);
+        if self.fast.insert(&key) {
+            self.pool.remove(&key);
+        }
     }
     fn add(&mut self, key: Entity, min: (Number, Number, Number), max: (Number, Number, Number), intersection_treshold: Number, alphaindex: i32) {
         self.fast.remove(&key);
@@ -112,18 +113,11 @@ impl TBoundingInfoCalc for VecBoundingInfoCalc {
             }
         }
     }
-    fn entities(&self) -> Vec<Entity> {
-        let count = self.fast.len() + self.pool.len();
-        let mut result = Vec::with_capacity(count);
-        self.fast.iter().for_each(|v| { result.push(*v); });
-        self.pool.keys().for_each(|v| { result.push(*v); });
-        result
-    }
     fn size(&self) -> usize {
         self.fast.capacity() + self.pool.capacity()
     }
     fn reset_temp(&mut self) {
-        self.temp.clear();
+        // self.temp.clear();
     }
 }
 
