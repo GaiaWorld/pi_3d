@@ -57,7 +57,7 @@ fn setup(
     state.instances.push(
         CustomVertexAttribute::new(
             Atom::from("InsPosition"),
-            Atom::from("A_POSITION.xyz = A_POSITION.xyz * 0.75 + InsPosition;"),
+            Atom::from("A_POSITION.xyz = A_POSITION.xyz * 0.75 + InsPosition + 10. * cos(InsColor.xyz + vec3(PI_Time.y, PI_Time.y, PI_Time.y));"),
             ECustomVertexType::Vec3, None
         )
     );

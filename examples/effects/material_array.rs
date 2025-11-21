@@ -32,15 +32,10 @@ pub struct ListTestData(SegQueue<(Entity, Entity, Vec<Entity>)>, Option<Entity>,
         mut commands: Commands,
         mut testdata: ResMut<ListTestData>,
         mut actions: pi_3d::ActionSets,
-        defaultmat: Res<SingleIDBaseDefaultMaterial>,
-        scenes: Query<&SceneBoundingPool>,
-        materials: Query<&MaterialRefs>,
-        viewers: Query<(&ModelList, &ModelListAfterCulling)>,
         instancedatas: Query<&ModelInstanceAttributes>,
         instancesource: Query<&InstancedMeshTransparentSortCollection>,
         combinebuffer: Res<CombineBuffer>,
         meshes: Query<&InstanceSourceRefs>,
-        tempvecs: Res<TmpCommonVec>,
     ) {
         let _ = actions.disposeref.drain();
         let mut instancedatalen = 0;
@@ -54,20 +49,9 @@ pub struct ListTestData(SegQueue<(Entity, Entity, Vec<Entity>)>, Option<Entity>,
 
         // return;
         let mut result = vec![instancedatalen];
-        // scenes.iter().for_each(|item| {
-        //     result.push(item.size() * 40);
-        // });
-        // materials.iter().for_each(|item| {
-        //     result.push(item.capacity() * 8);
-        // });
         meshes.iter().for_each(|item| {
             result.push(item.capacity() * 8);
         });
-        // viewers.iter().for_each(|item| {
-        //     result.push(item.0.0.capacity() * 8);
-        //     result.push(item.1.0.capacity() * 8);
-        // });
-        // log::error!("{:?}", (result, testdata.0.len(), tempvecs.instancesort.capacity() * 64));
         if let Some(scene) = testdata.1.clone() {
             if let Some((source, idmat, mut instances)) = testdata.0.pop() {
                 actions.obj_dispose.push(OpsDisposeReady::ops(source));
@@ -100,16 +84,7 @@ pub struct ListTestData(SegQueue<(Entity, Entity, Vec<Entity>)>, Option<Entity>,
                     actions.instance.create.push(OpsInstanceMeshCreation::ops(source, instance));
                     actions.transform.tree.push(OpsTransformNodeParent::ops(instance, scene));
                     actions.transform.localsrt.push(OpsTransformNodeLocal::ops(instance, ETransformSRT::Translation(random.gen_range(-0.5f32..0.5f32) as f32 * (TEST_SIZE as f32), random.gen_range(-0.5f32..0.5f32) * (TEST_SIZE as f32), random.gen_range(0f32..0.5f32) * (TEST_SIZE as f32))));
-                    actions.transform.localsrt.push(OpsTransformNodeLocal::ops(instance, ETransformSRT::Scaling(10.5, 10.5, 10.5)));
-                    
-                    // let instance = commands.spawn_empty_id();
-                    // actions.transform.tree.push(OpsTransformNodeParent::ops(instance, scene));
-                    // actions.transform.create.push(OpsTransformNode::ops(scene, instance));
-                    // actions.transform.localsrt.push(OpsTransformNodeLocal::ops(instance, ETransformSRT::Translation(random.gen_range(-0.5f32..0.5f32) as f32 * (TEST_SIZE as f32), random.gen_range(-0.5f32..0.5f32) * (TEST_SIZE as f32), random.gen_range(0f32..0.5f32) * (TEST_SIZE as f32))));
-                    // actions.transform.localsrt.push(OpsTransformNodeLocal::ops(instance, ETransformSRT::Scaling(0.5, 0.5, 0.5)));
-                    // // actions.transform.tree.push(OpsTransformNodeParent::ops(instance, scene));
-                    // // actions.mesh.create.push(OpsMeshCreation::ops(scene, instance, MeshInstanceState { instance_matrix: true, ..Default::default() }));
-    
+                    actions.transform.localsrt.push(OpsTransformNodeLocal::ops(instance, ETransformSRT::Scaling(10.5, 10.5, 10.5)));    
     
                     temp.push(instance);
                 }

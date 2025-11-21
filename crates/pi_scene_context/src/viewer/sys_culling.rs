@@ -73,11 +73,11 @@ impl<'a, 'w> TFilter for SceneBoundingFilter<'a, 'w> {
 }
 
 pub fn sys_abstructmesh_culling_flag_reset(
-    mut items: Query<&mut AbstructMeshCullingFlag>,
+    // mut items: Query<&mut AbstructMeshCullingFlag>,
 ) {
-    items.iter_mut().for_each(|mut item| {
-        *item = AbstructMeshCullingFlag(false);
-    });
+    // items.iter_mut().for_each(|mut item| {
+    //     *item = AbstructMeshCullingFlag(false);
+    // });
 }
 
 pub fn sys_update_viewer_model_list_by_viewer<T: TViewerViewMatrix + Component, T2: TViewerProjectMatrix + Component>(
@@ -91,8 +91,6 @@ pub fn sys_update_viewer_model_list_by_viewer<T: TViewerViewMatrix + Component, 
 ) {
     // let time1 = pi_time::Instant::now();
 
-    // log::debug!("CameraModelListByViewer :");
-    // log::debug!("SysModelListUpdateByCamera: ");
     viewers.iter_mut().for_each(|(_camera, vieweractive, scene, layer, mut list_model, mut flag_list_model)| {
         _sys_update_viewer_model_list_by_viewer(
             vieweractive, scene, layer, &mut list_model, &mut flag_list_model, &items
@@ -179,7 +177,7 @@ pub fn sys_tick_viewer_culling(
         // Or<(Changed<ModelList>, Changed<ViewerTransformMatrix>, Changed<ViewerViewMatrix>, Changed<ForceIncludeModelList>, Changed<ViewerCullingDirty>)>
     >,
     items: Query< (& GlobalEnable, Option<& MeshInstanceState>), With<AbstructMesh> >,
-    mut flags: Query<&mut AbstructMeshCullingFlag>,
+    mut flags: Query<(Entity, &mut AbstructMeshCullingFlag)>,
     mut meshes: Query<(&mut InstanceSourceRefs, &ModelInstanceAttributes)>,
     mut scenes: Query<
         &mut SceneBoundingPool
@@ -189,6 +187,18 @@ pub fn sys_tick_viewer_culling(
 ) {
     // log::error!("sys_tick_viewer_culling");
     // performance.systems.push(String::from("sys_tick_viewer_culling"));
+    
+    let mut cullokedlist = entitysets.pop();
+    let mut cullnoedlist = entitysets.pop();
+    flags.iter_mut().for_each(|(entity, mut item)| {
+        if item.0 {
+            cullokedlist.insert(&entity);
+        } else {
+            cullnoedlist.insert(&entity);
+        }
+        *item = AbstructMeshCullingFlag(false);
+    });
+
     let mut sources = entitysets.pop();
     if performance.debug { performance.t_culling = pi_time::Instant::now(); }
     viewers.iter_mut().for_each(|(idscene, vieweractive, list_model, transform, _cameraview, forceincludes, mut cullings)| {
@@ -237,18 +247,22 @@ pub fn sys_tick_viewer_culling(
 
             cullings.0.iter().for_each(|id| {
                 if let Ok(mut flag) = flags.get_mut(*id) {
-                    *flag = AbstructMeshCullingFlag(true);
-                }
-                if !sources.insert(id) { return; }
-                if let Ok((mut flag, attrs)) = meshes.get_mut(*id) {
-                    if attrs.bytes().len() > 0 {
-                        flag.set_changed();
+                    *flag.1 = AbstructMeshCullingFlag(true);
+                    if !sources.insert(id) { return; }
+                    if cullnoedlist.contains(id) {
+                        if let Ok((mut flag, attrs)) = meshes.get_mut(*id) {
+                            if attrs.bytes().len() > 0 {
+                                flag.set_changed();
+                            }
+                        }
                     }
                 }
             });
         }
     });
     entitysets.push(sources);
+    entitysets.push(cullokedlist);
+    entitysets.push(cullnoedlist);
     // // 尝试记录已成功剔除的后续不再计算剔除逻辑，但测试结果耗时更长
     // scenes.iter_mut().for_each(|mut items| {
     //     items.reset_temp();

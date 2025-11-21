@@ -1061,7 +1061,7 @@ impl<'w> MemSize for ResourceSets<'w> {
         8
         + self.node_material_blocks.memsize()
         + self.imgtex_loader.memsize()
-        + self.imgtex_loader_state.memsize()
+        + 128 // self.imgtex_loader_state.memsize()
         + self.imgtex_asset.size()
         + self.imgtexview_asset.size()
         + self.gltf2_asset.size()
@@ -1095,7 +1095,7 @@ impl<'w> ResourceSets<'w> {
     pub fn record(&self, result: &mut [f64], mut offset: usize) -> usize {
         offset += 0; result[offset] = self.node_material_blocks.memsize() as f64;
         offset += 1; result[offset] = self.imgtex_loader.memsize() as f64;
-        offset += 1; result[offset] = self.imgtex_loader_state.memsize() as f64;
+        offset += 1; result[offset] = 128 as f64; // self.imgtex_loader_state.memsize() as f64;
         offset += 1; result[offset] = self.imgtex_asset.size() as f64;
         offset += 1; result[offset] = self.imgtexview_asset.size() as f64;
         offset += 1; result[offset] = self.gltf2_asset.size() as f64;

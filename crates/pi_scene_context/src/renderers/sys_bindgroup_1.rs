@@ -17,12 +17,10 @@ pub fn _set1_modify(
     device: &PiRenderDevice,
     asset_mgr_bindgroup_layout: &ShareAssetMgr<BindGroupLayout>,
     asset_mgr_bindgroup: &ShareAssetMgr<BindGroup>,
-    // passindex: usize, matidx: u32,
     errors: &mut ErrorRecord
 ) -> Option<Arc<BindGroupModel>> {
     let mut result = None;
     let mut bind_skin = None;
-    // let mut matrix = None;
     let mut bind_lingingsidx = None;
 
     if let Ok( ( bind_model, bind_skl, id_skl, lightingidxs, modelbinddefines) ) = models.get(idmodel) {
@@ -49,19 +47,16 @@ pub fn _set1_modify(
             let key = KeyBindGroupModel::new(bind_model.matrix.clone(), bind_skin.clone(), bind_lingingsidx);
     
             let key_bind_group = key.key_bind_group();
-            // log::warn!("Set0Loaded : ");
             if let Some(bind_group) = create_bind_group(&key_bind_group, &device, &asset_mgr_bindgroup_layout, &asset_mgr_bindgroup) {
                 let data = BindGroupModel::new(BindGroupUsage::new(key_bind_group, bind_group), key);
                 let data = Arc::new(data);
-                // log::error!("create_bind_group 0: Ok");
-                // *set0 = PassBindGroupModel(Some(data.clone()));
                 result = Some(data.clone());
             } else {
                 errors.record(idmodel.index(), ErrorRecord::ERROR_PASS_SET1_FAIL); 
-                // log::error!("create_bind_group 0: Error");
+                log::warn!("create_bind_group 0: Error");
             }
     } else {
-        // log::error!("create_bind_group 0: Error");
+        log::warn!("create_bind_group 0: Error");
     }
 
     return result;

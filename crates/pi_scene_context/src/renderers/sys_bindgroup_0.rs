@@ -35,18 +35,17 @@ pub fn _set0_modify(
         Ok(bind_viewer)
     ) = (scenes.get(idscene), viewers.get(idviewer)) {
         // log::error!("Set0 Modify 2 {:?}", (meta.0.is_some(), idpass));
-        // log::error!("Set0 Modify 3");
         let bind_base_effect = if BindDefines::need_scene_effect(meta.binddefines) {
             Some(bind_base_effect.0.as_ref().unwrap().clone())
         } else { None };
 
         let bind_viewer = match (BindDefines::need_viewer(meta.binddefines), &bind_viewer.0) {
             (true, Some(bindviewer)) => {
-                // log::error!("Set0 Modify 4");
+                // log::warn!("Set0 Modify 4");
                 Some(bindviewer.clone())
             },
             (false, _) => {
-                // log::error!("Set0 Modify 44 {:?}", meta.key());
+                // log::warn!("Set0 Modify 44 {:?}", meta.key());
                 None
             },
             _ => {
@@ -102,7 +101,7 @@ pub fn _set0_modify(
             (true, Some(v0), Some(v1), Some(v2)) => { Some((v0.clone(), v1.clone(), v2.clone())) },
             (false, _, _, _) => None,
             _ => {
-                // log::error!("Env: {:?}", (env_irradiance.0.is_some(), env_texture.0.is_some(), env_sampler.0.is_some()));
+                log::warn!("Env: {:?}", (env_irradiance.0.is_some(), env_texture.0.is_some(), env_sampler.0.is_some()));
                 errors.record(idmodel.index(), ErrorRecord::ERROR_PASS_BIND_ENV_NONE);
                 return result;
             },
@@ -121,14 +120,14 @@ pub fn _set0_modify(
         let key_bind_group = key.key_bind_group();
         // log::warn!("Set0Loaded : {:?}", key_bind_group);
         if let Some(bind_group) = create_bind_group(&key_bind_group, &device, &asset_mgr_bindgroup_layout, &asset_mgr_bindgroup) {
-            // log::error!("Set0 Modify 5");
+            // log::warn!("Set0 Modify 5");
             let data = BindGroupScene::new(BindGroupUsage::new(key_bind_group, bind_group), key);
             let data = Arc::new(data);
 
             result = Some(data.clone());
         } else {
             errors.record(idmodel.index(), ErrorRecord::ERROR_PASS_SET0_FAIL);
-            // log::error!("create_bind_group 0: Error");
+            log::warn!("create_bind_group 0: Error");
             result = None;
         }
     } else {

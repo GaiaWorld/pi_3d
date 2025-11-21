@@ -35,12 +35,6 @@ pub fn sys_update_collider(
     entitysets: Res<EntityFilterForComponentChanged>,
 ) {
     let mut entities = entitysets.pop();
-    // changes.iter().for_each(|entity| {
-    //     entities.insert(*entity);
-    // });
-    // addeds.iter().for_each(|entity| {
-    //     entities.insert(*entity);
-    // });
     let mut temp = Vector3::zeros();
     // log::error!("sys_update_collider: {:?}", entities.len());
     changes.iter().chain(addeds.iter()).for_each(|entity| {
@@ -57,10 +51,10 @@ pub fn sys_update_collider(
                     }
                 }
             } else {
-                // log::error!("sys_update_collider Scene Not Found SceneColliderPool : ");
+                log::warn!("sys_update_collider Scene Not Found SceneColliderPool : ");
             }
         } else {
-            // log::error!("sys_update_collider Item Component Not Found : ");
+            log::warn!("sys_update_collider Item Component Not Found : ");
         }
     });
     changes0.iter().for_each(|entity| {
@@ -106,12 +100,6 @@ pub fn sys_update_culling_by_cullinginfo(
     // log::error!("sys_update_culling_by_cullinginfo");
     let mut entities = entitysets.pop();
     let mut dirtyscenes = entitysets.pop();
-    // addeds.iter().for_each(|entity| {
-    //     entities.insert(*entity);
-    // });
-    // changes.iter().for_each(|entity| {
-    //     entities.insert(*entity);
-    // });
     changes.iter().chain(addeds.iter()).for_each(|entity| {
         if !entities.insert(entity) { return; }
         if let Ok(instance) = instances.get(*entity) {
@@ -143,7 +131,6 @@ pub fn sys_update_culling_by_cullinginfo(
                         instancerefs.iter().for_each(|(_k, instance)| {
                             if !entities.insert(instance) { return; }
                             let instance = *instance;
-                            // if let Some(instance) = &instance { *instance } else { return; }
                             if let Ok((worldmatrix, disposed)) = items.get(instance) {
                                 if disposed.0 == true {
                                     pool.remove(instance);

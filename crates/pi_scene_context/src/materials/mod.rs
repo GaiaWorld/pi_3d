@@ -49,7 +49,6 @@ impl Plugin for PluginMaterial {
                 (
                     (
                         sys_image_texture_load_launch,
-                        sys_image_texture_loaded
                     ).chain().in_set(StageTextureLoad::TextureLoading),
                     (
                         sys_image_texture_view_load_launch2
@@ -65,7 +64,6 @@ impl Plugin for PluginMaterial {
                 .add_systems(StageD3, sys_update_data_texture                .in_set(StageMaterial::MatCommand))
                 .add_systems(StageD3, sys_texture_combine                .in_set(StageTextureLoad::TextureLoading))
                 .add_systems(StageD3, sys_image_texture_load_launch                                                   .in_set(StageTextureLoad::TextureLoading))
-                .add_systems(StageD3, sys_image_texture_loaded        .after(sys_image_texture_load_launch)   .in_set(StageTextureLoad::TextureLoading))
                 .add_systems(StageD3, sys_image_texture_view_load_launch2
                     // .run_if(runif_changes::<TextureKeyList>)         
                     .in_set(StageTextureLoad::TextureRequest))
