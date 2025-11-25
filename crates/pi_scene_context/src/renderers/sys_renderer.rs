@@ -104,7 +104,7 @@ pub fn sys_pass_bind_groups(
             let (idscene, idviewer) = if let Ok((idscene, idviewer)) = renderers.get(idrenderer.0) {
                 (idscene.0, idviewer.0)
             } else {
-                log::warn!("Bindgroups viewer Fail {:?}", idmodel);
+                // log::warn!("Bindgroups viewer Fail {:?}", idmodel);
                 return;
             };
 
@@ -112,7 +112,7 @@ pub fn sys_pass_bind_groups(
             let bind_passindex = if let Some(bindpassindex) = bindpassindexs.get(passidx.index()) {
                 bindpassindex
             } else {
-                log::warn!("Bindgroups bind_passindex Fail {:?}", idmodel);
+                // log::warn!("Bindgroups bind_passindex Fail {:?}", idmodel);
                 return;
             };
 
@@ -173,7 +173,7 @@ pub fn sys_pass_bind_groups(
                                 *bindgroups = PassBindGroups::new(None);
                                 *flag = PassFlagShader;
                             }
-                            log::warn!("Bindgroups Fail set1 {:?}", idmodel);
+                            // log::warn!("Bindgroups Fail set1 {:?}", idmodel);
                             return;
                         }
                         temp
@@ -186,7 +186,7 @@ pub fn sys_pass_bind_groups(
                             Some(Arc::new(BindGroupMaterial::new(BindGroupUsage::new(key_bind_group, bind_group), item.clone())))
                         } else {
                             errors.record(idmodel.index(), ErrorRecord::ERROR_PASS_SET2_FAIL);
-                            log::warn!("Bindgroups Fail set2 {:?}", idmodel);
+                            // log::warn!("Bindgroups Fail set2 {:?}", idmodel);
                             return;
                         }
                     } else { None };
@@ -215,22 +215,22 @@ pub fn sys_pass_bind_groups(
                         }
                     } else { None };
 
-                    log::warn!("Bindgroups Sccess {:?}", idmodel);
+                    // log::warn!("Bindgroups Sccess {:?}", idmodel);
                     let data = BindGroups3D::create(set0, set1, set2, set3);
                     *bindgroups = PassBindGroups::new(Some(data));
                     *flag = PassFlagShader;
                 } else {
-                    log::warn!("Bindgroups Fail effect {:?}", idmodel);
+                    // log::warn!("Bindgroups Fail effect {:?}", idmodel);
                 }
             } else {
-                log::warn!("Bindgroups Fail materials {:?}", idmodel);
+                // log::warn!("Bindgroups Fail materials {:?}", idmodel);
                 if bindgroups.val().is_some() {
                     *bindgroups = PassBindGroups::new(None);
                     *flag = PassFlagShader;
                 }
             }
         } else {
-            log::warn!("Bindgroups Fail Pass", );
+            // log::warn!("Bindgroups Fail Pass", );
         }
     });
     entitysets.push(entities);
@@ -941,18 +941,18 @@ pub fn sys_renderer_draws_modify(
                                         }
                                     }
                                 } else {
-                                    log::warn!("PassDraw Renderer Error {:?}", (passtag));
+                                    // log::warn!("PassDraw Renderer Error {:?}", (passtag));
                                 }
                             } else {
-                                log::warn!("PassDraw Error {:?}", (passtag));
+                                // log::warn!("PassDraw Error {:?}", (passtag));
                             }
                             countmesh += 1;
                             // log::warn!("OK {:?}", id_obj);
                         } else {
-                            log::warn!("Fail rendergeo {:?}", (idgeometry.0, id_obj));
+                            // log::warn!("Fail rendergeo {:?}", (idgeometry.0, id_obj));
                         }
                     } else {
-                        log::warn!("Fail rendergeo {:?}", (geoenable.0, globalenable.0));
+                        // log::warn!("Fail rendergeo {:?}", (geoenable.0, globalenable.0));
                     }
                 } else {
                     // log::warn!("models.get Fail {:?}", id_obj);
