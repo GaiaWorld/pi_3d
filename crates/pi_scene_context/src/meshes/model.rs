@@ -201,7 +201,7 @@ impl IndiceRenderRange {
 }
 impl Default for IndiceRenderRange {
     fn default() -> Self {
-        Self(Range { start: u32::MAX, end: 0 })
+        Self(Range { start: 0, end: 0 })
     }
 }
 impl pi_curves::curve::frame::FrameDataValue for IndiceRenderRange {

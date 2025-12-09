@@ -132,8 +132,8 @@ impl ActionCamera {
         (
             Camera(false, camera),
             ViewerDistanceCompute::default(),
-            CameraFov::default(),
-            CameraOrthSize::default(),
+            CameraFov(0.7),
+            CameraOrthSize(4.0),
             LayerMask::default(),
             CameraUp(CoordinateSytem3::up()),
             CameraTarget(Vector3::new(0., 0., 1.)),

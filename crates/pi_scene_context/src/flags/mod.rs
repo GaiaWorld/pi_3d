@@ -47,7 +47,7 @@ impl pi_curves::curve::frame::FrameDataValue for Enable {
 }
 impl Default for Enable {
     fn default() -> Self {
-        Self(1.)
+        Self(0.)
     }
 }
 impl TAssetCapacity for Enable {
@@ -110,7 +110,7 @@ impl Plugin for PluginFlags {
         app.add_systems(StageD3, 
             sys_act_node_enable
             // .run_if(runif_acts::<OpsNodeEnable>)
-            .in_set(StageEnable::Command)
+            .in_set(StageEnable::Command).before(EStageAnimation::Create)
         );
     }
 }

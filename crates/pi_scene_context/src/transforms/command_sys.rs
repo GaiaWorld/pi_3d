@@ -135,7 +135,7 @@ impl ActionTransformNode {
         (
             TransformNodeDirty(true),
             LocalPosition::default(),
-            LocalScaling::default(),
+            LocalScaling(Vector3::new(1., 1., 1.)),
             LocalRotationQuaternion::default(),
             LocalEulerAngles::default(),
             LocalRotation(Rotation3::identity()),
@@ -153,7 +153,7 @@ impl ActionTransformNode {
             Down::default(),
             Up::default(),
             Layer::default(),
-            Enable::default(),
+            Enable(1.),
             GlobalEnable(false),
             TransformNodeParent,
         )

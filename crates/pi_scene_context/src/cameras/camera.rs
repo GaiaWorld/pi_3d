@@ -77,7 +77,7 @@ impl pi_curves::curve::frame::FrameDataValue for CameraFov {
 }
 impl Default for CameraFov {
     fn default() -> Self {
-        Self(0.7)
+        Self(0.)
     }
 }
 impl TAssetCapacity for CameraFov {
@@ -120,7 +120,7 @@ impl pi_curves::curve::frame::FrameDataValue for CameraOrthSize {
 }
 impl Default for CameraOrthSize {
     fn default() -> Self {
-        Self(4.)
+        Self(0.)
     }
 }
 impl TAssetCapacity for CameraOrthSize {

@@ -532,7 +532,7 @@ impl ActionMesh {
             ModelVelocity::default(),
             RenderAlignment::default(),
             ScalingMode::default(),
-            IndiceRenderRange::default(),
+            IndiceRenderRange::new(None),
             VertexRenderRange::default(),
             GeometryBounding::default(),
             GeometryCullingMode::default(),

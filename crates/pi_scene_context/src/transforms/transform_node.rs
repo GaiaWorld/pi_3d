@@ -237,7 +237,7 @@ impl pi_curves::curve::frame::FrameDataValue for LocalScaling {
 }
 impl Default for LocalScaling {
     fn default() -> Self {
-        Self(Vector3::new(1., 1., 1.))
+        Self(Vector3::new(0., 0., 0.))
     }
 }
 impl TAssetCapacity for LocalScaling {
