@@ -192,6 +192,12 @@ pub fn sys_texture_ready(
                                 false
                             }
                         },
+                        ETextureViewUsage::SRT(_) => { 
+                            true
+                        },
+                        ETextureViewUsage::FBORect(_, _, _, _) => { 
+                            true
+                        },
                         _ => { 
                             sample.address_mode_u = key.wrapu;
                             sample.address_mode_v = key.wrapv;
