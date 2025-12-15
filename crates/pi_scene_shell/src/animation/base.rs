@@ -1,6 +1,6 @@
 use crate::{ecs::*, prelude::{ActionList, MemSize}};
 
-use std::hash::Hash;
+use std::{collections::HashSet, hash::Hash};
 
 use derive_deref::{Deref, DerefMut};
 use pi_animation::{
@@ -104,6 +104,23 @@ pub struct AnimatorableUniform;
 #[derive(Component, Default)]
 pub struct AnimatorableAttribute;
 
+#[derive(Resource)]
+pub struct GlobalAnimationGroupsAmout(pub AnimationContextAmount<Entity, AnimationGroupManagerDefault<Entity>>);
+impl GlobalAnimationGroupsAmout {
+    pub fn new() -> Self {
+        Self(
+            AnimationContextAmount::<Entity, AnimationGroupManagerDefault<Entity>>::default(
+                AnimationGroupManagerDefault::<Entity>::default()
+            )
+        )
+    }
+}
+impl Default for GlobalAnimationGroupsAmout {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// 记录动画运行相关数据
 #[derive(Resource)]
 pub struct GlobalAnimeAbout {
@@ -201,26 +218,21 @@ pub struct SceneAnimationGroupGoto(pub ActionList<(AnimationGroupKey, KeyFrameCu
 
 /// 记录场景中的动画组运行数据
 #[derive(Component)]
-pub struct SceneAnimationContext(pub AnimationContextAmount<Entity, AnimationGroupManagerDefault<Entity>>);
-impl SceneAnimationContext {
-    pub fn new() -> Self {
-        Self(
-            AnimationContextAmount::<Entity, AnimationGroupManagerDefault<Entity>>::default(
-                AnimationGroupManagerDefault::<Entity>::default()
-            )
-        )
-    }
+pub struct SceneAnimationContext {
+    pub map: XHashMap<Entity, AnimationGroupID>,
+    pub time_scale: KeyFrameCurveValue,
 }
 impl Default for SceneAnimationContext {
     fn default() -> Self {
-        Self::new()
+        Self {
+            time_scale: 1.,
+            map: XHashMap::default(),
+        }
     }
 }
 
 pub fn sys_animation_removed_data_clear(
-    mut ctxs: Query<&mut SceneAnimationContext>,
+    mut amounts: ResMut<GlobalAnimationGroupsAmout>,
 ) {
-    ctxs.iter_mut().for_each(|mut ctx| {
-        ctx.0.clear_removed_animations()
-    });
+    amounts.0.clear_removed_animations();
 }

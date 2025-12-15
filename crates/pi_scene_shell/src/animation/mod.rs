@@ -114,6 +114,7 @@ impl Plugin for PluginGlobalAnimation {
             group_records: XHashMap::default(),
         };
         app.insert_resource(globalaboput);
+        app.insert_resource(GlobalAnimationGroupsAmout::default());
         app.insert_resource(GlobalAnimeEvents::default());
     }
 }

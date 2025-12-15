@@ -60,7 +60,7 @@ pub fn sys_create_scene(
                     bundle,
                     pool,
                     pool2,
-                    SceneAnimationContext::new(),
+                    SceneAnimationContext::default(),
                     BoundingBoxDisplay { mesh: bounding, display: false }
                 );
                 entitycmds.insert(bundle);

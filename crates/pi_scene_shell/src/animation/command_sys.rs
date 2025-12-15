@@ -168,13 +168,16 @@ pub fn sys_create_animation_group(
     mut cmds: ResMut<ActionListAnimeGroupCreate>,
     // mut commands: Commands,
     mut scenes: Query<&mut SceneAnimationContext>,
+    mut amounts: ResMut<GlobalAnimationGroupsAmout>,
     mut globals: ResMut<GlobalAnimeAbout>,
     mut alter: Alter<(), (), BundleAnimGroup, ()>,
 ) {
     cmds.drain().for_each(|OpsAnimationGroupCreation(scene, entity)| {
         if let Ok(mut ctx) = scenes.get_mut(scene) {
             // if let Some(mut commands) = commands.get_entity(entity) {
-                let id_group = ctx.0.create_animation_group();
+                let id_group = amounts.0.create_animation_group();
+
+                ctx.map.insert(entity, id_group);
 
                 let bundle = (AnimationGroupKey(id_group), AnimationGroupScene(scene));
                 // commands.insert(bundle);
@@ -189,14 +192,14 @@ pub fn sys_create_animation_group(
 pub fn sys_act_animation_group_action(
     mut cmdsaction: ResMut<ActionListAnimationGroupAction>,
     items: Query<(&AnimationGroupKey, &AnimationGroupScene)>,
-    mut scenes: Query<&mut SceneAnimationContext>,
+    mut amounts: ResMut<GlobalAnimationGroupsAmout>,
     mut errors: ResMut<ResErrorRecord>,
     mut globals: ResMut<GlobalAnimeAbout>,
 ) {
     _sys_act_animation_group_action(
         &mut cmdsaction,
         items,
-        scenes,
+        &mut amounts,
         &mut errors,
         &mut globals
     );
@@ -261,51 +264,41 @@ pub fn sys_act_animation_group_action(
 fn _sys_act_animation_group_action(
     cmdsaction: &mut ActionListAnimationGroupAction,
     items: Query<(&AnimationGroupKey, &AnimationGroupScene)>,
-    mut scenes: Query<&mut SceneAnimationContext>,
+    mut amounts: &mut GlobalAnimationGroupsAmout,
     mut errors: &mut ResErrorRecord,
     mut globals: &mut GlobalAnimeAbout,
 ) {
     cmdsaction.drain().for_each(|act| {
         match act {
             OpsAnimationGroupAction::Start(entity, param, delay_time_ms, fillmode) => if let Ok( (groupkey, idscene) ) = items.get(entity) {
-                if let Ok(mut ctx) = scenes.get_mut(idscene.0) {
-                    match ctx.0.start_with_progress(groupkey.0, param.speed, param.loop_mode, param.from, param.to, param.fps, param.amountcalc, delay_time_ms, fillmode) {
-                        Ok(_) => {},
-                        Err(_) => { errors.record(entity.index(), ErrorRecord::ERROR_ANIMATION_START_FAIL); },
-                    }
+                match amounts.0.start_with_progress(groupkey.0, param.speed, param.loop_mode, param.from, param.to, param.fps, param.amountcalc, delay_time_ms, fillmode) {
+                    Ok(_) => {},
+                    Err(_) => { errors.record(entity.index(), ErrorRecord::ERROR_ANIMATION_START_FAIL); },
                 }
             },
             OpsAnimationGroupAction::Pause(entity) => if let Ok( (groupkey, idscene) ) = items.get(entity) {
-                if let Ok(mut ctx) = scenes.get_mut(idscene.0) {
-                    match ctx.0.pause(groupkey.0) {
-                        Ok(_) => {},
-                        Err(_) => { errors.record(entity.index(), ErrorRecord::ERROR_ANIMATION_PAUSE_FAIL); },
-                    }
+                match amounts.0.pause(groupkey.0) {
+                    Ok(_) => {},
+                    Err(_) => { errors.record(entity.index(), ErrorRecord::ERROR_ANIMATION_PAUSE_FAIL); },
                 }
             },
             OpsAnimationGroupAction::Stop(entity) => if let Ok( (groupkey, idscene) ) = items.get(entity) {
-                if let Ok(mut ctx) = scenes.get_mut(idscene.0) {
-                    match ctx.0.stop(groupkey.0) {
-                        Ok(_) => {},
-                        Err(_) => { errors.record(entity.index(), ErrorRecord::ERROR_ANIMATION_STOP_FAIL); },
-                    }
+                match amounts.0.stop(groupkey.0) {
+                    Ok(_) => {},
+                    Err(_) => { errors.record(entity.index(), ErrorRecord::ERROR_ANIMATION_STOP_FAIL); },
                 }
             },
             OpsAnimationGroupAction::Restart(entity) => if let Ok( (groupkey, idscene) ) = items.get(entity) {
-                if let Ok(mut ctx) = scenes.get_mut(idscene.0) {
-                    match ctx.0.restart(groupkey.0) {
-                        Ok(_) => {},
-                        Err(_) => { errors.record(entity.index(), ErrorRecord::ERROR_ANIMATION_START_FAIL); },
-                    }
+                match amounts.0.restart(groupkey.0) {
+                    Ok(_) => {},
+                    Err(_) => { errors.record(entity.index(), ErrorRecord::ERROR_ANIMATION_START_FAIL); },
                 }
             },
             OpsAnimationGroupAction::AddTarget(entity, target, animation) => {
                 if let Ok( (groupkey, idscene) ) = items.get(entity) {
-                    if let Ok(mut ctx) = scenes.get_mut(idscene.0) {
-                        match ctx.0.add_target_animation_notype(animation, groupkey.0, target) {
-                            Ok(_) => {},
-                            Err(_) => { errors.record(entity.index(), ErrorRecord::ERROR_ADD_TARGET_ANIMATION_FAIL); },
-                        }
+                    match amounts.0.add_target_animation_notype(animation, groupkey.0, target) {
+                        Ok(_) => {},
+                        Err(_) => { errors.record(entity.index(), ErrorRecord::ERROR_ADD_TARGET_ANIMATION_FAIL); },
                     }
                 }
             },
@@ -327,14 +320,16 @@ pub fn sys_act_dispose_animation_group(
     mut cmdsdispose: ResMut<ActionListAnimeGroupDispose>,
     items: Query<(&AnimationGroupKey, &AnimationGroupScene)>,
     mut scenes: Query<&mut SceneAnimationContext>,
+    mut amounts: ResMut<GlobalAnimationGroupsAmout>,
     mut disposecan: Query<&mut DisposeCan>,
     mut globals: ResMut<GlobalAnimeAbout>,
 ) {
     cmdsdispose.drain().for_each(|OpsAnimationGroupDispose(entity)| {
         if let Ok( (groupkey, idscene) ) = items.get(entity) {
             if let Ok(mut ctx) = scenes.get_mut(idscene.0) {
-                ctx.0.del_animation_group(groupkey.0);
+                ctx.map.remove(&entity);
             }
+            amounts.0.del_animation_group(groupkey.0);
             globals.remove(&groupkey.0);
         }
 
@@ -345,19 +340,17 @@ pub fn sys_act_dispose_animation_group(
 pub fn sys_act_reset_while_animationgroup_start(
     mut cmdsresetwhilestart: ResMut<ActionListAnimeGroupStartReset>,
     groups: Query<(&AnimationGroupKey, &AnimationGroupScene)>,
-    scenes: Query<&SceneAnimationContext>,
+    mut amounts: ResMut<GlobalAnimationGroupsAmout>,
     mut items: Query<&mut FlagAnimationStartResetComp>,
 ) {
     cmdsresetwhilestart.drain().for_each(|OpsAnimationGroupStartReset(entity)| {
         if let Ok((groupkey, idscene)) = groups.get(entity) {
-            if let Ok(ctx) = scenes.get(idscene.0) {
-                if let Some(animationgroup) = ctx.0.animation_group(groupkey.0) {
-                    animationgroup.animations().iter().for_each(|v| {
-                        if let Ok(mut flag) = items.get_mut(v.target) {
-                            *flag = FlagAnimationStartResetComp;
-                        }
-                    });
-                }
+            if let Some(animationgroup) = amounts.0.animation_group(groupkey.0) {
+                animationgroup.animations().iter().for_each(|v| {
+                    if let Ok(mut flag) = items.get_mut(v.target) {
+                        *flag = FlagAnimationStartResetComp;
+                    }
+                });
             }
         } 
     });
@@ -489,11 +482,9 @@ pub fn sys_remove_anime_target_record<D: TAnimatableComp>(
 
 pub(crate) fn sys_apply_removed_data<D: TAnimatableComp>(
     mut type_ctx: ResMut<TypeAnimeContext<D>>,
-    scenes: Query<& SceneAnimationContext>,
+    mut amounts: ResMut<GlobalAnimationGroupsAmout>,
 ) {
-    scenes.iter().for_each(| ctx | {
-        ctx.0.apply_removed_animations(&mut type_ctx.ctx);
-    });
+    amounts.0.apply_removed_animations(&mut type_ctx.ctx);
 }
 
 pub fn sys_reset_anime_performance(
