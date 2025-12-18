@@ -4,13 +4,13 @@ use serde::{Deserialize, Serialize};
 
 use crate::pass::PassTag;
 
-pub struct OpsMaterialCreate(pub Entity, pub KeyShaderMeta, pub bool);
+pub struct OpsMaterialCreate(pub Entity, pub KeyShaderMeta, pub bool, pub bool);
 impl OpsMaterialCreate {
     pub fn ops_with_matarray(mat: Entity, shader_meta: &str) -> Self {
-        Self(mat, Atom::from(shader_meta), true)
+        Self(mat, Atom::from(shader_meta), true, false)
     }
-    pub fn ops(mat: Entity, shader_meta: &str, withmatarray: bool) -> Self {
-        Self(mat, Atom::from(shader_meta), withmatarray)
+    pub fn ops(mat: Entity, shader_meta: &str, withmatarray: bool, static_bind: bool) -> Self {
+        Self(mat, Atom::from(shader_meta), withmatarray, static_bind)
     }
 }
 pub type ActionListMaterialCreate = ActionList<OpsMaterialCreate>;

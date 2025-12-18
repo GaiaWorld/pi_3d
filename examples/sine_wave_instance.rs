@@ -154,7 +154,7 @@ fn setup_sine_wave(
     // 设置材质
     let idmat = commands.spawn_empty_id();
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
-    actions.material.create.push(OpsMaterialCreate::ops(idmat, DefaultShader::KEY, false));
+    actions.material.create.push(OpsMaterialCreate::ops(idmat, DefaultShader::KEY, false, false));
 
     // 创建一个父节点用于整体控制
     let parent_node = commands.spawn_empty_id();
@@ -213,7 +213,7 @@ fn setup_sine_wave(
 
     let time_mat = commands.spawn_empty_id();
     actions.material.usemat.push(OpsMaterialUse::ops(time_mesh, time_mat, DemoScene::PASS_OPAQUE));
-    actions.material.create.push(OpsMaterialCreate::ops(time_mat, DefaultShader::KEY, false));
+    actions.material.create.push(OpsMaterialCreate::ops(time_mat, DefaultShader::KEY, false, false));
     actions.material.val.push(OpsUniformVal::ops(time_mat, EUniformVal::Vec4(Atom::from("color"), 1.0, 1.0, 0.0, 1.0)));
 
     // 保存实体引用

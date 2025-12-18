@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{ops::Deref, sync::Arc};
 use pi_slotmap::Key;
 use pi_scene_shell::{prelude::*, run_stage::EngineCustomPlugins};
 
@@ -40,17 +40,17 @@ pub fn sys_create_material(
     asset_shader: Res<ShareAssetMgr<ShaderEffectMeta>>,
     mut allocator: ResMut<ResBindBufferAllocator>,
     device: Res<PiRenderDevice>,
+    mut materialmgr: ResMut<MaterialDataMgr>,
+    engineopt: Res<EngineCustomPlugins>,
     mut commands: Commands,
     mut disposereadylist: ResMut<ActionListDisposeReadyForRef>,
     mut _disposecanlist: ResMut<ActionListDisposeCan>,
-    mut materialmgr: ResMut<MaterialDataMgr>,
     mut errors: ResMut<ResErrorRecord>,
     mut alter: Alter<(), (), MaterialBundle, ()>,
-    engineopt: Res<EngineCustomPlugins>,
     // mut performance: ResMut<Performance>,
 ) {
     // performance.systems.push(String::from("sys_create_material"));
-    cmds.drain().for_each(|OpsMaterialCreate(entity, key_shader, matarray)| {
+    cmds.drain().for_each(|OpsMaterialCreate(entity, key_shader, matarray, staticbind)| {
         // log::warn!("MaterialInit: {:?}", entity);
         if commands.get_entity(entity).is_none() { 
             // log::error!("Material: Not Found!! {:?}", key_shader);
@@ -60,14 +60,21 @@ pub fn sys_create_material(
 
         if let Some(meta) = asset_shader.get(&key_shader) {
             // log::error!("Material: oK!! {:?}", key_shader);
+
+            // let bind = if staticbind { 
+            //     materialmgr.allocate_initial(&key_shader, &meta, &device, &mut allocator, &engineopt, matarray)
+            // } else {
+            //     materialmgr.allocate(&key_shader, &meta, &device, &mut allocator, &engineopt, matarray)
+            // };
             let bind = materialmgr.allocate(&key_shader, &meta, &device, &mut allocator, &engineopt, matarray);
+
             // log::error!("MaterialData Allocate: {:?}", (&key_shader, bind.is_some()));
             let effect_val_bind = BindEffectValues::new(&device, key_shader.clone(), meta.clone(), bind);
             // let mut matcmds = commands.entity(entity);
 
             let bundle = (
                 ActionEntity::init(),
-                (BindEffect(effect_val_bind), AssetResShaderEffectMeta::from(meta)),
+                (BindEffect(effect_val_bind, !staticbind), AssetResShaderEffectMeta::from(meta)),
                 (
                     TargetAnimatorableIsRunning,
                     UniformAnimated::default(),
@@ -189,6 +196,14 @@ pub fn sys_act_material_value(
     mut animator_vec2: ResMut<ActionListAnimatorableVec2>,
     mut animator_float: ResMut<ActionListAnimatorableFloat>,
     mut animator_uint: ResMut<ActionListAnimatorableUint>,
+    
+    materials: Query<(&MaterialRefs, &AssetResShaderEffectMeta, &AssetKeyShaderEffect)>,
+    passes: Query<(&PassModelID, &PassTag)>,
+    mut models: Query<(&BindModel, &mut ModelInstanceAttributes, &mut ModelMatIdxs)>,
+    mut allocator: ResMut<ResBindBufferAllocator>,
+    device: Res<PiRenderDevice>,
+    mut materialmgr: ResMut<MaterialDataMgr>,
+    engineopt: Res<EngineCustomPlugins>,
 
     mut textureparams: Query<(&mut UniformTextureWithSamplerParams, &mut UniformTextureWithSamplerParamsDirty)>,
     mut bindvalues: Query<(&mut BindEffect, &mut UniformAnimated)>,
@@ -211,6 +226,8 @@ pub fn sys_act_material_value(
         match cmd {
             OpsUniformValB::Mat4(entity, slot, val) => {
                 if let Ok((mut bindvalue, _)) = bindvalues.get_mut(entity) {
+                    // if bindvalue.1 == false { log::error!("Dirty Mat4: {:?}", &slot); }
+                    // _alloc_bindeffect(entity, &mut bindvalue, &materials, &mut allocator, &device, &mut materialmgr, &engineopt, &passes, &mut models);
                     if let Some(bindvalue) = &mut bindvalue.0 {
                         let value = bytemuck::cast_slice(&val);
                         _bind_value(bindvalue, &slot, value);
@@ -304,64 +321,100 @@ pub fn sys_act_material_value(
     });
 
     cmdsval.drain().for_each(|OpsUniformVal(linked, cmd)| {
+        let mut bindvalue = if let Ok((bindvalue, _)) = bindvalues.get_mut(linked) {
+            bindvalue
+        } else { return; };
+
+        // if bindvalue.1 == false { log::error!("Dirty : {:?}", &cmd); }
+        // _alloc_bindeffect(linked, &mut bindvalue, &materials, &mut allocator, &device, &mut materialmgr, &engineopt, &passes, &mut models);
         match cmd {
             EUniformVal::Vec4( slot, x, y, z, w) => {
-                if let Ok((mut bindvalue, _)) = bindvalues.get_mut(linked) {
-                    if let Some(bindvalue) = &mut bindvalue.0 {
-                        let val = [x, y, z, w];
-                        let value = bytemuck::cast_slice(&val);
-                        if let Some(target) = _bind_value(bindvalue, &slot, value) {
-                            animator_vec4.push(OpsAnimatorableVec4::ops(target, linked, AnimatorableVec4::from(val.as_slice()), EAnimatorableEntityType::Uniform));
-                        }
+                if let Some(bindvalue) = &mut bindvalue.0 {
+                    let val = [x, y, z, w];
+                    let value = bytemuck::cast_slice(&val);
+                    if let Some(target) = _bind_value(bindvalue, &slot, value) {
+                        animator_vec4.push(OpsAnimatorableVec4::ops(target, linked, AnimatorableVec4::from(val.as_slice()), EAnimatorableEntityType::Uniform));
                     }
                 }
             },
             EUniformVal::Vec3( slot, x, y, z) => {
-                if let Ok((mut bindvalue, _)) = bindvalues.get_mut(linked) {
-                    if let Some(bindvalue) = &mut bindvalue.0 {
-                        let val = [x, y, z];
-                        let value = bytemuck::cast_slice(&val);
-                        if let Some(target) = _bind_value(bindvalue, &slot, value) {
-                            animator_vec3.push(OpsAnimatorableVec3::ops(target, linked, AnimatorableVec3::from(val.as_slice()), EAnimatorableEntityType::Uniform));
-                        }
+                if let Some(bindvalue) = &mut bindvalue.0 {
+                    let val = [x, y, z];
+                    let value = bytemuck::cast_slice(&val);
+                    if let Some(target) = _bind_value(bindvalue, &slot, value) {
+                        animator_vec3.push(OpsAnimatorableVec3::ops(target, linked, AnimatorableVec3::from(val.as_slice()), EAnimatorableEntityType::Uniform));
                     }
                 }
             },
             EUniformVal::Vec2( slot, x, y) => {
-                if let Ok((mut bindvalue, _)) = bindvalues.get_mut(linked) {
-                    if let Some(bindvalue) = &mut bindvalue.0 {
-                        let val = [x, y];
-                        let value = bytemuck::cast_slice(&val);
-                        if let Some(target) = _bind_value(bindvalue, &slot, value) {
-                            animator_vec2.push(OpsAnimatorableVec2::ops(target, linked, AnimatorableVec2::from(val.as_slice()), EAnimatorableEntityType::Uniform));
-                        }
+                if let Some(bindvalue) = &mut bindvalue.0 {
+                    let val = [x, y];
+                    let value = bytemuck::cast_slice(&val);
+                    if let Some(target) = _bind_value(bindvalue, &slot, value) {
+                        animator_vec2.push(OpsAnimatorableVec2::ops(target, linked, AnimatorableVec2::from(val.as_slice()), EAnimatorableEntityType::Uniform));
                     }
                 }
             },
             EUniformVal::Float( slot, val) => {
-                if let Ok((mut bindvalue, _)) = bindvalues.get_mut(linked) {
-                    if let Some(bindvalue) = &mut bindvalue.0 {
-                        let vv = [val];
-                        let value = bytemuck::cast_slice(&vv);
-                        if let Some(target) = _bind_value(bindvalue, &slot, value) {
-                            animator_float.push(OpsAnimatorableFloat::ops(target, linked, AnimatorableFloat(val), EAnimatorableEntityType::Uniform));
-                        }
+                if let Some(bindvalue) = &mut bindvalue.0 {
+                    let vv = [val];
+                    let value = bytemuck::cast_slice(&vv);
+                    if let Some(target) = _bind_value(bindvalue, &slot, value) {
+                        animator_float.push(OpsAnimatorableFloat::ops(target, linked, AnimatorableFloat(val), EAnimatorableEntityType::Uniform));
                     }
                 }
             },
             EUniformVal::Uint( slot, val) => {
-                if let Ok((mut bindvalue, _)) = bindvalues.get_mut(linked) {
-                    if let Some(bindvalue) = &mut bindvalue.0 {
-                        let vv = [val];
-                        let value = bytemuck::cast_slice(&vv);
-                        if let Some(target) = _bind_value(bindvalue, &slot, value) {
-                            animator_uint.push(OpsAnimatorableUint::ops(target, linked, AnimatorableUint(val), EAnimatorableEntityType::Uniform));
-                        }
+                if let Some(bindvalue) = &mut bindvalue.0 {
+                    let vv = [val];
+                    let value = bytemuck::cast_slice(&vv);
+                    if let Some(target) = _bind_value(bindvalue, &slot, value) {
+                        animator_uint.push(OpsAnimatorableUint::ops(target, linked, AnimatorableUint(val), EAnimatorableEntityType::Uniform));
                     }
                 }
             }
         }
     });
+}
+
+// 材质初始化时使用的统一的初始值Buffer, 当产生uniform数值操作时重新申请一个独享的
+fn _alloc_bindeffect(
+    idmat: Entity,
+    bindeffect: &mut BindEffect,
+    materials: &Query<(&MaterialRefs, &AssetResShaderEffectMeta, &AssetKeyShaderEffect)>,
+
+    allocator: &mut ResBindBufferAllocator,
+    device: &PiRenderDevice,
+    materialmgr: &mut MaterialDataMgr,
+    engineopt: &EngineCustomPlugins,
+
+    passes: &Query<(&PassModelID, &PassTag)>,
+    models: &mut Query<(&BindModel, &mut ModelInstanceAttributes, &mut ModelMatIdxs)>,
+) {
+    if bindeffect.1 == false {
+        if let Ok((materialrefs, meta, key_shader)) = materials.get(idmat) {
+            let meta = meta.0.as_ref().unwrap();
+            let key_shader = key_shader.deref();
+            let matarray = materialmgr.ismatarray(key_shader);
+            let bind = materialmgr.allocate(key_shader, meta, device, allocator, engineopt, matarray);
+            let effect_val_bind = BindEffectValues::new(device, key_shader.clone(), meta.clone(), bind);
+            bindeffect.0 = effect_val_bind;
+            bindeffect.1 = true;
+
+            materialrefs.iter().for_each(|id_pass| {
+                if let Ok((idmodel, pass)) = passes.get(*id_pass) {
+                    if let Ok((matidxs, mut instancedata, mut matidxrecord)) = models.get_mut(idmodel.0) {
+                        let passindex = pass.index();
+                        if let (Some(matidxs), Some(bindeff)) = (&matidxs.matrix, &bindeffect.0) {
+                            matidxs.update_matidxs(passindex, bindeff.bind.matidx());
+                            matidxrecord.0[passindex] = bindeff.bind.matidx() as u16;
+                            instancedata.update_matidx(passindex, bindeff.bind.matidx() as u16);
+                        }
+                    }
+                }
+            });
+        }
+    }
 }
 
 fn _bind_value(

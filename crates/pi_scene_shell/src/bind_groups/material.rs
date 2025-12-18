@@ -15,9 +15,30 @@ use crate::{binds::*, prelude::{EqAsResource, HashAsResource, KeyShaderMeta}, ru
 
 #[derive(Resource, Default)]
 pub struct MaterialDataMgr {
-    pub map: XHashMap<Atom, Vec<MaterialData>>
+    pub initial_data_map: XHashMap<Atom, (Arc<RefBindGroupMaterial>, bool)>,
+    pub map: XHashMap<Atom, Vec<MaterialData>>,
 }
 impl MaterialDataMgr {
+    pub fn ismatarray(&self, key_meta: &KeyShaderMeta) -> bool {
+        match self.initial_data_map.get(key_meta) {
+            Some((_, val)) => return *val,
+            None => false,
+        }
+    }
+    pub fn allocate_initial(&mut self, key_meta: &KeyShaderMeta, meta: &Handle<ShaderEffectMeta>, device: &RenderDevice, allocator: &mut BindBufferAllocator, engineopt: &EngineCustomPlugins, matarray: bool) -> Option<Arc<RefBindGroupMaterial>> {
+        match self.initial_data_map.get(key_meta) {
+            Some((data, _)) => return Some(data.clone()),
+            None => {
+                match self.allocate(key_meta, meta, device, allocator, engineopt, matarray) {
+                    Some(data) => {
+                        self.initial_data_map.insert(key_meta.clone(), (data.clone(), matarray));
+                        Some(data)
+                    },
+                    None => None,
+                }
+            },
+        }
+    }
     pub fn allocate(&mut self, key_meta: &KeyShaderMeta, meta: &Handle<ShaderEffectMeta>, device: &RenderDevice, allocator: &mut BindBufferAllocator, engineopt: &EngineCustomPlugins, matarray: bool) -> Option<Arc<RefBindGroupMaterial>> {
         if self.map.contains_key(key_meta) == false {
             self.map.insert(key_meta.clone(), vec![]);

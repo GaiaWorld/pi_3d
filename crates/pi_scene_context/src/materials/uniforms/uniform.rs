@@ -3,8 +3,8 @@ use std::sync::Arc;
 use derive_deref::{Deref, DerefMut};
 use pi_scene_shell::prelude::*;
 
-#[derive(Component, Default, Deref, DerefMut)]
-pub struct BindEffect(pub Option<BindEffectValues>);
+#[derive(Component, Default)]
+pub struct BindEffect(pub Option<BindEffectValues>, pub bool);
 
 #[derive(Component, Default)]
 pub struct UniformAnimated(pub Vec<Atom>);

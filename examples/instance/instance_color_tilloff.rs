@@ -75,7 +75,7 @@ fn setup(
 
     let idmat = commands.spawn_empty_id();
     actions.material.usemat.push(OpsMaterialUse::ops(source, idmat, DemoScene::PASS_OPAQUE));
-    actions.material.create.push(OpsMaterialCreate::ops(idmat, DefaultShader::KEY, false));
+    actions.material.create.push(OpsMaterialCreate::ops(idmat, DefaultShader::KEY, false, false));
     // actions.material.valb.push(OpsUniformValB::texture(idmat, UniformTextureWithSamplerParam {
     //     slotname: Atom::from(BlockMainTexture::KEY_TEX),
     //     sample: KeySampler::linear_repeat(),
