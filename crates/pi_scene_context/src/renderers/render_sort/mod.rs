@@ -3,12 +3,20 @@ use pi_scene_shell::prelude::*;
 use serde::{Deserialize, Serialize};
 
 /// 标识 Mesh 的渲染排序参数
-#[derive(Debug, Clone, Copy, Component, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Component, Serialize, Deserialize)]
 pub struct RenderQueueSortParam {
     /// 同 渲染类型 中的 渲染分组
     pub group: i32,
     /// 同 渲染分组 中的 渲染顺序
     pub index: i32,
+}
+impl Default for RenderQueueSortParam {
+    fn default() -> Self {
+        Self {
+            group: 0,
+            index: 0,
+        }
+    }
 }
 impl RenderQueueSortParam {
     pub fn opaque() -> Self {

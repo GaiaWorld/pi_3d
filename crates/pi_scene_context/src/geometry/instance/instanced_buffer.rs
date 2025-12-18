@@ -156,7 +156,7 @@ impl CombineBuffer {
         Self {
             buffers: buffer,
             initmax,
-            data: DataPool::new(initmax),
+            data,
             maxcombinesize: initmax,
         }
     }

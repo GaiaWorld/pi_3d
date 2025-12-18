@@ -21,13 +21,13 @@ pub struct DrawTmpRef<'w> {
 }
 impl<'w> DrawTmpRef<'w> {
     pub fn can_batch_instance_memory<'a>(&'a self, other: &'a Self, _debug: bool) -> bool {
-        // if debug {
+        // if _debug {
         //     log::warn!(
         //         "pipeline: {:?}, vertexhash: {:?}, bindgroupshash: {:?}, instance_memory: {:?}",
-        //         (self.pipeline , other.pipeline),
-        //         (self.vertexhash.0 , other.vertexhash.0),
-        //         (self.bindgroupshash.0 , other.bindgroupshash.0),
-        //         (self.instance_memory.is_some() , other.instance_memory.is_some())
+        //         (self.pipeline.key() , other.pipeline.key()),
+        //         (self.rendergeo.hashresource , other.rendergeo.hashresource),
+        //         (self.bindgroups.hashresource , other.bindgroups.hashresource),
+        //         (self.rendergeo.instance_slot.is_some() , other.rendergeo.instance_slot.is_some())
         //     );
         // }
         if self.indicerange.is_some() || other.indicerange.is_some() { return false; }

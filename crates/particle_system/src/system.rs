@@ -683,7 +683,7 @@ pub fn sys_update_buffer(
     mut particle_sys: Query<
         (Entity, &ParticleAttributes, &mut ParticleSystemRunningState, &ParticleSystemTime, &ParticleIDs, &ParticleLocal, &ParticleDirection, &ParticleEmitMatrix),
     >,
-    mut meshes: Query<(&GlobalEnable, &GeometryID, &ModelInstanceAttributes, &mut InstancedMeshTransparentSortCollection, &GlobalMatrix, &ModelMatIdxs)>,
+    mut meshes: Query<(&MeshInstanceState, &GlobalEnable, &GeometryID, &ModelInstanceAttributes, &mut InstancedMeshTransparentSortCollection, &GlobalMatrix, &ModelMatIdxs, &RenderQueueSortParam)>,
     // mut meshrenderenables: Query<&mut RenderGeometryEable>,
     instanceinfos: Query<&InstancedInfoComp>,
     mut performance: ResMut<ParticleSystemPerformance>,
@@ -718,7 +718,7 @@ pub fn sys_update_buffer(
             // log::warn!("sys_update_buffer A {:?}", particle_count);
 
             // if time.running_delta_ms <= 0 { return; }
-            if let Ok((enable, idgeo, _instanceattributes, mut instancesort, gmatrix, matidxs)) = meshes.get_mut(entity) {
+            if let Ok((meshinsstate, enable, idgeo, _instanceattributes, mut instancesort, gmatrix, matidxs, renderqueue)) = meshes.get_mut(entity) {
 
                 if state.isrunning == false || particle_count == 0 {
                     // if let Ok(mut rendergeometry) = meshrenderenables.get_mut(entity) {
@@ -741,6 +741,7 @@ pub fn sys_update_buffer(
                 }
 
                 instancesort.reset();
+                instancesort.use_single_instancebuffer = meshinsstate.use_single_instancebuffer;
                 state.waitframe = 0;
 
                 let positions = &particlelocal.position;
@@ -861,9 +862,9 @@ pub fn sys_update_buffer(
                                 index += 1;
                             });
 
-                            // log::error!("Particel: {:?}", (ids.actives.len(), index));
+                            // log::error!("Particel: {:?}", (meshinsstate.use_single_instancebuffer, renderqueue.index));
                             // bytemuck::cast_slice(&collect_float.as_slice()[0..(index * stripe)]).iter().for_each(|v| { instancesort.data.push(*v); });
-                            instancesort.ranges.push((0, Range { start: 0, end: index as u32 }, gmatrix.xyz()));
+                            instancesort.ranges.push((renderqueue.index, Range { start: 0, end: index as u32 }, gmatrix.xyz()));
                             instancesort.count = index;
                         }
                     }

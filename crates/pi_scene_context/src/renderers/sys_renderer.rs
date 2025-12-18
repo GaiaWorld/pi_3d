@@ -1034,6 +1034,8 @@ pub fn sys_renderer_draws_modify(
                     let batchmaxsize_ok = combinebuffer.usedsize() + drawinfo.instancedatasize() < combinebuffer.maxcombinesize;
                     let batchcomb_ok    = combinebuffer.combinecommon(drawinfo.instancedatasize());
 
+                    // log::error!("{:?}", (batchcount_ok, batchmem_ok, batchmaxsize_ok, batchcomb_ok, combinebuffer.usedsize(), drawinfo.instancedatasize(), combinebuffer.maxcombinesize));
+
                     if batchcount_ok && batchmem_ok && batchmaxsize_ok && batchcomb_ok {
                         // 可以合并：保持透明对象的正确渲染顺序
                         _combine_instance(&mut combinebuffer, &mut lastinsdata, &drawinfo);
@@ -1062,6 +1064,9 @@ pub fn sys_renderer_draws_modify(
                 lastinsdata.data.start = combinebuffer.usedsize();
             }
 
+            // if draws.list.len() > 0 {
+            //     log::error!("Draws: {:?}", draws.list.len());
+            // }
             // 第十二阶段：性能统计和收尾
             // 统计当前渲染器的绘制调用数量
             performance.drawcalls += draws.list.len() as u32;

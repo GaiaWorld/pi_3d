@@ -5,7 +5,7 @@ use super::vertex_buffer_useinfo::*;
 #[derive(Component, Default)]
 pub struct FlagGeometryDirty;
 
-#[derive(Component, Default)]
+#[derive(Debug, Component, Default)]
 pub struct GeometryDesc {
     pub list: Vec<VertexBufferDesc>,
 }

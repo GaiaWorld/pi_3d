@@ -86,7 +86,8 @@ pub fn sys_vertex_buffer_slots_loaded(
                                 if instancestate.use_single_instancebuffer {
                                     idgeo.hash(&mut hasher);
                                 }
-                                geometry.0 = Some(RenderGeometry::create(values, (indicesdesc.0.as_ref() , indices.0.as_ref()), instance_memory, hasher.finish()));
+                                let vertexhash = hasher.finish();
+                                geometry.0 = Some(RenderGeometry::create(values, (indicesdesc.0.as_ref() , indices.0.as_ref()), instance_memory, vertexhash));
                                 
                                 *rendergeo = RenderGeometryEable(true);
                             } else {
@@ -101,7 +102,8 @@ pub fn sys_vertex_buffer_slots_loaded(
                             if instancestate.use_single_instancebuffer {
                                 idgeo.hash(&mut hasher);
                             }
-                            geometry.0 = Some(RenderGeometry::create(values, (indicesdesc.0.as_ref() , indices.0.as_ref()), instance_memory, hasher.finish()));
+                            let vertexhash = hasher.finish();
+                            geometry.0 = Some(RenderGeometry::create(values, (indicesdesc.0.as_ref() , indices.0.as_ref()), instance_memory, vertexhash));
                             *rendergeo = RenderGeometryEable(true);
                         },
                         _ => {

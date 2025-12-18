@@ -107,6 +107,7 @@ impl MemSize for TmpTransformWorldCalc1 {
 }
 
 pub fn sys_transform_dirty(
+    add0: ComponentAdded<TransformNodeParent>,
     changes0: ComponentChanged<TransformNodeParent>,
     changes1: ComponentChanged<Enable>,
     changes2: ComponentChanged<LocalMatrix>,
@@ -118,8 +119,8 @@ pub fn sys_transform_dirty(
 ) {
     // performance.systems.push(String::from("sys_transform_dirty"));
 
-    let changes = changes0.iter().chain(changes1.iter()).chain(changes2.iter());
-
+    let changes = changes0.iter().chain(add0.iter()).chain(changes1.iter()).chain(changes2.iter());
+    let mut temp = vec![];
     let mut entities = entitysets.pop();
     // changes0.iter().for_each(|entity| {
     //     entities.insert(*entity);
@@ -132,6 +133,7 @@ pub fn sys_transform_dirty(
     // });
     changes.for_each(|entity| {
         if !entities.insert(entity) { return; }
+        temp.push(*entity);
         if let Ok(mut item) = layers.get_mut(*entity) {
             *item = TransformNodeDirty(true);
         }
@@ -139,8 +141,7 @@ pub fn sys_transform_dirty(
 
     entitysets.push(entities);
     let mut entities = entitysets.pop();
-    let changes = changes0.iter().chain(changes1.iter()).chain(changes2.iter());
-    changes.for_each(|entity| {
+    temp.iter().for_each(|entity| {
         if !entities.insert(entity) { return; }
         if let Ok(mut _item) = layers.get_mut(*entity) {
             if let Some(down) = tree.get_down(*entity) {
@@ -354,7 +355,7 @@ fn calc_world_root_bytree(
         let mut resultenable = enable.bool() && penable;
         // log::error!("{:?}", (entity, enable.bool(), penable));
 
-        let dirty = lmatrix.is_changed();
+        let dirty = true; // lmatrix.is_changed();
 
         if dirty {
             // log::debug!(">>>>> GlobalTransform 0");
