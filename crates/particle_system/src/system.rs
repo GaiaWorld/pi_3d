@@ -785,25 +785,31 @@ pub fn sys_update_buffer(
                                 let translation = positions.get(*idx).unwrap();
                                 // log::warn!("LOCAL: {:?}", translation);
     
-                                let tx = translation.x + calculator.pivot.x;
-                                let ty = translation.y + calculator.pivot.y;
-                                let tz = translation.z + calculator.pivot.z;
+                                let mut tx = translation.x;
+                                let mut ty = translation.y;
+                                let mut tz = translation.z;
+                                if f_v == false {
+                                    tx += calculator.pivot.x;
+                                    ty += calculator.pivot.y;
+                                    tz += calculator.pivot.z;
+                                }
 
                                 let direction = directions.get(*idx).unwrap();
                                 let emitmatrix = emitmatrixs.get(*idx).unwrap();
     
                                 l_velocity.copy_from(&direction.value);
                                 if f_v {
-                                    h.x = direction.value.x; h.y = direction.value.y; h.z = direction.value.z; h.w = 0.;
-                                    CoordinateSytem3::matrix4_mul_vector4(&emitmatrix.matrix, &h, &mut hh);
-                                    g_velocity.x = hh.x; g_velocity.y = hh.y; g_velocity.z = hh.z;
-                                    // CoordinateSytem3::transform_normal(&direction.value, &emitmatrix.matrix, &mut g_velocity);
+                                    // h.x = direction.value.x; h.y = direction.value.y; h.z = direction.value.z; h.w = 0.;
+                                    // CoordinateSytem3::matrix4_mul_vector4(&emitmatrix.matrix, &h, &mut hh);
+                                    // g_velocity.x = hh.x; g_velocity.y = hh.y; g_velocity.z = hh.z;
+                                    CoordinateSytem3::transform_normal(&direction.value, &emitmatrix.matrix, &mut g_velocity);
                                 }
 
-                                h.x = tx; h.y = ty; h.z = tz; h.w = 1.;
-                                CoordinateSytem3::matrix4_mul_vector4(&emitmatrix.matrix, &h, &mut hh);
-                                emitposition.x = hh.x; emitposition.y = hh.y; emitposition.z = hh.z;
-                                // CoordinateSytem3::transform_coordinates_floats(tx, ty, tz, &emitmatrix.matrix, &mut emitposition);
+                                // h.x = tx; h.y = ty; h.z = tz; h.w = 1.;
+                                // CoordinateSytem3::matrix4_mul_vector4(&emitmatrix.matrix, &h, &mut hh);
+                                // emitposition.x = hh.x; emitposition.y = hh.y; emitposition.z = hh.z;
+                                CoordinateSytem3::transform_coordinates_floats(tx, ty, tz, &emitmatrix.matrix, &mut emitposition);
+                                // log::error!("Position: {:?}", ((tx, ty, tz), &emitposition, &calculator.pivot, &translation));
 
                                 // emitposition.copy_from_slice(emitmatrix.matrix.fixed_view::<3, 1>(0, 3).as_slice());
                                 let vlen = direction.length; // CoordinateSytem3::length(&direction.value);
@@ -823,7 +829,7 @@ pub fn sys_update_buffer(
                                     );
 
                                     if f_lc {
-                                        calc_local_strentched_call(&scaling, &l_velocity, calculator.stretched_length_scale, calculator.stretched_velocity_scale * vlen, &mut refwmatrix, &mut reflmatrix, &mut localmatrix);
+                                        calc_local_strentched_call(&calculator.pivot, &scaling, &l_velocity, calculator.stretched_length_scale, calculator.stretched_velocity_scale, &mut refwmatrix, &mut reflmatrix, &mut localmatrix);
                                         CoordinateSytem3::mul_to(&resultmatrix, &localmatrix, &mut refwmatrix);
                                         // refwmatrix.copy_from(&resultmatrix);
                                         &refwmatrix

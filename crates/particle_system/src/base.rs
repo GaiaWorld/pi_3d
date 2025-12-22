@@ -1919,8 +1919,10 @@ impl ParticleDirection {
                 let limitscalarval = limitscalar.value * delta_seconds;
                 let delta = directionscalar - limitscalarval;
                 if PARTICLE_MIN_VALUE < delta {
-                    let factor = limitscalarval + (delta) * Number::exp(Number::ln(delta + 1.0) * (0. - limitscalar.dampen));
-                    // let factor = 1.0 - limitscalar.dampen * (directionscalar - limitscalar.value * delta_seconds) / directionscalar * (0.66);
+                    // let factor = limitscalarval + (delta) * Number::exp(Number::ln(delta + 1.0) * (0. - limitscalar.dampen));
+                    // let factor = 1.0 - limitscalar.dampen * delta / directionscalar * (0.66);
+
+                    let factor = (directionscalar - delta * limitscalar.dampen);
 
                     // new_direction.scale_mut(factor / directionscalar);
                     let scl = factor / directionscalar;

@@ -368,15 +368,16 @@ pub fn calc_local_strentched<'a>(_g_velocity: &'a Vector3, length_scale: Number,
 /// strentched 对齐模式的局部矩阵计算
 /// 使用全局速度数据,
 /// 速度方向为x轴正方向,
-/// 速度向量长度为
+/// 速度向量长度为 加 _scale 为局部缩放
+/// pivot z 轴不使用, y 轴为速度方向偏移, x 轴为另一方向偏移
 #[inline(always)]
-pub fn calc_local_strentched_call<'a>(_scale: &'a Vector3, _l_velocity: &'a Vector3, length_scale: Number, length_modify: Number, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
+pub fn calc_local_strentched_call<'a>(pivot: &'a Vector3, _scale: &'a Vector3, _l_velocity: &'a Vector3, length_scale: Number, length_modify: Number, refwmatrix: &'a mut Matrix, reflmatrix: &'a mut Matrix, result: &'a mut Matrix) {
     result.fill_with_identity();
     refwmatrix.fill_with_identity();
     reflmatrix.fill_with_identity();
 
     let vlen = CoordinateSytem3::length(_l_velocity);
-    let dlen = length_scale + length_modify * vlen;
+    let dlen = length_scale ;
 
     let mut tempvec3 = if vlen > f32::EPSILON {
         _l_velocity.scale(-1.0 / vlen)
@@ -395,7 +396,7 @@ pub fn calc_local_strentched_call<'a>(_scale: &'a Vector3, _l_velocity: &'a Vect
     // CoordinateSytem3::mul_to(&reflmatrix, &refwmatrix, result);
 
     // // 通过 Speed Scale 与 Length Scale 计算沿X轴的缩放
-    tempvec3.x = dlen * _scale.y;tempvec3.y = _scale.x;tempvec3.z = _scale.z;
+    tempvec3.x = dlen * _scale.y + length_modify;tempvec3.y = _scale.x;tempvec3.z = _scale.z;
     // // 计算缩放位移操作矩阵
     reflmatrix.fill_with_identity();
     reflmatrix.append_nonuniform_scaling_mut(&tempvec3);
@@ -403,7 +404,7 @@ pub fn calc_local_strentched_call<'a>(_scale: &'a Vector3, _l_velocity: &'a Vect
     
     reflmatrix.fill_with_identity();
     // // 局部坐标系中向x正方向移动半个单位,使面片左侧对齐坐标系原点
-    tempvec3.x = 0.5;tempvec3.y = 0.;tempvec3.z = 0.;
+    tempvec3.x = 0.5 - pivot.y;tempvec3.y = 0. + pivot.x;tempvec3.z = 0.;
     reflmatrix.append_translation_mut(&tempvec3);
     CoordinateSytem3::mul_to(&refwmatrix, &reflmatrix, result);
 }
