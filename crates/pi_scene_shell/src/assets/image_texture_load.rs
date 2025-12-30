@@ -771,9 +771,11 @@ fn _sys_image_texture_view_load_launch2(
             if url.starts_with("asimage:://") {
                 // asimage纹理处理 - 从实时渲染目标获取纹理视图
                 let key = param.clone();
+                // log::error!("Loading AsImage {:?}", url);
                 match load_from_asimage_url(url, asimage) {
                     Ok(rt) => match rt {
                         Some(rt) => {
+                            // log::error!("Load Ok AsImage {:?}", rt.0.rect());
                             // 成功获取渲染目标纹理视图
                             state.texview_success += 1;
                             Some(ETextureViewUsage::from(&rt.0))

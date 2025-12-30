@@ -56,7 +56,13 @@ pub fn sys_material_textures_modify(
                     // log::error!("Texture {:?} {:?}", index, &param.url);
     
                     if index < TEXTURE_SLOT_COUNT {
-                        if !slots.query(index).eq(&param) {
+                        if !slots.query(index).eq(&param) || match &param.url {
+                            EKeyTexture::Tex(atom) => {
+                                atom.starts_with("asimage:://")
+                            },
+                            EKeyTexture::SRT(_) => true,
+                            _ => false,
+                        } {
                             slots.modify(index, param.clone());
                         }
                         // if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {
