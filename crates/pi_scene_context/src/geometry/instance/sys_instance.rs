@@ -39,7 +39,7 @@ pub fn sys_tick_instanced_buffer_update_single(
     changeds: ComponentChanged<InstanceSourceRefs>,
     mut sources: Query<
         (
-            Entity, &EInstanceSortMode, &InstanceSourceRefs, &GeometryID, &MeshInstanceState, &mut InstancedMeshTransparentSortCollection
+            Entity, &EInstanceSortMode, &InstanceSourceRefs, &GeometryID, &MeshInstanceState, &mut InstancedSortedCollection
         )
     >,
     dispoeds: Query<&DisposeReady>,
@@ -188,7 +188,7 @@ pub fn sys_tick_instanced_buffer_update(
     instanceattributes: Query<&ModelInstanceAttributes>,
     mut sources: Query<
         (
-            Entity, &EInstanceSortMode, &InstanceSourceRefs, &GeometryID, &MeshInstanceState, &mut InstancedMeshTransparentSortCollection
+            Entity, &EInstanceSortMode, &InstanceSourceRefs, &GeometryID, &MeshInstanceState, &mut InstancedSortedCollection
         ),
     >,
     dispoeds: Query<&DisposeReady>,
@@ -356,7 +356,7 @@ pub fn update_instanced_buffer_for_single(
 fn collect_instance_info(
     sortmode: &EInstanceSortMode,                           // 排序模式：决定如何排序实例
     instances: &InstanceSourceRefs,                        // 实例源引用：包含要处理的所有实例
-    instancessortinfos: &mut InstancedMeshTransparentSortCollection, // 输出：排序后的实例信息集合
+    instancessortinfos: &mut InstancedSortedCollection, // 输出：排序后的实例信息集合
     actives: &Query<(&GlobalEnable, &RenderQueueSortParam, &AbstructMeshCullingFlag, &GlobalMatrix, &LocalPosition), With<InstanceMesh>>, // 活动实例查询
     dispoeds: &Query<&DisposeReady>,                       // 销毁状态查询
     instanceattributes: &Query<&ModelInstanceAttributes>,  // 实例属性查询

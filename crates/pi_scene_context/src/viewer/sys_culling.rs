@@ -187,16 +187,16 @@ pub fn sys_tick_viewer_culling(
 ) {
     // log::error!("sys_tick_viewer_culling");
     // performance.systems.push(String::from("sys_tick_viewer_culling"));
-    
-    let mut cullokedlist = entitysets.pop();
+
+    let mut cullokednews = entitysets.pop();
     let mut cullnoedlist = entitysets.pop();
+    let mut cullokold = vec![];
     flags.iter_mut().for_each(|(entity, mut item)| {
         if item.0 {
-            cullokedlist.insert(&entity);
+            cullokold.push(entity);
         } else {
             cullnoedlist.insert(&entity);
         }
-        *item = AbstructMeshCullingFlag(false);
     });
 
     let mut sources = entitysets.pop();
@@ -247,9 +247,12 @@ pub fn sys_tick_viewer_culling(
 
             cullings.0.iter().for_each(|id| {
                 if let Ok(mut flag) = flags.get_mut(*id) {
-                    *flag.1 = AbstructMeshCullingFlag(true);
-                    if !sources.insert(id) { return; }
+                    // 记录现在通过剔除的entity
+                    cullokednews.insert(id);
+                    // 之前未通过但现在通过的entity
                     if cullnoedlist.contains(id) {
+                        *flag.1 = AbstructMeshCullingFlag(true);
+                        if !sources.insert(id) { return; }
                         if let Ok((mut flag, attrs)) = meshes.get_mut(*id) {
                             if attrs.bytes().len() > 0 {
                                 flag.set_changed();
@@ -260,8 +263,18 @@ pub fn sys_tick_viewer_culling(
             });
         }
     });
+
+    // 之前通过剔除
+    cullokold.iter().for_each(|id| {
+        // 但现在未通过
+        if cullokednews.contains(id) == false {
+            if let Ok(mut flag) = flags.get_mut(*id) {
+                *flag.1 = AbstructMeshCullingFlag(false);
+            }
+        }
+    });
     entitysets.push(sources);
-    entitysets.push(cullokedlist);
+    entitysets.push(cullokednews);
     entitysets.push(cullnoedlist);
     // // 尝试记录已成功剔除的后续不再计算剔除逻辑，但测试结果耗时更长
     // scenes.iter_mut().for_each(|mut items| {

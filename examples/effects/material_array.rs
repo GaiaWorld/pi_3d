@@ -33,7 +33,7 @@ pub struct ListTestData(SegQueue<(Entity, Entity, Vec<Entity>)>, Option<Entity>,
         mut testdata: ResMut<ListTestData>,
         mut actions: pi_3d::ActionSets,
         instancedatas: Query<&ModelInstanceAttributes>,
-        instancesource: Query<&InstancedMeshTransparentSortCollection>,
+        instancesource: Query<&InstancedSortedCollection>,
         combinebuffer: Res<CombineBuffer>,
         meshes: Query<&InstanceSourceRefs>,
     ) {

@@ -1,11 +1,47 @@
 
 use pi_scene_shell::prelude::*;
 
+use crate::{flags::GlobalEnable, pass::{PassIDs, PassMaterialID}, prelude::{AbstructMeshCullingFlag, InstancedSortedCollection, RenderGeometryEable}};
+
 use super::{
     material::*,
     uniforms::{uniform::*, texture::*},
     shader_effect::*
 };
+
+pub fn sys_material_textures_placeholder(
+    sourcemeshes: ComponentChanged<InstancedSortedCollection>,
+    geomeshes: ComponentChanged<RenderGeometryEable>,
+    culled: ComponentChanged<AbstructMeshCullingFlag>,
+    items: Query<(&InstancedSortedCollection, &RenderGeometryEable, &AbstructMeshCullingFlag, &PassIDs)>,
+    passobjs: Query<&PassMaterialID>,
+    mut materials: Query<&mut UniformTextureWithSamplerParamsDirty>,
+    empty: Res<SingleEmptyEntity>,
+) {
+    sourcemeshes.iter().chain(geomeshes.iter()).chain(culled.iter()).for_each(|entity| {
+        if let Ok((insinfo, geoenable, culled, pass)) = items.get(*entity) {
+            let mut isok = true;
+            if insinfo.sizeperinstance > 0 && insinfo.count == 0 { isok = false; }
+            if geoenable.0 == false { isok = false; }
+            if culled.0 == false { isok = false; }
+
+            pass.0.iter().for_each(|id| {
+                if let Ok(id) = passobjs.get(*id) {
+                    if id.0 != empty.id() {
+                        if let Ok(mut flag) = materials.get_mut(id.0) {
+                            // if isok == false {
+                            //     log::error!("{:?}", (insinfo.sizeperinstance, insinfo.count, geoenable.0, culled.0));
+                            // }
+                            if flag.isplacehodler != !isok {
+                                flag.isplacehodler = !isok;
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+}
 
 pub fn sys_material_textures_modify(
     addeds: ComponentAdded<UniformTextureWithSamplerParamsDirty>,
@@ -13,33 +49,27 @@ pub fn sys_material_textures_modify(
     mut materials: Query<
         (
             &AssetResShaderEffectMeta, &mut UniformTextureWithSamplerParams,
-            &mut TextureKeyList,
+            &mut TextureKeyList, &UniformTextureWithSamplerParamsDirty
         )
     >,
-    // device: Res<PiRenderDevice>,
-    // asset_samp: Res<ShareAssetMgr<SamplerRes>>,
     entitysets: Res<EntityFilterForComponentChanged>,
+    placehoders: Res<super::command::ResTexturePlaceHolder>,
 ) {
     // log::debug!("SysMaterialMetaChange: ");
     let mut entities = entitysets.pop();
-    // addeds.iter().for_each(|entity| {
-    //     entities.insert(*entity);
-    // });
-    // changes.iter().for_each(|entity| {
-    //     entities.insert(*entity);
-    // });
     changes.iter().chain(addeds.iter()).for_each(|entity| {
         if !entities.insert(entity) { return; }
         if let Ok((
             effect, mut texparams,
-            mut slots
+            mut slots, flag
         )) = materials.get_mut(*entity) {
+            
             let effect = effect.0.as_ref().unwrap().as_ref();
             if effect.textures.len() > 0 {
                 for index in 0..effect.textures.len() {
                     let item = effect.textures.get(index).unwrap();
-                    let param = if let Some(param) = texparams.0.get(&item.slotname) {
-                        param
+                    let mut param = if let Some(param) = texparams.0.get(&item.slotname) {
+                        param.clone()
                     } else {
                         texparams.0.insert(
                             item.slotname.clone(), 
@@ -51,18 +81,26 @@ pub fn sys_material_textures_modify(
                                 }
                             )
                         );
-                        texparams.0.get(&item.slotname).unwrap()
+                        texparams.0.get(&item.slotname).unwrap().clone()
                     };
-                    // log::error!("Texture {:?} {:?}", index, &param.url);
-    
+                    
+                    if flag.isplacehodler {
+                        if let Some(url) = placehoders.get(&param.url) {
+                            let mut val = param.as_ref().clone();
+                            val.url = url.clone();
+                            param = std::sync::Arc::new(val);
+                        }
+                    }
+
                     if index < TEXTURE_SLOT_COUNT {
                         if !slots.query(index).eq(&param) || match &param.url {
                             EKeyTexture::Tex(atom) => {
                                 atom.starts_with("asimage:://")
                             },
-                            EKeyTexture::SRT(_) => true,
+                            EKeyTexture::SRT(_) => false,
                             _ => false,
                         } {
+                            // log::error!("{:?}", (index, &param.url));
                             slots.modify(index, param.clone());
                         }
                         // if let Some(samp) = BindDataSampler::create(param.sample.clone(), &device, &asset_samp) {

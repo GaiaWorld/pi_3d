@@ -800,7 +800,7 @@ pub fn sys_renderer_draws_modify(
     scenes: Query< (&BatchParamOpaque, &BatchParamTransparent) >, // 批处理参数
     models: Query<                                              // 模型组件查询
         (
-            &GlobalEnable, &GlobalMatrix, &RenderQueueSortParam, &InstancedMeshTransparentSortCollection,
+            &GlobalEnable, &GlobalMatrix, &RenderQueueSortParam, &InstancedSortedCollection,
             &PassIDs, &GeometryID, &IndiceRenderRange, &VertexRenderRange, &RenderGeometryEable,
         )
     >,
@@ -1425,7 +1425,7 @@ fn collect_draw<'w>(
     sort_param: &'w RenderQueueSortParam,                         // 渲染队列排序参数
     opaque_list: & mut Vec<DrawTmpRef<'w>>,                      // 不透明对象列表（输出）
     transparent_list: & mut Vec<DrawTmpRef<'w>>,                  // 透明对象列表（输出）
-    instancessortinfo: &'w InstancedMeshTransparentSortCollection, // 实例化排序信息
+    instancessortinfo: &'w InstancedSortedCollection, // 实例化排序信息
     distancecomp: &ViewerDistanceCompute,                         // 距离计算器
     viewposition: &(Number, Number, Number),                      // 摄像机位置
     viewdirection: &(Number, Number, Number),                      // 摄像机方向

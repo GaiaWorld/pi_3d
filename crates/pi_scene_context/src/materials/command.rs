@@ -18,7 +18,7 @@ pub type ActionListMaterialCreate = ActionList<OpsMaterialCreate>;
 #[derive(Debug)]
 pub enum OpsMaterialUse {
     Use(Entity, Entity, PassTag),
-    UnUse(Entity, Entity),
+    UnUse(Entity, Entity, PassTag),
 }
 impl OpsMaterialUse {
     pub fn ops(id_mesh: Entity, id_mat: Entity, pass: PassTag) -> Self {
@@ -88,3 +88,6 @@ impl OpsUniformVal {
 pub type ActionListUniformVal = ActionList<OpsUniformVal>;
 
 pub type EAnimeUniform = Atom;
+
+#[derive(Deref, DerefMut, Resource, Default)]
+pub struct ResTexturePlaceHolder(XHashMap<EKeyTexture, EKeyTexture>);

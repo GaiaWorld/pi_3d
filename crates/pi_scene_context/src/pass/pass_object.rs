@@ -13,7 +13,7 @@ pub struct DrawTmpRef<'w> {
     pub indicerange: &'w IndiceRenderRange,
     pub vertexrange: &'w VertexRenderRange,
     // 用于记录 Mesh 的实例的排序后实例数据
-    pub instancessortinfo: &'w InstancedMeshTransparentSortCollection,
+    pub instancessortinfo: &'w InstancedSortedCollection,
     pub inscombinerange: Range<u32>,
     pub pass: u8,
     pub distance: f32,

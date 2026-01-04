@@ -286,18 +286,18 @@ pub struct RenderWorldMatrix(pub Matrix);
 
 /// 用于记录 Mesh 的实例的排序后实例数据
 #[derive(Clone, Component, Default)]
-pub struct InstancedMeshTransparentSortCollection {
+pub struct InstancedSortedCollection {
     pub ranges: Vec<(i32, Range<u32>, (Number, Number, Number))>,
     pub data: Vec<u8>,
     pub count: u32,
     pub sizeperinstance: u16,
     pub use_single_instancebuffer: bool,
 }
-impl InstancedMeshTransparentSortCollection {
+impl InstancedSortedCollection {
     pub fn reset(&mut self) {
         self.ranges.clear();
         self.data.clear();
-        self.sizeperinstance = 0;
+        self.count = 0;
     }
 }
 

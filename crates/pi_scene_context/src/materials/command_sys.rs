@@ -81,7 +81,7 @@ pub fn sys_create_material(
                     AssetKeyShaderEffect(key_shader),
                     MaterialRefs::default(),
                     UniformTextureWithSamplerParams::default(),
-                    UniformTextureWithSamplerParamsDirty,
+                    UniformTextureWithSamplerParamsDirty { isplacehodler: false },
                     FlagAnimationStartResetComp,
                     DirtyMaterialRefs::default(),
                     TextureKeyList::default(),
@@ -167,7 +167,7 @@ pub fn sys_act_material_use(
                     errors.record(id_mesh.index(), ErrorRecord::ERROR_USE_MATERIAL_NULL_MAT);
                 }
             },
-            OpsMaterialUse::UnUse(id_mesh, _id_mat) => {
+            OpsMaterialUse::UnUse(id_mesh, _id_mat, pass) => {
                 if let Ok(mut matid) = linkedtargets.get_mut(id_mesh) {
                     let old = matid.0;
                     *matid = LinkedMaterialID(empty.id());
@@ -196,14 +196,6 @@ pub fn sys_act_material_value(
     mut animator_vec2: ResMut<ActionListAnimatorableVec2>,
     mut animator_float: ResMut<ActionListAnimatorableFloat>,
     mut animator_uint: ResMut<ActionListAnimatorableUint>,
-    
-    materials: Query<(&MaterialRefs, &AssetResShaderEffectMeta, &AssetKeyShaderEffect)>,
-    passes: Query<(&PassModelID, &PassTag)>,
-    mut models: Query<(&BindModel, &mut ModelInstanceAttributes, &mut ModelMatIdxs)>,
-    mut allocator: ResMut<ResBindBufferAllocator>,
-    device: Res<PiRenderDevice>,
-    mut materialmgr: ResMut<MaterialDataMgr>,
-    engineopt: Res<EngineCustomPlugins>,
 
     mut textureparams: Query<(&mut UniformTextureWithSamplerParams, &mut UniformTextureWithSamplerParamsDirty)>,
     mut bindvalues: Query<(&mut BindEffect, &mut UniformAnimated)>,
@@ -237,7 +229,7 @@ pub fn sys_act_material_value(
             OpsUniformValB::Texture(entity, param) => {
                 if let Ok((mut textureparams, mut flag)) = textureparams.get_mut(entity) {
                     textureparams.0.insert(param.slotname.clone(), Arc::new(param));
-                    *flag = UniformTextureWithSamplerParamsDirty;
+                    flag.set_changed();
                     return;
                 }
             },
@@ -251,7 +243,7 @@ pub fn sys_act_material_value(
                     }
                     param.url = EKeyTexture::SRT(key);
                     textureparams.0.insert(param.slotname.clone(), Arc::new(param));
-                    *flag = UniformTextureWithSamplerParamsDirty;
+                    flag.set_changed();
                 } else {
                     // log::error!("texture_from_target Error No Material");
                 }
@@ -269,7 +261,7 @@ pub fn sys_act_material_value(
                         }
                         param.url = EKeyTexture::SRT(key);
                         textureparams.0.insert(param.slotname.clone(), Arc::new(param));
-                        *flag = UniformTextureWithSamplerParamsDirty;
+                        flag.set_changed();
                     } else {
                         // log::error!("texture_from_renderer Error No Key");
                     }

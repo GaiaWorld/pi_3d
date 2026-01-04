@@ -90,7 +90,7 @@ pub fn sys_state_resource(
     renderers: Query<&Renderer>,
     performance: Res<Performance>,
     instancedatas: Query<&ModelInstanceAttributes>,
-    instancesource: Query<&InstancedMeshTransparentSortCollection>,
+    instancesource: Query<&InstancedSortedCollection>,
     combinebuffer: Res<CombineBuffer>,
     materials: Query<&BindEffect>,
 ) {

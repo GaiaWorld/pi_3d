@@ -72,17 +72,18 @@ pub fn sys_update_collider(
 pub fn sys_update_culling_by_worldmatrix(
     rmchanges: ComponentChanged<RenderWorldMatrix>,
     changes0: ComponentChanged<DisposeReady>,
+    changes1: ComponentChanged<GlobalEnable>,
     mut items: Query<&mut ItemCullingDirty>,
 ) {
     rmchanges.iter().for_each(|entity| {
         if let Ok(mut flag) = items.get_mut(*entity) {
-            *flag = ItemCullingDirty;
+            flag.set_changed();
         }
     });
 
-    changes0.iter().for_each(|entity| {
+    changes0.iter().chain(changes1.iter()).for_each(|entity| {
         if let Ok(mut flag) = items.get_mut(*entity) {
-            *flag = ItemCullingDirty;
+            flag.set_changed();
         }
     });
 }
@@ -157,7 +158,7 @@ pub fn sys_tick_culling_box(
     actives: Query<(&GlobalEnable, &GeometryBounding, &RenderWorldMatrix, &AbstructMeshCullingFlag)>,
     mut sources: Query<
         (
-            Entity, &GeometryID, &MeshInstanceState, &mut InstancedMeshTransparentSortCollection
+            Entity, &GeometryID, &MeshInstanceState, &mut InstancedSortedCollection
         )
     >,
     dispoeds: Query<&DisposeReady>,

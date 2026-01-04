@@ -91,8 +91,8 @@ impl Plugin for PluginScene {
             .configure_set(StageD3, StageScene::SceneCreate           .in_set(ERunStageChap::Create))
             .configure_set(StageD3, StageScene::_SceneCreate          .in_set(ERunStageChap::Create).after(StageScene::SceneCreate))
             .configure_set(StageD3, StageScene::SceneCommand          .in_set(ERunStageChap::Modify))
-            .configure_set(StageD3, StageScene::SceneTextureRequest   .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageScene::SceneCommand).after(StageTextureLoad::TextureRequest).before(StageTextureLoad::TextureLoading))
-            .configure_set(StageD3, StageScene::SceneTextureLoaded    .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoaded))
+            .configure_set(StageD3, StageScene::SceneTextureRequest   .in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageScene::SceneCommand).after(StageTextureLoad::TextureRequest).before(StageTextureLoad::TextureLoading))
+            .configure_set(StageD3, StageScene::SceneTextureLoaded    .in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoaded))
             .configure_set(StageD3, StageScene::SceneDispose           .in_set(ERunStageChap::Dispose))
             ;
 

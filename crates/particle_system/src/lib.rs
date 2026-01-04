@@ -59,7 +59,7 @@ impl Plugin for PluginParticleSystem {
         .configure_set(StageD3, StageParticleSystem::ParticleSysParamStart.in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysEmission))
         .configure_set(StageD3, StageParticleSystem::ParticleSysCalc      .in_set(ERunStageChap::Modify).run_if(runif_particlesystem).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysParamStart))
         .configure_set(StageD3, StageParticleSystem::ParticleSysMatrix    .in_set(ERunStageChap::Modify).run_if(runif_particlesystem).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysCalc).after(StageTransform::TransformCalcMatrix))
-        .configure_set(StageD3, StageParticleSystem::ParticleSysUpdate    .in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysMatrix).after(StageModel::InstanceEffectGeometry).after(StageGeometry::_VertexBufferLoadedApply).before(StageGeometry::GeometryLoaded))
+        .configure_set(StageD3, StageParticleSystem::ParticleSysUpdate    .in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageParticleSystem::ParticleSysMatrix).after(StageModel::InstanceEffectGeometry).after(StageGeometry::_VertexBufferLoadedApply).before(StageGeometry::GeometryLoaded).before(StageTextureLoad::TextureRequest))
         .configure_set(StageD3, StageParticleSystem::ParticleSysDispose    .in_set(ERunStageChap::Dispose).before(StageModel::MeshDispose).before(StageTrail::TrailDispose))
         ;
 

@@ -61,7 +61,7 @@ pub type BundleMesh = (
         GeometryBounding,
         GeometryCullingMode,
         ItemCullingDirty,
-        InstancedMeshTransparentSortCollection,
+        InstancedSortedCollection,
         SkeletonID,
     )
 );
@@ -537,7 +537,7 @@ impl ActionMesh {
             GeometryBounding::default(),
             GeometryCullingMode::default(),
             ItemCullingDirty::default(),
-            InstancedMeshTransparentSortCollection::default(),
+            InstancedSortedCollection::default(),
             SkeletonID(None),
         ))
     }

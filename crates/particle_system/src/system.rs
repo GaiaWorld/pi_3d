@@ -683,7 +683,7 @@ pub fn sys_update_buffer(
     mut particle_sys: Query<
         (Entity, &ParticleAttributes, &mut ParticleSystemRunningState, &ParticleSystemTime, &ParticleIDs, &ParticleLocal, &ParticleDirection, &ParticleEmitMatrix),
     >,
-    mut meshes: Query<(&MeshInstanceState, &GlobalEnable, &GeometryID, &ModelInstanceAttributes, &mut InstancedMeshTransparentSortCollection, &GlobalMatrix, &ModelMatIdxs, &RenderQueueSortParam)>,
+    mut meshes: Query<(&MeshInstanceState, &GlobalEnable, &GeometryID, &ModelInstanceAttributes, &mut InstancedSortedCollection, &GlobalMatrix, &ModelMatIdxs, &RenderQueueSortParam)>,
     // mut meshrenderenables: Query<&mut RenderGeometryEable>,
     instanceinfos: Query<&InstancedInfoComp>,
     mut performance: ResMut<ParticleSystemPerformance>,

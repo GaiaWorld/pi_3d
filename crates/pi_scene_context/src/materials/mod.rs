@@ -38,10 +38,11 @@ impl Plugin for PluginMaterial {
             app.insert_resource(ImageTextureViewLoader2::default());
             app.insert_resource(DataTextureCmds::default());
             app.insert_resource(ResSpriteFrames::default());
+            app.insert_resource(ResTexturePlaceHolder::default());
 
-            app.configure_set(StageD3, StageTextureLoad::TextureRequest.in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageMaterial::MatCommand));
-            app.configure_set(StageD3, StageTextureLoad::TextureLoading.in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageTextureLoad::TextureRequest));
-            app.configure_set(StageD3, StageTextureLoad::TextureLoaded .in_set(ERunStageChap::Modify).in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoading));
+            app.configure_set(StageD3, StageTextureLoad::TextureRequest.in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageMaterial::MatCommand).after(StageModel::InstanceEffectGeometry));
+            app.configure_set(StageD3, StageTextureLoad::TextureLoading.in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageTextureLoad::TextureRequest));
+            app.configure_set(StageD3, StageTextureLoad::TextureLoaded .in_set(ERunStageChap::Culled).in_set(FrameDataPrepare).after(StageTextureLoad::TextureLoading));
 
 #[cfg(feature = "use_bevy")]
             app.add_systems(
@@ -61,12 +62,13 @@ impl Plugin for PluginMaterial {
 
 #[cfg(not(feature = "use_bevy"))]
             app
-                .add_systems(StageD3, sys_update_data_texture                .in_set(StageMaterial::MatCommand))
-                .add_systems(StageD3, sys_texture_combine                .in_set(StageTextureLoad::TextureLoading))
-                .add_systems(StageD3, sys_image_texture_load_launch                                                   .in_set(StageTextureLoad::TextureLoading))
-                .add_systems(StageD3, sys_image_texture_view_load_launch2
+                .add_systems(StageD3, sys_image_texture_view_load_launch2    .in_set(StageTextureLoad::TextureRequest))
                     // .run_if(runif_changes::<TextureKeyList>)         
-                    .in_set(StageTextureLoad::TextureRequest))
+                    
+                .add_systems(StageD3, sys_update_data_texture                .in_set(StageMaterial::MatCommand))
+                .add_systems(StageD3, sys_texture_combine                    .in_set(StageTextureLoad::TextureLoading))
+                .add_systems(StageD3, sys_image_texture_load_launch          .in_set(StageTextureLoad::TextureLoading))
+
                 .add_systems(StageD3, sys_image_texture_view_loaded_check2        .in_set(StageTextureLoad::TextureLoaded))
                 ;
         }
@@ -162,9 +164,12 @@ impl Plugin for PluginMaterial {
                 // .run_if(runif_acts::<OpsMaterialUse>)                               
                 .in_set(StageMaterial::MatUse) )
             .add_systems(StageD3, sys_act_material_value                  .after(sys_act_material_use)   .in_set(StageMaterial::MatCommand) )
+            
+            .add_systems(StageD3, sys_material_textures_placeholder.in_set(StageTextureLoad::TextureRequest))
             .add_systems(StageD3, sys_material_textures_modify
                 // .run_if(runif_comp::<UniformTextureWithSamplerParamsDirty>)
-                .after(sys_act_material_value)                .in_set(StageMaterial::MatCommand) )
+                .before(sys_image_texture_view_load_launch2)
+                .after(sys_material_textures_placeholder)                .in_set(StageTextureLoad::TextureRequest) )
             .add_systems(StageD3, sys_texture_ready
                 // .run_if(runif_comp::<EffectBindTexture2DList>)
                 .in_set(StageMaterial::MatReady) )

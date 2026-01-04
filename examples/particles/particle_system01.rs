@@ -44,6 +44,7 @@ pub fn setup(
 
     let node = commands.spawn_empty_id(); actions.transform.tree.push(OpsTransformNodeParent::ops(node, scene));
     actions.transform.create.push(OpsTransformNode::ops(scene, node));
+                items.0.push((node, 0.,0.,0.));
 
     let mut mats = vec![];
     {
@@ -71,7 +72,7 @@ pub fn setup(
     }
 
     let mut random = pi_wy_rng::WyRng::default();
-    let temp = 5;
+    let temp = 1;
     let size = -10.0..10.0;
     let euler = -3.0..3.0;
     for _i in 0..temp {
@@ -113,7 +114,6 @@ pub fn setup(
                 let x = random.gen_range(size.clone());
                 let y = random.gen_range(size.clone());
                 let z = random.gen_range(size.clone());
-                items.0.push((item, x, y, z));
                 actions.transform.localsrt.push(OpsTransformNodeLocal::ops(item, ETransformSRT::Translation(x, y, z)));
                 actions.transform.localsrt.push(OpsTransformNodeLocal::ops(item, ETransformSRT::Euler(random.gen_range(euler.clone()), random.gen_range(euler.clone()), random.gen_range(euler.clone()))));
                 actions.transform.localsrt.push(OpsTransformNodeLocal::ops(item, ETransformSRT::Scaling(0.2, 0.2, 0.2)));
@@ -157,11 +157,21 @@ pub fn setup(
 }
 
 fn sys_modify(
-    items: Res<ActionListTestData>,
-    mut cmds: ResMut<ActionListTransformNodeLocal>,
+    mut items: ResMut<ActionListTestData>,
+    mut cmds1: ResMut<ActionListTransformNodeLocal>,
+    mut cmds: ResMut<ActionListNodeEnable>,
 ) {
-    items.0.iter().for_each(|(entity, x, y, z)| {
-        cmds.push(OpsTransformNodeLocal::ops(*entity, ETransformSRT::Translation(*x, *y, *z)));
+    items.0.iter_mut().for_each(|mut item| {
+        item.1 = item.1 + 1.;
+        let mut flag = true;
+        if item.1 < 60.0 {
+            flag = item.1 < 30.;
+        } else {
+            item.1 = 0.;
+        }
+        log::error!("{:?}", (item.1, flag));
+        cmds.push(OpsNodeEnable::ops(item.0, flag));
+        cmds1.push(OpsTransformNodeLocal(item.0, ETransformSRT::Translation(item.1, 0., 0.)));
     });
 }
 
@@ -228,9 +238,11 @@ pub fn main() {
     app.add_startup_system(Update, base::setup_demoinit);
 
     app.add_plugins(PluginTest);
-    app.add_systems(StageD3, pi_3d::sys_info_node.in_set(StageScene::SceneCreate));
-    app.add_systems(StageD3, pi_3d::sys_info_draw.in_set(StageScene::SceneCreate));
-    app.add_systems(StageD3, pi_3d::sys_info_resource.in_set(StageScene::SceneCreate));
+    // app.add_systems(StageD3, pi_3d::sys_info_node.in_set(StageScene::SceneCreate));
+    // app.add_systems(StageD3, pi_3d::sys_info_draw.in_set(StageScene::SceneCreate));
+    // app.add_systems(StageD3, pi_3d::sys_info_resource.in_set(StageScene::SceneCreate));
+    app.add_systems(StageD3, sys_modify.in_set(StageScene::SceneCreate));
+    
 
     app.world.get_resource_mut::<StateRecordCfg>().unwrap().write_state = false;
     
