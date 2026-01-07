@@ -161,6 +161,10 @@ impl  GLTF {
         let path = self.path.clone() + "#";
         path + index.to_string().as_str()
     }
+    pub fn key_buffer(&self, bufferindex: usize, start: usize, end: usize) -> String {
+        let path = self.path.clone() + "#";
+        path + bufferindex.to_string().as_str() + "#" + start.to_string().as_str() + "#" + end.to_string().as_str()
+    }
     pub fn key_particle_calculator(&self, index: usize) -> KeyParticleSystemCalculator {
         let path = self.path.clone() + "#";
         let key = Atom::from(path + index.to_string().as_str());
@@ -296,17 +300,18 @@ impl GLTFTempLoaded {
             mesh.primitives().for_each(|primitive| {
                 // Indices Buffer
                 if let Some(accessor) = primitive.indices() {
-                    let key = result.key_accessor(accessor.index());
+                    let view = accessor.view().unwrap();
+                    let bufferidx = view.buffer().index();
+                    let start = view.offset() + accessor.offset();
+                    let end = start + accessor.count() * accessor.size();
+                    let key = result.key_buffer(bufferidx, start, end);
                     let indice_key = KeyVertexBuffer::from(key.as_str());
                     let indice_key_u64 = indice_key.asset_u64();
                     if let Some(buffer) = vb_assets_mgr.get(&indice_key_u64) {
                         result.vbs.push(buffer);
                     } else {
-                        let view = accessor.view().unwrap();
-                        if let Some(bufferdata) = gltf.buffers.get(accessor.view().unwrap().buffer().index()) {
+                        if let Some(bufferdata) = gltf.buffers.get(bufferidx) {
                             let bufferdata = &bufferdata;
-                            let start = view.offset() + accessor.offset();
-                            let end = start + accessor.count() * accessor.size();
                             let data = &bufferdata[start..end];
                             if let Some(buffer) = vballocator.create_not_updatable_buffer_for_index(device, queue, data) {
                                 if let Ok(buffer) = vb_assets_mgr.insert(indice_key_u64, buffer) {
@@ -319,18 +324,19 @@ impl GLTFTempLoaded {
 
                 // attributes - 未处理稀疏存储情况
                 for (_semantic, accessor) in primitive.attributes() {
-                    let key = result.key_accessor(accessor.index());
+                    let view = accessor.view().unwrap();
+                    let bufferidx = view.buffer().index();
+                    let start = view.offset() + accessor.offset();
+                    let end = start + accessor.count() * accessor.size();
+                    let key = result.key_buffer(bufferidx, start, end);
                     // log::error!("VB {:?}", key);
                     let indice_key = KeyVertexBuffer::from(key.as_str());
                     let indice_key_u64 = indice_key.asset_u64();
                     if let Some(buffer) = vb_assets_mgr.get(&indice_key_u64) {
                         result.vbs.push(buffer);
                     } else {
-                        let view = accessor.view().unwrap();
-                        if let Some(bufferdata) = gltf.buffers.get(accessor.view().unwrap().buffer().index()) {
+                        if let Some(bufferdata) = gltf.buffers.get(bufferidx) {
                             let bufferdata = &bufferdata;
-                            let start = view.offset() + accessor.offset();
-                            let end = start + accessor.count() * accessor.size();
                             let data = &bufferdata[start..end];
                             if let Some(buffer) = vballocator.create_not_updatable_buffer(device, queue, data, None) {
                                 if let Ok(buffer) = vb_assets_mgr.insert(indice_key_u64, buffer) {
