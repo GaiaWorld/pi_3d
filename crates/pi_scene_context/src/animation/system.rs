@@ -39,38 +39,40 @@ pub fn sys_scene_anime_ctx(
                         group_info.loop_event = false;
                         group_info.last_amount_in_second = group_info.amount_in_second;
 
-                        if group_info.is_playing == true {
+                        if group_info.is_started == true {
                             let group_mgr = &mut amounts.group_mgr;
                             if let Some(group) = group_mgr.get_mut(id_group) {
                                 group.anime(&mut animeglobal.runtimeinfos, delta_ms, &mut group_info);
                             }
 
-                            if let Some((idobj, frameevents, listen)) = animeglobal.group_records.get(&id_group) {
-                                // if group_info.end_event {
-                                //     log::warn!("Group : {:?}", (idobj, id_group, group_info.end_event, (listen & TagGroupListen::END) == TagGroupListen::END));
-                                // }
-                                if group_info.start_event && (listen & TagGroupListen::START) == TagGroupListen::START {
-                                    animeevents.push((*idobj, *idobj, TagGroupListen::START, 0));
-                                }
-                
-                                if (listen & TagGroupListen::FRAME) == TagGroupListen::FRAME {
-                                    if let Some(data) = frameevents.query(group_info.last_amount_in_second, group_info.amount_in_second) {
-                                        data.iter().for_each(|v| {
-                                            animeevents.push((*idobj, *idobj, TagGroupListen::FRAME, *v));
-                                        });
+                            if group_info.is_playing == true {
+                                if let Some((idobj, frameevents, listen)) = animeglobal.group_records.get(&id_group) {
+                                    // if group_info.end_event {
+                                    //     log::warn!("Group : {:?}", (idobj, id_group, group_info.end_event, (listen & TagGroupListen::END) == TagGroupListen::END));
+                                    // }
+                                    if group_info.start_event && (listen & TagGroupListen::START) == TagGroupListen::START {
+                                        animeevents.push((*idobj, *idobj, TagGroupListen::START, 0));
                                     }
-                                }
+                    
+                                    if (listen & TagGroupListen::FRAME) == TagGroupListen::FRAME {
+                                        if let Some(data) = frameevents.query(group_info.last_amount_in_second, group_info.amount_in_second) {
+                                            data.iter().for_each(|v| {
+                                                animeevents.push((*idobj, *idobj, TagGroupListen::FRAME, *v));
+                                            });
+                                        }
+                                    }
 
-                                if group_info.loop_event && (listen & TagGroupListen::LOOP) == TagGroupListen::LOOP {
-                                    animeevents.push((*idobj, *idobj, TagGroupListen::LOOP, group_info.looped_count as u32));
-                                }
+                                    if group_info.loop_event && (listen & TagGroupListen::LOOP) == TagGroupListen::LOOP {
+                                        animeevents.push((*idobj, *idobj, TagGroupListen::LOOP, group_info.looped_count as u32));
+                                    }
 
-                                if group_info.end_event && (listen & TagGroupListen::END) == TagGroupListen::END {
-                                    animeevents.push((*idobj, *idobj, TagGroupListen::END, 0));
-                                }
-                            } else {
-                                // log::error!("AnimEvene Error: {:?}", id_group);
-                            };
+                                    if group_info.end_event && (listen & TagGroupListen::END) == TagGroupListen::END {
+                                        animeevents.push((*idobj, *idobj, TagGroupListen::END, 0));
+                                    }
+                                } else {
+                                    // log::error!("AnimEvene Error: {:?}", id_group);
+                                };
+                            }
                         }
                     
                         let item = amounts.group_infos.get_mut(id_group).unwrap();
